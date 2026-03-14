@@ -2,11 +2,11 @@
 
 ## Project
 
-**PeakTalk** — B2C SaaS AI-coach for communication skills: IT interview prep, confident speech, filler word elimination, public speaking.
+**PeakTalk** — B2C SaaS AI-тренер для подготовки к публичным выступлениям (собеседования, доклады, презентации, питчи).
 
-**Core flow:** User records video → AI analyzes → detailed report with metrics, timeline, recommendations → training → progress tracking.
+**Core flow:** Пользователь загружает документ → Ленивый парсинг (Lazy Parsing) перед симуляцией → Настройка параметров (тип собеседника, индустрия) → AI-симуляция Q&A сессии с использованием внутреннего монолога (Internal Reasoning) → Хранение всей истории и мыслей тренера в PostgreSQL для аналитики.
 
-**Target:** Russian-speaking students and junior devs preparing for IT interviews.
+**Target:** Студенты, молодые специалисты и фаундеры, готовящиеся к важным коммуникациям.
 
 ## Tech Stack
 
@@ -14,10 +14,9 @@
 |---|---|
 | Frontend | Next.js 15 (App Router) · TypeScript · Tailwind CSS · Framer Motion · TanStack Query · Zustand · next-pwa |
 | Backend | Python 3.12 · FastAPI · Celery · Redis |
-| DB / Storage | PostgreSQL · Supabase Storage → Yandex Cloud S3 |
-| AI | Gemini API (transcription, speech analysis, feedback, voice simulations) |
-| Infra | DDoS-Guard → Yandex CDN → Nginx → FastAPI · slowapi |
-| Deploy | PWA (no App Store) · Web Push notifications |
+| DB / Storage | PostgreSQL · SQLAlchemy 2.0 · Supabase Storage |
+| AI | Gemini API (gemini-1.5-flash, анализ контента, внутренний монолог тренера, текстовые симуляции) |
+| Infra | DDoS-Guard → Yandex CDN → Nginx → FastAPI · 152-ФЗ |
 
 ## Architecture
 
@@ -25,30 +24,39 @@
 [Next.js 15 PWA]
       ↕ HTTP/REST
 [FastAPI — API, auth, CRUD]
-      ↕ Redis (task queue + status cache)
+      ↕ Redis (task queue)
 [Celery AI-worker]  ←→  Gemini API
       ↕
-[PostgreSQL]  [Supabase / Yandex S3]
+[PostgreSQL]  [Supabase Storage]
 ```
 
-Video analysis is async (up to 5 min): compress to 360p via ffmpeg → delete original → notify via Web Push.
+**Безопасность (152-ФЗ):** Полный отказ от биометрии (видео/аудио) на этапе MVP. Работа только с текстом и документами.
 
 ## Key DB Models
 
 ```
-User · OnboardingProfile · LearningPlan · Exercise
-UserExercise · Report · Simulation
+User · OnboardingProfile
+SpeechDraft · AIAnalysisResult · PDFExport
+SimulationSession · SimulationMessage · SkillMetric
 ```
 
 ## Key API Endpoints
 
 ```
-POST /onboarding              → learning plan
-GET  /dashboard               → metrics + next exercise
-POST /exercises/{id}/submit   → upload video → Celery task
-GET  /reports/{id}            → analysis result
-WS   /simulations/{id}        → realtime voice simulation
+POST /documents/upload            → Upload document to Supabase
+GET  /documents                   → List user documents
+POST /simulation/start            → Initialize new simulation session
+POST /simulation/{id}/message     → Send message & get AI response (JSON with reasoning)
+GET  /simulation/{id}/history     → Get full chat history from PostgreSQL
 ```
+
+## Current Progress
+
+- [x] **Frontend Shell**: Sidebar (Desktop/Mobile), Dashboard Layout.
+- [x] **Auth**: Logic and Styles for Signup/Login pages.
+- [x] **Documents**: Page with grid view of uploaded files.
+- [x] **Simulation**: Setup page (Persona & Industry selection).
+- [ ] **Backend**: In development (FastAPI + SQLALchemy).
 
 ## Autonomy Rules
 
@@ -68,21 +76,21 @@ Claude operates in **maximum autonomy mode**:
 - `main` — production-ready, never push directly
 - Feature branches: `feat/`, `fix/`, `chore/` prefixes
 - One feature = one branch = one PR
-- Commit messages in **English**, imperative mood (`Add`, `Fix`, `Update`)
+- Commit messages in **Russian**
 - Before starting any feature: create branch from `main`
 
 ## Code Conventions
 
-- **Language:** code and comments in English, commits in English
-- **Python:** follow PEP 8, use type hints, Pydantic models for all request/response schemas
-- **TypeScript:** strict mode, no `any`, prefer functional components
+- **Language:** code and comments in English, commits in Russian
+- **Python:** follow PEP 8, use type hints, Pydantic v2 models
+- **TypeScript:** strict mode, no `any`, functional components (Next.js 15 Server/Client)
 - **API:** RESTful, consistent error responses `{detail: string, code: string}`
 - **Tests:** write tests for new backend endpoints (pytest), critical frontend paths (Playwright)
-- **No dead code:** remove unused imports, variables, commented-out blocks
+- **Design:** Premium dark theme, Framer Motion for micro-animations, pixel-perfect UX
 
 ## Communication
 
 - Speak with user in **Russian**
-- Report progress concisely — lead with what was done, not what you're about to do
-- When blocked: explain the blocker clearly, propose alternatives, don't retry blindly
-- When creating a branch or making commits: briefly mention it in the response
+- Report progress concisely — lead with what was done
+- When blocked: explain clearly, propose alternatives
+- Mention branch creation and commits briefly
