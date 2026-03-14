@@ -10,6 +10,7 @@ from app.database import Base
 # Import all models so Alembic detects them
 import app.models.document  # noqa: F401
 import app.models.draft  # noqa: F401
+import app.models.simulation  # noqa: F401
 import app.models.user  # noqa: F401
 
 config = context.config
