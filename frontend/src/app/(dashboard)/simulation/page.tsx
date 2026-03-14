@@ -16,7 +16,7 @@ export default function SimulationSetupPage() {
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     
     // API Data
-    const [drafts, setDrafts] = useState<any[]>([]);
+    const [drafts, setDrafts] = useState<{ id: string; title: string }[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
 
@@ -24,7 +24,7 @@ export default function SimulationSetupPage() {
         async function fetchDrafts() {
             try {
                 const res = await api.get('/drafts');
-                if (Array.isArray(res)) setDrafts(res);
+                if (res?.items) setDrafts(res.items);
             } catch (error) {
                 console.error('Failed to load drafts', error);
             }

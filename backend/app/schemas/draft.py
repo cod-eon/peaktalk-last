@@ -33,6 +33,11 @@ class SpeechDraftResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SpeechDraftListResponse(BaseModel):
+    items: list[SpeechDraftResponse]
+    total: int
+
+
 class SpeechDraftCreate(BaseModel):
     title: str = Field(min_length=1, max_length=512)
     raw_text: str = Field(min_length=10, description="Speech text to analyze (min 10 chars)")

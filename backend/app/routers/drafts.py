@@ -9,10 +9,26 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.draft import AIAnalysisResult, SpeechDraft
 from app.models.user import User
-from app.schemas.draft import SpeechDraftCreate, SpeechDraftResponse, AIAnalysisResultResponse
+from app.schemas.draft import SpeechDraftCreate, SpeechDraftResponse, SpeechDraftListResponse, AIAnalysisResultResponse
 from app.services.gemini import GeminiError, analyze_draft
 
 router = APIRouter(prefix="/drafts", tags=["drafts"])
+
+
+@router.get("", response_model=SpeechDraftListResponse)
+async def list_drafts(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SpeechDraftListResponse:
+    result = await db.execute(
+        select(SpeechDraft)
+        .options(selectinload(SpeechDraft.analysis_result))
+        .where(SpeechDraft.user_id == current_user.id)
+        .order_by(SpeechDraft.created_at.desc())
+    )
+    drafts = list(result.scalars().all())
+    return SpeechDraftListResponse(items=drafts, total=len(drafts))
 
 
 @router.post("", response_model=SpeechDraftResponse, status_code=status.HTTP_201_CREATED)

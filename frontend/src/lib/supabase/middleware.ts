@@ -33,8 +33,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup')
+  const pathname = request.nextUrl.pathname
+  // All protected pages (route group `(dashboard)` strips the parens from URL)
+  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/projects', '/settings', '/analysis']
+  const isDashboardRoute = protectedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
 
   if (!user && isDashboardRoute) {
     // no user, potentially respond by redirecting the user to the login page
