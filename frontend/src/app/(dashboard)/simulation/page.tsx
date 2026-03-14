@@ -1,23 +1,43 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Users, Briefcase, ChevronRight, FileText, CheckCircle2, MessageSquare } from 'lucide-react';
-import Link from 'next/link';
+import { Bot, Users, Briefcase, ChevronRight, FileText, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function SimulationSetupPage() {
+    const router = useRouter();
     // State
     const [selectedRole, setSelectedRole] = useState<string | null>(null);
     const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
     const [customDomain, setCustomDomain] = useState('');
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+    
+    // API Data
+    const [drafts, setDrafts] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isStarting, setIsStarting] = useState(false);
+
+    useEffect(() => {
+        async function fetchDrafts() {
+            try {
+                const res = await api.get('/drafts');
+                if (Array.isArray(res)) setDrafts(res);
+            } catch (error) {
+                console.error('Failed to load drafts', error);
+            }
+        }
+        fetchDrafts();
+    }, []);
 
     // Mock Data
     const roles = [
         { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций. Ждет четких цифр.', icon: Briefcase },
-        { id: 'cto', name: 'CEO / Техдир', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы на реализацию.', icon: Bot },
+        { id: 'tech_lead', name: 'CEO / Техдир', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы на реализацию.', icon: Bot },
         { id: 'hr', name: 'HR / Нанимающий менеджер', desc: 'Эмпатичный, но строгий. Оценивает софт-скиллы, культурный код и стрессоустойчивость.', icon: Users },
-        { id: 'skeptic', name: 'Скептик из зала', desc: 'Провокационный. Задает каверзные вопросы на конференции, пытается найти слабые места.', icon: MessageSquare },
+        { id: 'listener', name: 'Скептик из зала', desc: 'Провокационный. Задает каверзные вопросы на конференции, пытается найти слабые места.', icon: MessageSquare },
     ];
 
     const domains = [
@@ -28,14 +48,37 @@ export default function SimulationSetupPage() {
         { id: 'custom', name: 'Своя сфера...' },
     ];
 
-    const documents = [
-        { id: 'none', name: 'Без документа', desc: 'Общее интервью по сфере и роли', type: 'General' },
-        { id: 'doc1', name: 'Питч перед ангелами V3.md', desc: 'B2B SaaS платформа для оптимизации логистики', type: 'Pitch Deck' },
-        { id: 'doc2', name: 'Сценарий конфы_Техдир.txt', desc: 'Выступление на HighLoad 2026', type: 'Tech Speech' },
-        { id: 'doc3', name: 'Ответы на YC Interview.docx', desc: 'Черновик ответов на вопросы акселератора', type: 'Q&A Prep' },
-    ];
+    const isReady = selectedRole && (selectedDomain !== 'custom' || customDomain.trim().length > 0);
 
-    const isReady = selectedRole && (selectedDomain !== 'custom' || customDomain.length > 0) && selectedDoc;
+    const handleStart = async () => {
+        if (!isReady) return;
+        setIsStarting(true);
+        
+        try {
+            const domainName = selectedDomain === 'custom' 
+                ? customDomain 
+                : domains.find(d => d.id === selectedDomain)?.name || 'General';
+                
+            const payload = {
+                persona_config: {
+                    role: selectedRole,
+                    industry: domainName,
+                    difficulty: 3
+                },
+                draft_id: selectedDoc === 'none' ? null : selectedDoc
+            };
+
+            const simulationUrl = await api.post('/simulation/start', payload);
+            if (simulationUrl?.id) {
+                router.push(`/simulation/${simulationUrl.id}`);
+            } else {
+                throw new Error('Не удалось получить ID симуляции');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Ошибка запуска симуляции');
+            setIsStarting(false);
+        }
+    };
 
     return (
         <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10 overflow-hidden">
@@ -169,11 +212,34 @@ export default function SimulationSetupPage() {
                     transition={{ duration: 0.5, delay: 0.5 }}
                 >
                     <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера
+                        <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера (Опционально)
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {documents.map((doc) => {
+                        <button
+                            onClick={() => setSelectedDoc('none')}
+                            className={`text-left p-4 rounded-xl border transition-all flex items-start gap-4 relative ${
+                                selectedDoc === 'none' 
+                                    ? 'bg-[var(--accent-blue)]/5 border-[var(--accent-blue)] shadow-[0_0_15px_rgba(56,189,248,0.1)]' 
+                                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                            }`}
+                        >
+                            <div className={`mt-0.5 min-w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                                selectedDoc === 'none' ? 'bg-[var(--accent-blue)] border-[var(--accent-blue)]' : 'border-slate-500 bg-[var(--bg-surface-alt)]'
+                            }`}>
+                                {selectedDoc === 'none' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="font-inter font-medium text-slate-100 truncate mb-1">
+                                    Без документа
+                                </div>
+                                <div className="font-inter text-xs text-slate-400 line-clamp-1">
+                                    Общее интервью по сфере и роли
+                                </div>
+                            </div>
+                        </button>
+                        
+                        {drafts.map((doc) => {
                             const isSelected = selectedDoc === doc.id;
                             
                             return (
@@ -194,16 +260,11 @@ export default function SimulationSetupPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-inter font-medium text-slate-100 truncate">
-                                                {doc.name}
+                                                {doc.title}
                                             </span>
-                                            {doc.id !== 'none' && (
-                                                <span className="flex-shrink-0 font-mono text-[9px] uppercase tracking-wider text-slate-400 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] px-1.5 py-0.5 rounded">
-                                                    {doc.type}
-                                                </span>
-                                            )}
                                         </div>
                                         <div className="font-inter text-xs text-slate-400 line-clamp-1">
-                                            {doc.desc}
+                                            {doc.raw_text.substring(0, 60)}...
                                         </div>
                                     </div>
                                 </button>
@@ -219,20 +280,18 @@ export default function SimulationSetupPage() {
                     transition={{ duration: 0.5, delay: 0.6 }}
                     className="pt-6 border-t border-[var(--border-main)] flex justify-end"
                 >
-                    <Link
-                        href={isReady ? "/simulation/mock-123" : "#"}
+                    <button
+                        disabled={!isReady || isStarting}
+                        onClick={handleStart}
                         className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-syne font-semibold text-sm transition-all duration-300 ${
-                            isReady
+                            isReady && !isStarting
                                 ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5'
                                 : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)] text-slate-500 cursor-not-allowed'
                         }`}
-                        onClick={(e) => {
-                            if (!isReady) e.preventDefault();
-                        }}
                     >
-                        Начать симуляцию
-                        <ChevronRight size={18} />
-                    </Link>
+                        {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать симуляцию'}
+                        {!isStarting && <ChevronRight size={18} />}
+                    </button>
                 </motion.div>
             </div>
             
