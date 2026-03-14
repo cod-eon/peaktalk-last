@@ -5,7 +5,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.routers import documents, users
+from app.routers import documents, drafts, users
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -30,6 +30,7 @@ app.add_middleware(
 
 app.include_router(users.router)
 app.include_router(documents.router)
+app.include_router(drafts.router)
 
 
 @app.get("/health", tags=["system"])
