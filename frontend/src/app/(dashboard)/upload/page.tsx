@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, FileText, Type, Terminal, Activity, Zap, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function UploadPage() {
     const router = useRouter();
@@ -39,38 +41,83 @@ export default function UploadPage() {
         }
     };
 
-    const startAnalysis = () => {
+    const startAnalysis = async () => {
         if (mode === 'file' && !file) return;
         if (mode === 'text' && !text.trim()) return;
 
         setIsProcessing(true);
         setLogs(['> Инициализация AI-движка PeakTalk...']);
-    };
 
-    // Fake Processing Effect
-    useEffect(() => {
-        if (!isProcessing) return;
+        try {
+            let documentId = null;
+            let rawText = text;
 
-        const steps = [
-            { msg: '> Разбор логической структуры...', delay: 800 },
-            { msg: '> Извлечение семантического ядра...', delay: 1800 },
-            { msg: '> Поиск стилистических и риторических уязвимостей...', delay: 2800 },
-            { msg: '> Внимание: обнаружено 3 слабых фрагмента.', delay: 3600 },
-            { msg: '> Формирование рекомендаций...', delay: 4400 },
-            { msg: '> Анализ завершен. Отрисовка результатов...', delay: 5200 },
-        ];
+            // 1. Upload document if in file mode
+            if (mode === 'file' && file) {
+                setLogs(prev => [...prev, '> Загрузка документа на сервер...']);
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Determine file type
+                let fileType = 'other';
+                if (file.name.endsWith('.pdf')) fileType = 'pdf';
+                else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) fileType = 'docx';
+                else if (file.name.endsWith('.txt') || file.name.endsWith('.md')) fileType = 'txt';
+                formData.append('file_type', fileType);
 
-        const timeouts = steps.map((step, index) =>
-            setTimeout(() => {
-                setLogs(prev => [...prev, step.msg]);
-                if (index === steps.length - 1) {
-                    setTimeout(() => router.push('/analysis/123'), 1000);
+                const uploadRes = await api.request('/documents/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                documentId = uploadRes.id;
+                
+                // If the parser was synchronous, it will have extracted text
+                if (uploadRes.extracted_text) {
+                    rawText = uploadRes.extracted_text;
+                    setLogs(prev => [...prev, '> Текст успешно распознан из документа.']);
+                } else {
+                    setLogs(prev => [...prev, '> Документ загружен. Текст пуст или в процессе (лимит 50МБ).']);
+                    throw new Error('Не удалось извлечь текст из документа - файл слишком большой или формат не поддерживается');
                 }
-            }, step.delay)
-        );
+            }
 
-        return () => timeouts.forEach(clearTimeout);
-    }, [isProcessing, router]);
+            if (rawText.length < 10) {
+                throw new Error('Текст слишком короткий, минимум 10 символов.');
+            }
+
+            // 2. Create draft
+            setLogs(prev => [...prev, '> Создание черновика речи...']);
+            const draftTitle = mode === 'file' ? file?.name : 'Текстовый черновик ' + new Date().toLocaleTimeString();
+            
+            const draftRes = await api.post('/drafts', {
+                title: draftTitle,
+                raw_text: rawText,
+                document_id: documentId
+            });
+
+            const draftId = draftRes.id;
+
+            // 3. Request Analysis
+            setLogs(prev => [...prev, '> Запуск глубокого семантического анализа (Gemini)...']);
+            setLogs(prev => [...prev, '> Поиск стилистических и риторических уязвимостей...']);
+            
+            await api.post(`/drafts/${draftId}/analyze`);
+            
+            setLogs(prev => [...prev, '> Формирование рекомендаций...']);
+            setLogs(prev => [...prev, '> Анализ завершен. Перенаправление...']);
+            
+            setTimeout(() => {
+                router.push(`/analysis/${draftId}`);
+            }, 1000);
+
+        } catch (error: any) {
+            console.error('Analysis error:', error);
+            setLogs(prev => [...prev, `> ОШИБКА: ${error.message || 'Внутренняя ошибка сервера'}`]);
+            toast.error(error.message || 'Ошибка обработки');
+            setTimeout(() => setIsProcessing(false), 3000);
+        }
+    };
 
     return (
         <div className="flex w-full flex-col justify-start px-6 md:pl-6 md:pr-[calc(72px+1.5rem)] py-12 md:py-20 max-w-4xl mx-auto relative z-10 box-border">

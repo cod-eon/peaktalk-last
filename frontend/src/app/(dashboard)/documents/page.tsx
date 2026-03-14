@@ -2,19 +2,54 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, UploadCloud, File, FileType2, Search, MoreVertical, Calendar } from 'lucide-react';
+import { FileText, UploadCloud, File, FileType2, Search, MoreVertical, Calendar, Trash2, Loader2, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+
+type Document = {
+    id: string;
+    name: string;
+    file_type: string;
+    storage_path: string;
+    extracted_text: string | null;
+    parsed_at: string | null;
+    created_at: string;
+};
+
+type DocumentListResponse = {
+    items: Document[];
+    total: number;
+};
 
 export default function DocumentsPage() {
-    // Mock Documents Data
-    const documents = [
-        { id: '1', name: 'Питч перед ангелами V3.md', type: 'Pitch Deck', date: '14 Марта 2026', size: '124 KB', icon: FileText, extension: '.md' },
-        { id: '2', name: 'Сценарий конфы_Техдир.txt', type: 'Tech Speech', date: '13 Марта 2026', size: '45 KB', icon: File, extension: '.txt' },
-        { id: '3', name: 'Ответы на YC Interview.docx', type: 'Q&A Prep', date: '10 Марта 2026', size: '1.2 MB', icon: FileType2, extension: '.docx' },
-        { id: '4', name: 'Презентация продукта_Q2.pdf', type: 'General', date: '7 Марта 2026', size: '4.8 MB', icon: FileText, extension: '.pdf' },
-        { id: '5', name: 'Product_Requirements_v2.pdf', type: 'PRD', date: '1 Марта 2026', size: '2.1 MB', icon: FileText, extension: '.pdf' },
-        { id: '6', name: 'Конкурентный_анализ.docx', type: 'Strategy', date: '28 Февраля 2026', size: '3.4 MB', icon: FileType2, extension: '.docx' },
-    ];
+    const queryClient = useQueryClient();
+
+    const { data, isLoading, error, refetch } = useQuery<DocumentListResponse>({
+        queryKey: ['documents'],
+        queryFn: () => api.get('/documents')
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => api.delete(`/documents/${id}`),
+        onSuccess: () => {
+            toast.success('Документ удален');
+            queryClient.invalidateQueries({ queryKey: ['documents'] });
+        },
+        onError: (err) => {
+            toast.error(err.message || 'Ошибка удаления документа');
+        }
+    });
+
+    const documents = data?.items || [];
+
+    const getIconInfo = (fileType: string) => {
+        if (fileType === 'pdf') return { icon: FileText, ext: '.pdf', typeName: 'PDF' };
+        if (fileType === 'docx' || fileType === 'doc') return { icon: FileType2, ext: `.${fileType}`, typeName: 'Word' };
+        return { icon: File, ext: '.txt', typeName: 'Text' };
+    };
 
     return (
         <div className="pb-10 pt-4 sm:pt-8 w-full max-w-6xl mx-auto px-6 lg:px-10 overflow-hidden">
@@ -80,54 +115,101 @@ export default function DocumentsPage() {
             </motion.div>
 
             {/* ─── DOCUMENTS GRID ─── */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-                {documents.map((doc, idx) => {
-                    const Icon = doc.icon;
-                    return (
-                        <div 
-                            key={doc.id}
-                            className="bg-[var(--bg-card)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)] p-5 rounded-2xl transition-all duration-300 group relative overflow-hidden flex flex-col cursor-pointer"
-                        >
-                            {/* Decorative element */}
-                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-[var(--accent-blue)]/5 rounded-full blur-2xl group-hover:bg-[var(--accent-blue)]/10 transition-colors duration-500"></div>
-                            
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center text-slate-400 group-hover:text-[var(--accent-blue)] transition-colors">
-                                    <Icon size={24} strokeWidth={1.5} />
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <Loader2 size={32} className="animate-spin text-[var(--accent-blue)] mb-4" />
+                    <div className="text-slate-400 font-mono text-sm">Загрузка документов...</div>
+                </div>
+            ) : error ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="text-rose-500 mb-4 bg-rose-500/10 p-4 rounded-full">
+                        <File size={32} />
+                    </div>
+                    <div className="text-slate-200 mb-2">Не удалось загрузить документы</div>
+                    <div className="text-slate-500 text-sm mb-6">{error.message}</div>
+                    <button onClick={() => refetch()} className="btn-secondary rounded-lg">
+                        <RefreshCcw size={16} className="mr-2" />
+                        Попробовать снова
+                    </button>
+                </div>
+            ) : documents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border-main)] rounded-2xl bg-[var(--bg-surface)]">
+                    <div className="text-slate-500 mb-4 bg-[var(--bg-card)] p-4 rounded-full">
+                        <UploadCloud size={32} />
+                    </div>
+                    <div className="text-slate-200 mb-2 font-syne text-xl">Нет загруженных документов</div>
+                    <div className="text-slate-500 text-sm mb-6 max-w-sm">
+                        Загрузите свои материалы, чтобы ИИ мог проанализировать их и подготовить вас к выступлению
+                    </div>
+                    <Link href="/upload" className="btn-primary rounded-lg">
+                        <UploadCloud size={16} className="mr-2" />
+                        Загрузить файл
+                    </Link>
+                </div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+                >
+                    {documents.map((doc) => {
+                        const { icon: Icon, ext, typeName } = getIconInfo(doc.file_type);
+                        const isDeleting = deleteMutation.isPending && deleteMutation.variables === doc.id;
+                        
+                        return (
+                            <div 
+                                key={doc.id}
+                                className={`bg-[var(--bg-card)] border border-[var(--border-main)] hover:border-[var(--border-light)] ${isDeleting ? 'opacity-50' : 'hover:bg-[var(--bg-surface-hover)]'} p-5 rounded-2xl transition-all duration-300 group relative overflow-hidden flex flex-col`}
+                            >
+                                {/* Decorative element */}
+                                <div className="absolute -right-10 -top-10 w-32 h-32 bg-[var(--accent-blue)]/5 rounded-full blur-2xl group-hover:bg-[var(--accent-blue)]/10 transition-colors duration-500 pointer-events-none"></div>
+                                
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center text-slate-400 group-hover:text-[var(--accent-blue)] transition-colors">
+                                        <Icon size={24} strokeWidth={1.5} />
+                                    </div>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            if (confirm('Удалить документ?')) {
+                                                deleteMutation.mutate(doc.id);
+                                            }
+                                        }}
+                                        disabled={isDeleting}
+                                        className="p-2 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/10 cursor-pointer"
+                                        title="Удалить"
+                                    >
+                                        {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                                    </button>
                                 </div>
-                                <button className="p-2 text-slate-500 hover:text-slate-300 transition-colors rounded-lg hover:bg-[var(--bg-surface-alt)]">
-                                    <MoreVertical size={18} />
-                                </button>
-                            </div>
 
-                            <div className="mb-4 relative z-10 flex-1">
-                                <h3 className="font-syne text-lg font-semibold text-slate-100 mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
-                                    {doc.name}
-                                </h3>
-                                <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mt-2 flex gap-2">
-                                    <span className="bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">{doc.type}</span>
-                                    <span className="bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">{doc.extension}</span>
+                                <div className="mb-4 relative z-10 flex-1">
+                                    <h3 className="font-syne text-lg font-semibold text-slate-100 mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors" title={doc.name}>
+                                        {doc.name}
+                                    </h3>
+                                    <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mt-2 flex gap-2">
+                                        <span className="bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">{typeName}</span>
+                                        <span className="bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">{ext}</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border-light)]/50 relative z-10">
-                                <div className="flex items-center gap-1.5 text-slate-400 font-inter text-xs">
-                                    <Calendar size={12} />
-                                    <span>{doc.date}</span>
-                                </div>
-                                <div className="font-mono text-[11px] text-slate-500">
-                                    {doc.size}
+                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border-light)]/50 relative z-10">
+                                    <div className="flex items-center gap-1.5 text-slate-400 font-inter text-xs">
+                                        <Calendar size={12} />
+                                        <span>{format(new Date(doc.created_at), 'dd MMM yyyy')}</span>
+                                    </div>
+                                    {doc.parsed_at && (
+                                        <div className="font-mono text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                            Распознано
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </motion.div>
+                        );
+                    })}
+                </motion.div>
+            )}
         </div>
     );
 }
