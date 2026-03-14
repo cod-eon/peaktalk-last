@@ -3,21 +3,40 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
-
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: implement headless Authentik registration
-    setTimeout(() => {
+    setError(null);
+
+    const supabase = createClient();
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: name,
+        },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
       setIsLoading(false);
-      window.location.href = '/dashboard/upload';
-    }, 1500);
+      return;
+    }
+
+    router.push('/dashboard');
+    router.refresh();
   };
 
   return (
@@ -35,6 +54,11 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg">
+            {error}
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block ml-1">
             Как к вам обращаться

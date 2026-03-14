@@ -2,17 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     FolderDot,
     BarChart2,
     Settings,
     Bot,
-    FileText
+    FileText,
+    LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useAuthStore } from '@/store/authStore';
+import { createClient } from '@/lib/supabase/client';
 
 const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
@@ -24,7 +27,19 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(false);
+    const { user } = useAuthStore();
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push('/login');
+        router.refresh();
+    };
+
+    const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
+    const firstLetter = displayName.charAt(0).toUpperCase();
 
     return (
         <motion.aside
@@ -125,12 +140,20 @@ export function Sidebar() {
                     </div>
                 </Link>
                 <button
+                    onClick={handleLogout}
                     title={!isExpanded ? "Выйти" : undefined}
-                    className="flex items-center gap-4 px-3 h-10 rounded-md transition-colors relative group text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border border-transparent w-[216px]"
+                    className="flex items-center gap-4 px-3 h-10 rounded-md transition-colors relative group text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border border-transparent w-[216px] overflow-hidden"
                 >
-                    <div className="w-5 h-5 rounded-md bg-[var(--text-main)] text-[var(--bg-main)] flex items-center justify-center font-bold text-[10px] shrink-0 font-syne uppercase">
-                        A
+                    <div className="w-[18px] h-[18px] shrink-0 group-hover:hidden text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">
+                      <div className="w-5 h-5 -ml-0.5 -mt-0.5 rounded-md bg-[var(--text-main)] text-[var(--bg-main)] flex items-center justify-center font-bold text-[10px] font-syne uppercase">
+                          {firstLetter}
+                      </div>
                     </div>
+                    <LogOut
+                        size={18}
+                        strokeWidth={2}
+                        className="shrink-0 hidden group-hover:block text-[var(--text-muted)] group-hover:text-red-400 transition-colors"
+                    />
                     <div className="flex-1 overflow-hidden flex justify-start">
                         <AnimatePresence>
                             {isExpanded && (
@@ -138,9 +161,9 @@ export function Sidebar() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="font-mono text-[11px] uppercase tracking-wider whitespace-nowrap"
+                                    className="font-mono text-[11px] uppercase tracking-wider whitespace-nowrap group-hover:text-red-400 transition-colors"
                                 >
-                                    Артур
+                                    Выйти ({displayName})
                                 </motion.span>
                             )}
                         </AnimatePresence>

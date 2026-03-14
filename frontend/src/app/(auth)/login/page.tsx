@@ -3,20 +3,34 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
-
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: implement headless Authentik login
-    setTimeout(() => {
+    setError(null);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
       setIsLoading(false);
-      window.location.href = '/dashboard';
-    }, 1500);
+      return;
+    }
+
+    router.push('/dashboard');
+    router.refresh();
   };
 
   return (
@@ -34,6 +48,11 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg">
+            {error}
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block ml-1">
             Email

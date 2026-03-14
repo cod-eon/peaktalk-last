@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     LayoutDashboard, 
@@ -13,8 +13,11 @@ import {
     X,
     Sparkles,
     Bot,
-    FileText
+    FileText,
+    LogOut
 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
@@ -32,6 +35,19 @@ interface MobileSidebarOverlayProps {
 
 export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayProps) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { user } = useAuthStore();
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        onClose();
+        router.push('/login');
+        router.refresh();
+    };
+
+    const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
+    const firstLetter = displayName.charAt(0).toUpperCase();
 
     return (
         <AnimatePresence>
@@ -83,8 +99,19 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                             })}
                         </div>
 
-                        <div className="p-6 border-t border-[var(--border-main)] mt-auto">
-                            <div className="bg-[var(--bg-surface-hover)] rounded-xl p-4 border border-[var(--border-light)]">
+                        <div className="p-6 border-t border-[var(--border-main)] mt-auto flex flex-col gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--text-main)] text-[var(--bg-main)] flex items-center justify-center font-bold text-sm font-syne uppercase">
+                                        {firstLetter}
+                                    </div>
+                                    <div className="font-mono text-xs text-white max-w-[150px] truncate">{displayName}</div>
+                                </div>
+                                <button onClick={handleLogout} className="p-2 text-[var(--text-dim)] hover:text-red-400 transition-colors">
+                                    <LogOut size={18} />
+                                </button>
+                            </div>
+                            <div className="bg-[var(--bg-surface-hover)] rounded-xl p-4 border border-[var(--border-light)] mt-2">
                                 <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Basic Plan</div>
                                 <div className="text-xs text-white mb-4">Улучшите навыки с ИИ</div>
                                 <button className="w-full py-2 bg-[var(--accent-blue)] text-white font-mono text-[10px] uppercase rounded hover:bg-[var(--accent-blue-hover)] transition-colors">

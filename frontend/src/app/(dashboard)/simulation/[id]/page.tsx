@@ -91,6 +91,9 @@ export default function SimulationPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-10 w-full"
         >
+          <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-xl p-6 text-center">
+            <p className="text-slate-400">Выберите &quot;Собеседование&quot; для начала</p>
+          </div>
           <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 size={40} />
           </div>
@@ -168,7 +171,7 @@ export default function SimulationPage() {
             {/* Карточка Вопроса */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-syne font-semibold leading-tight text-[var(--text-main)]">
-                "{question.text}"
+                &quot;{question.text}&quot;
               </h1>
             </div>
 
@@ -238,7 +241,7 @@ export default function SimulationPage() {
 
                 <div className="flex justify-between items-center bg-[var(--bg-main)]/50 rounded-xl p-4 border border-[var(--border-light)]">
                   <div className="text-sm text-[var(--text-dim)] truncate max-w-[60%] italic">
-                    «{answer}»
+                    &laquo;{answer}&raquo;
                   </div>
                   <button
                     onClick={handleNext}
