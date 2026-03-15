@@ -73,13 +73,7 @@ async def start_simulation(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
-    if not body.document_id and not body.draft_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Provide at least one of: document_id, draft_id",
-        )
-
-    doc_text = await _get_doc_text(db, body.document_id, body.draft_id)
+    doc_text = await _get_doc_text(db, body.document_id, body.draft_id) if (body.document_id or body.draft_id) else ""
 
     session = SimulationSession(
         user_id=current_user.id,

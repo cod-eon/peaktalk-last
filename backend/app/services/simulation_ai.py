@@ -130,7 +130,10 @@ def _build_user_prompt(doc_text: str, history: list[dict]) -> str:
         parts.append(f"CONVERSATION SO FAR:\n{history_text}")
 
     if not history:
-        parts.append("START the session by asking your first question based on the presentation.")
+        if doc_text:
+            parts.append("START the session by asking your first question based on the presentation.")
+        else:
+            parts.append("No document provided. START the session by asking a broad opening question relevant to your role and focus areas.")
     else:
         parts.append("Ask your NEXT question. Build on the conversation — probe deeper or shift focus.")
 

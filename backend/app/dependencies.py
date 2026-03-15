@@ -2,25 +2,19 @@ import uuid
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from supabase import create_client
 
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 
 bearer_scheme = HTTPBearer()
 
-# Supabase project uses ES256 (ECC P-256) — public key from JWKS (safe to hardcode)
-_SUPABASE_JWK = {
-    "alg": "ES256",
-    "crv": "P-256",
-    "kty": "EC",
-    "use": "sig",
-    "x": "0Dm3-zM0zsZGFtICWSwWxhCTtEYPCoNSe9PSA0yHuCA",
-    "y": "ROgLgy_Wq1cz-tWg3lPHHA7GYLqoohWgnIudh8zmY2g",
-}
+# Supabase client for server-side token verification (service role key)
+_supabase = create_client(settings.supabase_url, settings.supabase_key)
 
 
 async def get_current_user(
@@ -35,18 +29,13 @@ async def get_current_user(
     )
 
     try:
-        payload = jwt.decode(
-            token,
-            _SUPABASE_JWK,
-            algorithms=["ES256"],
-            options={"verify_aud": False},
-        )
-        user_id_str: str | None = payload.get("sub")
-        if user_id_str is None:
+        response = _supabase.auth.get_user(token)
+        sb_user = response.user
+        if sb_user is None:
             raise credentials_exception
-        user_id = uuid.UUID(user_id_str)
-        email: str | None = payload.get("email")
-    except (JWTError, ValueError):
+        user_id = uuid.UUID(sb_user.id)
+        email: str | None = sb_user.email
+    except Exception:
         raise credentials_exception
 
     result = await db.execute(
