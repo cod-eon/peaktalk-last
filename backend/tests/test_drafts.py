@@ -22,9 +22,17 @@ DRAFT_PAYLOAD = {
 }
 
 
+async def _mock_analyze_draft_ok(text: str) -> GeminiAnalysisResult:
+    return MOCK_GEMINI_RESULT
+
+
+async def _mock_analyze_draft_error(text: str) -> GeminiAnalysisResult:
+    raise GeminiError("API timeout")
+
+
 @pytest.fixture(autouse=True)
 def mock_gemini(monkeypatch):
-    monkeypatch.setattr("app.routers.drafts.analyze_draft", lambda text: MOCK_GEMINI_RESULT)
+    monkeypatch.setattr("app.routers.drafts.analyze_draft", _mock_analyze_draft_ok)
 
 
 @pytest.mark.asyncio
@@ -45,11 +53,9 @@ async def test_create_draft_text_too_short(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_analyze_draft(client: AsyncClient) -> None:
-    # Create draft
     create_resp = await client.post("/drafts", json=DRAFT_PAYLOAD)
     draft_id = create_resp.json()["id"]
 
-    # Analyze
     analyze_resp = await client.post(f"/drafts/{draft_id}/analyze")
     assert analyze_resp.status_code == 200
     data = analyze_resp.json()
@@ -103,10 +109,7 @@ async def test_get_analysis_after_analyze(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_analyze_gemini_error(client: AsyncClient, monkeypatch) -> None:
-    monkeypatch.setattr(
-        "app.routers.drafts.analyze_draft",
-        lambda text: (_ for _ in ()).throw(GeminiError("API timeout")),
-    )
+    monkeypatch.setattr("app.routers.drafts.analyze_draft", _mock_analyze_draft_error)
     create_resp = await client.post("/drafts", json=DRAFT_PAYLOAD)
     draft_id = create_resp.json()["id"]
 

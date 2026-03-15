@@ -1,14 +1,9 @@
 import io
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
-
-
-def _make_pdf_bytes() -> bytes:
-    """Minimal valid PDF content for testing."""
-    return b"%PDF-1.4 test document content"
 
 
 def _make_txt_bytes(content: str = "Hello, this is a test speech document.") -> bytes:
@@ -17,9 +12,15 @@ def _make_txt_bytes(content: str = "Hello, this is a test speech document.") -> 
 
 @pytest.fixture(autouse=True)
 def mock_storage(monkeypatch):
-    """Mock all Supabase Storage calls so tests don't need real credentials."""
-    monkeypatch.setattr("app.routers.documents.storage.upload_file", lambda *a, **kw: a[1])
-    monkeypatch.setattr("app.routers.documents.storage.delete_file", lambda *a, **kw: None)
+    """Mock all Supabase Storage calls (now async) so tests don't need real credentials."""
+    monkeypatch.setattr(
+        "app.routers.documents.storage.upload_file",
+        AsyncMock(side_effect=lambda file_bytes, path, ct: path),
+    )
+    monkeypatch.setattr(
+        "app.routers.documents.storage.delete_file",
+        AsyncMock(return_value=None),
+    )
     monkeypatch.setattr("app.routers.documents.storage.is_large_file", lambda b: False)
     monkeypatch.setattr(
         "app.routers.documents.storage.build_storage_path",
@@ -33,7 +34,7 @@ async def test_upload_txt_document(client: AsyncClient) -> None:
     response = await client.post(
         "/documents/upload",
         files={"file": ("speech.txt", io.BytesIO(file_bytes), "text/plain")},
-        params={"file_type": "speech"},
+        data={"file_type": "speech"},
     )
     assert response.status_code == 201
     data = response.json()
@@ -67,7 +68,7 @@ async def test_upload_and_list(client: AsyncClient) -> None:
     await client.post(
         "/documents/upload",
         files={"file": ("pitch.txt", io.BytesIO(file_bytes), "text/plain")},
-        params={"file_type": "pitch"},
+        data={"file_type": "pitch"},
     )
 
     response = await client.get("/documents")
@@ -80,7 +81,6 @@ async def test_upload_and_list(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_document(client: AsyncClient) -> None:
-    # Upload first
     file_bytes = _make_txt_bytes("Temporary document.")
     upload_resp = await client.post(
         "/documents/upload",
@@ -89,11 +89,9 @@ async def test_delete_document(client: AsyncClient) -> None:
     assert upload_resp.status_code == 201
     doc_id = upload_resp.json()["id"]
 
-    # Delete
     delete_resp = await client.delete(f"/documents/{doc_id}")
     assert delete_resp.status_code == 204
 
-    # Verify gone from list
     list_resp = await client.get("/documents")
     ids = [d["id"] for d in list_resp.json()["items"]]
     assert doc_id not in ids

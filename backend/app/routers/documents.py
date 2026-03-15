@@ -1,8 +1,9 @@
+import asyncio
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -28,7 +29,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 async def upload_document(
     request: Request,
     file: UploadFile,
-    file_type: FileType = FileType.other,
+    file_type: FileType = Form(FileType.other),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Document:
@@ -50,7 +51,8 @@ async def upload_document(
     filename = file.filename or f"{document_id}.bin"
     storage_path = storage.build_storage_path(current_user.id, document_id, filename)
 
-    storage.upload_file(file_bytes, storage_path, file.content_type or "application/octet-stream")
+    # Upload to Supabase Storage (non-blocking)
+    await storage.upload_file(file_bytes, storage_path, file.content_type or "application/octet-stream")
 
     doc = Document(
         id=document_id,
@@ -60,22 +62,28 @@ async def upload_document(
         file_type=file_type,
     )
 
-    # Lazy parse: handle synchronously for small files, offload to Celery for large ones
+    # Lazy parse: offload CPU-bound work to thread pool
     if storage.is_large_file(file_bytes):
         from app.worker import parse_document_task
         parse_document_task.delay(str(document_id))
     else:
-        parse_result = parser.parse_file(file_bytes, file_type, filename)
-        if parse_result.was_slow:
-            # Retroactively offload — document already parsed but flag for future large files
-            pass
+        parse_result = await asyncio.to_thread(parser.parse_file, file_bytes, file_type, filename)
         if parse_result.text:
             doc.extracted_text = parse_result.text
             doc.parsed_at = datetime.now(timezone.utc)
 
-    db.add(doc)
-    await db.flush()
-    await db.refresh(doc)
+    try:
+        db.add(doc)
+        await db.flush()
+        await db.refresh(doc)
+    except Exception:
+        # Rollback storage if DB write fails
+        await storage.delete_file(storage_path)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save document record",
+        )
+
     return doc
 
 
@@ -110,5 +118,5 @@ async def delete_document(
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
 
-    storage.delete_file(doc.storage_path)
+    await storage.delete_file(doc.storage_path)
     await db.delete(doc)

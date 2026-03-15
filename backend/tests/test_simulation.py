@@ -26,10 +26,22 @@ START_PAYLOAD = {
 }
 
 
+async def _mock_generate_question(**kw) -> SimulationTurn:
+    return MOCK_TURN
+
+
+async def _mock_evaluate_session(**kw) -> SkillEvaluation:
+    return MOCK_EVALUATION
+
+
+async def _mock_generate_question_error(**kw) -> SimulationTurn:
+    raise GeminiError("timeout")
+
+
 @pytest.fixture(autouse=True)
 def mock_ai(monkeypatch):
-    monkeypatch.setattr("app.routers.simulation.generate_question", lambda **kw: MOCK_TURN)
-    monkeypatch.setattr("app.routers.simulation.evaluate_session", lambda **kw: MOCK_EVALUATION)
+    monkeypatch.setattr("app.routers.simulation.generate_question", _mock_generate_question)
+    monkeypatch.setattr("app.routers.simulation.evaluate_session", _mock_evaluate_session)
 
 
 @pytest.fixture
@@ -63,11 +75,13 @@ async def test_start_simulation(client: AsyncClient, draft_id: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_start_without_source_fails(client: AsyncClient) -> None:
+async def test_start_without_source_succeeds(client: AsyncClient) -> None:
+    """Starting simulation without a document is valid — AI uses general questions."""
     resp = await client.post("/simulation/start", json={
         "persona_config": {"role": "hr", "industry": "general", "difficulty": 2},
     })
-    assert resp.status_code == 422
+    assert resp.status_code == 201
+    assert resp.json()["status"] == "active"
 
 
 @pytest.mark.asyncio
@@ -98,7 +112,6 @@ async def test_get_history(client: AsyncClient, session_id: str) -> None:
 
 @pytest.mark.asyncio
 async def test_complete_session(client: AsyncClient, session_id: str) -> None:
-    # Need at least one user message
     await client.post(
         f"/simulation/{session_id}/message",
         json={"content": "We have strong retention metrics, D7 retention is 40%."},
@@ -153,9 +166,6 @@ async def test_session_not_found(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_gemini_error_on_start(client: AsyncClient, draft_id: str, monkeypatch) -> None:
-    monkeypatch.setattr(
-        "app.routers.simulation.generate_question",
-        lambda **kw: (_ for _ in ()).throw(GeminiError("timeout")),
-    )
+    monkeypatch.setattr("app.routers.simulation.generate_question", _mock_generate_question_error)
     resp = await client.post("/simulation/start", json={**START_PAYLOAD, "draft_id": draft_id})
     assert resp.status_code == 502

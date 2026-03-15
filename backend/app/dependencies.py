@@ -13,8 +13,14 @@ from app.models.user import User
 
 bearer_scheme = HTTPBearer()
 
-# Supabase client for server-side token verification (service role key)
-_supabase = create_client(settings.supabase_url, settings.supabase_key)
+_supabase_client = None
+
+
+def _get_supabase():
+    global _supabase_client
+    if _supabase_client is None:
+        _supabase_client = create_client(settings.supabase_url, settings.supabase_key)
+    return _supabase_client
 
 
 async def get_current_user(
@@ -29,7 +35,7 @@ async def get_current_user(
     )
 
     try:
-        response = _supabase.auth.get_user(token)
+        response = _get_supabase().auth.get_user(token)
         sb_user = response.user
         if sb_user is None:
             raise credentials_exception

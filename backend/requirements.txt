@@ -8,9 +8,6 @@ asyncpg==0.30.0
 greenlet==3.2.1
 alembic==1.14.0
 
-# Auth
-python-jose[cryptography]==3.3.0
-
 # Supabase
 supabase==2.10.0
 

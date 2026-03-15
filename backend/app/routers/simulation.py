@@ -86,7 +86,7 @@ async def start_simulation(
     await db.flush()
 
     try:
-        turn = generate_question(
+        turn = await generate_question(
             persona_config=body.persona_config.model_dump(),
             doc_text=doc_text,
             history=[],
@@ -142,7 +142,7 @@ async def send_message(
     ] + [{"role": "user", "content": body.content}]
 
     try:
-        turn = generate_question(
+        turn = await generate_question(
             persona_config=session.persona_config,
             doc_text=doc_text,
             history=history,
@@ -201,7 +201,7 @@ async def complete_session(
     history = [{"role": m.role.value, "content": m.content} for m in session.messages]
 
     try:
-        evaluation = evaluate_session(doc_text=doc_text, messages=history)
+        evaluation = await evaluate_session(doc_text=doc_text, messages=history)
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 

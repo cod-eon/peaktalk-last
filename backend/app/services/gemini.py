@@ -58,7 +58,6 @@ class GeminiAnalysisResult:
 
 def _parse_gemini_json(raw: str) -> dict:
     """Extract JSON from Gemini response, stripping any accidental markdown."""
-    # Strip markdown code blocks if present
     cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("```").strip()
     return json.loads(cleaned)
 
@@ -69,12 +68,12 @@ def _parse_gemini_json(raw: str) -> dict:
     retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
     reraise=True,
 )
-def analyze_draft(text: str) -> GeminiAnalysisResult:
+async def analyze_draft(text: str) -> GeminiAnalysisResult:
     model = _get_model()
     prompt = _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
     except Exception as exc:
         raise GeminiError(f"Gemini API call failed: {exc}") from exc
 
@@ -90,7 +89,6 @@ def analyze_draft(text: str) -> GeminiAnalysisResult:
     if not improved_text or not isinstance(feedback, dict):
         raise GeminiError(f"Unexpected Gemini response structure: {parsed}")
 
-    # Validate required feedback keys
     required_keys = {"logic", "style", "clarity", "grammar", "overall_score"}
     if not required_keys.issubset(feedback.keys()):
         raise GeminiError(f"Missing feedback keys: {required_keys - feedback.keys()}")

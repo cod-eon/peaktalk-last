@@ -2,9 +2,11 @@
 import json
 import re
 
+import google.generativeai as genai
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from app.services.gemini import GeminiError, _get_model
+from app.config import settings
+from app.services.gemini import GeminiError
 
 CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to Gemini
 
@@ -96,7 +98,6 @@ class SimulationTurn:
 
 class SkillEvaluation:
     def __init__(self, metrics: list[dict]) -> None:
-        # metrics: [{"name": str, "score": float, "comment": str}]
         self.metrics = metrics
 
 
@@ -140,31 +141,31 @@ def _build_user_prompt(doc_text: str, history: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
+def _make_simulation_model(persona_config: dict) -> genai.GenerativeModel:
+    """Create a Gemini model instance with persona-specific system prompt."""
+    genai.configure(api_key=settings.gemini_api_key)
+    return genai.GenerativeModel(
+        model_name="gemini-2.5-flash",
+        system_instruction=_build_system_prompt(persona_config),
+    )
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
     reraise=True,
 )
-def generate_question(
+async def generate_question(
     persona_config: dict,
     doc_text: str,
     history: list[dict],
 ) -> SimulationTurn:
-    import google.generativeai as genai
-
-    from app.config import settings
-
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        system_instruction=_build_system_prompt(persona_config),
-    )
-
+    model = _make_simulation_model(persona_config)
     prompt = _build_user_prompt(doc_text, history)
 
     try:
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
     except Exception as exc:
         raise GeminiError(f"Gemini simulation call failed: {exc}") from exc
 
@@ -186,7 +187,7 @@ def generate_question(
     retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
     reraise=True,
 )
-def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluation:
+async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluation:
     transcript_lines = []
     for msg in messages:
         label = "PRESENTER" if msg["role"] == "user" else "INTERVIEWER"
@@ -198,9 +199,10 @@ def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluation:
         transcript=transcript,
     )
 
-    model = _get_model()
+    genai.configure(api_key=settings.gemini_api_key)
+    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
     try:
-        response = model.generate_content(prompt)
+        response = await model.generate_content_async(prompt)
     except Exception as exc:
         raise GeminiError(f"Gemini evaluation call failed: {exc}") from exc
 

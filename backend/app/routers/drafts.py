@@ -71,7 +71,7 @@ async def analyze_draft_endpoint(
         return draft.analysis_result
 
     try:
-        gemini_result = analyze_draft(draft.raw_text)
+        gemini_result = await analyze_draft(draft.raw_text)
     except GeminiError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
