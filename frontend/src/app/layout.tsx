@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Syne } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,6 +42,7 @@ export default function RootLayout({
         <AuthProvider>
           <QueryProvider>
             {children}
+            <Toaster richColors position="top-right" />
           </QueryProvider>
         </AuthProvider>
       </body>

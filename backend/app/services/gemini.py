@@ -41,7 +41,7 @@ TEXT TO ANALYZE:
 def _get_model() -> genai.GenerativeModel:
     genai.configure(api_key=settings.gemini_api_key)
     return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.5-flash",
         system_instruction=_ANALYSIS_SYSTEM_PROMPT,
     )
 

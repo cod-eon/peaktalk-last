@@ -16,7 +16,7 @@ export default function SimulationSetupPage() {
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     
     // API Data
-    const [drafts, setDrafts] = useState<{ id: string; title: string }[]>([]);
+    const [drafts, setDrafts] = useState<{ id: string; title: string; content?: string }[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
 
@@ -264,7 +264,7 @@ export default function SimulationSetupPage() {
                                             </span>
                                         </div>
                                         <div className="font-inter text-xs text-slate-400 line-clamp-1">
-                                            {doc.raw_text.substring(0, 60)}...
+                                            {doc.content ? doc.content.substring(0, 60) + '...' : 'Нет предпросмотра'}
                                         </div>
                                     </div>
                                 </button>
