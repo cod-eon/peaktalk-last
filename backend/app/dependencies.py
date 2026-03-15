@@ -7,11 +7,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.config import settings
 from app.database import get_db
 from app.models.user import User
 
 bearer_scheme = HTTPBearer()
+
+# Supabase project uses ES256 (ECC P-256) — public key from JWKS (safe to hardcode)
+_SUPABASE_JWK = {
+    "alg": "ES256",
+    "crv": "P-256",
+    "kty": "EC",
+    "use": "sig",
+    "x": "0Dm3-zM0zsZGFtICWSwWxhCTtEYPCoNSe9PSA0yHuCA",
+    "y": "ROgLgy_Wq1cz-tWg3lPHHA7GYLqoohWgnIudh8zmY2g",
+}
 
 
 async def get_current_user(
@@ -28,8 +37,8 @@ async def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
+            _SUPABASE_JWK,
+            algorithms=["ES256"],
             options={"verify_aud": False},
         )
         user_id_str: str | None = payload.get("sub")

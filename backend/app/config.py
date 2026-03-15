@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     # Supabase
     supabase_url: str
     supabase_key: str
-    supabase_jwt_secret: str
     supabase_storage_bucket: str = "documents"
+    # JWT is verified via ES256 JWKS (no symmetric secret needed)
+    supabase_jwks_url: str = "https://bfaywzoeuamsxcicofyc.supabase.co/auth/v1/.well-known/jwks.json"
 
     # AI
     gemini_api_key: str
