@@ -36,6 +36,8 @@ class SpeechDraftResponse(BaseModel):
 class SpeechDraftListResponse(BaseModel):
     items: list[SpeechDraftResponse]
     total: int
+    limit: int
+    offset: int
 
 
 class SpeechDraftCreate(BaseModel):

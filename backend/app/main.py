@@ -1,3 +1,8 @@
+import logging
+import logging.config
+import time
+import uuid as uuid_lib
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,7 +10,39 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from app.config import settings
 from app.routers import documents, drafts, simulation, users
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s | %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+    },
+    "root": {
+        "level": "DEBUG" if settings.debug else "INFO",
+        "handlers": ["console"],
+    },
+    "loggers": {
+        "uvicorn": {"propagate": True},
+        "sqlalchemy.engine": {"level": "WARNING", "propagate": True},
+    },
+})
+
+logger = logging.getLogger("peaktalk")
+
+# ── App ───────────────────────────────────────────────────────────────────────
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -22,11 +59,45 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Request logging middleware ─────────────────────────────────────────────────
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    request_id = str(uuid_lib.uuid4())[:8]
+    request.state.request_id = request_id
+    start = time.monotonic()
+
+    logger.info(
+        "→ %s %s  [req=%s]",
+        request.method,
+        request.url.path,
+        request_id,
+    )
+
+    response = await call_next(request)
+
+    elapsed_ms = (time.monotonic() - start) * 1000
+    logger.info(
+        "← %s %s  status=%d  %.1fms  [req=%s]",
+        request.method,
+        request.url.path,
+        response.status_code,
+        elapsed_ms,
+        request_id,
+    )
+
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+# ── Routers ───────────────────────────────────────────────────────────────────
 
 app.include_router(users.router)
 app.include_router(documents.router)

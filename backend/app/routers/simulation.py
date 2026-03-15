@@ -1,7 +1,10 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+logger = logging.getLogger("peaktalk.simulation")
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -104,6 +107,7 @@ async def start_simulation(
     db.add(first_message)
     await db.flush()
 
+    logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
     return await _load_session(db, session.id, current_user.id)
 
 
@@ -217,6 +221,7 @@ async def complete_session(
     session.completed_at = datetime.now(timezone.utc)
     await db.flush()
 
+    logger.info("Session completed user=%s session=%s metrics=%d", current_user.id, session_id, len(evaluation.metrics))
     return await _load_session(db, session.id, current_user.id, populate_existing=True)
 
 

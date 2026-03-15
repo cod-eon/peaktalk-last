@@ -21,3 +21,5 @@ class DocumentResponse(BaseModel):
 class DocumentListResponse(BaseModel):
     items: list[DocumentResponse]
     total: int
+    limit: int
+    offset: int

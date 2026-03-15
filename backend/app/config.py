@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = False
 
+    # CORS — comma-separated origins, e.g. "http://localhost:3000,https://peaktalk.io"
+    allowed_origins: str = "http://localhost:3000"
+
+    def get_allowed_origins(self) -> list[str]:
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:

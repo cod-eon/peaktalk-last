@@ -1,9 +1,10 @@
 import asyncio
+import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request, UploadFile, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -12,6 +13,8 @@ from app.models.document import Document, FileType
 from app.models.user import User
 from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.services import parser, storage
+
+logger = logging.getLogger("peaktalk.documents")
 
 ALLOWED_CONTENT_TYPES = {
     "application/pdf": "pdf",
@@ -51,7 +54,8 @@ async def upload_document(
     filename = file.filename or f"{document_id}.bin"
     storage_path = storage.build_storage_path(current_user.id, document_id, filename)
 
-    # Upload to Supabase Storage (non-blocking)
+    logger.info("Uploading document user=%s file=%s size=%d", current_user.id, filename, len(file_bytes))
+
     await storage.upload_file(file_bytes, storage_path, file.content_type or "application/octet-stream")
 
     doc = Document(
@@ -62,22 +66,23 @@ async def upload_document(
         file_type=file_type,
     )
 
-    # Lazy parse: offload CPU-bound work to thread pool
     if storage.is_large_file(file_bytes):
         from app.worker import parse_document_task
         parse_document_task.delay(str(document_id))
+        logger.info("Large file queued for async parsing document=%s", document_id)
     else:
         parse_result = await asyncio.to_thread(parser.parse_file, file_bytes, file_type, filename)
         if parse_result.text:
             doc.extracted_text = parse_result.text
             doc.parsed_at = datetime.now(timezone.utc)
+            logger.info("Document parsed synchronously chars=%d", len(parse_result.text))
 
     try:
         db.add(doc)
         await db.flush()
         await db.refresh(doc)
     except Exception:
-        # Rollback storage if DB write fails
+        logger.error("DB write failed for document=%s — rolling back storage", document_id)
         await storage.delete_file(storage_path)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -90,16 +95,25 @@ async def upload_document(
 @router.get("", response_model=DocumentListResponse)
 async def list_documents(
     request: Request,
+    limit: int = Query(50, ge=1, le=200, description="Max items to return"),
+    offset: int = Query(0, ge=0, description="Number of items to skip"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentListResponse:
+    total_result = await db.execute(
+        select(func.count()).select_from(Document).where(Document.owner_id == current_user.id)
+    )
+    total = total_result.scalar_one()
+
     result = await db.execute(
         select(Document)
         .where(Document.owner_id == current_user.id)
         .order_by(Document.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
     docs = list(result.scalars().all())
-    return DocumentListResponse(items=docs, total=len(docs))
+    return DocumentListResponse(items=docs, total=total, limit=limit, offset=offset)
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -120,3 +134,4 @@ async def delete_document(
 
     await storage.delete_file(doc.storage_path)
     await db.delete(doc)
+    logger.info("Document deleted user=%s document=%s", current_user.id, document_id)
