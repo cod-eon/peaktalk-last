@@ -109,15 +109,22 @@ class SkillEvaluation:
         self.metrics = metrics
 
 
+def _sanitize_industry(value: str) -> str:
+    """Strip newlines and control chars to prevent system prompt injection."""
+    cleaned = value.replace("\n", " ").replace("\r", " ").replace("\x00", "")
+    return cleaned.strip()[:100] or "general"
+
+
 def _build_system_prompt(persona_config: dict) -> str:
     role = persona_config.get("role", "listener")
     persona = _PERSONA_DESCRIPTIONS.get(role, _PERSONA_DESCRIPTIONS["listener"])
     difficulty = int(persona_config.get("difficulty", 3))
+    industry = _sanitize_industry(persona_config.get("industry", "general"))
     return _SIMULATION_SYSTEM_TEMPLATE.format(
         persona_title=persona["title"],
         persona_style=persona["style"],
         persona_focus=persona["focus"],
-        industry=persona_config.get("industry", "general"),
+        industry=industry,
         difficulty=difficulty,
         difficulty_desc=_DIFFICULTY_DESCRIPTIONS.get(difficulty, "standard"),
     )

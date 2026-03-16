@@ -3,6 +3,10 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 logger = logging.getLogger("peaktalk.simulation")
 from sqlalchemy import select
@@ -31,15 +35,22 @@ async def _get_doc_text(
     db: AsyncSession,
     document_id: uuid.UUID | None,
     draft_id: uuid.UUID | None,
+    user_id: uuid.UUID | None = None,
 ) -> str:
-    """Resolve source document text (lazy parse already happened at upload)."""
+    """Resolve source document text. Ownership check enforced when user_id provided."""
     if document_id:
-        result = await db.execute(select(Document).where(Document.id == document_id))
+        stmt = select(Document).where(Document.id == document_id)
+        if user_id is not None:
+            stmt = stmt.where(Document.owner_id == user_id)
+        result = await db.execute(stmt)
         doc = result.scalar_one_or_none()
         if doc and doc.extracted_text:
             return doc.extracted_text
     if draft_id:
-        result = await db.execute(select(SpeechDraft).where(SpeechDraft.id == draft_id))
+        stmt = select(SpeechDraft).where(SpeechDraft.id == draft_id)
+        if user_id is not None:
+            stmt = stmt.where(SpeechDraft.user_id == user_id)
+        result = await db.execute(stmt)
         draft = result.scalar_one_or_none()
         if draft:
             return draft.raw_text
@@ -70,13 +81,14 @@ async def _load_session(
 
 
 @router.post("/start", response_model=SimulationSessionResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def start_simulation(
     request: Request,
     body: SimulationStartRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
-    doc_text = await _get_doc_text(db, body.document_id, body.draft_id) if (body.document_id or body.draft_id) else ""
+    doc_text = await _get_doc_text(db, body.document_id, body.draft_id, current_user.id) if (body.document_id or body.draft_id) else ""
 
     session = SimulationSession(
         user_id=current_user.id,
@@ -112,6 +124,7 @@ async def start_simulation(
 
 
 @router.post("/{session_id}/message", response_model=SendMessageResponse)
+@limiter.limit("15/minute")
 async def send_message(
     request: Request,
     session_id: uuid.UUID,

@@ -63,10 +63,15 @@ export default function SettingsPage() {
     }, [user]);
 
     const handleSaveProfile = async () => {
+        const trimmed = displayName.trim();
+        if (trimmed.length > 100) {
+            toast.error('Имя не может быть длиннее 100 символов');
+            return;
+        }
         setIsSavingProfile(true);
         try {
             const supabase = createClient();
-            const { error } = await supabase.auth.updateUser({ data: { display_name: displayName } });
+            const { error } = await supabase.auth.updateUser({ data: { display_name: trimmed } });
             if (error) throw error;
             toast.success('Профиль обновлён');
         } catch (err: unknown) {
@@ -209,8 +214,14 @@ export default function SettingsPage() {
                                             value={displayName}
                                             onChange={(e) => setDisplayName(e.target.value)}
                                             placeholder="Ваше имя"
+                                            maxLength={100}
                                             className={inputClass}
                                         />
+                                        {displayName.length > 80 && (
+                                            <p className="text-[11px] font-mono text-amber-500">
+                                                {100 - displayName.length} символов осталось
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <label className="text-xs font-mono text-slate-400 uppercase tracking-widest">

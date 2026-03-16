@@ -51,5 +51,5 @@ class SpeechDraftListResponse(BaseModel):
 
 class SpeechDraftCreate(BaseModel):
     title: str = Field(min_length=1, max_length=512)
-    raw_text: str = Field(min_length=10, description="Speech text to analyze (min 10 chars)")
+    raw_text: str = Field(min_length=10, max_length=50_000, description="Speech text to analyze (min 10 chars)")
     document_id: uuid.UUID | None = None

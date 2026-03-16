@@ -134,7 +134,7 @@ export default function SimulationSetupPage() {
                                     onClick={() => setSelectedRole(role.id)}
                                     className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
                                         isSelected 
-                                            ? 'bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] shadow-[0_0_20px_rgba(56,189,248,0.15)] glow-border' 
+                                            ? 'bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] shadow-[0_0_20px_rgba(56,189,248,0.15)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.2),0_0_20px_rgba(56,189,248,0.15)]' 
                                             : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                     }`}
                                 >
@@ -198,6 +198,7 @@ export default function SimulationSetupPage() {
                                 placeholder="Укажите вашу индустрию (например: B2C HealthTech)..."
                                 value={customDomain}
                                 onChange={(e) => setCustomDomain(e.target.value)}
+                                maxLength={100}
                                 className="w-full max-w-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] focus:border-[var(--accent-blue)] focus:ring-1 focus:ring-[var(--accent-blue)] rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all font-inter"
                                 autoFocus
                             />
@@ -295,11 +296,6 @@ export default function SimulationSetupPage() {
                 </motion.div>
             </div>
             
-            <style dangerouslySetInnerHTML={{__html: `
-                .glow-border {
-                    box-shadow: inset 0 0 0 1px rgba(56,189,248,0.2), 0 0 20px rgba(56,189,248,0.15);
-                }
-            `}} />
         </div>
     );
 }

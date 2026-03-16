@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -7,8 +8,8 @@ from app.models.simulation import MessageRole, SessionStatus
 
 
 class PersonaConfig(BaseModel):
-    role: str = Field(description="investor | hr | tech_lead | listener")
-    industry: str = Field(default="general", description="e.g. fintech, edtech, healthcare")
+    role: Literal["investor", "hr", "tech_lead", "listener"] = Field(description="AI persona role")
+    industry: str = Field(default="general", max_length=100, description="e.g. fintech, edtech, healthcare")
     difficulty: int = Field(default=3, ge=1, le=5, description="1=easy, 5=brutal")
 
 
@@ -50,7 +51,7 @@ class SimulationSessionResponse(BaseModel):
 
 
 class SendMessageRequest(BaseModel):
-    content: str = Field(min_length=1, description="User's answer to the AI question")
+    content: str = Field(min_length=1, max_length=8000, description="User's answer to the AI question")
 
 
 class SendMessageResponse(BaseModel):
