@@ -55,9 +55,21 @@ async def get_current_user(
         # Auto-provision user on first authenticated request
         if not email:
             raise credentials_exception
-        user = User(id=user_id, email=email)
-        db.add(user)
-        await db.flush()
-        await db.refresh(user)
+        try:
+            user = User(id=user_id, email=email)
+            db.add(user)
+            await db.flush()
+            await db.refresh(user)
+        except Exception:
+            await db.rollback()
+            # Another concurrent request already created the user — just fetch it
+            result = await db.execute(
+                select(User)
+                .options(selectinload(User.onboarding_profile))
+                .where(User.id == user_id)
+            )
+            user = result.scalar_one_or_none()
+            if user is None:
+                raise credentials_exception
 
     return user
