@@ -50,6 +50,24 @@ class SimulationSessionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SimulationSessionListItem(BaseModel):
+    """Lightweight session summary for list views — no messages payload."""
+    id: uuid.UUID
+    persona_config: PersonaConfig
+    status: SessionStatus
+    created_at: datetime
+    completed_at: datetime | None = None
+    message_count: int = 0
+    avg_score: float | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class SimulationSessionListResponse(BaseModel):
+    items: list[SimulationSessionListItem]
+    total: int
+
+
 class SendMessageRequest(BaseModel):
     content: str = Field(min_length=1, max_length=8000, description="User's answer to the AI question")
 

@@ -1,186 +1,222 @@
 "use client";
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
-    Clock,
-    UploadCloud,
+    Bot,
+    Briefcase,
+    Users,
+    MessageSquare,
     ArrowRight,
     Activity,
-    TrendingUp,
-    TrendingDown,
-    Minus,
     CheckCircle2,
+    Clock,
     AlertCircle,
+    BarChart3,
+    Plus,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { api } from '@/lib/api';
 
-type Draft = {
-    id: string;
-    title: string;
-    created_at: string;
-    analysis_result: {
-        feedback_json: { overall_score: number };
-    } | null;
+type PersonaConfig = {
+    role: string;
+    industry: string;
+    difficulty: number;
 };
 
-type DraftsResponse = {
-    items: Draft[];
+type SimulationSessionListItem = {
+    id: string;
+    persona_config: PersonaConfig;
+    status: 'active' | 'completed';
+    created_at: string;
+    completed_at: string | null;
+    message_count: number;
+    avg_score: number | null;
+};
+
+type SimulationListResponse = {
+    items: SimulationSessionListItem[];
     total: number;
 };
 
+const PERSONA_LABELS: Record<string, string> = {
+    investor: 'Венчурный Инвестор',
+    tech_lead: 'CEO / Техдир',
+    hr: 'HR-Менеджер',
+    listener: 'Скептик из зала',
+};
+
+const PERSONA_ICONS: Record<string, React.ElementType> = {
+    investor: Briefcase,
+    tech_lead: Bot,
+    hr: Users,
+    listener: MessageSquare,
+};
+
+const DIFFICULTY_LABELS: Record<number, string> = {
+    1: 'Лёгко',
+    2: 'Средне',
+    3: 'Стандарт',
+    4: 'Сложно',
+    5: 'Брутально',
+};
+
+function ScoreBadge({ score }: { score: number }) {
+    const pct = Math.round(score * 10);
+    const color =
+        score >= 0.8 ? 'text-emerald-400' : score >= 0.5 ? 'text-amber-400' : 'text-rose-400';
+    const bg =
+        score >= 0.8
+            ? 'bg-emerald-500/10 border-emerald-500/20'
+            : score >= 0.5
+            ? 'bg-amber-500/10 border-amber-500/20'
+            : 'bg-rose-500/10 border-rose-500/20';
+    return (
+        <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded-full border ${color} ${bg}`}>
+            {pct}/10
+        </span>
+    );
+}
+
 export default function ProjectsPage() {
-    const { data, isLoading, isError } = useQuery<DraftsResponse>({
-        queryKey: ['drafts-projects'],
-        queryFn: () => api.get('/drafts?limit=50'),
+    const { data, isLoading, isError, refetch } = useQuery<SimulationListResponse>({
+        queryKey: ['simulation-sessions'],
+        queryFn: () => api.get('/simulation?limit=50'),
         staleTime: 30_000,
     });
 
-    const drafts = data?.items ?? [];
+    const sessions = data?.items ?? [];
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-4 py-10 md:py-16">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="pb-10 pt-4 sm:pt-8 w-full max-w-6xl mx-auto px-6 lg:px-10">
+            {/* ─── HEADER ─── */}
+            <div className="flex flex-col gap-6 mb-10 sm:flex-row sm:items-center sm:justify-between sm:mb-14">
                 <div>
-                    <h1 className="text-3xl font-syne font-bold text-slate-100 mb-2 tracking-tight">
-                        Мои материалы
+                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3">
+                        ТРЕНИРОВОЧНЫЕ СЕССИИ
+                    </div>
+                    <h1 className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0">
+                        Мои проекты
                     </h1>
-                    <p className="text-slate-400 text-sm">
-                        Все загруженные черновики и результаты AI-анализа.
-                    </p>
                 </div>
-                <Link href="/upload" className="btn-primary flex items-center gap-2 px-5 py-2 w-fit">
-                    <UploadCloud size={16} /> Загрузить
+                <Link
+                    href="/simulation"
+                    className="btn-primary w-full sm:w-auto mt-2 sm:mt-0 shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-shadow"
+                >
+                    <Plus size={16} className="mr-2" />
+                    Новая симуляция
                 </Link>
             </div>
 
-            {isLoading && (
-                <div className="flex items-center justify-center py-24">
-                    <Activity size={28} className="animate-spin text-[var(--accent-blue)]" />
+            {/* ─── CONTENT ─── */}
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <Activity size={28} className="animate-spin text-[var(--accent-blue)] mb-4" />
+                    <div className="text-slate-400 font-mono text-sm">Загрузка...</div>
                 </div>
-            )}
-
-            {isError && (
-                <div className="flex items-center justify-center gap-3 py-24 text-rose-400 font-mono text-sm">
-                    <AlertCircle size={18} /> Ошибка загрузки данных
+            ) : isError ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="text-rose-500 mb-4 bg-rose-500/10 p-4 rounded-full">
+                        <AlertCircle size={28} />
+                    </div>
+                    <div className="text-slate-200 mb-2">Не удалось загрузить проекты</div>
+                    <button onClick={() => refetch()} className="btn-secondary rounded-lg mt-4">
+                        Попробовать снова
+                    </button>
                 </div>
-            )}
-
-            {!isLoading && !isError && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* New material card */}
-                    <Link
-                        href="/upload"
-                        className="group border border-dashed border-[var(--border-light)] hover:border-blue-500/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-[var(--bg-surface-alt)] hover:bg-blue-500/5 transition-all min-h-[200px]"
-                    >
-                        <div className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:border-blue-500/30 transition-colors mb-4">
-                            <UploadCloud size={20} />
-                        </div>
-                        <h3 className="text-slate-200 font-medium mb-1 group-hover:text-blue-400 transition-colors">
-                            Новый материал
-                        </h3>
-                        <p className="text-slate-500 text-xs">Загрузите PDF, DOCX или TXT</p>
+            ) : sessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-[var(--border-main)] rounded-2xl bg-[var(--bg-surface)]">
+                    <div className="text-slate-500 mb-4 bg-[var(--bg-card)] p-4 rounded-full">
+                        <Bot size={28} />
+                    </div>
+                    <div className="text-slate-200 mb-2 font-syne text-xl">Нет симуляций</div>
+                    <div className="text-slate-500 text-sm mb-6 max-w-sm">
+                        Запустите тренировочную сессию с AI-собеседником, чтобы прокачать навыки
+                    </div>
+                    <Link href="/simulation" className="btn-primary rounded-lg">
+                        <Plus size={14} className="mr-2" /> Начать симуляцию
                     </Link>
-
-                    {drafts.map((draft, i) => {
-                        const score = draft.analysis_result?.feedback_json.overall_score ?? null;
-                        const analyzed = draft.analysis_result !== null;
-                        const dateStr = formatDistanceToNow(new Date(draft.created_at), {
-                            addSuffix: true,
-                            locale: ru,
-                        });
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {sessions.map((session) => {
+                        const Icon = PERSONA_ICONS[session.persona_config.role] ?? Bot;
+                        const personaLabel =
+                            PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
+                        const isCompleted = session.status === 'completed';
+                        const href = isCompleted
+                            ? `/simulation/${session.id}/report`
+                            : `/simulation/${session.id}`;
 
                         return (
-                            <motion.div
-                                key={draft.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                className="h-full"
-                            >
-                                <Link
-                                    href={`/analysis/${draft.id}`}
-                                    className="group block bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] rounded-2xl p-6 transition-all flex flex-col min-h-[200px] h-full relative overflow-hidden"
-                                >
-                                    {/* Glow on hover */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-blue)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                            <Link key={session.id} href={href} className="block h-full group">
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] hover:border-[var(--accent-blue)]/50 rounded-2xl p-5 flex flex-col h-full relative overflow-hidden transition-colors duration-200 cursor-pointer">
+                                    {/* Glow */}
+                                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-[var(--accent-blue)]/5 rounded-full blur-2xl group-hover:bg-[var(--accent-blue)]/10 transition-colors duration-500 pointer-events-none" />
 
-                                    {/* Status badge */}
+                                    {/* Top row */}
                                     <div className="flex justify-between items-start mb-4 relative z-10">
-                                        {analyzed ? (
+                                        <div className="w-11 h-11 rounded-xl bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center text-slate-400 group-hover:text-[var(--accent-blue)] transition-colors duration-200">
+                                            <Icon size={22} strokeWidth={1.5} />
+                                        </div>
+                                        {isCompleted ? (
                                             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 uppercase tracking-wider">
-                                                <CheckCircle2 size={10} /> Проанализирован
+                                                <CheckCircle2 size={10} /> Завершён
                                             </span>
                                         ) : (
-                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-main)] border border-[var(--border-light)] text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                                                <Clock size={10} /> Загружен
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-mono text-blue-400 uppercase tracking-wider">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                                Активен
                                             </span>
                                         )}
                                     </div>
 
-                                    <h3 className="text-base font-syne font-semibold text-slate-200 mb-2 mt-auto group-hover:text-[var(--accent-blue)] transition-colors line-clamp-2 relative z-10">
-                                        {draft.title}
-                                    </h3>
-
-                                    <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 mb-4 mt-1 relative z-10">
-                                        <Clock size={11} className="opacity-70" />
-                                        {dateStr}
-                                    </div>
-
-                                    {/* Score row */}
-                                    <div className="pt-4 border-t border-[var(--border-light)] flex justify-between items-center mt-auto relative z-10">
-                                        {score !== null ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-slate-400 font-mono">
-                                                    AI Score
-                                                </span>
-                                                <span
-                                                    className={`font-mono text-sm font-bold ${
-                                                        score >= 8
-                                                            ? 'text-emerald-400'
-                                                            : score >= 6
-                                                            ? 'text-blue-400'
-                                                            : 'text-yellow-400'
-                                                    }`}
-                                                >
-                                                    {score}/10
-                                                </span>
-                                                {score >= 7 ? (
-                                                    <TrendingUp size={12} className="text-emerald-500" />
-                                                ) : score >= 5 ? (
-                                                    <Minus size={12} className="text-slate-500" />
-                                                ) : (
-                                                    <TrendingDown size={12} className="text-yellow-500" />
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <span className="text-xs text-slate-500 font-mono">
-                                                Анализ не запущен
+                                    {/* Persona & Industry */}
+                                    <div className="mb-4 relative z-10 flex-1">
+                                        <h3 className="font-syne text-base font-semibold text-slate-100 mb-1 group-hover:text-blue-400 transition-colors duration-200">
+                                            {personaLabel}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                            <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">
+                                                {session.persona_config.industry}
                                             </span>
-                                        )}
-
-                                        <div className="opacity-0 translate-x-[-8px] group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[var(--accent-blue)] bg-[var(--accent-blue)]/10 p-1.5 rounded-full">
-                                            <ArrowRight size={14} />
+                                            <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest bg-[var(--bg-surface-alt)] px-2 py-0.5 rounded border border-[var(--border-light)]">
+                                                {DIFFICULTY_LABELS[session.persona_config.difficulty] ?? `D${session.persona_config.difficulty}`}
+                                            </span>
                                         </div>
                                     </div>
-                                </Link>
-                            </motion.div>
+
+                                    {/* Footer */}
+                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border-light)]/50 relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            {/* Message count */}
+                                            <div className="flex items-center gap-1 text-slate-500 font-mono text-xs">
+                                                <MessageSquare size={11} />
+                                                {session.message_count}
+                                            </div>
+                                            {/* Date */}
+                                            <div className="flex items-center gap-1 text-slate-500 font-mono text-xs">
+                                                <Clock size={11} />
+                                                {format(new Date(session.created_at), 'dd.MM.yy')}
+                                            </div>
+                                        </div>
+
+                                        {isCompleted && session.avg_score !== null ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <BarChart3 size={11} className="text-slate-500" />
+                                                <ScoreBadge score={session.avg_score} />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 font-mono text-[10px] text-[var(--accent-blue)]">
+                                                Продолжить <ArrowRight size={10} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
                         );
                     })}
-
-                    {drafts.length === 0 && (
-                        <div className="sm:col-span-2 lg:col-span-2 flex flex-col items-center justify-center py-16 gap-4 text-[var(--text-muted)]">
-                            <p className="font-mono text-sm">Нет материалов — загрузите первый!</p>
-                            <Link href="/upload" className="btn-primary text-sm">
-                                <UploadCloud size={14} className="mr-2" />
-                                Загрузить материал
-                            </Link>
-                        </div>
-                    )}
                 </div>
             )}
         </div>

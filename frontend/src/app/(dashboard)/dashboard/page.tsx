@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { ArrowRight, FileText, CheckCircle2, Clock, UploadCloud, Activity, TrendingUp, BarChart2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -87,33 +86,18 @@ export default function DashboardPage() {
             {/* ─── HEADER SECTION ─── */}
             <div className="flex flex-col gap-6 mb-10 sm:flex-row sm:items-start sm:justify-between sm:mb-14">
                 <div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2"
-                    >
+                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-blue)] opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-blue)]"></span>
                         </span>
                         SYSTEM_STATE: READY [100%]
-                    </motion.div>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                        className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0"
-                    >
+                    </div>
+                    <h1 className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0">
                         С возвращением,<br className="hidden sm:block lg:hidden" /> {displayName}.
-                    </motion.h1>
+                    </h1>
                 </div>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    className="w-full sm:w-auto"
-                >
+                <div className="w-full sm:w-auto">
                     <Link
                         href="/upload"
                         className="btn-primary w-full sm:w-auto mt-2 sm:mt-0 shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-shadow"
@@ -121,17 +105,14 @@ export default function DashboardPage() {
                         <UploadCloud size={16} className="mr-2" />
                         Новый разбор
                     </Link>
-                </motion.div>
+                </div>
             </div>
 
             {/* ─── STATS GRID ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 sm:mb-16">
                 {stats.map((stat, i) => (
-                    <motion.div
+                    <div
                         key={i}
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 + i * 0.1, type: 'spring', stiffness: 100 }}
                         className="bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--accent-blue)]/50 transition-colors duration-300 p-6 flex flex-col relative overflow-hidden rounded-2xl group shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
                     >
                         <div className="absolute -right-20 -top-20 w-40 h-40 bg-[var(--accent-blue)]/5 rounded-full blur-3xl group-hover:bg-[var(--accent-blue)]/10 transition-all duration-500" />
@@ -166,18 +147,10 @@ export default function DashboardPage() {
                         <div className="mt-auto flex flex-col gap-3 relative z-10">
                             {stat.type === 'progress' && (
                                 <div className="w-full h-2 bg-[var(--bg-main)] rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${stat.valueProgress ?? 0}%` }}
-                                        transition={{ duration: 1.2, delay: 0.5, ease: 'easeOut' }}
-                                        className="h-full bg-[var(--accent-blue)] relative overflow-hidden"
-                                    >
-                                        <motion.div
-                                            animate={{ x: ['-100%', '200%'] }}
-                                            transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-                                            className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                                        />
-                                    </motion.div>
+                                    <div
+                                        className="h-full bg-[var(--accent-blue)] transition-all duration-700"
+                                        style={{ width: `${stat.valueProgress ?? 0}%` }}
+                                    />
                                 </div>
                             )}
 
@@ -186,17 +159,12 @@ export default function DashboardPage() {
                                 {stat.trend}
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 ))}
             </div>
 
             {/* ─── RECENT DRAFTS MODULE ─── */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="w-full"
-            >
+            <div className="w-full">
                 <div className="flex items-end justify-between mb-6">
                     <h2 className="font-syne text-xl sm:text-2xl font-semibold text-slate-100 m-0">
                         Недавние разборы
@@ -302,7 +270,7 @@ export default function DashboardPage() {
                         })}
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 }

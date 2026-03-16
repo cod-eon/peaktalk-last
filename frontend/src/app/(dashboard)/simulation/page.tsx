@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Bot, Users, Briefcase, ChevronRight, FileText, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -84,41 +83,22 @@ export default function SimulationSetupPage() {
         <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10 overflow-hidden">
             <div className="flex flex-col gap-6 mb-10 sm:mb-14">
                 <div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2"
-                    >
+                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2">
                         КОНФИГУРАЦИЯ СЕССИИ
-                    </motion.div>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                        className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0"
-                    >
+                    </div>
+                    <h1 className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0">
                         Настройка симуляции
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                        className="font-inter text-slate-400 mt-4 max-w-2xl text-sm leading-relaxed"
-                    >
-                        Выберите характер AI-собеседника, сферу и базовый материал (если есть), 
+                    </h1>
+                    <p className="font-inter text-slate-400 mt-4 max-w-2xl text-sm leading-relaxed">
+                        Выберите характер AI-собеседника, сферу и базовый материал (если есть),
                         чтобы начать индивидуальную тренировку по защите ваших идей в условиях, приближенных к реальности.
-                    </motion.p>
+                    </p>
                 </div>
             </div>
 
             <div className="space-y-12">
                 {/* 1. ROLE SELECTION */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                >
+                <section>
                     <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
                         <span className="text-[var(--text-muted)]">Шаг 1:</span> Выбор собеседника
                     </h2>
@@ -158,14 +138,10 @@ export default function SimulationSetupPage() {
                             );
                         })}
                     </div>
-                </motion.section>
+                </section>
 
                 {/* 2. DOMAIN SELECTION */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                >
+                <section>
                     <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
                         <span className="text-[var(--text-muted)]">Шаг 2:</span> Индустрия / Ниша
                     </h2>
@@ -188,11 +164,7 @@ export default function SimulationSetupPage() {
                     
                     {/* Custom Domain Input */}
                     {selectedDomain === 'custom' && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                            className="overflow-hidden"
-                        >
+                        <div className="mt-4">
                             <input
                                 type="text"
                                 placeholder="Укажите вашу индустрию (например: B2C HealthTech)..."
@@ -202,16 +174,12 @@ export default function SimulationSetupPage() {
                                 className="w-full max-w-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] focus:border-[var(--accent-blue)] focus:ring-1 focus:ring-[var(--accent-blue)] rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all font-inter"
                                 autoFocus
                             />
-                        </motion.div>
+                        </div>
                     )}
-                </motion.section>
+                </section>
 
                 {/* 3. DOCUMENT SELECTION */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5 }}
-                >
+                <section>
                     <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
                         <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера (Опционально)
                     </h2>
@@ -272,15 +240,10 @@ export default function SimulationSetupPage() {
                             );
                         })}
                     </div>
-                </motion.section>
+                </section>
 
                 {/* LAUNCH BUTTON */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    className="pt-6 border-t border-[var(--border-main)] flex justify-end"
-                >
+                <div className="pt-6 border-t border-[var(--border-main)] flex justify-end">
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
@@ -293,7 +256,7 @@ export default function SimulationSetupPage() {
                         {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать симуляцию'}
                         {!isStarting && <ChevronRight size={18} />}
                     </button>
-                </motion.div>
+                </div>
             </div>
             
         </div>

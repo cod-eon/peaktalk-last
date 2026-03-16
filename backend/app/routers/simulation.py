@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -22,6 +22,8 @@ from app.models.user import User
 from app.schemas.simulation import (
     SendMessageRequest,
     SendMessageResponse,
+    SimulationSessionListItem,
+    SimulationSessionListResponse,
     SimulationSessionResponse,
     SimulationStartRequest,
 )
@@ -78,6 +80,48 @@ async def _load_session(
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     return session
+
+
+@router.get("", response_model=SimulationSessionListResponse)
+async def list_sessions(
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SimulationSessionListResponse:
+    from sqlalchemy import func as sqlfunc
+    from app.models.simulation import SkillMetric
+
+    total_res = await db.execute(
+        select(sqlfunc.count()).select_from(SimulationSession)
+        .where(SimulationSession.user_id == current_user.id)
+    )
+    total = total_res.scalar_one()
+
+    res = await db.execute(
+        select(SimulationSession)
+        .options(selectinload(SimulationSession.messages), selectinload(SimulationSession.skill_metrics))
+        .where(SimulationSession.user_id == current_user.id)
+        .order_by(SimulationSession.created_at.desc())
+        .limit(limit).offset(offset)
+    )
+    sessions = list(res.scalars().all())
+
+    items = []
+    for s in sessions:
+        scores = [m.score for m in s.skill_metrics] if s.skill_metrics else []
+        items.append(SimulationSessionListItem(
+            id=s.id,
+            persona_config=s.persona_config,
+            status=s.status,
+            created_at=s.created_at,
+            completed_at=s.completed_at,
+            message_count=len(s.messages),
+            avg_score=round(sum(scores) / len(scores), 2) if scores else None,
+        ))
+
+    return SimulationSessionListResponse(items=items, total=total)
 
 
 @router.post("/start", response_model=SimulationSessionResponse, status_code=status.HTTP_201_CREATED)
