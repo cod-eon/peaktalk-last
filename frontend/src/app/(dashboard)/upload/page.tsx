@@ -57,13 +57,7 @@ export default function UploadPage() {
                 setLogs(prev => [...prev, '> Загрузка документа на сервер...']);
                 const formData = new FormData();
                 formData.append('file', file);
-                
-                // Determine file type
-                let fileType = 'other';
-                if (file.name.endsWith('.pdf')) fileType = 'pdf';
-                else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) fileType = 'docx';
-                else if (file.name.endsWith('.txt') || file.name.endsWith('.md')) fileType = 'txt';
-                formData.append('file_type', fileType);
+                formData.append('file_type', 'other');
 
                 const uploadRes = await api.request('/documents/upload', {
                     method: 'POST',
