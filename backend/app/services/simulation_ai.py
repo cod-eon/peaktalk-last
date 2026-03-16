@@ -64,22 +64,28 @@ JSON structure:
 """.strip()
 
 _SKILL_EVAL_TEMPLATE = """
-You are an expert communication coach. Evaluate the presenter's performance in this Q&A session.
+Ты — эксперт-тренер по публичным выступлениям. Оцени выступление участника по результатам Q&A сессии.
 
-PRESENTATION CONTEXT:
+ЯЗЫК ОТВЕТА: Все поля "comment" ОБЯЗАТЕЛЬНО на русском языке.
+
+КОНТЕКСТ ВЫСТУПЛЕНИЯ:
 {doc_text}
 
-SESSION TRANSCRIPT:
+ТРАНСКРИПТ СЕССИИ:
 {transcript}
 
-Rate EACH of the following skills on a scale from 0.0 to 1.0 and provide a specific comment.
-Return ONLY valid JSON:
+Оцени КАЖДЫЙ навык по шкале 0.0–1.0. В поле "comment" дай конкретную обратную связь на русском:
+- Укажи конкретный момент из транскрипта (цитату или ситуацию)
+- Объясни, что именно было хорошо или плохо
+- Дай одну конкретную рекомендацию по улучшению с примером
+
+Верни ТОЛЬКО валидный JSON без markdown:
 {{
-  "clarity": {{"score": <0.0-1.0>, "comment": "<specific observation>"}},
-  "argumentation": {{"score": <0.0-1.0>, "comment": "<specific observation>"}},
-  "stress_resistance": {{"score": <0.0-1.0>, "comment": "<specific observation>"}},
-  "structure": {{"score": <0.0-1.0>, "comment": "<specific observation>"}},
-  "conciseness": {{"score": <0.0-1.0>, "comment": "<specific observation>"}}
+  "Ясность изложения": {{"score": <0.0-1.0>, "comment": "<конкретная обратная связь на русском с примером>"}},
+  "Аргументация": {{"score": <0.0-1.0>, "comment": "<конкретная обратная связь на русском с примером>"}},
+  "Стрессоустойчивость": {{"score": <0.0-1.0>, "comment": "<конкретная обратная связь на русском с примером>"}},
+  "Структура ответов": {{"score": <0.0-1.0>, "comment": "<конкретная обратная связь на русском с примером>"}},
+  "Лаконичность": {{"score": <0.0-1.0>, "comment": "<конкретная обратная связь на русском с примером>"}}
 }}
 """.strip()
 
@@ -197,6 +203,12 @@ async def generate_question(
         response = await model.generate_content_async(prompt)
     except Exception as exc:
         raise GeminiError(f"Gemini simulation call failed: {exc}") from exc
+
+    # Check for valid content parts before accessing .text
+    candidates = getattr(response, "candidates", None)
+    if not candidates or not candidates[0].content or not candidates[0].content.parts:
+        finish_reason = getattr(candidates[0], "finish_reason", "unknown") if candidates else "no candidates"
+        raise GeminiError(f"Empty Gemini response (finish_reason={finish_reason})")
 
     raw = response.text
     if not raw:

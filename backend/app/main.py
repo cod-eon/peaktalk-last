@@ -11,7 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.config import settings
-from app.routers import documents, drafts, simulation, users
+from app.routers import documents, drafts, simulation, users, projects
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -103,6 +103,7 @@ async def log_requests(request: Request, call_next):
 # ── Routers ───────────────────────────────────────────────────────────────────
 
 app.include_router(users.router)
+app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(drafts.router)
 app.include_router(simulation.router)
