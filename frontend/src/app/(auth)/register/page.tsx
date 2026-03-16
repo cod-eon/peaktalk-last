@@ -35,8 +35,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
+    router.push('/onboarding');
   };
 
   return (

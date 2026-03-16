@@ -13,12 +13,20 @@ export default function SimulationPage() {
   const sessionId = params?.id as string;
   
   // States
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<{role: string; content: string; turn_index: number}[]>([]);
+  const [personaConfig, setPersonaConfig] = useState<{role: string; industry: string} | null>(null);
   const [answer, setAnswer] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  const PERSONA_LABELS: Record<string, string> = {
+    investor: 'AI-Инвестор',
+    tech_lead: 'CEO / Техдир',
+    hr: 'HR-Менеджер',
+    listener: 'Скептик из зала',
+  };
 
   useEffect(() => {
     async function loadHistory() {
@@ -26,10 +34,8 @@ export default function SimulationPage() {
       try {
         const res = await api.get(`/simulation/${sessionId}/history`);
         setMessages(res.messages || []);
-        // In case the API tells us the session is completed or we want to determine it some other way.
-        // For now, assume it's active. Wait, does `/history` return status?
-        // Let's assume it doesn't fail, but if we get 404, redirect back.
-      } catch (err: any) {
+        if (res.persona_config) setPersonaConfig(res.persona_config);
+      } catch (err: unknown) {
         toast.error('Ошибка загрузки симуляции');
         router.push('/simulation');
       } finally {
@@ -57,8 +63,9 @@ export default function SimulationPage() {
         const filtered = prev.filter(m => m !== optimisticUserMsg);
         return [...filtered, res.user_message, res.assistant_message];
       });
-    } catch(err: any) {
-      toast.error('Ошибка отправки сообщения: ' + (err.message || 'Сбой сети'));
+    } catch(err: unknown) {
+      const message = err instanceof Error ? err.message : 'Сбой сети';
+      toast.error('Ошибка отправки сообщения: ' + message);
       setAnswer(currentAnswer); // restore
       setMessages(prev => prev.filter(m => m !== optimisticUserMsg)); // remove optimistic
     } finally {
@@ -76,8 +83,9 @@ export default function SimulationPage() {
     try {
       await api.post(`/simulation/${sessionId}/complete`);
       setIsFinished(true);
-    } catch (err: any) {
-      toast.error('Ошибка завершения сессии: ' + (err.message || 'Сбой сети'));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Сбой сети';
+      toast.error('Ошибка завершения сессии: ' + message);
       setIsCompleting(false);
     }
   };
@@ -89,6 +97,8 @@ export default function SimulationPage() {
           </div>
       );
   }
+
+  const personaLabel = PERSONA_LABELS[personaConfig?.role ?? ''] || personaConfig?.role || 'Тренер';
 
   if (isFinished) {
     return (
@@ -105,7 +115,7 @@ export default function SimulationPage() {
             Тренировка завершена!
           </h2>
           <p className="text-[var(--text-dim)] mb-8 max-w-md mx-auto">
-            Сессия была успешно завершена. AI-инвестор проанализировал ваши ответы, и теперь вы можете ознакомиться с подробным отчетом по вашим навыкам.
+            Сессия была успешно завершена. {personaLabel} проанализировал ваши ответы — ознакомьтесь с подробным отчетом по вашим навыкам.
           </p>
           <div className="flex gap-4 justify-center">
             <button
@@ -142,7 +152,7 @@ export default function SimulationPage() {
             </div>
             <div>
               <div className="font-mono text-xs text-[var(--accent-blue)] tracking-wider uppercase mb-1">
-                Бот-Инвестор
+                {personaLabel}
               </div>
               <div className="text-sm text-[var(--text-dim)] border border-[var(--border-main)] rounded-full px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
                 Тренировка
@@ -190,7 +200,7 @@ export default function SimulationPage() {
               <textarea
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Ваш ответ инвестору..."
+                placeholder={`Ваш ответ ${personaLabel}...`}
                 autoFocus
                 disabled={isAnalyzing}
                 className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-blue)] focus:ring-1 focus:ring-[var(--accent-blue)] transition-all resize-none shadow-sm"
