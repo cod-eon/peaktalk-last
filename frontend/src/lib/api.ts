@@ -56,14 +56,25 @@ export const api = {
     })
 
     if (!response.ok) {
-        // Handle common backend errors (FastAPI sends `{ "detail": "..." }`)
-        let errorMessage = 'An error occurred'
+        let errorMessage = 'Произошла ошибка'
         try {
             const errorData = await response.json()
-            errorMessage = errorData.detail || errorData.message || errorMessage
+            if (typeof errorData.detail === 'string') {
+                errorMessage = errorData.detail
+            } else if (Array.isArray(errorData.detail)) {
+                // FastAPI validation errors: [{loc, msg, type}]
+                errorMessage = errorData.detail
+                    .map((e: { msg?: string }) => e.msg ?? JSON.stringify(e))
+                    .join('; ')
+            } else if (typeof errorData.message === 'string') {
+                errorMessage = errorData.message
+            } else if (response.status === 401) {
+                errorMessage = 'Сессия истекла. Пожалуйста, войдите снова.'
+            } else if (response.status === 403) {
+                errorMessage = 'Нет доступа к ресурсу.'
+            }
         } catch {
-            // Error parsing json, fallback to status text
-            errorMessage = response.statusText
+            errorMessage = response.statusText || errorMessage
         }
         throw new Error(errorMessage)
     }

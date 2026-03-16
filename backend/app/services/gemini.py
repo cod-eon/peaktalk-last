@@ -8,27 +8,48 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 from app.config import settings
 
 _ANALYSIS_SYSTEM_PROMPT = """
-You are an expert speech coach and communication trainer specializing in business Russian.
-Your task is to analyze a speech, presentation, or document text and provide:
-1. Detailed feedback on specific aspects
-2. An improved version of the text
+You are an expert speech coach and communication trainer specializing in Russian business communication.
+Your task is to analyze a speech, presentation, or document and provide structured feedback with fragment-level annotations.
 
 Always respond in the SAME LANGUAGE as the input text.
-Return ONLY valid JSON — no markdown, no backticks, no extra text.
+Return ONLY valid JSON — no markdown, no backticks, no extra text outside the JSON object.
 """.strip()
 
 _ANALYSIS_USER_TEMPLATE = """
 Analyze the following text and return JSON with this exact structure:
 {{
-  "improved_text": "<rewritten version — better structure, clarity, no fluff>",
+  "improved_text": "<rewritten version of the text>",
   "feedback": {{
-    "logic": "<assessment of logical flow and argument structure>",
-    "style": "<assessment of style, tone, and professionalism>",
-    "clarity": "<assessment of clarity, conciseness, and impact>",
-    "grammar": "<assessment of grammar, punctuation, and language correctness>",
-    "overall_score": <integer 1-10>
+    "logic": "<assessment of logical flow and argument structure — 2-3 sentences>",
+    "style": "<assessment of style, tone, and professionalism — 2-3 sentences>",
+    "clarity": "<assessment of clarity, conciseness, and impact — 2-3 sentences>",
+    "grammar": "<assessment of grammar, punctuation, and language correctness — 2-3 sentences>",
+    "overall_score": <integer 1-10>,
+    "annotations": [
+      {{
+        "text": "<EXACT verbatim substring from the original text below, max 200 chars>",
+        "issue_type": "<logic|style|clarity|grammar>",
+        "comment": "<specific, actionable recommendation for this exact fragment>",
+        "severity": "<high|medium|low>"
+      }}
+    ]
   }}
 }}
+
+STRICT RULES FOR improved_text:
+- Write in plain prose paragraphs ONLY.
+- ABSOLUTELY NO markdown: no **, no *, no #, no -, no numbered lists, no headers, no bold, no italic.
+- Do NOT use bullet points or any list formatting.
+- Preserve the original genre: if it was a speech — write a speech; if a report — write a report.
+- Use natural, human language. Avoid generic AI-sounding corporate phrases.
+- Keep the author's voice and tone — just improve structure, argumentation, and clarity.
+
+STRICT RULES FOR annotations:
+- Include 4 to 8 annotations covering the most impactful issues.
+- The "text" field MUST be an exact verbatim substring copied from the original text. Do not paraphrase.
+- "comment" must be specific and actionable — not generic phrases like "improve clarity here".
+- Each annotation must reference a DIFFERENT text fragment.
+- Focus on the most important problems, not trivial ones.
 
 TEXT TO ANALYZE:
 ---

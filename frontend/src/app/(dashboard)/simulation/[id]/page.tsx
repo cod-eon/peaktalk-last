@@ -191,7 +191,7 @@ export default function SimulationPage() {
                 <Bot size={24} />
               </div>
               <h1 className="text-xl md:text-2xl lg:text-3xl font-syne font-medium leading-tight text-[var(--text-main)]">
-                &quot;{lastQuestion}&quot;
+                {lastQuestion}
               </h1>
             </div>
 

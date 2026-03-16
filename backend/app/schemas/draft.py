@@ -1,7 +1,15 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+
+class AnnotationItem(BaseModel):
+    text: str = Field(description="Exact verbatim substring from the original text")
+    issue_type: Literal["logic", "style", "clarity", "grammar"]
+    comment: str = Field(description="Specific, actionable recommendation")
+    severity: Literal["high", "medium", "low"] = "medium"
 
 
 class AnalysisFeedback(BaseModel):
@@ -10,6 +18,7 @@ class AnalysisFeedback(BaseModel):
     clarity: str = Field(description="Assessment of clarity and conciseness")
     grammar: str = Field(description="Assessment of grammar and language correctness")
     overall_score: int = Field(ge=1, le=10, description="Overall quality score 1-10")
+    annotations: list[AnnotationItem] = Field(default_factory=list, description="Fragment-level issue annotations")
 
 
 class AIAnalysisResultResponse(BaseModel):
