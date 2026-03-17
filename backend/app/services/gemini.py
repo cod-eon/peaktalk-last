@@ -1,5 +1,7 @@
+import asyncio
 import json
 import re
+from functools import partial
 
 from google import genai
 from google.genai import types
@@ -85,11 +87,16 @@ async def analyze_draft(text: str) -> GeminiAnalysisResult:
     prompt = _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=_ANALYSIS_SYSTEM_PROMPT,
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            partial(
+                client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=_ANALYSIS_SYSTEM_PROMPT,
+                ),
             ),
         )
     except Exception as exc:

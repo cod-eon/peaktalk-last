@@ -1,6 +1,8 @@
 """Gemini prompts and calls for the simulation feature."""
+import asyncio
 import json
 import re
+from functools import partial
 
 from google import genai
 from google.genai import types
@@ -191,11 +193,16 @@ async def generate_question(
     prompt = _build_user_prompt(doc_text, history)
 
     try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=_build_system_prompt(persona_config),
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            partial(
+                client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=_build_system_prompt(persona_config),
+                ),
             ),
         )
     except Exception as exc:
@@ -233,9 +240,14 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
 
     client = genai.Client(api_key=settings.gemini_api_key)
     try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            partial(
+                client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=prompt,
+            ),
         )
     except Exception as exc:
         raise GeminiError(f"Gemini evaluation call failed: {exc}") from exc
