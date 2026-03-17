@@ -180,7 +180,7 @@ def _make_simulation_model(persona_config: dict) -> genai.GenerativeModel:
     """Create a Gemini model instance with persona-specific system prompt."""
     genai.configure(api_key=settings.gemini_api_key)
     return genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-1.5-flash",
         system_instruction=_build_system_prompt(persona_config),
     )
 
@@ -241,7 +241,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
     )
 
     genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
     try:
         response = await model.generate_content_async(prompt)
     except Exception as exc:
