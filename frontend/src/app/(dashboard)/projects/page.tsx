@@ -8,12 +8,14 @@ import { api } from '@/lib/api';
 import { Project } from '@/lib/types/projects';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { toast } from 'sonner';
 
 export default function ProjectsPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<{ items: Project[] }>({
     queryKey: ['projects'],
@@ -46,9 +48,7 @@ export default function ProjectsPage() {
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Вы уверены, что хотите удалить проект? Все связи будут разорваны.')) {
-      deleteMutation.mutate(id);
-    }
+    setDeleteProjectId(id);
   };
 
   const projects = data?.items || [];
@@ -142,11 +142,23 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      <CreateProjectModal 
+      <CreateProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={(data) => createMutation.mutate(data)}
         isSubmitting={createMutation.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteProjectId !== null}
+        title="Удалить проект?"
+        message="Все связанные данные будут удалены. Это действие невозможно отменить."
+        confirmLabel="Удалить"
+        onConfirm={() => {
+          if (deleteProjectId) deleteMutation.mutate(deleteProjectId);
+          setDeleteProjectId(null);
+        }}
+        onCancel={() => setDeleteProjectId(null)}
       />
     </div>
   );

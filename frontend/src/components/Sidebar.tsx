@@ -83,7 +83,7 @@ export function Sidebar() {
                             className={`
                                 flex items-center gap-4 px-3 h-10 rounded-md transition-colors relative group w-[216px]
                                 ${isActive
-                                    ? 'text-[var(--text-main)] bg-[var(--bg-surface)] border border-[var(--border-main)]'
+                                    ? 'sidebar-item-active text-[var(--accent-blue)] border border-[color-mix(in_srgb,var(--accent-blue)_35%,transparent_65%)]'
                                     : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border border-transparent'
                                 }
                             `}
@@ -142,17 +142,12 @@ export function Sidebar() {
                 <button
                     onClick={handleLogout}
                     title={!isExpanded ? "Выйти" : undefined}
-                    className="flex items-center gap-4 px-3 h-10 rounded-md transition-colors relative group text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border border-transparent w-[216px] overflow-hidden"
+                    className="flex items-center gap-4 px-3 h-10 rounded-md transition-colors relative group text-[var(--text-dim)] hover:text-red-400 hover:bg-red-400/5 border border-transparent hover:border-red-400/20 w-[216px] overflow-hidden cursor-pointer"
                 >
-                    <div className="w-[18px] h-[18px] shrink-0 group-hover:hidden text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">
-                      <div className="w-5 h-5 -ml-0.5 -mt-0.5 rounded-md bg-[var(--text-main)] text-[var(--bg-main)] flex items-center justify-center font-bold text-[10px] font-syne uppercase">
-                          {firstLetter}
-                      </div>
-                    </div>
                     <LogOut
                         size={18}
                         strokeWidth={2}
-                        className="shrink-0 hidden group-hover:block text-[var(--text-muted)] group-hover:text-red-400 transition-colors"
+                        className="shrink-0 text-[var(--text-muted)] group-hover:text-red-400 transition-colors"
                     />
                     <div className="flex-1 overflow-hidden flex justify-start">
                         <AnimatePresence>
@@ -161,9 +156,9 @@ export function Sidebar() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="font-mono text-[11px] uppercase tracking-wider whitespace-nowrap group-hover:text-red-400 transition-colors"
+                                    className="font-inter text-sm whitespace-nowrap group-hover:text-red-400 transition-colors"
                                 >
-                                    Выйти ({displayName})
+                                    Выйти
                                 </motion.span>
                             )}
                         </AnimatePresence>

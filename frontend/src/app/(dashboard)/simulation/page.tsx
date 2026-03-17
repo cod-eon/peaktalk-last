@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bot, Users, Briefcase, ChevronRight, FileText, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
+import { Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -47,7 +47,12 @@ export default function SimulationSetupPage() {
         { id: 'custom', name: 'Своя сфера...' },
     ];
 
-    const isReady = selectedRole && (selectedDomain !== 'custom' || customDomain.trim().length > 0);
+    const isReady = selectedRole && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0);
+
+    // Determine current step for progress stepper
+    const currentStep = !selectedRole ? 1 : !selectedDomain || (selectedDomain === 'custom' && !customDomain.trim()) ? 2 : 3;
+
+    const selectedRoleName = roles.find(r => r.id === selectedRole)?.name ?? null;
 
     const handleStart = async () => {
         if (!isReady) return;
@@ -83,16 +88,48 @@ export default function SimulationSetupPage() {
         <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10 overflow-hidden">
             <div className="flex flex-col gap-6 mb-10 sm:mb-14">
                 <div>
-                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2">
-                        КОНФИГУРАЦИЯ СЕССИИ
-                    </div>
-                    <h1 className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0">
+                    <h1 className="font-syne text-2xl sm:text-3xl font-bold text-slate-100 leading-tight tracking-tight m-0 mb-4">
                         Настройка симуляции
                     </h1>
-                    <p className="font-inter text-slate-400 mt-4 max-w-2xl text-sm leading-relaxed">
+                    <p className="font-inter text-slate-400 max-w-2xl text-sm leading-relaxed">
                         Выберите характер AI-собеседника, сферу и базовый материал (если есть),
-                        чтобы начать индивидуальную тренировку по защите ваших идей в условиях, приближенных к реальности.
+                        чтобы начать индивидуальную тренировку по защите ваших идей.
                     </p>
+                </div>
+
+                {/* Progress Stepper */}
+                <div className="flex items-center gap-2 pt-2">
+                    {[
+                        { step: 1, label: 'Персонаж' },
+                        { step: 2, label: 'Индустрия' },
+                        { step: 3, label: 'Контекст' },
+                    ].map(({ step, label }, i) => {
+                        const isDone = currentStep > step;
+                        const isActive = currentStep === step;
+                        return (
+                            <React.Fragment key={step}>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                                        isDone
+                                            ? 'bg-[var(--color-success)] text-white'
+                                            : isActive
+                                                ? 'bg-[var(--accent-blue)] text-white'
+                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)] text-[var(--text-dim)]'
+                                    }`}>
+                                        {isDone ? <CheckCircle2 size={14} /> : step}
+                                    </div>
+                                    <span className={`text-xs font-inter hidden sm:block transition-colors ${
+                                        isActive ? 'text-[var(--text-main)]' : isDone ? 'text-[var(--color-success)]' : 'text-[var(--text-dim)]'
+                                    }`}>
+                                        {label}
+                                    </span>
+                                </div>
+                                {i < 2 && (
+                                    <div className={`flex-1 h-px max-w-[40px] transition-colors ${isDone ? 'bg-[var(--color-success)]' : 'bg-[var(--border-main)]'}`} />
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -180,8 +217,11 @@ export default function SimulationSetupPage() {
 
                 {/* 3. DOCUMENT SELECTION */}
                 <section>
-                    <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера (Опционально)
+                    <h2 className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest mb-4 flex items-center gap-3 border-b border-[var(--border-main)] pb-3">
+                        Контекст для тренера
+                        <span className="font-inter text-[10px] normal-case tracking-normal bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border border-[var(--accent-blue)]/30 px-2 py-0.5 rounded-full">
+                            Необязательно
+                        </span>
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -242,15 +282,13 @@ export default function SimulationSetupPage() {
                     </div>
                 </section>
 
-                {/* LAUNCH BUTTON */}
-                <div className="pt-6 border-t border-[var(--border-main)] flex justify-end">
+                {/* LAUNCH BUTTON — desktop */}
+                <div className="hidden md:flex pt-6 border-t border-[var(--border-main)] justify-end">
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
-                        className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-syne font-semibold text-sm transition-all duration-300 ${
-                            isReady && !isStarting
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5'
-                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)] text-slate-500 cursor-not-allowed'
+                        className={`btn-primary gap-2 px-6 py-3 ${
+                            !isReady || isStarting ? 'opacity-40 cursor-not-allowed' : ''
                         }`}
                     >
                         {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать симуляцию'}
@@ -258,7 +296,32 @@ export default function SimulationSetupPage() {
                     </button>
                 </div>
             </div>
-            
+
+            {/* STICKY BOTTOM CTA — mobile only */}
+            <div className="md:hidden fixed bottom-20 left-4 right-4 z-20">
+                <div className="bg-[var(--bg-surface-alt)]/95 backdrop-blur-md border border-[var(--border-light)] rounded-2xl p-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                    <div className="flex-1 min-w-0">
+                        <p className="font-inter text-xs text-[var(--text-dim)]">
+                            {selectedRoleName ? (
+                                <span className="text-[var(--text-muted)]">{selectedRoleName}</span>
+                            ) : (
+                                'Выберите персонажа'
+                            )}
+                        </p>
+                    </div>
+                    <button
+                        disabled={!isReady || isStarting}
+                        onClick={handleStart}
+                        className={`btn-primary text-sm px-4 py-2.5 shrink-0 gap-2 ${
+                            !isReady || isStarting ? 'opacity-40 cursor-not-allowed' : ''
+                        }`}
+                    >
+                        {isStarting ? <Loader2 className="animate-spin" size={16} /> : (
+                            <>Начать <ChevronRight size={16} /></>
+                        )}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

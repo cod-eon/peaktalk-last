@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 type Document = {
     id: string;
@@ -48,6 +49,7 @@ export default function DocumentsPage() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<FileFilter>('Все');
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
     const { data, isLoading, error, refetch } = useQuery<DocumentListResponse>({
         queryKey: ['documents'],
@@ -209,7 +211,7 @@ export default function DocumentsPage() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            if (confirm('Удалить документ?')) deleteMutation.mutate(doc.id);
+                                            setDeleteTarget(doc.id);
                                         }}
                                         disabled={isDeleting}
                                         className="p-2 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/10 cursor-pointer"
@@ -261,6 +263,18 @@ export default function DocumentsPage() {
                     })}
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={deleteTarget !== null}
+                title="Удалить документ?"
+                message="Это действие невозможно отменить. Документ будет удалён безвозвратно."
+                confirmLabel="Удалить"
+                onConfirm={() => {
+                    if (deleteTarget) deleteMutation.mutate(deleteTarget);
+                    setDeleteTarget(null);
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

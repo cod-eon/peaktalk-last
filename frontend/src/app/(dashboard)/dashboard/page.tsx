@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ArrowRight, FileText, CheckCircle2, Clock, UploadCloud, Activity, TrendingUp, BarChart2, AlertCircle } from 'lucide-react';
+import { ArrowRight, FileText, CheckCircle2, Clock, UploadCloud, Activity, TrendingUp, BarChart2, AlertCircle, Play, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
@@ -86,15 +86,8 @@ export default function DashboardPage() {
             {/* ─── HEADER SECTION ─── */}
             <div className="flex flex-col gap-6 mb-10 sm:flex-row sm:items-start sm:justify-between sm:mb-14">
                 <div>
-                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.1em] uppercase mb-3 flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-blue)] opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-blue)]"></span>
-                        </span>
-                        SYSTEM_STATE: READY [100%]
-                    </div>
-                    <h1 className="font-syne text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 leading-tight tracking-tight m-0">
-                        С возвращением,<br className="hidden sm:block lg:hidden" /> {displayName}.
+                    <h1 className="font-syne text-2xl sm:text-3xl font-bold text-slate-100 leading-tight tracking-tight m-0">
+                        С возвращением, {displayName}.
                     </h1>
                 </div>
                 <div className="w-full sm:w-auto">
@@ -107,6 +100,55 @@ export default function DashboardPage() {
                     </Link>
                 </div>
             </div>
+
+            {/* ─── ONBOARDING CHECKLIST (shown only for new users with no content) ─── */}
+            {!isLoading && !isError && totalDrafts === 0 && (
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl p-6 mb-10 shadow-lg">
+                    <h2 className="font-syne text-base font-semibold text-[var(--text-main)] mb-5">Начните работу</h2>
+                    <div className="flex flex-col gap-3">
+                        {/* Step 1 */}
+                        <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/30 flex items-center justify-center shrink-0">
+                                <UploadCloud size={16} className="text-[var(--accent-blue)]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <Link href="/upload" className="font-inter text-sm font-medium text-[var(--text-main)] hover:text-[var(--accent-blue)] transition-colors flex items-center gap-1.5">
+                                    Загрузите документ
+                                    <ArrowRight size={14} className="opacity-60" />
+                                </Link>
+                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">Текст выступления, питча или сценария</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full border border-[var(--border-light)] flex items-center justify-center shrink-0">
+                                <span className="w-2 h-2 rounded-full bg-[var(--border-light)]" />
+                            </div>
+                        </div>
+                        <div className="ml-4 w-px h-4 bg-[var(--border-main)]" />
+                        {/* Step 2 */}
+                        <div className="flex items-center gap-4 opacity-40">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0">
+                                <Zap size={16} className="text-[var(--text-dim)]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="font-inter text-sm font-medium text-[var(--text-muted)]">Запустите анализ</span>
+                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">AI разберёт структуру и логику текста</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full border border-[var(--border-main)] flex items-center justify-center shrink-0" />
+                        </div>
+                        <div className="ml-4 w-px h-4 bg-[var(--border-main)]" />
+                        {/* Step 3 */}
+                        <div className="flex items-center gap-4 opacity-40">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0">
+                                <Play size={16} className="text-[var(--text-dim)]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="font-inter text-sm font-medium text-[var(--text-muted)]">Начните симуляцию</span>
+                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">Стресс-тест с AI-собеседником по вашему материалу</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full border border-[var(--border-main)] flex items-center justify-center shrink-0" />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ─── STATS GRID ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 sm:mb-16">
@@ -133,12 +175,12 @@ export default function DashboardPage() {
                             {stat.type === 'action' ? (
                                 <Link
                                     href={stat.href!}
-                                    className="font-syne text-2xl sm:text-3xl font-bold text-[var(--accent-blue)] leading-none tracking-tight group-hover:scale-105 transition-transform origin-left underline-offset-4 hover:underline"
+                                    className="font-syne text-2xl sm:text-3xl font-bold text-[var(--accent-blue)] leading-none tracking-tight underline-offset-4 hover:underline transition-colors"
                                 >
                                     {stat.value}
                                 </Link>
                             ) : (
-                                <div className="font-syne text-3xl sm:text-4xl font-bold text-slate-100 leading-none tracking-tight group-hover:scale-105 transition-transform origin-left">
+                                <div className="font-syne text-3xl sm:text-4xl font-bold text-slate-100 leading-none tracking-tight">
                                     {stat.value}
                                 </div>
                             )}

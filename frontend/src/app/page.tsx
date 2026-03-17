@@ -71,7 +71,7 @@ function Nav() {
           </div>
 
           {/* Desktop Nav */}
-          <div style={{ display: 'none', justifySelf: 'center' }} className="lg-flex">
+          <div style={{ display: 'none', justifySelf: 'center' }} className="hidden lg:flex">
             <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
               {['Как это работает', 'Возможности', 'Отзывы', 'Тарифы'].map((item, i) => {
                 const mapIds = ['#how', '#features', '#testimonials', '#pricing'];
@@ -101,7 +101,7 @@ function Nav() {
             </div>
           </div>
 
-          <div style={{ display: 'none', justifySelf: 'end' }} className="lg-flex">
+          <div style={{ display: 'none', justifySelf: 'end' }} className="hidden lg:flex">
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
               <a href="/login" style={{
                 fontFamily: 'var(--font-mono)',
@@ -119,7 +119,7 @@ function Nav() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="lg-hidden"
+            className="lg:hidden"
             onClick={() => setMobileMenuOpen(true)}
             style={{
               justifySelf: 'end',
@@ -220,13 +220,6 @@ function Nav() {
           </motion.div>
         )}
       </AnimatePresence>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @media (min-width: 1024px) {
-          .lg-flex { display: flex !important; }
-          .lg-hidden { display: none !important; }
-        }
-      ` }} />
     </>
   );
 }
@@ -641,6 +634,83 @@ function Features() {
   );
 }
 
+// ─── WHY NOT CHATGPT ───────────────────────────────────────────────────────────
+function WhyNotChatGPT() {
+  const comparisons = [
+    {
+      feature: 'Структура работы',
+      peaktalk: 'Структурированный воркфлоу: загрузка → анализ → симуляция → отчёт',
+      chatgpt: 'Свободный чат — нужно самому знать, что и как спросить',
+    },
+    {
+      feature: 'Ролевые симуляции',
+      peaktalk: 'Персонажи с контекстом: Инвестор, HR, Техдир, Скептик',
+      chatgpt: 'Нейтральный бот без ролевой глубины и отраслевых знаний',
+    },
+    {
+      feature: 'История и аналитика',
+      peaktalk: 'Все сессии сохраняются, есть прогресс и рекомендации',
+      chatgpt: 'Stateless — каждый новый чат начинается с нуля',
+    },
+  ];
+
+  return (
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 0', backgroundColor: 'var(--bg-surface)' }}>
+      <div className="container-custom">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 60 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-syne)',
+            fontSize: 'clamp(22px, 4vw, 30px)',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            margin: 0,
+            whiteSpace: 'nowrap',
+          }}>
+            Почему не ChatGPT?
+          </h2>
+          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--border-main)' }}>
+          {/* Header row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '1px solid var(--border-main)' }}>
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Функция
+            </div>
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              PeakTalk
+            </div>
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              ChatGPT
+            </div>
+          </div>
+
+          {comparisons.map((row, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: i < comparisons.length - 1 ? '1px solid var(--border-main)' : 'none' }}
+            >
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
+                {row.feature}
+              </div>
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: 'rgba(79, 140, 255, 0.03)' }}>
+                {row.peaktalk}
+              </div>
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-dim)' }}>
+                {row.chatgpt}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── TESTIMONIALS ──────────────────────────────────────────────────────────────
 function Testimonials() {
   return (
@@ -761,9 +831,9 @@ function Pricing() {
                 ))}
               </div>
               <div style={{ marginTop: 40 }}>
-                <button className={plan.accent ? "btn-primary" : "btn-secondary"} style={{ width: '100%' }}>
+                <a href="/register" className={plan.accent ? "btn-primary" : "btn-secondary"} style={{ width: '100%', justifyContent: 'center' }}>
                   Выбрать план
-                </button>
+                </a>
               </div>
             </motion.div>
           ))}
@@ -811,6 +881,7 @@ export default function Page() {
       <MarqueeStrip />
       <HowItWorks />
       <Features />
+      <WhyNotChatGPT />
       <Testimonials />
       <Pricing />
       <Footer />

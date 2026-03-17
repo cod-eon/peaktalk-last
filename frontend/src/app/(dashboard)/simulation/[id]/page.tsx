@@ -179,10 +179,10 @@ export default function SimulationPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={`qa-step-${turnCount}`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className="w-full max-w-3xl mx-auto"
           >
             {/* Карточка Вопроса */}
