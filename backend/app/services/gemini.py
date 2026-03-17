@@ -1,8 +1,8 @@
 import json
 import re
-from functools import lru_cache
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
@@ -58,15 +58,6 @@ TEXT TO ANALYZE:
 """
 
 
-@lru_cache
-def _get_model() -> genai.GenerativeModel:
-    genai.configure(api_key=settings.gemini_api_key)
-    return genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        system_instruction=_ANALYSIS_SYSTEM_PROMPT,
-    )
-
-
 class GeminiError(Exception):
     pass
 
@@ -90,11 +81,17 @@ def _parse_gemini_json(raw: str) -> dict:
     reraise=True,
 )
 async def analyze_draft(text: str) -> GeminiAnalysisResult:
-    model = _get_model()
+    client = genai.Client(api_key=settings.gemini_api_key)
     prompt = _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
-        response = await model.generate_content_async(prompt)
+        response = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=_ANALYSIS_SYSTEM_PROMPT,
+            ),
+        )
     except Exception as exc:
         raise GeminiError(f"Gemini API call failed: {exc}") from exc
 
