@@ -1,517 +1,300 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertCircle, TerminalSquare, ListFilter, Sparkles, Activity, ChevronLeft } from 'lucide-react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import {
+    ArrowLeft,
+    FileText,
+    Zap,
+    TrendingUp,
+    AlertCircle,
+    CheckCircle2,
+    ChevronRight,
+    BarChart2,
+    MessageSquare,
+    Lightbulb,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { api } from '@/lib/api';
-import { toast } from 'sonner';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type Severity = 'high' | 'medium' | 'low';
-type IssueType = 'logic' | 'style' | 'clarity' | 'grammar';
-
-type Annotation = {
-    text: string;
-    issue_type: IssueType;
-    comment: string;
-    severity: Severity;
-};
-
-type FeedbackJSON = {
+type AnalysisFeedback = {
     logic: string;
     style: string;
     clarity: string;
     grammar: string;
     overall_score: number;
-    annotations?: Annotation[];
+    strengths?: string[];
+    weaknesses?: string[];
+    recommendations?: string[];
 };
 
 type Draft = {
     id: string;
     title: string;
-    raw_text: string;
+    content: string;
+    created_at: string;
     analysis_result: {
-        feedback_json: FeedbackJSON;
-        improved_text: string;
+        id: string;
+        feedback_json: AnalysisFeedback;
+        created_at: string;
     } | null;
+    document_id: string | null;
 };
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+function ScoreRing({ score }: { score: number }) {
+    const size = 80;
+    const stroke = 5;
+    const r = (size - stroke) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (score / 10) * circ;
+    const color = score >= 7 ? '#10b981' : score >= 5 ? '#fbbf24' : '#ef4444';
 
-const ISSUE_STYLES: Record<IssueType, { bg: string; border: string; label: string; color: string; dot: string }> = {
-    logic:   { bg: 'bg-red-500/20',    border: 'border-b-2 border-red-400',    label: 'Логика',      color: '#ef4444', dot: 'bg-red-400' },
-    style:   { bg: 'bg-orange-500/20', border: 'border-b-2 border-orange-400', label: 'Стиль',       color: '#f97316', dot: 'bg-orange-400' },
-    clarity: { bg: 'bg-purple-500/20', border: 'border-b-2 border-purple-400', label: 'Ясность',     color: '#a855f7', dot: 'bg-purple-400' },
-    grammar: { bg: 'bg-yellow-500/20', border: 'border-b-2 border-yellow-400', label: 'Грамматика',  color: '#eab308', dot: 'bg-yellow-400' },
-};
-
-const SEVERITY_LABEL: Record<Severity, string> = {
-    high: 'Критично',
-    medium: 'Средний',
-    low: 'Низкий',
-};
-
-// ─── Text segmentation ───────────────────────────────────────────────────────
-
-type Segment = { text: string; annotation?: Annotation };
-
-function buildSegments(rawText: string, annotations: Annotation[]): Segment[] {
-    if (!annotations.length) return [{ text: rawText }];
-
-    // Find non-overlapping spans sorted by position
-    const spans: Array<{ start: number; end: number; ann: Annotation }> = [];
-    for (const ann of annotations) {
-        if (!ann.text || ann.text.length < 3) continue;
-        const idx = rawText.indexOf(ann.text);
-        if (idx === -1) continue;
-        const end = idx + ann.text.length;
-        const overlaps = spans.some((s) => !(end <= s.start || idx >= s.end));
-        if (!overlaps) spans.push({ start: idx, end, ann });
-    }
-    spans.sort((a, b) => a.start - b.start);
-
-    const segments: Segment[] = [];
-    let cursor = 0;
-    for (const span of spans) {
-        if (span.start > cursor) segments.push({ text: rawText.slice(cursor, span.start) });
-        segments.push({ text: rawText.slice(span.start, span.end), annotation: span.ann });
-        cursor = span.end;
-    }
-    if (cursor < rawText.length) segments.push({ text: rawText.slice(cursor) });
-    return segments;
+    return (
+        <div className="relative w-20 h-20 shrink-0">
+            <svg width={size} height={size} className="-rotate-90">
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--bg-main)" strokeWidth={stroke} />
+                <motion.circle
+                    cx={size / 2} cy={size / 2} r={r} fill="none"
+                    stroke={color} strokeWidth={stroke} strokeLinecap="round"
+                    strokeDasharray={circ}
+                    initial={{ strokeDashoffset: circ }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-syne text-[20px] font-bold leading-none" style={{ color }}>{score}</span>
+                <span className="text-[9px] font-mono text-[var(--text-dim)] mt-0.5">/10</span>
+            </div>
+        </div>
+    );
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+function CategoryCard({ label, text }: { label: string; text: string }) {
+    return (
+        <div className="p-4 bg-[var(--bg-surface-alt)] rounded-[var(--radius-md)] border border-[var(--border-main)]">
+            <span className="label-kicker mb-2 block">{label}</span>
+            <p className="text-[13px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
+        </div>
+    );
+}
 
 export default function AnalysisPage() {
     const params = useParams();
     const router = useRouter();
     const draftId = params.id as string;
 
-    const [draft, setDraft] = useState<Draft | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [activeSection, setActiveSection] = useState<string>('logic');
-    const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
-    const [showRightPanel, setShowRightPanel] = useState(false);
-    const [view, setView] = useState<'original' | 'improved'>('original');
+    const { data: draft, isLoading, isError } = useQuery<Draft>({
+        queryKey: ['draft', draftId],
+        queryFn: () => api.get(`/drafts/${draftId}`),
+        enabled: !!draftId,
+    });
 
-    useEffect(() => {
-        const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-        if (isDesktop) setShowRightPanel(true);
-    }, []);
-
-    useEffect(() => {
-        async function fetchDraft() {
-            try {
-                const res = await api.get(`/drafts/${draftId}`);
-                setDraft(res);
-            } catch (err: unknown) {
-                toast.error(err instanceof Error ? err.message : 'Ошибка загрузки разбора');
-                router.push('/upload');
-            } finally {
-                setLoading(false);
-            }
-        }
-        if (draftId) fetchDraft();
-    }, [draftId, router]);
-
-    const handleAnnotationClick = useCallback((ann: Annotation) => {
-        setSelectedAnnotation(ann);
-        setActiveSection(ann.issue_type);
-        if (!showRightPanel) setShowRightPanel(true);
-    }, [showRightPanel]);
-
-    const clearAnnotation = useCallback(() => setSelectedAnnotation(null), []);
-
-    // Build annotated segments from raw text
-    const segments = useMemo(() => {
-        if (!draft?.raw_text) return [];
-        const annotations = draft.analysis_result?.feedback_json.annotations ?? [];
-        return buildSegments(draft.raw_text, annotations);
-    }, [draft]);
-
-    const annotations = draft?.analysis_result?.feedback_json.annotations ?? [];
-
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="flex flex-1 items-center justify-center bg-[var(--bg-main)]">
-                <div className="flex flex-col items-center gap-4 text-[var(--accent-blue)]">
-                    <Activity size={32} className="animate-spin" />
-                    <span className="text-sm font-mono text-[var(--text-muted)]">Загрузка данных...</span>
-                </div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-6 h-6 border-2 border-[var(--border-light)] border-t-[var(--accent-primary)] rounded-full animate-spin" />
             </div>
         );
     }
 
-    if (!draft || !draft.analysis_result) {
+    if (isError || !draft) {
         return (
-            <div className="flex flex-1 items-center justify-center bg-[var(--bg-main)]">
-                <div className="text-[var(--text-muted)] font-mono">Анализ не найден</div>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <AlertCircle size={32} className="text-red-400" strokeWidth={1.5} />
+                <p className="text-[14px] text-[var(--text-muted)] font-inter">Материал не найден</p>
+                <Link href="/dashboard" className="btn-secondary text-sm gap-2">
+                    <ArrowLeft size={14} /> На дашборд
+                </Link>
             </div>
         );
     }
 
-    const { title } = draft;
-    const { feedback_json, improved_text } = draft.analysis_result;
-
-    const feedbackItems = [
-        { id: 'logic',   title: 'Логика и структура', desc: feedback_json.logic,   color: ISSUE_STYLES.logic.color },
-        { id: 'style',   title: 'Стиль и тон',        desc: feedback_json.style,   color: ISSUE_STYLES.style.color },
-        { id: 'clarity', title: 'Ясность',             desc: feedback_json.clarity, color: ISSUE_STYLES.clarity.color },
-        { id: 'grammar', title: 'Грамматика',          desc: feedback_json.grammar, color: ISSUE_STYLES.grammar.color },
-    ];
-
-    // Annotations for the active category (for right panel listing)
-    const categoryAnnotations = annotations.filter((a) => a.issue_type === activeSection);
+    const analysis = draft.analysis_result;
+    const fb = analysis?.feedback_json;
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[var(--bg-main)]">
-            {/* ─── TOOLBAR ─── */}
-            <div className="h-14 border-b border-[var(--border-main)] flex items-center justify-between px-4 sm:px-6 bg-[var(--bg-surface)] shrink-0 gap-2">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-[var(--text-main)] font-mono text-[13px] truncate max-w-[180px] sm:max-w-[360px]">
-                        <TerminalSquare size={16} className="text-[var(--accent-blue)] shrink-0" />
-                        <span className="truncate">{title || 'draft.txt'}</span>
-                    </div>
-                    <div className="hidden sm:block h-4 w-px bg-[var(--border-main)]" />
-                    <div className="hidden sm:flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
-                        Score:{' '}
-                        <span
-                            className="font-semibold"
-                            style={{
-                                color:
-                                    feedback_json.overall_score >= 8
-                                        ? '#10b981'
-                                        : feedback_json.overall_score >= 5
-                                        ? '#f59e0b'
-                                        : '#f43f5e',
-                            }}
-                        >
-                            {feedback_json.overall_score}/10
-                        </span>
-                    </div>
-                    {annotations.length > 0 && (
-                        <>
-                            <div className="hidden sm:block h-4 w-px bg-[var(--border-main)]" />
-                            <div className="hidden sm:flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
-                                <AlertCircle size={12} />
-                                {annotations.length} замечаний
-                            </div>
-                        </>
-                    )}
-                </div>
+        <div className="w-full max-w-4xl mx-auto px-5 py-8 lg:px-8 pb-16 md:pb-10">
+            <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors mb-6 group"
+            >
+                <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                <span className="text-[12px] font-inter">Назад</span>
+            </button>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        className="md:hidden flex items-center gap-1.5 border border-[var(--border-light)] text-[var(--text-main)] px-2.5 py-1.5 rounded text-xs font-mono"
-                        onClick={() => setShowRightPanel(!showRightPanel)}
-                    >
-                        <ListFilter size={14} /> Анализ
-                    </button>
-                    <button
-                        onClick={() => { setView(view === 'improved' ? 'original' : 'improved'); clearAnnotation(); }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded border transition-colors ${
-                            view === 'improved'
-                                ? 'bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] text-[var(--accent-blue)]'
-                                : 'btn-primary'
-                        }`}
-                    >
-                        <Sparkles size={14} />
-                        <span className="hidden sm:inline">
-                            {view === 'improved' ? 'Оригинал' : 'Улучшенная версия'}
-                        </span>
-                    </button>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+                <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0 mt-0.5">
+                        <FileText size={18} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="label-kicker mb-1">Разбор материала</p>
+                        <h1 className="font-syne text-[20px] sm:text-[24px] font-bold text-[var(--text-main)] tracking-tight leading-tight">
+                            {draft.title}
+                        </h1>
+                        <p className="text-[11px] text-[var(--text-dim)] mt-1 font-mono">
+                            {format(new Date(draft.created_at), 'd MMMM yyyy', { locale: ru })}
+                        </p>
+                    </div>
                 </div>
+                {analysis && (
+                    <Link href={`/simulation?draft=${draftId}`} className="btn-primary flex-shrink-0 gap-2 self-start">
+                        <Zap size={14} /> Симуляция
+                    </Link>
+                )}
             </div>
 
-            {/* ─── MAIN WORKSPACE ─── */}
-            <div className="flex flex-1 min-h-0 overflow-hidden relative">
-
-                {/* ─── LEFT: TEXT VIEW ─── */}
-                <div className="flex-1 overflow-y-auto bg-[var(--bg-main)] scroll-smooth">
-                    <AnimatePresence mode="wait">
-                        {view === 'improved' ? (
-                            <motion.div
-                                key="improved"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="p-8 pb-20 max-w-3xl mx-auto"
-                            >
-                                <div className="flex items-center gap-2 mb-6 font-mono text-xs text-[var(--accent-blue)] uppercase tracking-widest">
-                                    <Sparkles size={14} />
-                                    Оптимизированный текст
-                                </div>
-                                <div className="font-inter text-[15px] leading-[1.9] text-[var(--text-main)] whitespace-pre-wrap">
-                                    {improved_text}
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="original"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="p-8 pb-20 max-w-3xl mx-auto"
-                            >
-                                {annotations.length > 0 && (
-                                    <div className="mb-6 flex flex-wrap gap-2">
-                                        {(Object.keys(ISSUE_STYLES) as IssueType[]).map((type) => {
-                                            const count = annotations.filter((a) => a.issue_type === type).length;
-                                            if (!count) return null;
-                                            return (
-                                                <button
-                                                    key={type}
-                                                    onClick={() => { setActiveSection(type); clearAnnotation(); }}
-                                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono border transition-all ${
-                                                        activeSection === type
-                                                            ? 'opacity-100 border-current'
-                                                            : 'opacity-50 border-transparent hover:opacity-75'
-                                                    }`}
-                                                    style={{ color: ISSUE_STYLES[type].color }}
-                                                >
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${ISSUE_STYLES[type].dot}`} />
-                                                    {ISSUE_STYLES[type].label} ({count})
-                                                </button>
-                                            );
-                                        })}
-                                        {selectedAnnotation && (
-                                            <button
-                                                onClick={clearAnnotation}
-                                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-light)] transition-colors"
-                                            >
-                                                <X size={10} /> Снять выбор
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-
-                                <div className="font-inter text-[15px] leading-[1.9] text-[var(--text-main)] whitespace-pre-wrap">
-                                    {segments.map((seg, i) => {
-                                        if (!seg.annotation) return <span key={i}>{seg.text}</span>;
-
-                                        const style = ISSUE_STYLES[seg.annotation.issue_type];
-                                        const isSelected = selectedAnnotation === seg.annotation;
-
-                                        return (
-                                            <mark
-                                                key={i}
-                                                onClick={() => handleAnnotationClick(seg.annotation!)}
-                                                title={seg.annotation.comment}
-                                                className={`cursor-pointer rounded-sm px-0.5 transition-all duration-150 ${style.bg} ${style.border} ${
-                                                    isSelected ? 'ring-2 ring-offset-1 ring-current' : 'hover:brightness-125'
-                                                }`}
-                                                style={isSelected ? { color: style.color } : {}}
-                                            >
-                                                {seg.text}
-                                            </mark>
-                                        );
-                                    })}
-                                </div>
-
-                                {annotations.length === 0 && (
-                                    <p className="mt-6 text-xs font-mono text-[var(--text-muted)]">
-                                        Аннотации не найдены — переанализируйте текст для получения подсказок.
-                                    </p>
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+            {!analysis && (
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-8 text-center">
+                    <div className="w-12 h-12 rounded-[var(--radius-md)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center mx-auto mb-4">
+                        <BarChart2 size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+                    </div>
+                    <h2 className="font-syne text-[16px] font-semibold text-[var(--text-main)] mb-2">Анализ ещё не запущен</h2>
+                    <p className="text-[13px] text-[var(--text-muted)] font-inter mb-5 max-w-sm mx-auto">
+                        AI разберёт структуру, логику и стиль вашего текста
+                    </p>
+                    <button className="btn-primary gap-2"><Zap size={14} /> Запустить анализ</button>
                 </div>
+            )}
 
-                {/* ─── RIGHT: SMART PANEL ─── */}
-                <AnimatePresence>
-                    {showRightPanel && (
+            {analysis && fb && (
+                <div className="flex flex-col gap-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="relative bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5 overflow-hidden"
+                    >
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/25 to-transparent" />
+                        <div className="flex items-center gap-5">
+                            <ScoreRing score={fb.overall_score} />
+                            <div>
+                                <h2 className="font-syne text-[16px] font-semibold text-[var(--text-main)] tracking-tight">AI Score</h2>
+                                <p className="text-[12px] text-[var(--text-dim)] font-inter mt-1 max-w-xs">
+                                    {fb.overall_score >= 8 ? 'Отличная работа — материал готов к выступлению'
+                                        : fb.overall_score >= 6 ? 'Хорошая основа, есть точки роста'
+                                        : fb.overall_score >= 4 ? 'Требуется доработка перед выступлением'
+                                        : 'Материал нуждается в существенной переработке'}
+                                </p>
+                                <p className="text-[10px] text-[var(--text-dim)] font-mono mt-2">
+                                    {format(new Date(analysis.created_at), 'd MMM yyyy, HH:mm', { locale: ru })}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.08 }}
+                        className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <MessageSquare size={15} className="text-[var(--accent-primary)]" />
+                            <h2 className="font-syne text-[15px] font-semibold text-[var(--text-main)] tracking-tight">Разбор по критериям</h2>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <CategoryCard label="Логика" text={fb.logic} />
+                            <CategoryCard label="Ясность" text={fb.clarity} />
+                            <CategoryCard label="Стиль" text={fb.style} />
+                            <CategoryCard label="Грамматика" text={fb.grammar} />
+                        </div>
+                    </motion.div>
+
+                    {(fb.strengths?.length || fb.weaknesses?.length) ? (
                         <motion.div
-                            initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 340, opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
-                            className="fixed md:relative right-0 top-14 md:top-0 bottom-0 w-[min(340px,85vw)] max-w-full md:max-w-none border-l border-[var(--border-main)] bg-[var(--bg-surface)] flex flex-col z-20 shadow-2xl md:shadow-none backdrop-blur-xl md:backdrop-blur-none"
+                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.35, delay: 0.16 }}
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
                         >
-                            <div className="px-5 py-4 border-b border-[var(--border-main)] flex items-center justify-between">
-                                <span className="font-mono text-[11px] text-[var(--text-muted)] uppercase tracking-[0.1em]">
-                                    Анализ
-                                </span>
-                                <button
-                                    className="md:hidden bg-transparent border-none text-[var(--text-dim)]"
-                                    onClick={() => setShowRightPanel(false)}
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto">
-                                <AnimatePresence mode="wait">
-                                    {/* ── Annotation detail view ── */}
-                                    {selectedAnnotation ? (
-                                        <motion.div
-                                            key="annotation-detail"
-                                            initial={{ opacity: 0, x: 10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            className="flex flex-col h-full"
-                                        >
-                                            <button
-                                                onClick={clearAnnotation}
-                                                className="flex items-center gap-1.5 px-5 py-3 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] border-b border-[var(--border-light)] transition-colors"
-                                            >
-                                                <ChevronLeft size={12} /> Назад к категориям
-                                            </button>
-
-                                            <div className="p-5 flex-1">
-                                                {/* Issue type badge */}
-                                                <div
-                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono mb-4 border"
-                                                    style={{
-                                                        color: ISSUE_STYLES[selectedAnnotation.issue_type].color,
-                                                        borderColor: ISSUE_STYLES[selectedAnnotation.issue_type].color + '40',
-                                                        backgroundColor: ISSUE_STYLES[selectedAnnotation.issue_type].color + '15',
-                                                    }}
-                                                >
-                                                    <span
-                                                        className={`w-1.5 h-1.5 rounded-full ${ISSUE_STYLES[selectedAnnotation.issue_type].dot}`}
-                                                    />
-                                                    {ISSUE_STYLES[selectedAnnotation.issue_type].label}
-                                                    <span className="opacity-60 mx-1">·</span>
-                                                    {SEVERITY_LABEL[selectedAnnotation.severity]}
-                                                </div>
-
-                                                {/* Quoted fragment */}
-                                                <div className="bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl p-4 mb-4">
-                                                    <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-2">
-                                                        Фрагмент
-                                                    </div>
-                                                    <p className="text-sm text-slate-300 leading-relaxed italic">
-                                                        &ldquo;{selectedAnnotation.text}&rdquo;
-                                                    </p>
-                                                </div>
-
-                                                {/* Recommendation */}
-                                                <div>
-                                                    <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-2">
-                                                        Рекомендация
-                                                    </div>
-                                                    <p className="text-sm text-slate-200 leading-relaxed">
-                                                        {selectedAnnotation.comment}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ) : (
-                                        /* ── Category list view ── */
-                                        <motion.div
-                                            key="category-list"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                        >
-                                            {/* General feedback categories */}
-                                            {feedbackItems.map((item) => {
-                                                const isActive = activeSection === item.id;
-                                                const count = annotations.filter(
-                                                    (a) => a.issue_type === item.id
-                                                ).length;
-                                                return (
-                                                    <div
-                                                        key={item.id}
-                                                        onClick={() => setActiveSection(item.id)}
-                                                        className={`px-5 py-4 border-b border-[var(--border-light)] cursor-pointer transition-colors relative ${
-                                                            isActive
-                                                                ? 'bg-[var(--bg-surface-hover)]'
-                                                                : 'hover:bg-[var(--bg-surface-hover)]/50'
-                                                        }`}
-                                                    >
-                                                        {isActive && (
-                                                            <motion.div
-                                                                layoutId="sidebar-active-indicator"
-                                                                className="absolute left-0 top-0 bottom-0 w-1"
-                                                                style={{ backgroundColor: item.color }}
-                                                            />
-                                                        )}
-                                                        <div className="flex items-start gap-3">
-                                                            <AlertCircle
-                                                                size={16}
-                                                                color={item.color}
-                                                                className="mt-0.5 shrink-0"
-                                                            />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center justify-between mb-1">
-                                                                    <div
-                                                                        className={`font-inter text-sm ${
-                                                                            isActive
-                                                                                ? 'text-white font-semibold'
-                                                                                : 'text-[var(--text-main)]'
-                                                                        }`}
-                                                                    >
-                                                                        {item.title}
-                                                                    </div>
-                                                                    {count > 0 && (
-                                                                        <span
-                                                                            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                                                                            style={{
-                                                                                color: item.color,
-                                                                                backgroundColor: item.color + '20',
-                                                                            }}
-                                                                        >
-                                                                            {count}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <div
-                                                                    className={`font-inter text-xs leading-relaxed ${
-                                                                        isActive
-                                                                            ? 'text-slate-300'
-                                                                            : 'text-[var(--text-muted)] line-clamp-2'
-                                                                    }`}
-                                                                >
-                                                                    {item.desc}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-
-                                            {/* Annotations for active category */}
-                                            {categoryAnnotations.length > 0 && (
-                                                <div className="px-5 py-3">
-                                                    <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-3">
-                                                        Найденные проблемы
-                                                    </div>
-                                                    {categoryAnnotations.map((ann, i) => (
-                                                        <button
-                                                            key={i}
-                                                            onClick={() => handleAnnotationClick(ann)}
-                                                            className="w-full text-left p-3 mb-2 bg-[var(--bg-main)] border border-[var(--border-light)] rounded-xl hover:border-[var(--border-main)] transition-colors group"
-                                                        >
-                                                            <div className="flex items-center justify-between mb-1.5">
-                                                                <span
-                                                                    className="text-[10px] font-mono"
-                                                                    style={{ color: ISSUE_STYLES[ann.issue_type].color }}
-                                                                >
-                                                                    {SEVERITY_LABEL[ann.severity]}
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-xs text-slate-300 italic line-clamp-1 mb-1">
-                                                                &ldquo;{ann.text.slice(0, 60)}{ann.text.length > 60 ? '…' : ''}&rdquo;
-                                                            </p>
-                                                            <p className="text-[11px] text-[var(--text-muted)] line-clamp-2">
-                                                                {ann.comment}
-                                                            </p>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                            {fb.strengths?.length ? (
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <CheckCircle2 size={14} className="text-emerald-400" />
+                                        <span className="label-kicker" style={{ color: 'rgba(52,211,153,0.7)' }}>Сильные стороны</span>
+                                    </div>
+                                    <ul className="flex flex-col gap-2.5">
+                                        {fb.strengths.map((s, i) => (
+                                            <li key={i} className="flex items-start gap-2">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-400 mt-[7px] shrink-0" />
+                                                <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">{s}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : null}
+                            {fb.weaknesses?.length ? (
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <AlertCircle size={14} className="text-[var(--color-warning)]" />
+                                        <span className="label-kicker" style={{ color: 'rgba(251,191,36,0.7)' }}>Зоны роста</span>
+                                    </div>
+                                    <ul className="flex flex-col gap-2.5">
+                                        {fb.weaknesses.map((w, i) => (
+                                            <li key={i} className="flex items-start gap-2">
+                                                <div className="w-1 h-1 rounded-full bg-[var(--color-warning)] mt-[7px] shrink-0" />
+                                                <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">{w}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : null}
                         </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                    ) : null}
+
+                    {fb.recommendations?.length ? (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.35, delay: 0.22 }}
+                            className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5"
+                        >
+                            <div className="flex items-center gap-2 mb-4">
+                                <Lightbulb size={15} className="text-[var(--color-ai)]" />
+                                <h2 className="font-syne text-[15px] font-semibold text-[var(--text-main)] tracking-tight">Рекомендации AI</h2>
+                            </div>
+                            <ol className="flex flex-col gap-3">
+                                {fb.recommendations.map((rec, i) => (
+                                    <li key={i} className="flex items-start gap-3">
+                                        <span className="w-5 h-5 rounded-[var(--radius-sm)] bg-[var(--color-ai-bg)] border border-[var(--color-ai-glow)] flex items-center justify-center shrink-0 mt-0.5">
+                                            <span className="text-[9px] font-mono font-bold" style={{ color: 'var(--color-ai)' }}>{i + 1}</span>
+                                        </span>
+                                        <p className="text-[13px] text-[var(--text-muted)] font-inter leading-relaxed">{rec}</p>
+                                    </li>
+                                ))}
+                            </ol>
+                        </motion.div>
+                    ) : null}
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.28 }}
+                        className="relative bg-[var(--bg-card)] border border-[var(--accent-primary-glow)] rounded-[var(--radius-lg)] p-5 overflow-hidden"
+                    >
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/30 to-transparent" />
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex-1">
+                                <h3 className="font-syne text-[15px] font-semibold text-[var(--text-main)] tracking-tight">Готовы к стресс-тесту?</h3>
+                                <p className="text-[12px] text-[var(--text-dim)] font-inter mt-1">AI-собеседник задаст жёсткие вопросы по вашему материалу</p>
+                            </div>
+                            <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-2 shrink-0">
+                                <Zap size={14} /> Начать симуляцию <ChevronRight size={13} />
+                            </Link>
+                        </div>
+                    </motion.div>
+
+                    <div className="flex items-center gap-5 pt-1">
+                        <Link href="/analytics" className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">
+                            <TrendingUp size={13} /><span className="text-[12px] font-inter">Аналитика</span>
+                        </Link>
+                        <Link href="/documents" className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">
+                            <FileText size={13} /><span className="text-[12px] font-inter">Все документы</span>
+                        </Link>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

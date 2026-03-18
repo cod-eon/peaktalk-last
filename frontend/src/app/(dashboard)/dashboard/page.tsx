@@ -1,7 +1,18 @@
 "use client";
 
 import React from 'react';
-import { ArrowRight, FileText, CheckCircle2, Clock, UploadCloud, Activity, TrendingUp, BarChart2, AlertCircle, Play, Zap } from 'lucide-react';
+import {
+    ArrowRight,
+    FileText,
+    CheckCircle2,
+    Clock,
+    UploadCloud,
+    AlertCircle,
+    Zap,
+    TrendingUp,
+    BarChart2,
+    ChevronRight,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
@@ -10,9 +21,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
 type AnalysisResult = {
-    feedback_json: {
-        overall_score: number;
-    };
+    feedback_json: { overall_score: number };
 };
 
 type Draft = {
@@ -29,9 +38,29 @@ type DraftsResponse = {
 
 function getDraftStatus(draft: Draft): { label: string; color: string; icon: React.ReactNode } {
     if (draft.analysis_result) {
-        return { label: 'Проанализирован', color: 'text-emerald-400', icon: <CheckCircle2 size={15} className="text-emerald-400" /> };
+        return {
+            label: 'Проанализирован',
+            color: 'text-emerald-400',
+            icon: <CheckCircle2 size={14} className="text-emerald-400" />,
+        };
     }
-    return { label: 'Загружен', color: 'text-[var(--text-muted)]', icon: <Clock size={15} className="text-[var(--text-dim)]" /> };
+    return {
+        label: 'Загружен',
+        color: 'text-[var(--text-dim)]',
+        icon: <Clock size={14} className="text-[var(--text-dim)]" />,
+    };
+}
+
+function ScoreBadge({ score }: { score: number }) {
+    const color =
+        score >= 7 ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
+        score >= 5 ? 'text-[var(--color-warning)] bg-[var(--color-warning-bg)] border-[var(--color-warning)]/20' :
+                    'text-red-400 bg-red-400/10 border-red-400/20';
+    return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${color}`}>
+            {score}/10
+        </span>
+    );
 }
 
 export default function DashboardPage() {
@@ -47,265 +76,331 @@ export default function DashboardPage() {
     const drafts = data?.items ?? [];
     const totalDrafts = data?.total ?? 0;
     const analyzedDrafts = drafts.filter((d) => d.analysis_result !== null);
-    const avgScore = analyzedDrafts.length
-        ? Math.round(analyzedDrafts.reduce((acc, d) => acc + (d.analysis_result!.feedback_json.overall_score), 0) / analyzedDrafts.length)
-        : null;
+    const avgScore =
+        analyzedDrafts.length
+            ? Math.round(
+                  analyzedDrafts.reduce((acc, d) => acc + d.analysis_result!.feedback_json.overall_score, 0) /
+                      analyzedDrafts.length
+              )
+            : null;
 
-    const stats = [
-        {
-            label: 'Материалов загружено',
-            value: isLoading ? '—' : String(totalDrafts),
-            trend: totalDrafts > 0 ? `${analyzedDrafts.length} проанализировано` : 'Загрузите первый материал',
-            positive: totalDrafts > 0,
-            type: 'progress' as const,
-            valueProgress: totalDrafts > 0 ? Math.round((analyzedDrafts.length / totalDrafts) * 100) : 0,
-            icon: <BarChart2 size={16} className="text-[var(--accent-blue)]" />,
-        },
-        {
-            label: 'Средний балл анализа',
-            value: isLoading ? '—' : avgScore !== null ? `${avgScore} / 10` : 'Нет данных',
-            trend: avgScore !== null ? (avgScore >= 7 ? 'Отличный результат!' : avgScore >= 5 ? 'Есть куда расти' : 'Нужна доработка') : 'Запустите анализ материала',
-            positive: avgScore !== null && avgScore >= 7,
-            type: 'status' as const,
-            statusColor: avgScore !== null ? (avgScore >= 7 ? '#10b981' : avgScore >= 5 ? '#f59e0b' : '#f43f5e') : '#64748b',
-            icon: <TrendingUp size={16} className="text-[var(--accent-blue)]" />,
-        },
-        {
-            label: 'Быстрый старт',
-            value: 'Симуляция',
-            trend: 'Стресс-тест с AI-собеседником',
-            positive: true,
-            type: 'action' as const,
-            href: '/simulation',
-            icon: <Activity size={16} className="text-[var(--accent-blue)]" />,
-        },
-    ];
+    const analysisProgress = totalDrafts > 0 ? Math.round((analyzedDrafts.length / totalDrafts) * 100) : 0;
 
     return (
-        <div className="pb-10 pt-4 sm:pt-8 w-full max-w-6xl mx-auto px-6 lg:px-10 overflow-hidden">
-            {/* ─── HEADER SECTION ─── */}
-            <div className="flex flex-col gap-6 mb-10 sm:flex-row sm:items-start sm:justify-between sm:mb-14">
+        <div className="pb-16 md:pb-10 pt-6 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
+
+            {/* ─── Header ─── */}
+            <div className="flex flex-col gap-4 mb-10 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="font-syne text-2xl sm:text-3xl font-bold text-slate-100 leading-tight tracking-tight m-0">
-                        С возвращением, {displayName}.
+                    <p className="label-kicker mb-2">Рабочее пространство</p>
+                    <h1 className="font-syne text-2xl sm:text-[28px] font-bold text-[var(--text-main)] leading-tight tracking-tight">
+                        {displayName}
                     </h1>
                 </div>
-                <div className="w-full sm:w-auto">
-                    <Link
-                        href="/upload"
-                        className="btn-primary w-full sm:w-auto mt-2 sm:mt-0 shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-shadow"
-                    >
-                        <UploadCloud size={16} className="mr-2" />
-                        Новый разбор
-                    </Link>
-                </div>
+                <Link
+                    href="/upload"
+                    className="btn-primary w-full sm:w-auto flex-shrink-0 gap-2"
+                >
+                    <UploadCloud size={15} />
+                    Новый разбор
+                </Link>
             </div>
 
-            {/* ─── ONBOARDING CHECKLIST (shown only for new users with no content) ─── */}
+            {/* ─── Onboarding checklist (new users only) ─── */}
             {!isLoading && !isError && totalDrafts === 0 && (
-                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl p-6 mb-10 shadow-lg">
-                    <h2 className="font-syne text-base font-semibold text-[var(--text-main)] mb-5">Начните работу</h2>
-                    <div className="flex flex-col gap-3">
-                        {/* Step 1 */}
-                        <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-lg bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/30 flex items-center justify-center shrink-0">
-                                <UploadCloud size={16} className="text-[var(--accent-blue)]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <Link href="/upload" className="font-inter text-sm font-medium text-[var(--text-main)] hover:text-[var(--accent-blue)] transition-colors flex items-center gap-1.5">
-                                    Загрузите документ
-                                    <ArrowRight size={14} className="opacity-60" />
-                                </Link>
-                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">Текст выступления, питча или сценария</p>
-                            </div>
-                            <div className="w-5 h-5 rounded-full border border-[var(--border-light)] flex items-center justify-center shrink-0">
-                                <span className="w-2 h-2 rounded-full bg-[var(--border-light)]" />
-                            </div>
-                        </div>
-                        <div className="ml-4 w-px h-4 bg-[var(--border-main)]" />
-                        {/* Step 2 */}
-                        <div className="flex items-center gap-4 opacity-40">
-                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0">
-                                <Zap size={16} className="text-[var(--text-dim)]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <span className="font-inter text-sm font-medium text-[var(--text-muted)]">Запустите анализ</span>
-                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">AI разберёт структуру и логику текста</p>
-                            </div>
-                            <div className="w-5 h-5 rounded-full border border-[var(--border-main)] flex items-center justify-center shrink-0" />
-                        </div>
-                        <div className="ml-4 w-px h-4 bg-[var(--border-main)]" />
-                        {/* Step 3 */}
-                        <div className="flex items-center gap-4 opacity-40">
-                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0">
-                                <Play size={16} className="text-[var(--text-dim)]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <span className="font-inter text-sm font-medium text-[var(--text-muted)]">Начните симуляцию</span>
-                                <p className="font-inter text-xs text-[var(--text-dim)] mt-0.5">Стресс-тест с AI-собеседником по вашему материалу</p>
-                            </div>
-                            <div className="w-5 h-5 rounded-full border border-[var(--border-main)] flex items-center justify-center shrink-0" />
-                        </div>
+                <div className="relative bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-6 mb-8 overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/30 to-transparent" />
+                    <h2 className="font-syne text-[15px] font-semibold text-[var(--text-main)] mb-5 tracking-tight">
+                        С чего начать
+                    </h2>
+                    <div className="flex flex-col gap-0">
+                        {[
+                            {
+                                icon: UploadCloud,
+                                title: 'Загрузите материал',
+                                desc: 'Текст выступления, питча или сценария',
+                                href: '/upload',
+                                active: true,
+                            },
+                            {
+                                icon: BarChart2,
+                                title: 'Запустите анализ',
+                                desc: 'AI разберёт структуру и логику текста',
+                                href: null,
+                                active: false,
+                            },
+                            {
+                                icon: Zap,
+                                title: 'Начните симуляцию',
+                                desc: 'Стресс-тест с AI-собеседником по вашему материалу',
+                                href: null,
+                                active: false,
+                            },
+                        ].map((step, i) => (
+                            <React.Fragment key={i}>
+                                <div className={`flex items-center gap-4 py-3 ${!step.active ? 'opacity-35' : ''}`}>
+                                    <div className={`w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center shrink-0 transition-colors ${
+                                        step.active
+                                            ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)]'
+                                            : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)]'
+                                    }`}>
+                                        <step.icon
+                                            size={15}
+                                            className={step.active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        {step.href ? (
+                                            <Link
+                                                href={step.href}
+                                                className="text-[13px] font-medium text-[var(--text-main)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 w-fit"
+                                            >
+                                                {step.title}
+                                                <ArrowRight size={12} className="opacity-60" />
+                                            </Link>
+                                        ) : (
+                                            <span className="text-[13px] font-medium text-[var(--text-muted)]">
+                                                {step.title}
+                                            </span>
+                                        )}
+                                        <p className="text-[11px] text-[var(--text-dim)] mt-0.5">{step.desc}</p>
+                                    </div>
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                        step.active ? 'border-[var(--accent-primary-glow)]' : 'border-[var(--border-main)]'
+                                    }`}>
+                                        {step.active && (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />
+                                        )}
+                                    </div>
+                                </div>
+                                {i < 2 && (
+                                    <div className="ml-10 w-px h-3 bg-[var(--border-main)]" />
+                                )}
+                            </React.Fragment>
+                        ))}
                     </div>
                 </div>
             )}
 
-            {/* ─── STATS GRID ─── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 sm:mb-16">
-                {stats.map((stat, i) => (
-                    <div
-                        key={i}
-                        className="bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--accent-blue)]/50 transition-colors duration-300 p-6 flex flex-col relative overflow-hidden rounded-2xl group shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
-                    >
-                        <div className="absolute -right-20 -top-20 w-40 h-40 bg-[var(--accent-blue)]/5 rounded-full blur-3xl group-hover:bg-[var(--accent-blue)]/10 transition-all duration-500" />
-
-                        <div className="flex justify-between items-start mb-6 relative z-10">
-                            <div className="font-mono text-[11px] text-[var(--text-dim)] uppercase tracking-widest">
-                                {stat.label}
-                            </div>
-                            {stat.type === 'status' && stat.statusColor && (
-                                <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 relative">
-                                    <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: stat.statusColor }} />
-                                    <div className="relative w-full h-full rounded-full" style={{ backgroundColor: stat.statusColor }} />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex items-end justify-between mb-8 relative z-10">
-                            {stat.type === 'action' ? (
-                                <Link
-                                    href={stat.href!}
-                                    className="font-syne text-2xl sm:text-3xl font-bold text-[var(--accent-blue)] leading-none tracking-tight underline-offset-4 hover:underline transition-colors"
-                                >
-                                    {stat.value}
-                                </Link>
-                            ) : (
-                                <div className="font-syne text-3xl sm:text-4xl font-bold text-slate-100 leading-none tracking-tight">
-                                    {stat.value}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="mt-auto flex flex-col gap-3 relative z-10">
-                            {stat.type === 'progress' && (
-                                <div className="w-full h-2 bg-[var(--bg-main)] rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-[var(--accent-blue)] transition-all duration-700"
-                                        style={{ width: `${stat.valueProgress ?? 0}%` }}
-                                    />
-                                </div>
-                            )}
-
-                            <div className={`font-inter text-xs flex items-center gap-1.5 ${stat.positive ? 'text-emerald-400' : 'text-[var(--text-muted)]'}`}>
-                                <Activity size={14} className="opacity-80" />
-                                {stat.trend}
-                            </div>
+            {/* ─── Stats ─── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+                {/* Stat: Materials */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-[var(--border-light)] transition-colors">
+                    <div className="flex items-center justify-between">
+                        <span className="label-kicker">Материалы</span>
+                        <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--accent-blue-bg)] flex items-center justify-center">
+                            <FileText size={14} className="text-[var(--accent-blue)]" />
                         </div>
                     </div>
-                ))}
+                    <div>
+                        <div className="font-syne text-[32px] font-bold text-[var(--text-main)] leading-none tracking-tight mb-1">
+                            {isLoading ? <span className="opacity-30">—</span> : totalDrafts}
+                        </div>
+                        <p className="text-[11px] text-[var(--text-dim)]">
+                            {totalDrafts > 0
+                                ? `${analyzedDrafts.length} из ${totalDrafts} проанализировано`
+                                : 'Загрузите первый материал'}
+                        </p>
+                    </div>
+                    {totalDrafts > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                            <div className="w-full h-1 bg-[var(--bg-main)] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[var(--accent-blue)] rounded-full transition-all duration-700"
+                                    style={{ width: `${analysisProgress}%` }}
+                                />
+                            </div>
+                            <span className="label-kicker">{analysisProgress}% разобрано</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Stat: Average score */}
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-[var(--border-light)] transition-colors">
+                    <div className="flex items-center justify-between">
+                        <span className="label-kicker">Средний балл</span>
+                        <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--accent-primary-bg)] flex items-center justify-center">
+                            <TrendingUp size={14} className="text-[var(--accent-primary)]" />
+                        </div>
+                    </div>
+                    <div>
+                        <div className="font-syne text-[32px] font-bold text-[var(--text-main)] leading-none tracking-tight mb-1">
+                            {isLoading ? (
+                                <span className="opacity-30">—</span>
+                            ) : avgScore !== null ? (
+                                <span>
+                                    {avgScore}
+                                    <span className="text-[18px] text-[var(--text-dim)] font-medium ml-1">/10</span>
+                                </span>
+                            ) : (
+                                <span className="text-[var(--text-dim)] text-2xl">—</span>
+                            )}
+                        </div>
+                        <p className="text-[11px] text-[var(--text-dim)]">
+                            {avgScore !== null
+                                ? avgScore >= 7
+                                    ? 'Отличный результат'
+                                    : avgScore >= 5
+                                    ? 'Есть куда расти'
+                                    : 'Нужна доработка'
+                                : 'Запустите анализ материала'}
+                        </p>
+                    </div>
+                    {avgScore !== null && (
+                        <div className="flex flex-col gap-1.5">
+                            <div className="w-full h-1 bg-[var(--bg-main)] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{
+                                        width: `${(avgScore / 10) * 100}%`,
+                                        backgroundColor:
+                                            avgScore >= 7 ? '#10b981' : avgScore >= 5 ? 'var(--color-warning)' : '#ef4444',
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Stat: Quick action */}
+                <Link
+                    href="/simulation"
+                    className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-[var(--accent-primary)]/40 transition-all duration-200 hover:shadow-[0_0_20px_var(--accent-primary-glow)]"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/0 to-[var(--accent-primary)]/0 group-hover:from-[var(--accent-primary)]/4 group-hover:to-transparent transition-all duration-300" />
+                    <div className="flex items-center justify-between relative z-10">
+                        <span className="label-kicker">Быстрый старт</span>
+                        <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] flex items-center justify-center group-hover:bg-[var(--accent-primary)] transition-colors">
+                            <Zap size={14} className="text-[var(--accent-primary)] group-hover:text-[#0a0c10] transition-colors" />
+                        </div>
+                    </div>
+                    <div className="relative z-10">
+                        <div className="font-syne text-[22px] font-bold text-[var(--text-main)] leading-tight tracking-tight mb-1 group-hover:text-[var(--accent-primary)] transition-colors">
+                            Симуляция
+                        </div>
+                        <p className="text-[11px] text-[var(--text-dim)]">
+                            Стресс-тест с AI-собеседником
+                        </p>
+                    </div>
+                    <div className="mt-auto flex items-center gap-1 text-[var(--text-dim)] group-hover:text-[var(--accent-primary)] transition-colors relative z-10">
+                        <span className="text-[11px] font-medium font-inter">Начать сессию</span>
+                        <ChevronRight size={13} />
+                    </div>
+                </Link>
             </div>
 
-            {/* ─── RECENT DRAFTS MODULE ─── */}
-            <div className="w-full">
-                <div className="flex items-end justify-between mb-6">
-                    <h2 className="font-syne text-xl sm:text-2xl font-semibold text-slate-100 m-0">
-                        Недавние разборы
+            {/* ─── Recent drafts ─── */}
+            <div>
+                <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-syne text-[18px] font-semibold text-[var(--text-main)] tracking-tight">
+                        Последние разборы
                     </h2>
                     <Link
                         href="/upload"
-                        className="flex items-center gap-1.5 bg-transparent border-none p-0 text-[var(--text-dim)] hover:text-[var(--accent-blue)] font-mono text-[10px] sm:text-[11px] tracking-widest uppercase cursor-pointer transition-colors"
+                        className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--accent-primary)] transition-colors group"
                     >
-                        <span className="hidden sm:inline">Добавить</span> <ArrowRight size={14} />
+                        <span className="text-[12px] font-medium font-inter">Добавить</span>
+                        <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>
 
-                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-2xl relative">
-                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-blue)]/30 to-transparent" />
+                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] overflow-hidden relative">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/20 to-transparent" />
 
                     {/* Desktop header */}
-                    <div className="hidden lg:grid grid-cols-[minmax(0,1fr)_160px_120px_48px] px-6 py-5 border-b border-[var(--border-light)]/50 bg-[var(--bg-surface-alt)]/50">
-                        <div className="font-mono text-[10px] text-[var(--text-dim)] uppercase tracking-widest">Название</div>
-                        <div className="font-mono text-[10px] text-[var(--text-dim)] uppercase tracking-widest">Статус</div>
-                        <div className="font-mono text-[10px] text-[var(--text-dim)] uppercase tracking-widest">Дата</div>
-                        <div></div>
+                    <div className="hidden lg:grid grid-cols-[minmax(0,1fr)_150px_140px_40px] px-5 py-3.5 border-b border-[var(--border-main)] bg-[var(--bg-surface-alt)]/60">
+                        <span className="label-kicker">Название</span>
+                        <span className="label-kicker">Статус</span>
+                        <span className="label-kicker">Дата</span>
+                        <span />
                     </div>
 
-                    <div className="flex flex-col divide-y divide-[var(--border-main)] relative z-10">
+                    <div className="flex flex-col divide-y divide-[var(--border-main)]">
                         {isLoading && (
-                            <div className="px-6 py-10 flex items-center justify-center gap-3 text-[var(--text-muted)] font-mono text-sm">
-                                <Activity size={16} className="animate-spin" /> Загрузка...
+                            <div className="px-5 py-10 flex items-center justify-center gap-3 text-[var(--text-dim)]">
+                                <div className="w-4 h-4 border-2 border-[var(--border-light)] border-t-[var(--accent-primary)] rounded-full animate-spin" />
+                                <span className="text-[13px] font-inter">Загрузка...</span>
                             </div>
                         )}
 
                         {isError && (
-                            <div className="px-6 py-10 flex items-center justify-center gap-3 text-rose-400 font-mono text-sm">
-                                <AlertCircle size={16} /> Ошибка загрузки данных
+                            <div className="px-5 py-10 flex items-center justify-center gap-2 text-red-400">
+                                <AlertCircle size={15} />
+                                <span className="text-[13px] font-inter">Ошибка загрузки данных</span>
                             </div>
                         )}
 
                         {!isLoading && !isError && drafts.length === 0 && (
-                            <div className="px-6 py-12 text-center">
-                                <p className="text-[var(--text-muted)] font-mono text-sm mb-4">
-                                    Нет материалов. Загрузите первый документ для разбора.
+                            <div className="px-5 py-12 text-center">
+                                <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center mx-auto mb-3">
+                                    <FileText size={18} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+                                </div>
+                                <p className="text-[13px] text-[var(--text-muted)] font-inter mb-4">
+                                    Пока нет материалов для разбора
                                 </p>
-                                <Link href="/upload" className="btn-primary text-sm">
-                                    <UploadCloud size={14} className="mr-2" /> Загрузить материал
+                                <Link href="/upload" className="btn-primary text-sm gap-1.5">
+                                    <UploadCloud size={13} />
+                                    Загрузить первый
                                 </Link>
                             </div>
                         )}
 
                         {drafts.map((draft) => {
                             const { label, color, icon } = getDraftStatus(draft);
-                            const dateStr = formatDistanceToNow(new Date(draft.created_at), { addSuffix: true, locale: ru });
+                            const dateStr = formatDistanceToNow(new Date(draft.created_at), {
+                                addSuffix: true,
+                                locale: ru,
+                            });
+                            const score = draft.analysis_result?.feedback_json.overall_score ?? null;
 
                             return (
                                 <Link
                                     href={`/analysis/${draft.id}`}
                                     key={draft.id}
-                                    className="group flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_160px_120px_48px] lg:items-center px-4 py-4 sm:px-6 hover:bg-[var(--bg-surface-hover)] transition-all duration-300 relative overflow-hidden"
+                                    className="group flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_150px_140px_40px] lg:items-center px-4 py-3.5 sm:px-5 hover:bg-[var(--bg-surface-hover)] transition-colors duration-150 relative"
                                 >
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--accent-blue)]/50 to-[var(--accent-blue)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-blue)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--accent-primary)] opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full" />
 
                                     {/* Name */}
-                                    <div className="flex items-center gap-4 min-w-0 mb-3 lg:mb-0 relative z-10">
-                                        <div className="w-10 h-10 rounded-xl bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center flex-shrink-0 group-hover:border-[var(--accent-blue)]/50 group-hover:shadow-[0_0_10px_rgba(56,189,248,0.2)] transition-all duration-300">
-                                            <FileText size={18} className="text-[var(--text-muted)] group-hover:text-[var(--accent-blue)] transition-colors" />
+                                    <div className="flex items-center gap-3 min-w-0 mb-2.5 lg:mb-0">
+                                        <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center shrink-0 group-hover:border-[var(--accent-primary)]/30 transition-colors">
+                                            <FileText size={15} className="text-[var(--text-dim)] group-hover:text-[var(--accent-primary)] transition-colors" />
                                         </div>
-                                        <span className="font-inter text-sm font-medium text-slate-100 overflow-hidden text-ellipsis whitespace-nowrap group-hover:translate-x-1 transition-transform duration-300">
+                                        <span className="text-[13px] font-medium text-[var(--text-main)] overflow-hidden text-ellipsis whitespace-nowrap">
                                             {draft.title}
                                         </span>
                                     </div>
 
                                     {/* Mobile meta */}
-                                    <div className="grid grid-cols-2 gap-4 lg:hidden ml-14 relative z-10">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="font-mono text-[9px] text-[var(--text-dim)] uppercase tracking-widest">Статус</span>
+                                    <div className="grid grid-cols-2 gap-3 lg:hidden ml-11">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="label-kicker mb-1">Статус</span>
                                             <div className="flex items-center gap-1.5">
                                                 {icon}
-                                                <span className={`font-inter text-[11px] font-medium ${color}`}>{label}</span>
+                                                <span className={`text-[11px] font-medium font-inter ${color}`}>{label}</span>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="font-mono text-[9px] text-[var(--text-dim)] uppercase tracking-widest">Дата</span>
-                                            <span className="font-mono text-[11px] text-[var(--text-muted)]">{dateStr}</span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="label-kicker mb-1">Дата</span>
+                                            <span className="text-[11px] text-[var(--text-dim)] font-mono">{dateStr}</span>
                                         </div>
                                     </div>
 
                                     {/* Desktop status */}
-                                    <div className="hidden lg:flex items-center gap-2 relative z-10">
+                                    <div className="hidden lg:flex items-center gap-2">
                                         {icon}
-                                        <span className={`font-inter text-sm font-medium ${color}`}>{label}</span>
+                                        <span className={`text-[12px] font-medium font-inter ${color}`}>{label}</span>
+                                        {score !== null && <ScoreBadge score={score} />}
                                     </div>
 
                                     {/* Desktop date */}
-                                    <div className="hidden lg:flex items-center font-mono text-xs text-[var(--text-muted)] relative z-10">
+                                    <div className="hidden lg:flex items-center text-[11px] font-mono text-[var(--text-dim)]">
                                         {dateStr}
                                     </div>
 
-                                    {/* Chevron */}
-                                    <div className="hidden lg:flex items-center justify-end text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:text-[var(--accent-blue)] group-hover:translate-x-1 transition-all relative z-10">
-                                        <ArrowRight size={18} />
+                                    {/* Arrow */}
+                                    <div className="hidden lg:flex items-center justify-end text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:text-[var(--accent-primary)] transition-all">
+                                        <ChevronRight size={16} />
                                     </div>
                                 </Link>
                             );
