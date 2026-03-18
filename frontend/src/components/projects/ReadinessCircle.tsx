@@ -46,7 +46,7 @@ export const ReadinessCircle: React.FC<ReadinessCircleProps> = ({
           strokeLinecap="round"
           className={
             safeScore >= 0.8 ? 'text-emerald-400' : 
-            safeScore >= 0.5 ? 'text-[var(--accent-blue)]' : 
+            safeScore >= 0.5 ? 'text-[var(--accent-primary)]' : 
             'text-amber-400'
           }
         />

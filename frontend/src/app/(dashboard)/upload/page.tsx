@@ -118,10 +118,10 @@ export default function UploadPage() {
             
             {/* Header */}
             <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-5xl font-syne font-bold text-slate-100 mb-4 tracking-tight shadow-sm">
+                <h1 className="text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-4 tracking-tight shadow-sm">
                     Новый разбор
                 </h1>
-                <p className="text-slate-400 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
+                <p className="text-[var(--text-muted)] text-sm md:text-base max-w-lg mx-auto leading-relaxed">
                     Загрузите ваш сценарий или вставьте текст напрямую. ИИ проанализирует логику, найдет слабые места и подготовит вопросы для стресс-теста.
                 </p>
             </div>
@@ -144,8 +144,8 @@ export default function UploadPage() {
                                     onClick={() => setMode('file')}
                                     className={`flex-1 py-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                                         mode === 'file' 
-                                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[var(--bg-surface-hover)]' 
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-[var(--bg-surface-alt)]'
+                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]' 
+                                            : 'text-[var(--text-dim)] hover:text-[var(--text-muted)] hover:bg-[var(--bg-surface-alt)]'
                                     }`}
                                 >
                                     <FileText size={16} /> Документ (PDF, DOCX)
@@ -154,8 +154,8 @@ export default function UploadPage() {
                                     onClick={() => setMode('text')}
                                     className={`flex-1 py-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                                         mode === 'text' 
-                                            ? 'text-blue-400 border-b-2 border-blue-500 bg-[var(--bg-surface-hover)]' 
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-[var(--bg-surface-alt)]'
+                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]' 
+                                            : 'text-[var(--text-dim)] hover:text-[var(--text-muted)] hover:bg-[var(--bg-surface-alt)]'
                                     }`}
                                 >
                                     <Type size={16} /> Текст
@@ -179,7 +179,7 @@ export default function UploadPage() {
                                                 onDrop={handleDrop}
                                                 className={`h-full w-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all cursor-pointer ${
                                                     isDragging 
-                                                        ? 'border-blue-500 bg-blue-500/10 scale-[0.98]' 
+                                                        ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-bg)] scale-[0.98]' 
                                                         : 'border-[var(--border-light)] hover:border-[var(--border-main)] hover:bg-[var(--bg-surface-alt)]'
                                                 }`}
                                                 onClick={() => !file && fileInputRef.current?.click()}
@@ -188,31 +188,31 @@ export default function UploadPage() {
                                                 
                                                 {file ? (
                                                     <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
-                                                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+                                                        <div className="w-16 h-16 rounded-2xl bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] flex items-center justify-center text-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-primary-glow)]">
                                                             <CheckCircle2 size={32} />
                                                         </div>
                                                         <div className="text-center">
-                                                            <div className="text-slate-200 font-mono text-sm mb-1 max-w-[240px] truncate">{file.name}</div>
-                                                            <div className="text-slate-500 font-sans text-xs">{(file.size / 1024).toFixed(1)} КБ</div>
+                                                            <div className="text-[var(--text-main)] font-mono text-sm mb-1 max-w-[240px] truncate">{file.name}</div>
+                                                            <div className="text-[var(--text-dim)] font-sans text-xs">{(file.size / 1024).toFixed(1)} КБ</div>
                                                         </div>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                                                            className="mt-2 text-xs text-slate-400 hover:text-slate-200 underline underline-offset-4 transition-colors"
+                                                            className="mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] underline underline-offset-4 transition-colors"
                                                         >
                                                             Загрузить другой файл
                                                         </button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col items-center pointer-events-none">
-                                                        <div className={`p-4 rounded-full mb-4 transition-colors ${isDragging ? 'bg-blue-500/20 text-blue-400' : 'bg-[var(--bg-surface)] border border-[var(--border-light)] text-slate-400'}`}>
+                                                        <div className={`p-4 rounded-full mb-4 transition-colors ${isDragging ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'bg-[var(--bg-surface)] border border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                                                             <UploadCloud size={28} strokeWidth={1.5} />
                                                         </div>
-                                                        <h3 className="text-slate-200 font-medium mb-1">Перетащите файл сюда</h3>
-                                                        <p className="text-slate-500 text-xs mb-6 text-center max-w-[240px]">Или кликните, чтобы выбрать на устройстве</p>
+                                                        <h3 className="text-[var(--text-main)] font-medium mb-1">Перетащите файл сюда</h3>
+                                                        <p className="text-[var(--text-dim)] text-xs mb-6 text-center max-w-[240px]">Или кликните, чтобы выбрать на устройстве</p>
                                                         
                                                         <div className="flex gap-2 flex-wrap justify-center">
                                                             {['PDF', 'DOCX', 'TXT'].map((ext) => (
-                                                                <span key={ext} className="px-2 py-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded font-mono text-[10px] text-slate-400 tracking-wider">
+                                                                <span key={ext} className="px-2 py-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded font-mono text-[10px] text-[var(--text-muted)] tracking-wider">
                                                                     {ext}
                                                                 </span>
                                                             ))}
@@ -234,13 +234,13 @@ export default function UploadPage() {
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
                                                 placeholder="Вставьте текст вашего выступления (рекомендуется от 500 символов)..."
-                                                className="w-full flex-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl p-4 text-sm text-slate-200 placeholder:text-slate-600 resize-none outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all font-inter leading-relaxed"
+                                                className="w-full flex-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl p-4 text-sm text-[var(--text-main)] placeholder:text-[var(--text-dim)] resize-none outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary-glow)] transition-all font-inter leading-relaxed"
                                             />
                                             <div className="flex justify-between items-center mt-3 px-1">
-                                                <span className={`text-xs font-mono font-medium ${text.length > 0 ? 'text-blue-400' : 'text-slate-500'}`}>
+                                                <span className={`text-xs font-mono font-medium ${text.length > 0 ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}`}>
                                                     {text.length} символов
                                                 </span>
-                                                <button onClick={() => setText('')} className="text-xs text-slate-500 hover:text-slate-300 transition-colors font-medium">Очистить</button>
+                                                <button onClick={() => setText('')} className="text-xs text-[var(--text-dim)] hover:text-[var(--text-muted)] transition-colors font-medium">Очистить</button>
                                             </div>
                                         </motion.div>
                                     )}
@@ -249,7 +249,7 @@ export default function UploadPage() {
 
                             {/* Action Bar */}
                             <div className="flex justify-between items-center border-t border-[var(--border-main)] p-5 bg-[var(--bg-surface)]">
-                                <div className="text-xs text-slate-500 hidden sm:block">
+                                <div className="text-xs text-[var(--text-dim)] hidden sm:block">
                                     Ваши данные надежно защищены (152-ФЗ)
                                 </div>
                                 <button
@@ -275,7 +275,7 @@ export default function UploadPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-2xl mx-auto"
                     >
-                        <div className="bg-[#0A0A0E] border border-blue-500/30 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.15)] flex flex-col">
+                        <div className="bg-[#0A0A0E] border border-[var(--accent-primary-glow)] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.12)] flex flex-col">
                             {/* Terminal Header */}
                             <div className="px-5 py-3 border-b border-zinc-800/80 bg-[#111115] flex items-center">
                                 <div className="flex gap-2 mr-4 opacity-70">
@@ -283,20 +283,20 @@ export default function UploadPage() {
                                     <div className="w-3 h-3 rounded-full bg-yellow-400" />
                                     <div className="w-3 h-3 rounded-full bg-green-400" />
                                 </div>
-                                <div className="mx-auto flex items-center gap-2 font-mono text-xs text-slate-500">
-                                    <Terminal size={14} className="text-blue-500/70" /> peaktalk/engine
+                                <div className="mx-auto flex items-center gap-2 font-mono text-xs text-[var(--text-dim)]">
+                                    <Terminal size={14} className="text-[var(--accent-primary)]/70" /> peaktalk/engine
                                 </div>
                                 <div className="w-[52px]" />
                             </div>
 
                             {/* Terminal Body */}
-                            <div className="p-6 md:p-8 h-[300px] font-mono text-xs md:text-sm flex flex-col gap-3 overflow-hidden text-slate-300">
+                            <div className="p-6 md:p-8 h-[300px] font-mono text-xs md:text-sm flex flex-col gap-3 overflow-hidden text-[var(--text-muted)]">
                                 {logs.map((log, i) => (
                                     <motion.div
                                         key={i}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        className={`${log.includes('Внимание') ? 'text-yellow-400' : log.includes('завершен') ? 'text-green-400' : 'text-slate-300'}`}
+                                        className={`${log.includes('Внимание') ? 'text-yellow-400' : log.includes('завершен') ? 'text-green-400' : 'text-[var(--text-muted)]'}`}
                                     >
                                         {log}
                                     </motion.div>
@@ -304,7 +304,7 @@ export default function UploadPage() {
 
                                 {logs.length > 0 && !logs[logs.length - 1].includes('завершен') && (
                                     <motion.div animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
-                                        <div className="w-2 h-4 bg-blue-400 mt-1" />
+                                        <div className="w-2 h-4 bg-[var(--accent-primary)] mt-1" />
                                     </motion.div>
                                 )}
                             </div>
@@ -315,7 +315,7 @@ export default function UploadPage() {
                                     initial={{ width: '0%' }}
                                     animate={{ width: `${(logs.length / 6) * 100}%` }}
                                     transition={{ ease: "linear" }}
-                                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                    className="h-full bg-[var(--accent-primary)] shadow-[0_0_15px_rgba(245,158,11,0.4)]"
                                 />
                             </div>
                         </div>
@@ -324,9 +324,9 @@ export default function UploadPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
-                            className="mt-8 text-center flex items-center justify-center gap-2 font-mono text-xs text-slate-500"
+                            className="mt-8 text-center flex items-center justify-center gap-2 font-mono text-xs text-[var(--text-dim)]"
                         >
-                            <Activity size={14} className="animate-spin-slow text-blue-500" />
+                            <Activity size={14} className="animate-spin-slow text-[var(--accent-primary)]" />
                             AI анализирует контекст... Пожалуйста, подождите.
                         </motion.div>
                     </motion.div>

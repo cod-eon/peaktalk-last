@@ -22,11 +22,11 @@
     --accent-primary-glow: rgba(245, 158, 11, 0.22);
     --accent-primary-bg: rgba(245, 158, 11, 0.08);
 
-    /* ─── Secondary Accent — Blue (links, focus rings, timestamps) ─── */
-    --accent-blue: #4f8cff;
-    --accent-blue-hover: #3d78e0;
-    --accent-blue-glow: rgba(79, 140, 255, 0.18);
-    --accent-blue-bg: rgba(79, 140, 255, 0.08);
+    /* ─── Secondary (alias) — same amber so legacy code gets amber automatically ─── */
+    --accent-blue: #f59e0b;
+    --accent-blue-hover: #d97706;
+    --accent-blue-glow: rgba(245, 158, 11, 0.22);
+    --accent-blue-bg: rgba(245, 158, 11, 0.08);
 
     /* ─── AI — warm cream-gold (unique, not generic purple) ─── */
     --color-ai: #e2c97e;

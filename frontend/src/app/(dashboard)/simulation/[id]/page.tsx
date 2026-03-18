@@ -93,7 +93,7 @@ export default function SimulationPage() {
   if (isLoading) {
       return (
           <div className="flex-1 w-full max-w-4xl mx-auto flex items-center justify-center min-h-[calc(100vh-2rem)]">
-              <Loader2 className="animate-spin text-[var(--accent-blue)]" size={32} />
+              <Loader2 className="animate-spin text-[var(--accent-primary)]" size={32} />
           </div>
       );
   }
@@ -147,11 +147,11 @@ export default function SimulationPage() {
         {/* Шапка */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/20 rounded-full flex items-center justify-center text-[var(--accent-blue)]">
+            <div className="w-10 h-10 bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 rounded-full flex items-center justify-center text-[var(--accent-primary)]">
               <Bot size={20} />
             </div>
             <div>
-              <div className="font-mono text-xs text-[var(--accent-blue)] tracking-wider uppercase mb-1">
+              <div className="font-mono text-xs text-[var(--accent-primary)] tracking-wider uppercase mb-1">
                 {personaLabel}
               </div>
               <div className="text-sm text-[var(--text-dim)] border border-[var(--border-main)] rounded-full px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
@@ -166,7 +166,7 @@ export default function SimulationPage() {
             <button 
                 onClick={handleComplete}
                 disabled={isCompleting || isAnalyzing}
-                className="text-xs font-mono border border-[var(--border-main)] hover:border-[var(--accent-blue)] bg-[var(--bg-surface)] hover:bg-[var(--accent-blue)]/10 text-slate-400 hover:text-[var(--accent-blue)] px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                className="text-xs font-mono border border-[var(--border-main)] hover:border-[var(--accent-primary)] bg-[var(--bg-surface)] hover:bg-[var(--accent-primary)]/10 text-[var(--text-muted)] hover:text-[var(--accent-primary)] px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
             >
                 {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
                 Завершить симуляцию
@@ -187,7 +187,7 @@ export default function SimulationPage() {
           >
             {/* Карточка Вопроса */}
             <div className="mb-8 p-6 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] rounded-2xl relative shadow-sm">
-              <div className="absolute -left-3 -top-3 text-[var(--accent-blue)] bg-[var(--bg-main)] rounded-full p-1 opacity-50">
+              <div className="absolute -left-3 -top-3 text-[var(--accent-primary)] bg-[var(--bg-main)] rounded-full p-1 opacity-50">
                 <Bot size={24} />
               </div>
               <h1 className="text-xl md:text-2xl lg:text-3xl font-syne font-medium leading-tight text-[var(--text-main)]">
@@ -203,7 +203,7 @@ export default function SimulationPage() {
                 placeholder={`Ваш ответ ${personaLabel}...`}
                 autoFocus
                 disabled={isAnalyzing}
-                className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-blue)] focus:ring-1 focus:ring-[var(--accent-blue)] transition-all resize-none shadow-sm"
+                className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm"
                 style={{ fontSize: '16px' }}
               />
               

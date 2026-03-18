@@ -90,9 +90,9 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                                         key={item.path} 
                                         href={item.path} 
                                         onClick={onClose}
-                                        className={`flex items-center gap-4 p-4 rounded-lg font-mono text-xs uppercase tracking-wider transition-all ${isActive ? 'bg-[rgba(59,130,246,0.1)] text-white border border-[rgba(59,130,246,0.2)]' : 'text-[var(--text-muted)] hover:text-white'}`}
+                                        className={`flex items-center gap-2.5 px-3 py-3 rounded-[var(--radius-sm)] border transition-all font-inter text-[13px] font-medium ${isActive ? 'sidebar-item-active text-[var(--accent-primary)] border-[var(--accent-primary-glow)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'}`}
                                     >
-                                        <item.icon size={18} className={isActive ? 'text-[var(--accent-blue)]' : ''} />
+                                        <item.icon size={18} className={isActive ? 'text-[var(--accent-primary)]' : ''} />
                                         <span>{item.name}</span>
                                     </Link>
                                 );
@@ -114,7 +114,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                             <div className="bg-[var(--bg-surface-hover)] rounded-xl p-4 border border-[var(--border-light)] mt-2">
                                 <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Basic Plan</div>
                                 <div className="text-xs text-white mb-4">Улучшите навыки с ИИ</div>
-                                <button className="w-full py-2 bg-[var(--accent-blue)] text-white font-mono text-[10px] uppercase rounded hover:bg-[var(--accent-blue-hover)] transition-colors">
+                                <button className="w-full py-2 bg-[var(--accent-primary)] text-white font-mono text-[10px] uppercase rounded hover:bg-[var(--accent-primary-hover)] transition-colors">
                                     Upgrade to Pro
                                 </button>
                             </div>

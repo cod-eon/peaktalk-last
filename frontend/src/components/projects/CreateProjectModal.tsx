@@ -75,7 +75,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Например: Собеседование в Google"
-                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-blue)] outline-none transition-all"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-primary)] outline-none transition-all"
                 />
               </div>
 
@@ -90,7 +90,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                       onClick={() => setEventType(type)}
                       className={`px-3 py-2 text-[10px] uppercase font-mono tracking-wider rounded-lg border transition-all ${
                         eventType === type 
-                          ? 'bg-[var(--accent-blue)] border-[var(--accent-blue)] text-white' 
+                          ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white' 
                           : 'bg-white/5 border-[var(--border-main)] text-[var(--text-dim)] hover:border-[var(--border-light)]'
                       }`}
                     >
@@ -109,7 +109,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-blue)] outline-none transition-all [color-scheme:dark]"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-primary)] outline-none transition-all [color-scheme:dark]"
                 />
               </div>
 
@@ -122,7 +122,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Опишите ваши цели подготовки..."
-                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-blue)] outline-none transition-all resize-none"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 text-sm focus:border-[var(--accent-primary)] outline-none transition-all resize-none"
                 />
               </div>
             </form>

@@ -9,16 +9,16 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="bg-grid absolute inset-0 z-0 pointer-events-none opacity-50" />
       
       {/* Decorative Blur */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[var(--accent-primary)]/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[var(--accent-primary)]/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header Logo */}
       <div className="absolute top-8 left-8 z-20">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold font-syne text-sm shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all">
+          <div className="w-8 h-8 rounded bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] flex items-center justify-center text-[var(--accent-primary)] font-bold font-syne text-sm shadow-[0_0_15px_var(--accent-primary-glow)] group-hover:shadow-[0_0_25px_rgba(245,158,11,0.35)] transition-all">
             P
           </div>
-          <span className="font-syne font-bold text-lg tracking-wide text-slate-100">
+          <span className="font-syne font-bold text-lg tracking-wide text-[var(--text-main)]">
             PeakTalk
           </span>
         </Link>

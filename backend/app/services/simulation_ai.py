@@ -198,7 +198,7 @@ async def generate_question(
             None,
             partial(
                 client.models.generate_content,
-                model="gemini-2.5-flash-lite-preview-06-17",
+                model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=_build_system_prompt(persona_config),
@@ -245,7 +245,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
             None,
             partial(
                 client.models.generate_content,
-                model="gemini-2.5-flash-lite-preview-06-17",
+                model="gemini-2.5-flash-lite",
                 contents=prompt,
             ),
         )

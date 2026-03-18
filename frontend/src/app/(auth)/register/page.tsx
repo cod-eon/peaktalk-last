@@ -46,8 +46,8 @@ export default function RegisterPage() {
       className="bg-[var(--bg-card)]/80 backdrop-blur-xl border border-[var(--border-main)] p-8 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
     >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-syne font-semibold text-slate-100 mb-2">Начать бесплатно</h1>
-        <p className="text-slate-400 text-sm">
+        <h1 className="text-2xl font-syne font-semibold text-[var(--text-main)] mb-2">Начать бесплатно</h1>
+        <p className="text-[var(--text-muted)] text-sm">
           Умная подготовка к выступлениям за 3 шага
         </p>
       </div>
@@ -59,7 +59,7 @@ export default function RegisterPage() {
           </div>
         )}
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
             Как к вам обращаться
           </label>
           <input
@@ -67,13 +67,13 @@ export default function RegisterPage() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-inter"
+            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
             placeholder="Илон Маск"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
             Рабочий Email
           </label>
           <input
@@ -81,13 +81,13 @@ export default function RegisterPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-inter"
+            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
             placeholder="elon@spacex.com"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
             Надежный пароль
           </label>
           <input
@@ -95,7 +95,7 @@ export default function RegisterPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-inter"
+            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
             placeholder="Минимум 8 символов"
           />
         </div>
@@ -113,15 +113,15 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <p className="mt-5 text-xs text-center text-slate-500">
+      <p className="mt-5 text-xs text-center text-[var(--text-dim)]">
         Нажимая кнопку, вы соглашаетесь с{" "}
-        <a href="#" className="underline hover:text-slate-300">Условиями</a> и{" "}
-        <a href="#" className="underline hover:text-slate-300">Политикой 152-ФЗ</a>.
+        <a href="#" className="underline hover:text-[var(--text-main)]">Условиями</a> и{" "}
+        <a href="#" className="underline hover:text-[var(--text-main)]">Политикой 152-ФЗ</a>.
       </p>
 
-      <div className="mt-8 text-center text-sm text-slate-400">
+      <div className="mt-8 text-center text-sm text-[var(--text-muted)]">
         Уже есть аккаунт?{" "}
-        <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+        <Link href="/login" className="text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)] transition-colors font-medium">
           Войти
         </Link>
       </div>

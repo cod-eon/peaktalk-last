@@ -68,7 +68,7 @@ export default function OnboardingPage() {
     if (isChecking) {
         return (
             <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center">
-                <Loader2 size={32} className="animate-spin text-[var(--accent-blue)]" />
+                <Loader2 size={32} className="animate-spin text-[var(--accent-primary)]" />
             </div>
         );
     }
@@ -83,10 +83,10 @@ export default function OnboardingPage() {
             <div className="w-full max-w-2xl relative z-10">
                 {/* Logo / Brand */}
                 <div className="text-center mb-10">
-                    <div className="font-mono text-[11px] text-[var(--accent-blue)] tracking-[0.15em] uppercase mb-3">
+                    <div className="font-mono text-[11px] text-[var(--accent-primary)] tracking-[0.15em] uppercase mb-3">
                         PeakTalk · Onboarding
                     </div>
-                    <h1 className="font-syne text-3xl sm:text-4xl font-bold text-slate-100 mb-3">
+                    <h1 className="font-syne text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-3">
                         {step === 1 ? 'Расскажите о себе' : 'К чему готовитесь?'}
                     </h1>
                     <p className="text-[var(--text-dim)] font-inter text-sm max-w-md mx-auto">
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
                                 step > s
                                     ? 'bg-emerald-500 text-white'
                                     : step === s
-                                        ? 'bg-[var(--accent-blue)] text-white shadow-[0_0_12px_rgba(79,140,255,0.4)]'
+                                        ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_12px_rgba(245,158,11,0.35)]'
                                         : 'bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-dim)]'
                             }`}>
                                 {step > s ? <CheckCircle2 size={14} /> : s}
@@ -133,24 +133,24 @@ export default function OnboardingPage() {
                                         onClick={() => setSegment(seg.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 relative group ${
                                             segment === seg.id
-                                                ? 'bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] shadow-[0_0_20px_rgba(79,140,255,0.15)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(245,158,11,0.2)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
                                         {segment === seg.id && (
-                                            <div className="absolute top-4 right-4 text-[var(--accent-blue)]">
+                                            <div className="absolute top-4 right-4 text-[var(--accent-primary)]">
                                                 <CheckCircle2 size={16} />
                                             </div>
                                         )}
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors ${
                                             segment === seg.id
-                                                ? 'bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]'
-                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-slate-400 group-hover:text-slate-300'
+                                                ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]'
+                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-[var(--text-muted)] group-hover:text-[var(--text-main)]'
                                         }`}>
                                             {seg.icon}
                                         </div>
-                                        <div className="font-syne text-base font-semibold text-slate-100 mb-1">{seg.label}</div>
-                                        <div className="font-inter text-xs text-slate-400 leading-relaxed">{seg.desc}</div>
+                                        <div className="font-syne text-base font-semibold text-[var(--text-main)] mb-1">{seg.label}</div>
+                                        <div className="font-inter text-xs text-[var(--text-muted)] leading-relaxed">{seg.desc}</div>
                                     </button>
                                 ))}
                             </div>
@@ -159,7 +159,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!segment}
                                     onClick={() => setStep(2)}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:-translate-y-0.5"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
                                 >
                                     Далее <ChevronRight size={18} />
                                 </button>
@@ -182,23 +182,23 @@ export default function OnboardingPage() {
                                         onClick={() => setGoal(g.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 flex items-center gap-4 relative group ${
                                             goal === g.id
-                                                ? 'bg-[var(--accent-blue)]/10 border-[var(--accent-blue)] shadow-[0_0_20px_rgba(79,140,255,0.15)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(245,158,11,0.2)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
                                         {goal === g.id && (
-                                            <div className="absolute top-4 right-4 text-[var(--accent-blue)]">
+                                            <div className="absolute top-4 right-4 text-[var(--accent-primary)]">
                                                 <CheckCircle2 size={16} />
                                             </div>
                                         )}
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
                                             goal === g.id
-                                                ? 'bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]'
-                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-slate-400 group-hover:text-slate-300'
+                                                ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]'
+                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-[var(--text-muted)] group-hover:text-[var(--text-main)]'
                                         }`}>
                                             {g.icon}
                                         </div>
-                                        <div className="font-syne text-base font-semibold text-slate-100">{g.label}</div>
+                                        <div className="font-syne text-base font-semibold text-[var(--text-main)]">{g.label}</div>
                                     </button>
                                 ))}
                             </div>
@@ -213,7 +213,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!goal || isSubmitting}
                                     onClick={handleSubmit}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:-translate-y-0.5"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 size={16} className="animate-spin" /> Сохранение...</>

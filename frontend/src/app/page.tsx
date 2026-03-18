@@ -257,7 +257,7 @@ function Hero() {
               backdropFilter: 'blur(10px)',
             }}
           >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--accent-blue)', marginRight: 10 }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--accent-primary)', marginRight: 10 }} />
             AI-Тренер выступлений
           </motion.div>
 
@@ -277,7 +277,7 @@ function Hero() {
             }}
           >
             Текст — это лишь база.<br />
-            <span className="text-slate-300">Уверенность решает.</span>
+            <span className="text-[var(--text-muted)]">Уверенность решает.</span>
           </motion.h1>
 
           <motion.p
@@ -308,7 +308,7 @@ function Hero() {
               Начать бесплатно
             </a>
             <button 
-              className="btn-secondary transition-all border-slate-700 hover:bg-slate-800 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
+              className="btn-secondary transition-all border-[var(--border-main)] hover:bg-[var(--bg-surface-hover)] hover:shadow-[0_0_15px_rgba(245,158,11,0.15)]" 
               onClick={() => smoothScroll('#how')} 
               style={{ padding: '16px 32px', fontSize: 13 }}
             >
@@ -348,15 +348,15 @@ function Hero() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: 'clamp(16px, 4vw, 32px)', fontFamily: 'var(--font-mono)', fontSize: 'clamp(11px, 2.5vw, 13px)', color: 'var(--text-muted)', lineHeight: 1.8, position: 'relative' }}>
-              <div><span style={{ color: 'var(--accent-blue)' }}>[00:00]</span> Здравствуйте, сегодня я хочу представить вам наш стартап.</div>
-              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-blue)' }}>[00:15]</span> Мы решаем острую проблему рынка... <span style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', padding: '0 4px', borderRadius: 2 }}>как бы так сказать, довольно сложную</span> (⚠ Вода / Неуверенность)</div>
-              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-blue)' }}>[00:42]</span> Наш TAM составляет 2 миллиарда долларов.</div>
+              <div><span style={{ color: 'var(--accent-primary)' }}>[00:00]</span> Здравствуйте, сегодня я хочу представить вам наш стартап.</div>
+              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-primary)' }}>[00:15]</span> Мы решаем острую проблему рынка... <span style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', padding: '0 4px', borderRadius: 2 }}>как бы так сказать, довольно сложную</span> (⚠ Вода / Неуверенность)</div>
+              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-primary)' }}>[00:42]</span> Наш TAM составляет 2 миллиарда долларов.</div>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4" style={{
                 marginTop: 'clamp(24px, 4vw, 32px)',
                 padding: 'clamp(12px, 3vw, 16px)',
-                backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                borderLeft: '2px solid var(--accent-blue)',
+                backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                borderLeft: '2px solid var(--accent-primary)',
                 fontFamily: 'var(--font-inter)',
               }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative', border: '1px solid var(--border-light)' }}>
@@ -404,7 +404,7 @@ function MarqueeStrip() {
             }}>
               {text}
             </span>
-            <span style={{ color: 'var(--accent-blue)', fontSize: 10 }}>✚</span>
+            <span style={{ color: 'var(--accent-primary)', fontSize: 10 }}>✚</span>
           </div>
         ))}
       </motion.div>
@@ -450,7 +450,7 @@ function HowItWorks() {
               <div style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 10,
-                color: 'var(--accent-blue)',
+                color: 'var(--accent-primary)',
                 letterSpacing: '0.1em',
                 marginBottom: 16,
               }}>
@@ -490,9 +490,9 @@ function FeatureCard({ tag, title, desc, accent, topVisual, delay = 0 }: { tag: 
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay }}
       style={{
-        border: `1px solid ${accent ? 'var(--accent-blue)' : 'var(--border-light)'}`,
+        border: `1px solid ${accent ? 'var(--accent-primary)' : 'var(--border-light)'}`,
         padding: 'clamp(24px, 4vw, 40px)',
-        backgroundColor: accent ? 'rgba(59, 130, 246, 0.02)' : 'var(--bg-surface)',
+        backgroundColor: accent ? 'rgba(245, 158, 11, 0.02)' : 'var(--bg-surface)',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -505,7 +505,7 @@ function FeatureCard({ tag, title, desc, accent, topVisual, delay = 0 }: { tag: 
       <div style={{
         fontFamily: 'var(--font-mono)',
         fontSize: 10,
-        color: accent ? 'var(--accent-blue)' : 'var(--text-dim)',
+        color: accent ? 'var(--accent-primary)' : 'var(--text-dim)',
         letterSpacing: '0.1em',
         marginBottom: 24,
       }}>
@@ -549,7 +549,7 @@ function Features() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '60%' }}>
                   <div style={{ height: 6, borderRadius: 4, background: 'var(--text-dim)', width: '100%' }} />
                   <div style={{ height: 6, borderRadius: 4, background: 'var(--text-dim)', width: '80%' }} />
-                  <div style={{ height: 6, borderRadius: 4, background: 'var(--accent-blue)', width: '60%', boxShadow: '0 0 10px rgba(59,130,246,0.5)' }} />
+                  <div style={{ height: 6, borderRadius: 4, background: 'var(--accent-primary)', width: '60%', boxShadow: '0 0 10px rgba(245,158,11,0.5)' }} />
                 </div>
               </div>
             }
@@ -561,8 +561,8 @@ function Features() {
             delay={0.1}
             topVisual={
               <div style={{ width: '100%', aspectRatio: '16/9', position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, rgba(20,30,40,0.8), rgba(5,10,20,0.9))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', border: '2px dashed rgba(59,130,246,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--accent-blue)', boxShadow: '0 0 20px var(--accent-blue)' }} />
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', border: '2px dashed rgba(245,158,11,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--accent-primary)', boxShadow: '0 0 20px var(--accent-primary)' }} />
                 </div>
               </div>
             }
@@ -677,7 +677,7 @@ function WhyNotChatGPT() {
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Функция
             </div>
-            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               PeakTalk
             </div>
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -697,7 +697,7 @@ function WhyNotChatGPT() {
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                 {row.feature}
               </div>
-              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: 'rgba(79, 140, 255, 0.03)' }}>
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: 'rgba(245, 158, 11, 0.03)' }}>
                 {row.peaktalk}
               </div>
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-dim)' }}>
@@ -812,9 +812,9 @@ function Pricing() {
                 zIndex: plan.accent ? 10 : 1,
               }}>
               {plan.accent && (
-                <div style={{ position: 'absolute', top: -1, left: -1, right: -1, height: 2, background: 'var(--accent-blue)' }} />
+                <div style={{ position: 'absolute', top: -1, left: -1, right: -1, height: 2, background: 'var(--accent-primary)' }} />
               )}
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: plan.accent ? 'var(--accent-blue)' : 'var(--text-dim)', marginBottom: 24 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: plan.accent ? 'var(--accent-primary)' : 'var(--text-dim)', marginBottom: 24 }}>
                 {plan.name}
               </div>
               <div style={{ marginBottom: 40 }}>

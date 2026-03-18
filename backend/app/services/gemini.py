@@ -92,7 +92,7 @@ async def analyze_draft(text: str) -> GeminiAnalysisResult:
             None,
             partial(
                 client.models.generate_content,
-                model="gemini-2.5-flash-lite-preview-06-17",
+                model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=_ANALYSIS_SYSTEM_PROMPT,
