@@ -275,9 +275,9 @@ export default function UploadPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-2xl mx-auto"
                     >
-                        <div className="bg-[#0A0A0E] border border-[var(--accent-primary-glow)] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.12)] flex flex-col">
+                        <div className="bg-[#0c0a08] border border-[var(--accent-primary-glow)] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.12)] flex flex-col">
                             {/* Terminal Header */}
-                            <div className="px-5 py-3 border-b border-zinc-800/80 bg-[#111115] flex items-center">
+                            <div className="px-5 py-3 border-b border-[var(--border-main)] bg-[#131009] flex items-center">
                                 <div className="flex gap-2 mr-4 opacity-70">
                                     <div className="w-3 h-3 rounded-full bg-red-400" />
                                     <div className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -310,7 +310,7 @@ export default function UploadPage() {
                             </div>
 
                             {/* Processing Progress Bar */}
-                            <div className="h-1 w-full bg-[#111115]">
+                            <div className="h-1 w-full bg-[#131009]">
                                 <motion.div
                                     initial={{ width: '0%' }}
                                     animate={{ width: `${(logs.length / 6) * 100}%` }}
