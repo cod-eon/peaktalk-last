@@ -2,15 +2,19 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
+  const captchaRef = useRef<HCaptcha>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,11 +27,13 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: {
-          display_name: name,
-        },
+        data: { display_name: name },
+        captchaToken,
       },
     });
+
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(undefined);
 
     if (signUpError) {
       setError(signUpError.message);
@@ -43,7 +49,7 @@ export default function RegisterPage() {
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-[var(--bg-card)]/80 backdrop-blur-xl border border-[var(--border-main)] p-8 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+      className="bg-white border border-[var(--border-main)] p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
     >
       <div className="text-center mb-8">
         <h1 className="text-2xl font-syne font-semibold text-[var(--text-main)] mb-2">Начать бесплатно</h1>
@@ -100,9 +106,18 @@ export default function RegisterPage() {
           />
         </div>
 
+        <div className="flex justify-center">
+          <HCaptcha
+            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(undefined)}
+            ref={captchaRef}
+          />
+        </div>
+
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !captchaToken}
           className="w-full btn-primary py-3.5 text-xs font-semibold mt-6 h-11"
         >
           {isLoading ? (

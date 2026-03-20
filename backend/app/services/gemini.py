@@ -9,6 +9,15 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 
 from app.config import settings
 
+_SEGMENT_LABELS: dict[str, str] = {
+    "student": "Студент", "junior": "Молодой специалист",
+    "founder": "Фаундер / Стартап", "manager": "Руководитель", "other": "Другое",
+}
+_GOAL_LABELS: dict[str, str] = {
+    "interview": "Собеседование", "pitch": "Питч инвестору",
+    "conference": "Конференция / Доклад", "defense": "Защита проекта", "other": "Другое",
+}
+
 _ANALYSIS_SYSTEM_PROMPT = """
 You are an expert speech coach and communication trainer specializing in Russian business communication.
 Your task is to analyze a speech, presentation, or document and provide structured feedback with fragment-level annotations.
@@ -82,9 +91,15 @@ def _parse_gemini_json(raw: str) -> dict:
     retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
     reraise=True,
 )
-async def analyze_draft(text: str) -> GeminiAnalysisResult:
+async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAnalysisResult:
     client = genai.Client(api_key=settings.gemini_api_key)
-    prompt = _ANALYSIS_USER_TEMPLATE.format(text=text)
+    context_block = ""
+    if user_context:
+        seg = _SEGMENT_LABELS.get(user_context.get("segment", ""), "")
+        goal = _GOAL_LABELS.get(user_context.get("goal", ""), "")
+        if seg or goal:
+            context_block = f"SPEAKER PROFILE:\n- Role: {seg}\n- Goal: {goal}\nTailor feedback tone, examples, and recommendations to this person's background and objective.\n\n"
+    prompt = context_block + _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
         loop = asyncio.get_event_loop()

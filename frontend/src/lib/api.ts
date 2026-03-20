@@ -56,6 +56,32 @@ export const api = {
     })
 
     if (!response.ok) {
+        if (response.status === 401) {
+            // Try refreshing the session once before giving up
+            const supabase = createClient()
+            const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
+            if (refreshedSession?.access_token) {
+                // Retry the request with the new token
+                const retryHeaders = new Headers(options.headers)
+                if (!(options.body instanceof FormData)) {
+                    retryHeaders.set('Content-Type', 'application/json')
+                }
+                retryHeaders.set('Authorization', `Bearer ${refreshedSession.access_token}`)
+                const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...options, headers: retryHeaders })
+                if (retryResponse.ok) {
+                    if (retryResponse.status === 204) return null
+                    const ct = retryResponse.headers.get('content-type')
+                    return ct?.includes('application/json') ? retryResponse.json() : retryResponse.text()
+                }
+            }
+            // Session truly invalid — sign out and redirect
+            await supabase.auth.signOut()
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login'
+            }
+            throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
+        }
+
         let errorMessage = 'Произошла ошибка'
         try {
             const errorData = await response.json()
@@ -68,8 +94,6 @@ export const api = {
                     .join('; ')
             } else if (typeof errorData.message === 'string') {
                 errorMessage = errorData.message
-            } else if (response.status === 401) {
-                errorMessage = 'Сессия истекла. Пожалуйста, войдите снова.'
             } else if (response.status === 403) {
                 errorMessage = 'Нет доступа к ресурсу.'
             }

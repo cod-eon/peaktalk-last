@@ -22,10 +22,40 @@ export default function SimulationPage() {
   const [isCompleting, setIsCompleting] = useState(false);
 
   const PERSONA_LABELS: Record<string, string> = {
-    investor: 'AI-Инвестор',
-    tech_lead: 'CEO / Техдир',
-    hr: 'HR-Менеджер',
+    supervisor: 'Научный руководитель',
+    reviewer: 'Придирчивый рецензент',
+    peer: 'Однокурсник-скептик',
+    tech_lead: 'Тимлид / Principal Engineer',
+    hr: 'HR-менеджер',
+    senior_dev: 'Старший разработчик',
+    investor: 'Венчурный инвестор',
+    partner: 'Корпоративный партнёр',
+    customer: 'Потенциальный клиент',
+    board: 'Совет директоров',
+    subordinate: 'Скептичный подчинённый',
+    journalist: 'Журналист',
+    audience: 'Общая аудитория',
+    moderator: 'Модератор дискуссии',
     listener: 'Скептик из зала',
+  };
+
+  // Dative case — "Ваш ответ [кому]..."
+  const PERSONA_DATIVE: Record<string, string> = {
+    supervisor: 'научному руководителю',
+    reviewer: 'придирчивому рецензенту',
+    peer: 'однокурснику-скептику',
+    tech_lead: 'тимлиду',
+    hr: 'HR-менеджеру',
+    senior_dev: 'старшему разработчику',
+    investor: 'венчурному инвестору',
+    partner: 'корпоративному партнёру',
+    customer: 'потенциальному клиенту',
+    board: 'совету директоров',
+    subordinate: 'скептичному подчинённому',
+    journalist: 'журналисту',
+    audience: 'аудитории',
+    moderator: 'модератору дискуссии',
+    listener: 'скептику из зала',
   };
 
   useEffect(() => {
@@ -61,8 +91,12 @@ export default function SimulationPage() {
       const res = await api.post(`/simulation/${sessionId}/message`, { content: currentAnswer });
       setMessages(prev => {
         const filtered = prev.filter(m => m !== optimisticUserMsg);
-        return [...filtered, res.user_message, res.assistant_message];
+        const newMsgs = [res.user_message, ...(res.assistant_message ? [res.assistant_message] : [])];
+        return [...filtered, ...newMsgs];
       });
+      if (res.session_completed) {
+        setIsFinished(true);
+      }
     } catch(err: unknown) {
       const message = err instanceof Error ? err.message : 'Сбой сети';
       toast.error('Ошибка отправки сообщения: ' + message);
@@ -99,6 +133,7 @@ export default function SimulationPage() {
   }
 
   const personaLabel = PERSONA_LABELS[personaConfig?.role ?? ''] || personaConfig?.role || 'Тренер';
+  const personaDative = PERSONA_DATIVE[personaConfig?.role ?? ''] ?? personaLabel.toLowerCase();
 
   if (isFinished) {
     return (
@@ -136,16 +171,20 @@ export default function SimulationPage() {
     );
   }
 
+  const MAX_TURNS = 10;
+
   // Find the last assistant message to display as the current question
   const aiMessages = messages.filter(m => m.role === 'assistant');
   const lastQuestion = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1].content : "Загрузка вопроса...";
   const turnCount = aiMessages.length;
+  const progressPct = Math.min((turnCount / MAX_TURNS) * 100, 100);
+  const isLastQuestion = turnCount >= MAX_TURNS;
 
   return (
     <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:p-8 min-h-[calc(100vh-2rem)] relative">
       <div className="w-full mb-8 pt-4">
         {/* Шапка */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 rounded-full flex items-center justify-center text-[var(--accent-primary)]">
               <Bot size={20} />
@@ -159,20 +198,44 @@ export default function SimulationPage() {
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-mono text-sm text-[var(--text-dim)] mb-2">
-              Вопрос {turnCount}
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <div className="font-mono text-xs text-[var(--text-dim)]">
+                Вопрос <span className="text-[var(--text-main)] font-semibold">{turnCount}</span> из {MAX_TURNS}
+              </div>
             </div>
-            <button 
-                onClick={handleComplete}
-                disabled={isCompleting || isAnalyzing}
-                className="text-xs font-mono border border-[var(--border-main)] hover:border-[var(--accent-primary)] bg-[var(--bg-surface)] hover:bg-[var(--accent-primary)]/10 text-[var(--text-muted)] hover:text-[var(--accent-primary)] px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+            <button
+              onClick={handleComplete}
+              disabled={isCompleting || isAnalyzing}
+              className="text-xs font-mono border border-[var(--border-main)] hover:border-red-500/50 bg-[var(--bg-surface)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-40"
             >
-                {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
-                Завершить симуляцию
+              {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
+              <span className="hidden sm:inline">Завершить досрочно</span>
+              <span className="sm:hidden">Завершить</span>
             </button>
           </div>
         </div>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 bg-[var(--bg-surface-alt)] rounded-full overflow-hidden">
+          <motion.div
+            className={`h-full rounded-full transition-colors ${isLastQuestion ? 'bg-emerald-500' : 'bg-[var(--accent-primary)]'}`}
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
+        </div>
+        <div className="flex justify-between mt-1 sm:hidden">
+          <span className="font-mono text-[10px] text-[var(--text-dim)]">Вопрос {turnCount} из {MAX_TURNS}</span>
+          {isLastQuestion && (
+            <span className="font-mono text-[10px] text-emerald-500">Последний вопрос!</span>
+          )}
+        </div>
+        {isLastQuestion && (
+          <div className="hidden sm:block text-right mt-1">
+            <span className="font-mono text-[10px] text-emerald-500">Последний вопрос!</span>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col justify-center relative">
@@ -200,7 +263,7 @@ export default function SimulationPage() {
               <textarea
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder={`Ваш ответ ${personaLabel}...`}
+                placeholder={`Ваш ответ ${personaDative}...`}
                 autoFocus
                 disabled={isAnalyzing}
                 className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm"

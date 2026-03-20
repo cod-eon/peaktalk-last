@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { GraduationCap, Briefcase, Rocket, Users, ChevronRight, Mic, FileText, MonitorPlay, Globe, CheckCircle2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -76,15 +77,19 @@ export default function OnboardingPage() {
     return (
         <div className="min-h-screen bg-[var(--bg-main)] flex flex-col items-center justify-center px-4 py-12">
             {/* Background grid */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.03]"
+            <div className="fixed inset-0 pointer-events-none opacity-40"
                 style={{ backgroundImage: 'linear-gradient(var(--border-main) 1px, transparent 1px), linear-gradient(90deg, var(--border-main) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
             />
 
             <div className="w-full max-w-2xl relative z-10">
                 {/* Logo / Brand */}
                 <div className="text-center mb-10">
+                    <a href="/" className="flex flex-col items-center gap-1.5 mb-6 hover:opacity-80 transition-opacity">
+                        <Image src="/logo_svg.svg" alt="PeakTalk" width={36} height={36} className="block" />
+                        <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--text-main)' }}>PeakTalk</span>
+                    </a>
                     <div className="font-mono text-[11px] text-[var(--accent-primary)] tracking-[0.15em] uppercase mb-3">
-                        PeakTalk · Onboarding
+                        Onboarding
                     </div>
                     <h1 className="font-syne text-3xl sm:text-4xl font-bold text-[var(--text-main)] mb-3">
                         {step === 1 ? 'Расскажите о себе' : 'К чему готовитесь?'}
@@ -104,7 +109,7 @@ export default function OnboardingPage() {
                                 step > s
                                     ? 'bg-emerald-500 text-white'
                                     : step === s
-                                        ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_12px_rgba(245,158,11,0.35)]'
+                                        ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_12px_rgba(249,115,22,0.30)]'
                                         : 'bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-dim)]'
                             }`}>
                                 {step > s ? <CheckCircle2 size={14} /> : s}
@@ -133,7 +138,7 @@ export default function OnboardingPage() {
                                         onClick={() => setSegment(seg.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 relative group ${
                                             segment === seg.id
-                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(249,115,22,0.15)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
@@ -159,7 +164,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!segment}
                                     onClick={() => setStep(2)}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(249,115,22,0.25)]"
                                 >
                                     Далее <ChevronRight size={18} />
                                 </button>
@@ -182,7 +187,7 @@ export default function OnboardingPage() {
                                         onClick={() => setGoal(g.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 flex items-center gap-4 relative group ${
                                             goal === g.id
-                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(249,115,22,0.15)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
@@ -213,7 +218,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!goal || isSubmitting}
                                     onClick={handleSubmit}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(249,115,22,0.25)]"
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 size={16} className="animate-spin" /> Сохранение...</>

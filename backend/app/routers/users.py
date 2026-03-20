@@ -1,12 +1,16 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import _get_supabase, get_current_user
 from app.models.user import OnboardingProfile, User
 from app.schemas.user import OnboardingProfileCreate, UserResponse
+
+logger = logging.getLogger("peaktalk.users")
 
 router = APIRouter(prefix="/me", tags=["users"])
 
@@ -56,3 +60,23 @@ async def save_onboarding(
         .where(User.id == current_user.id)
     )
     return result.scalar_one()
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    user_id = str(current_user.id)
+
+    # Delete from Supabase Auth first (best-effort)
+    try:
+        _get_supabase().auth.admin.delete_user(user_id)
+        logger.info("delete_me: supabase user deleted user_id=%s", user_id)
+    except Exception as exc:
+        logger.warning("delete_me: supabase delete failed user_id=%s: %s", user_id, exc)
+
+    # Delete from local DB — cascade handles all child tables
+    await db.delete(current_user)
+    await db.flush()
+    logger.info("delete_me: local user deleted user_id=%s", user_id)

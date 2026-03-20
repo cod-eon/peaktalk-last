@@ -11,7 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.config import settings
-from app.routers import documents, drafts, simulation, users, projects
+from app.routers import documents, drafts, simulation, users, projects, webhooks
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,7 @@ app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(drafts.router)
 app.include_router(simulation.router)
+app.include_router(webhooks.router)
 
 
 @app.get("/health", tags=["system"])

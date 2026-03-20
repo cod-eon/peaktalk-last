@@ -136,7 +136,7 @@ export default function UploadPage() {
                         className="w-full max-w-2xl mx-auto"
                     >
                         {/* ─── UPLOAD WORKSPACE ─── */}
-                        <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-md">
+                        <div className="bg-white border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
                             
                             {/* Tabs */}
                             <div className="flex w-full border-b border-[var(--border-main)] bg-[var(--bg-surface)]">

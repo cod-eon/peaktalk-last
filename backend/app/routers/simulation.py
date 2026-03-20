@@ -32,6 +32,8 @@ from app.services.simulation_ai import evaluate_session, generate_question
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 
+MAX_TURNS = 10  # Maximum AI questions per session
+
 
 async def _get_doc_text(
     db: AsyncSession,
@@ -124,6 +126,22 @@ async def list_sessions(
     return SimulationSessionListResponse(items=items, total=total)
 
 
+@router.get("/personas")
+async def get_personas(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    from app.services.simulation_ai import get_available_personas, get_default_difficulty, get_industries_for_segment
+    profile = current_user.onboarding_profile
+    segment = profile.segment.value if profile else None
+    return {
+        "segment": segment or "other",
+        "default_difficulty": get_default_difficulty(segment),
+        "personas": get_available_personas(segment),
+        "industries": get_industries_for_segment(segment),
+    }
+
+
 @router.post("/start", response_model=SimulationSessionResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def start_simulation(
@@ -144,11 +162,15 @@ async def start_simulation(
     db.add(session)
     await db.flush()
 
+    profile = current_user.onboarding_profile
+    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
+
     try:
         turn = await generate_question(
             persona_config=body.persona_config.model_dump(),
             doc_text=doc_text,
             history=[],
+            user_context=user_context,
         )
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
@@ -202,11 +224,28 @@ async def send_message(
         for msg in session.messages
     ] + [{"role": "user", "content": body.content}]
 
+    # Count AI messages already asked (before this user answer)
+    ai_turn_count = sum(1 for m in session.messages if m.role == MessageRole.assistant)
+
+    # Auto-complete when MAX_TURNS questions have been asked and answered
+    if ai_turn_count >= MAX_TURNS:
+        try:
+            await _finalize_session(session, db)
+        except GeminiError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        await db.refresh(user_msg)
+        logger.info("Session auto-completed at MAX_TURNS=%d session=%s", MAX_TURNS, session_id)
+        return SendMessageResponse(user_message=user_msg, assistant_message=None, session_completed=True)
+
+    profile = current_user.onboarding_profile
+    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
+
     try:
         turn = await generate_question(
             persona_config=session.persona_config,
             doc_text=doc_text,
             history=history,
+            user_context=user_context,
         )
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
@@ -236,6 +275,24 @@ async def get_history(
     return await _load_session(db, session_id, current_user.id)
 
 
+async def _finalize_session(session: SimulationSession, db: AsyncSession) -> None:
+    """Run evaluation and mark session as completed. Shared by endpoint and auto-complete."""
+    doc_text = await _get_doc_text(db, session.document_id, session.draft_id)
+    history = [{"role": m.role.value, "content": m.content} for m in session.messages]
+    evaluation = await evaluate_session(doc_text=doc_text, messages=history)
+    for metric in evaluation.metrics:
+        db.add(SkillMetric(
+            session_id=session.id,
+            metric_name=metric["name"],
+            score=metric["score"],
+            comment=metric.get("comment"),
+        ))
+    session.status = SessionStatus.completed
+    session.completed_at = datetime.now(timezone.utc)
+    await db.flush()
+    logger.info("Session finalized session=%s metrics=%d", session.id, len(evaluation.metrics))
+
+
 @router.post("/{session_id}/complete", response_model=SimulationSessionResponse)
 async def complete_session(
     request: Request,
@@ -258,27 +315,12 @@ async def complete_session(
             detail="Cannot complete session with no answers from user",
         )
 
-    doc_text = await _get_doc_text(db, session.document_id, session.draft_id)
-    history = [{"role": m.role.value, "content": m.content} for m in session.messages]
-
     try:
-        evaluation = await evaluate_session(doc_text=doc_text, messages=history)
+        await _finalize_session(session, db)
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
-    for metric in evaluation.metrics:
-        db.add(SkillMetric(
-            session_id=session.id,
-            metric_name=metric["name"],
-            score=metric["score"],
-            comment=metric.get("comment"),
-        ))
-
-    session.status = SessionStatus.completed
-    session.completed_at = datetime.now(timezone.utc)
-    await db.flush()
-
-    logger.info("Session completed user=%s session=%s metrics=%d", current_user.id, session_id, len(evaluation.metrics))
+    logger.info("Session completed by user user=%s session=%s", current_user.id, session_id)
     return await _load_session(db, session.id, current_user.id, populate_existing=True)
 
 

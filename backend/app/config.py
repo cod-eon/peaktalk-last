@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = False
 
+    # Supabase webhook secret (set in Supabase Dashboard → Database → Webhooks → custom header)
+    supabase_webhook_secret: str = ""
+
     # CORS — comma-separated origins, e.g. "http://localhost:3000,https://peaktalk.io"
     allowed_origins: str = "http://localhost:3000"
 

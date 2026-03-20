@@ -13,27 +13,134 @@ from app.services.gemini import GeminiError
 
 CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to Gemini
 
-_PERSONA_DESCRIPTIONS: dict[str, dict] = {
-    "investor": {
-        "title": "Tough Venture Capitalist",
-        "style": "skeptical, data-driven, focused on ROI and market size",
-        "focus": "business model, unit economics, market opportunity, team, moat",
+_SEGMENT_PERSONAS: dict[str, dict] = {
+    "student": {
+        "default_difficulty": 2,
+        "personas": {
+            "supervisor": {
+                "title": "Строгий научный руководитель",
+                "description": "Требовательный, ждёт академической строгости. Проверяет методологию и источники.",
+                "style": "demanding, detail-oriented, expects academic rigor",
+                "focus": "methodology, sources, logical consistency, depth of research",
+            },
+            "reviewer": {
+                "title": "Придирчивый рецензент",
+                "description": "Критичный и формальный. Ищет слабые аргументы и пробелы в логике.",
+                "style": "critical, formal, looks for gaps and weak arguments",
+                "focus": "evidence quality, conclusions, originality",
+            },
+            "peer": {
+                "title": "Однокурсник-скептик",
+                "description": "Дружелюбный, но задаёт неудобные вопросы о практической значимости.",
+                "style": "friendly but challenging, asks 'but why though?'",
+                "focus": "practical relevance, clarity of explanation",
+            },
+        },
     },
-    "hr": {
-        "title": "Senior HR Manager",
-        "style": "empathetic but probing, focused on cultural fit and soft skills",
-        "focus": "motivation, conflict resolution, leadership, teamwork, growth mindset",
+    "junior": {
+        "default_difficulty": 3,
+        "personas": {
+            "tech_lead": {
+                "title": "Тимлид / Principal Engineer",
+                "description": "Точный и прагматичный. Не впечатляется buzzwords, копает в архитектуру и компромиссы.",
+                "style": "precise, unimpressed by buzzwords",
+                "focus": "architecture, tradeoffs, scalability, technical depth",
+            },
+            "hr": {
+                "title": "HR-менеджер",
+                "description": "Эмпатичный, но зондирующий. Оценивает мотивацию, soft skills и потенциал роста.",
+                "style": "empathetic but probing",
+                "focus": "motivation, soft skills, growth mindset",
+            },
+            "senior_dev": {
+                "title": "Старший разработчик на ревью",
+                "description": "Прямолинейный и прагматичный. Видел всё — проверяет качество кода и edge cases.",
+                "style": "blunt, pragmatic, seen it all",
+                "focus": "code quality, edge cases, maintainability",
+            },
+        },
     },
-    "tech_lead": {
-        "title": "Principal Engineer / Tech Lead",
-        "style": "precise, technical, unimpressed by buzzwords",
-        "focus": "architecture decisions, scalability, tradeoffs, technical depth",
+    "founder": {
+        "default_difficulty": 4,
+        "personas": {
+            "investor": {
+                "title": "Жёсткий венчурный инвестор",
+                "description": "Скептичный, ориентированный на данные. Давит на юнит-экономику, TAM и конкурентный ров.",
+                "style": "skeptical, data-driven, focused on ROI",
+                "focus": "business model, unit economics, market size, moat",
+            },
+            "partner": {
+                "title": "Скептичный корпоративный партнёр",
+                "description": "Осторожный и консервативный. Беспокоится о рисках интеграции и долгосрочных обязательствах.",
+                "style": "conservative, risk-averse, process-oriented",
+                "focus": "integration risks, compliance, long-term commitment",
+            },
+            "customer": {
+                "title": "Потенциальный клиент",
+                "description": "Практичный и нетерпеливый. Хочет знать: решает ли это его реальную проблему и сколько стоит.",
+                "style": "practical, impatient, focused on real problems",
+                "focus": "does it solve my problem, cost, switching effort",
+            },
+        },
     },
-    "listener": {
-        "title": "Curious General Audience Member",
-        "style": "friendly but genuinely confused, asks 'why' and 'how' questions",
-        "focus": "clarity, jargon-free explanation, real-world impact",
+    "manager": {
+        "default_difficulty": 4,
+        "personas": {
+            "board": {
+                "title": "Член совета директоров",
+                "description": "Стратегический, нетерпеливый. Фокус на ROI, рисках и способности команды исполнять.",
+                "style": "strategic, numbers-focused, impatient",
+                "focus": "ROI, risk, strategic alignment, execution ability",
+            },
+            "subordinate": {
+                "title": "Скептичный подчинённый",
+                "description": "Циничный, видел провальные инициативы. Проверяет реальность планов и влияние на команду.",
+                "style": "cynical, has seen failed initiatives",
+                "focus": "feasibility, impact on team, leadership credibility",
+            },
+            "journalist": {
+                "title": "Журналист на пресс-конференции",
+                "description": "Провокационный. Ищет противоречия, задаёт острые вопросы о публичном резонансе.",
+                "style": "provocative, looks for contradictions",
+                "focus": "inconsistencies, controversy, public impact",
+            },
+        },
     },
+    "other": {
+        "default_difficulty": 3,
+        "personas": {
+            "audience": {
+                "title": "Общая аудитория",
+                "description": "Любознательный, без жаргона. Хочет понять: зачем это мне и почему это важно.",
+                "style": "curious, jargon-free, asks 'why should I care'",
+                "focus": "relevance, clarity, real-world impact",
+            },
+            "moderator": {
+                "title": "Модератор дискуссии",
+                "description": "Нейтральный, но зондирующий. Управляет дискуссией, следит за глубиной и балансом.",
+                "style": "neutral but probing, steers conversation",
+                "focus": "balance of perspectives, depth, time management",
+            },
+        },
+    },
+}
+
+
+def get_personas_for_segment(segment: str | None) -> dict:
+    return _SEGMENT_PERSONAS.get(segment or "other", _SEGMENT_PERSONAS["other"])["personas"]
+
+
+def get_default_difficulty(segment: str | None) -> int:
+    return _SEGMENT_PERSONAS.get(segment or "other", _SEGMENT_PERSONAS["other"])["default_difficulty"]
+
+
+_SEGMENT_LABELS: dict[str, str] = {
+    "student": "Студент", "junior": "Молодой специалист",
+    "founder": "Фаундер / Стартап", "manager": "Руководитель", "other": "Другое",
+}
+_GOAL_LABELS: dict[str, str] = {
+    "interview": "Собеседование", "pitch": "Питч инвестору",
+    "conference": "Конференция / Доклад", "defense": "Защита проекта", "other": "Другое",
 }
 
 _SIMULATION_SYSTEM_TEMPLATE = """
@@ -42,6 +149,7 @@ Your style: {persona_style}
 Focus areas: {persona_focus}
 Industry context: {industry}
 Difficulty level: {difficulty}/5 ({difficulty_desc})
+{user_context_block}
 
 LANGUAGE RULE (MANDATORY):
 - You MUST always write your question in Russian, regardless of the presentation language or what the presenter writes.
@@ -124,11 +232,56 @@ def _sanitize_industry(value: str) -> str:
     return cleaned.strip()[:100] or "general"
 
 
-def _build_system_prompt(persona_config: dict) -> str:
-    role = persona_config.get("role", "listener")
-    persona = _PERSONA_DESCRIPTIONS.get(role, _PERSONA_DESCRIPTIONS["listener"])
+def get_available_personas(segment: str | None) -> dict[str, dict]:
+    """Returns persona dict for the given segment (or 'other' as fallback)."""
+    return get_personas_for_segment(segment)
+
+
+_SEGMENT_INDUSTRIES: dict[str, list[str]] = {
+    "student": ["Академия / Наука", "IT / Технологии", "Медицина / Биотех", "Социальные науки", "Экономика / Финансы"],
+    "junior":  ["IT / Разработка", "Продуктовые компании", "FinTech", "Консалтинг", "E-commerce"],
+    "founder": ["B2B SaaS / IT", "FinTech", "EdTech", "HealthTech / MedTech", "E-commerce / Retail"],
+    "manager": ["Корпоративный сектор", "Производство / Промышленность", "Ритейл", "Финансы / Банки", "IT / Технологии"],
+    "other":   ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"],
+}
+
+
+def get_industries_for_segment(segment: str | None) -> list[str]:
+    return _SEGMENT_INDUSTRIES.get(segment or "other", _SEGMENT_INDUSTRIES["other"])
+
+
+def _build_system_prompt(persona_config: dict, user_context: dict | None = None) -> str:
+    role = persona_config.get("role", "audience")
     difficulty = int(persona_config.get("difficulty", 3))
     industry = _sanitize_industry(persona_config.get("industry", "general"))
+
+    # Persona lookup: try segment from user_context first, then search all segments, then fallback
+    persona: dict | None = None
+    segment = user_context.get("segment") if user_context else None
+
+    if segment and segment in _SEGMENT_PERSONAS:
+        persona = _SEGMENT_PERSONAS[segment]["personas"].get(role)
+
+    if persona is None:
+        for seg_data in _SEGMENT_PERSONAS.values():
+            if role in seg_data["personas"]:
+                persona = seg_data["personas"][role]
+                break
+
+    if persona is None:
+        persona = _SEGMENT_PERSONAS["other"]["personas"]["audience"]
+
+    # Build user_context_block
+    user_context_block = ""
+    if user_context:
+        seg_label = _SEGMENT_LABELS.get(user_context.get("segment", ""), "")
+        goal_label = _GOAL_LABELS.get(user_context.get("goal", ""), "")
+        if seg_label or goal_label:
+            user_context_block = (
+                f"Speaker profile: {seg_label}, preparing for: {goal_label}.\n"
+                f"Calibrate question complexity and focus to this person's level and goal."
+            )
+
     return _SIMULATION_SYSTEM_TEMPLATE.format(
         persona_title=persona["title"],
         persona_style=persona["style"],
@@ -136,6 +289,7 @@ def _build_system_prompt(persona_config: dict) -> str:
         industry=industry,
         difficulty=difficulty,
         difficulty_desc=_DIFFICULTY_DESCRIPTIONS.get(difficulty, "standard"),
+        user_context_block=user_context_block,
     )
 
 
@@ -188,6 +342,7 @@ async def generate_question(
     persona_config: dict,
     doc_text: str,
     history: list[dict],
+    user_context: dict | None = None,
 ) -> SimulationTurn:
     client = genai.Client(api_key=settings.gemini_api_key)
     prompt = _build_user_prompt(doc_text, history)
@@ -201,7 +356,7 @@ async def generate_question(
                 model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction=_build_system_prompt(persona_config),
+                    system_instruction=_build_system_prompt(persona_config, user_context),
                 ),
             ),
         )

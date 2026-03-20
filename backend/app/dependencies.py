@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import Depends, HTTPException, status
@@ -10,6 +11,8 @@ from supabase import create_client
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
+
+logger = logging.getLogger("peaktalk.auth")
 
 bearer_scheme = HTTPBearer()
 
@@ -38,10 +41,16 @@ async def get_current_user(
         response = _get_supabase().auth.get_user(token)
         sb_user = response.user
         if sb_user is None:
+            logger.warning("auth: get_user returned None")
             raise credentials_exception
         user_id = uuid.UUID(sb_user.id)
-        email: str | None = sb_user.email
-    except Exception:
+        # For OAuth users email may live in user_metadata if top-level is None
+        email: str | None = sb_user.email or (sb_user.user_metadata or {}).get("email")
+        logger.debug("auth: sb_user id=%s email=%s", user_id, email)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("auth: get_user failed: %s", exc, exc_info=True)
         raise credentials_exception
 
     result = await db.execute(
@@ -54,22 +63,34 @@ async def get_current_user(
     if user is None:
         # Auto-provision user on first authenticated request
         if not email:
+            logger.warning("auth: no email for user_id=%s, cannot provision", user_id)
             raise credentials_exception
         try:
             user = User(id=user_id, email=email)
             db.add(user)
             await db.flush()
             await db.refresh(user)
-        except Exception:
+            logger.info("auth: provisioned new user id=%s email=%s", user_id, email)
+        except Exception as exc:
+            logger.warning("auth: provision failed (race/conflict): %s", exc)
             await db.rollback()
-            # Another concurrent request already created the user — just fetch it
+            # Fallback 1: same UUID (concurrent request created the user)
+            # Fallback 2: same email but different UUID (OAuth account not yet linked in Supabase)
+            from sqlalchemy import or_, update as sa_update
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.onboarding_profile))
-                .where(User.id == user_id)
+                .where(or_(User.id == user_id, User.email == email))
             )
             user = result.scalar_one_or_none()
             if user is None:
+                logger.error("auth: user not found after rollback, user_id=%s email=%s", user_id, email)
                 raise credentials_exception
+            # If UUID mismatch (different OAuth provider), update UUID so next requests are fast
+            if user.id != user_id:
+                logger.info("auth: migrating user UUID %s → %s for email=%s", user.id, user_id, email)
+                await db.execute(sa_update(User).where(User.id == user.id).values(id=user_id))
+                await db.flush()
+                user.id = user_id
 
     return user

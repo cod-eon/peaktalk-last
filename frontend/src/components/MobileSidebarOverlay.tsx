@@ -5,27 +5,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    LayoutDashboard, 
-    FolderOpen, 
-    Activity, 
+import {
+    LayoutDashboard,
     Settings,
     X,
-    Sparkles,
     Bot,
     FileText,
-    LogOut
+    LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Проекты', path: '/dashboard/projects', icon: FolderOpen },
-    { name: 'Документы', path: '/documents', icon: FileText },
-    { name: 'Аналитика', path: '/dashboard/analytics', icon: Activity },
-    { name: 'Симуляция', path: '/simulation', icon: Bot },
-    { name: 'Настройки', path: '/dashboard/settings', icon: Settings },
+    { name: 'Мои тексты', path: '/documents', icon: FileText },
+    { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Настройки', path: '/settings', icon: Settings },
 ];
 
 interface MobileSidebarOverlayProps {
@@ -59,7 +54,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]"
+                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9998]"
                     />
 
                     {/* Drawer */}
@@ -68,53 +63,76 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--bg-surface)] border-r border-[var(--border-main)] z-[9999] flex flex-col pt-safe"
+                        className="fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-[var(--border-main)] z-[9999] flex flex-col pt-safe"
                     >
-                        <div className="p-6 flex items-center justify-between border-b border-[var(--border-main)]">
-                            <div className="flex items-center gap-3">
+                        {/* Header */}
+                        <div className="px-5 h-16 flex items-center justify-between border-b border-[var(--border-main)]">
+                            <Link href="/" onClick={onClose} className="flex items-center gap-3 hover:opacity-75 transition-opacity">
                                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
                                     <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={32} height={32} />
                                 </div>
-                                <span className="font-syne font-extrabold text-xl">PeakTalk</span>
-                            </div>
-                            <button onClick={onClose} className="p-2 text-[var(--text-dim)]">
-                                <X size={20} />
+                                <span className="text-[15px] font-bold tracking-tight text-[var(--text-main)]" style={{ letterSpacing: '-0.02em' }}>
+                                    PeakTalk
+                                </span>
+                            </Link>
+                            <button
+                                onClick={onClose}
+                                className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] transition-colors"
+                            >
+                                <X size={18} />
                             </button>
                         </div>
 
-                        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+                        {/* Nav */}
+                        <div className="flex-1 p-3 space-y-0.5 overflow-y-auto">
                             {navItems.map((item) => {
                                 const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
                                 return (
-                                    <Link 
-                                        key={item.path} 
-                                        href={item.path} 
+                                    <Link
+                                        key={item.path}
+                                        href={item.path}
                                         onClick={onClose}
-                                        className={`flex items-center gap-2.5 px-3 py-3 rounded-[var(--radius-sm)] border transition-all font-inter text-[13px] font-medium ${isActive ? 'sidebar-item-active text-[var(--accent-primary)] border-[var(--accent-primary-glow)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'}`}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] border transition-all text-[13px] font-medium font-inter ${
+                                            isActive
+                                                ? 'sidebar-item-active text-[var(--accent-primary)] border-orange-100'
+                                                : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'
+                                        }`}
                                     >
-                                        <item.icon size={18} className={isActive ? 'text-[var(--accent-primary)]' : ''} />
+                                        <item.icon
+                                            size={17}
+                                            strokeWidth={isActive ? 2.5 : 2}
+                                            className={isActive ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}
+                                        />
                                         <span>{item.name}</span>
                                     </Link>
                                 );
                             })}
                         </div>
 
-                        <div className="p-6 border-t border-[var(--border-main)] mt-auto flex flex-col gap-4">
+                        {/* Footer */}
+                        <div className="p-4 border-t border-[var(--border-main)] mt-auto flex flex-col gap-3">
+                            {/* User chip */}
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-[var(--text-main)] text-[var(--bg-main)] flex items-center justify-center font-bold text-sm font-syne uppercase">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center font-bold text-sm text-orange-500 shrink-0 uppercase">
                                         {firstLetter}
                                     </div>
-                                    <div className="font-mono text-xs text-white max-w-[150px] truncate">{displayName}</div>
+                                    <div className="text-[13px] font-medium text-[var(--text-main)] truncate">{displayName}</div>
                                 </div>
-                                <button onClick={handleLogout} className="p-2 text-[var(--text-dim)] hover:text-red-400 transition-colors">
-                                    <LogOut size={18} />
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-dim)] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                                    title="Выйти"
+                                >
+                                    <LogOut size={16} />
                                 </button>
                             </div>
-                            <div className="bg-[var(--bg-surface-hover)] rounded-xl p-4 border border-[var(--border-light)] mt-2">
-                                <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase mb-2">Basic Plan</div>
-                                <div className="text-xs text-white mb-4">Улучшите навыки с ИИ</div>
-                                <button className="w-full py-2 bg-[var(--accent-primary)] text-white font-mono text-[10px] uppercase rounded hover:bg-[var(--accent-primary-hover)] transition-colors">
+
+                            {/* Upsell card */}
+                            <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                                <div className="text-[11px] font-medium text-orange-400 uppercase tracking-wide mb-1">Basic Plan</div>
+                                <div className="text-[13px] text-[var(--text-main)] font-medium mb-3">Улучшите навыки с ИИ</div>
+                                <button className="w-full py-2 bg-[var(--accent-primary)] text-white text-[12px] font-semibold rounded-[var(--radius-sm)] hover:bg-[var(--accent-primary-hover)] transition-colors">
                                     Upgrade to Pro
                                 </button>
                             </div>

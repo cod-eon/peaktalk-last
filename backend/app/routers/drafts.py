@@ -90,8 +90,10 @@ async def analyze_draft_endpoint(
         return draft.analysis_result
 
     logger.info("Starting Gemini analysis draft=%s chars=%d", draft_id, len(draft.raw_text))
+    profile = current_user.onboarding_profile
+    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
     try:
-        gemini_result = await analyze_draft(draft.raw_text)
+        gemini_result = await analyze_draft(draft.raw_text, user_context=user_context)
     except GeminiError as exc:
         logger.error("Gemini analysis failed draft=%s error=%s", draft_id, exc)
         raise HTTPException(
