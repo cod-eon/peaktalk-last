@@ -1,0 +1,59 @@
+# =============================================================================
+# PeakTalk — Nginx HTTP-only config (use BEFORE getting SSL certificate)
+# =============================================================================
+# Step 1: Copy this to nginx.conf on the server
+# Step 2: Start nginx: docker compose up -d nginx
+# Step 3: Get SSL cert: certbot certonly --webroot -w /var/www/certbot -d YOUR_DOMAIN
+# Step 4: Replace nginx.conf with the full HTTPS version
+# Step 5: docker compose restart nginx
+# =============================================================================
+
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    sendfile on;
+    keepalive_timeout 65;
+    client_max_body_size 55m;
+
+    upstream fastapi_backend {
+        server api:8000;
+    }
+
+    upstream nextjs_frontend {
+        server frontend:3000;
+    }
+
+    server {
+        listen 80;
+        server_name YOUR_DOMAIN;
+
+        # Certbot ACME challenge (needed to get the certificate)
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+
+        location /api/ {
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://fastapi_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location / {
+            proxy_pass http://nextjs_frontend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}

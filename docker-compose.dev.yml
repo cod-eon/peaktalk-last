@@ -1,0 +1,59 @@
+# =============================================================================
+# PeakTalk — LOCAL DEVELOPMENT Override
+# =============================================================================
+# This file extends docker-compose.yml for local development.
+# It adds hot-reload, exposes ports directly, and skips nginx.
+#
+# Usage:
+#   Start:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   Or add alias to your shell:
+#     alias dc-dev="docker compose -f docker-compose.yml -f docker-compose.dev.yml"
+# =============================================================================
+
+services:
+
+  # Override API: expose port + enable debug mode
+  api:
+    ports:
+      - "8000:8000"          # Direct access at http://localhost:8000
+    environment:
+      APP_ENV: development
+      DEBUG: "true"
+    # Mount source code for hot-reload (requires uvicorn --reload)
+    volumes:
+      - ./backend:/app
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload   # Hot-reload on code changes
+
+  # Override worker: mount source for hot-reload
+  worker:
+    environment:
+      APP_ENV: development
+    volumes:
+      - ./backend:/app
+
+  # Override frontend: expose port directly
+  frontend:
+    ports:
+      - "3000:3000"          # Direct access at http://localhost:3000
+
+  # Expose postgres port so you can connect with psql / DBeaver etc.
+  postgres:
+    ports:
+      - "5432:5432"
+
+  # Expose redis port for debugging
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Disable nginx in development — connect directly to services
+  nginx:
+    profiles:
+      - donotstart    # This profile is never activated, so nginx won't start

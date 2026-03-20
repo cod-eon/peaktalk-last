@@ -1,19 +1,28 @@
-# Dependencies
+# =============================================================================
+# PeakTalk — .gitignore
+# =============================================================================
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
 node_modules/
 .pnp
 .pnp.js
-
-# Next.js
 frontend/.next/
 frontend/out/
 frontend/build/
+frontend/.turbo/
 
-# Env files
+# ── Environment files (NEVER commit these — they contain secrets!) ───────────
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env.local
 
-# Python
+# .env.example files SHOULD be committed (they contain no secrets)
+!backend/.env.example
+!frontend/.env.example
+
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -25,24 +34,46 @@ env/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
 
-# OS
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Don't ignore docker-compose files — they are part of the project
+# .docker/  (only if you store secrets there)
+
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# IDE
+# ── IDE ────────────────────────────────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# Logs
+# ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# PWA
+# ── PWA (generated files) ────────────────────────────────────────────────────
 frontend/public/sw.js
 frontend/public/workbox-*.js
 
-# Claude internal
+# ── TypeScript build info ─────────────────────────────────────────────────────
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# ── Claude internal ───────────────────────────────────────────────────────────
 .claude/

@@ -1,0 +1,123 @@
+# =============================================================================
+# PeakTalk — CI/CD Pipeline
+# =============================================================================
+# Triggered automatically on every push to the `main` branch.
+#
+# What this does:
+#   1. Run backend tests (pytest with SQLite in-memory — no real DB needed)
+#   2. SSH into the VDS
+#   3. Pull latest code
+#   4. Build Docker images
+#   5. Run Alembic migrations
+#   6. Restart services
+#   7. Verify the API is healthy
+#
+# Required GitHub Secrets (set in: GitHub repo → Settings → Secrets → Actions):
+#   VDS_HOST        — IP address or hostname of your VDS (e.g. 123.45.67.89)
+#   VDS_USER        — SSH username (e.g. root or ubuntu)
+#   VDS_SSH_KEY     — Private SSH key (contents of ~/.ssh/id_ed25519)
+#   VDS_APP_DIR     — Path to the app on the VDS (e.g. /opt/peaktalk)
+#
+# Optional secrets:
+#   SLACK_WEBHOOK   — Slack webhook URL for deploy notifications
+# =============================================================================
+
+name: Deploy to VDS
+
+on:
+  push:
+    branches:
+      - main
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  # ── Job 1: Run Tests ────────────────────────────────────────────────────────
+  test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          # Note: aiosqlite is included in requirements.txt for CI tests
+
+      - name: Run pytest
+        working-directory: backend
+        env:
+          # Tests use SQLite in-memory — no real credentials needed
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+          SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_KEY: "test-service-role-key"
+          GEMINI_API_KEY: "test-gemini-key"
+          REDIS_URL: "redis://localhost:6379/0"
+          APP_ENV: "test"
+        run: |
+          pytest tests/ -v --tb=short
+
+  # ── Job 2: Deploy ────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to VDS
+    runs-on: ubuntu-latest
+    needs: test          # Only deploy if tests pass
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install the SSH key from GitHub Secrets so we can connect to the VDS
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VDS_SSH_KEY }}
+
+      # Add the VDS host to known_hosts so SSH doesn't ask for confirmation
+      - name: Add VDS to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VDS_HOST }}" >> ~/.ssh/known_hosts
+
+      # SSH into the VDS and run the deploy script
+      # The script: git pull → docker build → migrate → restart → healthcheck
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.VDS_USER }}@${{ secrets.VDS_HOST }} \
+            "cd ${{ secrets.VDS_APP_DIR }} && bash deploy.sh"
+
+      # Quick sanity check: hit the health endpoint from GitHub's runner
+      # (optional — only works if your VDS is publicly accessible)
+      - name: Verify deployment
+        run: |
+          echo "Waiting 15s for services to stabilize..."
+          sleep 15
+          echo "Checking health endpoint..."
+          # The /health endpoint goes through nginx → fastapi
+          # Replace with your actual domain once DNS is set up
+          # curl -sf "https://${{ secrets.VDS_DOMAIN }}/health" || echo "Health check skipped (domain not set)"
+          echo "Deploy finished. Check https://YOUR_DOMAIN to verify."
+
+      # Uncomment to get Slack notifications on deploy
+      # - name: Notify Slack
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v1.26.0
+      #   with:
+      #     payload: |
+      #       {
+      #         "text": "${{ job.status == 'success' && '✅' || '❌' }} Deploy to PeakTalk VDS: ${{ job.status }}\nCommit: ${{ github.event.head_commit.message }}\nAuthor: ${{ github.actor }}"
+      #       }
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
