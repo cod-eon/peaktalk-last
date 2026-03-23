@@ -32,12 +32,14 @@ echo "[1/5] Pulling latest code from main..."
 git pull origin main
 
 # ── Step 2: Build Docker images ───────────────────────────────────────────────
-# We build only the services that have code (not postgres/redis/nginx).
-# --no-cache is NOT used so builds stay fast. Force no-cache only when needed:
-#   docker compose build --no-cache api
+# api and worker use layer cache (Python deps rarely change).
+# frontend is always built --no-cache: NEXT_PUBLIC_* vars are baked into
+# the JS bundle at build time, and BuildKit cache on VDS can silently reuse
+# a stale image even when source files changed.
 echo ""
 echo "[2/5] Building Docker images..."
-docker compose build api worker frontend
+docker compose build api worker
+docker compose build --no-cache frontend
 
 # ── Step 3: Run database migrations ──────────────────────────────────────────
 # The migrate service is a one-shot container that runs alembic upgrade head.
