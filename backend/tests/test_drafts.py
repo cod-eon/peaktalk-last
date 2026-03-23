@@ -22,11 +22,11 @@ DRAFT_PAYLOAD = {
 }
 
 
-async def _mock_analyze_draft_ok(text: str) -> GeminiAnalysisResult:
+async def _mock_analyze_draft_ok(text: str, **kwargs) -> GeminiAnalysisResult:
     return MOCK_GEMINI_RESULT
 
 
-async def _mock_analyze_draft_error(text: str) -> GeminiAnalysisResult:
+async def _mock_analyze_draft_error(text: str, **kwargs) -> GeminiAnalysisResult:
     raise GeminiError("API timeout")
 
 
