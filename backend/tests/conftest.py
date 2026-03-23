@@ -15,12 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.database import Base, get_db
 from app.dependencies import get_current_user
-from app.limiter import limiter
 from app.main import app
-
-# Disable rate limiting in tests — all requests share 127.0.0.1 and would
-# hit the per-minute limits after just a few fixtures.
-limiter._enabled = False
+# Rate limiting is bypassed in tests via APP_ENV=test in the key_func
+# (see app/limiter.py — each request gets a unique UUID key).
 from app.models.user import User
 
 TEST_ENGINE = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
