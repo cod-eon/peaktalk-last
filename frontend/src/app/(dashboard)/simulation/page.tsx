@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
     Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -124,8 +124,10 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function SimulationPage() {
+function SimulationPageContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const draftFromUrl = searchParams.get('draft');
 
     // View state
     const [view, setView] = useState<'loading' | 'history' | 'setup'>('loading');
@@ -186,6 +188,14 @@ export default function SimulationPage() {
         fetchAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Auto-select draft from URL param once data is loaded
+    useEffect(() => {
+        if (draftFromUrl && !sessionsLoading) {
+            setSelectedDoc(draftFromUrl);
+            setView('setup');
+        }
+    }, [draftFromUrl, sessionsLoading]);
 
     // ── Derived setup state ──────────────────────────────────────────────────
 
@@ -597,5 +607,17 @@ export default function SimulationPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SimulationPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex-1 flex items-center justify-center min-h-[40vh]">
+                <Loader2 className="animate-spin text-[var(--accent-primary)]" size={28} />
+            </div>
+        }>
+            <SimulationPageContent />
+        </Suspense>
     );
 }

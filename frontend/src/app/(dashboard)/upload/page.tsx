@@ -275,10 +275,10 @@ export default function UploadPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-2xl mx-auto"
                     >
-                        <div className="bg-[#0c0a08] border border-[var(--accent-primary-glow)] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.12)] flex flex-col">
-                            {/* Terminal Header */}
-                            <div className="px-5 py-3 border-b border-[var(--border-main)] bg-[#131009] flex items-center">
-                                <div className="flex gap-2 mr-4 opacity-70">
+                        <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-[var(--shadow-soft)] flex flex-col">
+                            {/* Log Viewer Header */}
+                            <div className="px-5 py-3 border-b border-[var(--border-main)] bg-[var(--bg-surface-alt)] flex items-center">
+                                <div className="flex gap-2 mr-4 opacity-50">
                                     <div className="w-3 h-3 rounded-full bg-red-400" />
                                     <div className="w-3 h-3 rounded-full bg-yellow-400" />
                                     <div className="w-3 h-3 rounded-full bg-green-400" />
@@ -289,14 +289,14 @@ export default function UploadPage() {
                                 <div className="w-[52px]" />
                             </div>
 
-                            {/* Terminal Body */}
-                            <div className="p-6 md:p-8 h-[300px] font-mono text-xs md:text-sm flex flex-col gap-3 overflow-hidden text-[var(--text-muted)]">
+                            {/* Log Viewer Body */}
+                            <div className="p-6 md:p-8 h-[300px] font-mono text-xs md:text-sm flex flex-col gap-3 overflow-hidden">
                                 {logs.map((log, i) => (
                                     <motion.div
                                         key={i}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        className={`${log.includes('Внимание') ? 'text-yellow-400' : log.includes('завершен') ? 'text-green-400' : 'text-[var(--text-muted)]'}`}
+                                        className={`${log.includes('ОШИБКА') ? 'text-[var(--color-error)]' : log.includes('завершен') ? 'text-[var(--color-success)]' : 'text-[var(--text-dim)]'}`}
                                     >
                                         {log}
                                     </motion.div>
@@ -310,12 +310,12 @@ export default function UploadPage() {
                             </div>
 
                             {/* Processing Progress Bar */}
-                            <div className="h-1 w-full bg-[#131009]">
+                            <div className="h-1 w-full bg-[var(--bg-surface-alt)]">
                                 <motion.div
                                     initial={{ width: '0%' }}
                                     animate={{ width: `${(logs.length / 6) * 100}%` }}
                                     transition={{ ease: "linear" }}
-                                    className="h-full bg-[var(--accent-primary)] shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                                    className="h-full bg-[var(--accent-primary)]"
                                 />
                             </div>
                         </div>
