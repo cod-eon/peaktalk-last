@@ -91,12 +91,17 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.VDS_HOST }}" >> ~/.ssh/known_hosts
 
-      # SSH into the VDS and run the deploy script
-      # The script: git pull → docker build → migrate → restart → healthcheck
+      # SSH into the VDS and run the deploy script.
+      # Before running deploy.sh we temporarily set the git remote to use
+      # GITHUB_TOKEN (auto-provided by Actions) so git pull never needs a PAT.
+      # After deploy.sh the remote is restored to plain HTTPS.
       - name: Deploy
         run: |
           ssh ${{ secrets.VDS_USER }}@${{ secrets.VDS_HOST }} \
-            "cd ${{ secrets.VDS_APP_DIR }} && bash deploy.sh"
+            "cd ${{ secrets.VDS_APP_DIR }} && \
+             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/cod-eon/peaktalk-last.git && \
+             bash deploy.sh ; \
+             git remote set-url origin https://github.com/cod-eon/peaktalk-last.git"
 
       # Quick sanity check: hit the health endpoint from GitHub's runner
       # (optional — only works if your VDS is publicly accessible)
