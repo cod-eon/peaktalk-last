@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import datetime, timezone, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -53,12 +54,39 @@ async def get_current_user(
         logger.warning("auth: get_user failed: %s", exc, exc_info=True)
         raise credentials_exception
 
+    # Parse Supabase account creation time for re-registration detection
+    sb_created_at: datetime | None = None
+    try:
+        raw = sb_user.created_at
+        if isinstance(raw, str):
+            sb_created_at = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        elif isinstance(raw, datetime):
+            sb_created_at = raw if raw.tzinfo else raw.replace(tzinfo=timezone.utc)
+    except Exception:
+        pass
+
     result = await db.execute(
         select(User)
         .options(selectinload(User.onboarding_profile))
         .where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
+
+    # Re-registration detection: if the Supabase account was created AFTER our local
+    # user record, the user was deleted from Supabase and signed up again.
+    # Delete stale local data so they get a clean slate (onboarding, etc.).
+    if user is not None and sb_created_at is not None:
+        local_created = user.created_at
+        if local_created.tzinfo is None:
+            local_created = local_created.replace(tzinfo=timezone.utc)
+        if sb_created_at > local_created + timedelta(seconds=60):
+            logger.info(
+                "auth: re-registration detected for user_id=%s (sb=%s local=%s) — wiping stale data",
+                user_id, sb_created_at, local_created,
+            )
+            await db.delete(user)
+            await db.flush()
+            user = None  # will be provisioned fresh below
 
     if user is None:
         # Auto-provision user on first authenticated request
