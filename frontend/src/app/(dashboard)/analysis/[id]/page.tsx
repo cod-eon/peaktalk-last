@@ -456,9 +456,9 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                         onMouseEnter={() => onHover(seg.idx!)}
                         onMouseLeave={onLeave}
                         style={{
-                            textDecoration: isActive ? 'none' : 'underline',
+                            textDecoration: 'underline',
                             textDecorationStyle: 'wavy',
-                            textDecorationColor: c.pill,
+                            textDecorationColor: isActive ? 'transparent' : c.pill,
                             textDecorationThickness: '2px',
                             textUnderlineOffset: '4px',
                             backgroundColor: isActive ? c.bgHover : 'transparent',
