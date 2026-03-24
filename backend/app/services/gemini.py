@@ -58,7 +58,7 @@ STRICT RULES FOR improved_text:
 STRICT RULES FOR annotations:
 - Include 4 to 8 annotations covering the most impactful issues.
 - The "text" field MUST be an exact verbatim substring copied from the original text. Do not paraphrase.
-- "comment" must be specific and actionable — not generic phrases like "improve clarity here".
+- "comment" MUST include a concrete before/after rewrite example. Format: first explain the problem in 1 sentence, then provide: "Например: «[original fragment]» → «[improved version]»". Never write generic advice like "improve clarity here" or "rewrite this sentence" without showing the actual rewrite.
 - Each annotation must reference a DIFFERENT text fragment.
 - Focus on the most important problems, not trivial ones.
 
