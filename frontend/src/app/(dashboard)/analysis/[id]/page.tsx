@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Zap, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft,
-    BarChart2, Sparkles, Copy, Download, Check, X, MessageSquare,
+    BarChart2, Sparkles, Copy, Download, Check, X, MessageSquare, MousePointer2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -216,20 +216,18 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
 
 // ── Desktop Summary Panel ──────────────────────────────────────────────────────
 
-function SummaryPanel({ fb, annotations, categories, countByType, scoreLabel, scoreColor, activeFilter, onFilter }: {
+function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, onFilter }: {
     fb: AnalysisFeedback;
     annotations: Annotation[];
-    categories: { key: IssueType; label: string; text: string }[];
-    countByType: Record<string, number>;
     scoreLabel: string;
     scoreColor: string;
     activeFilter: IssueType | null;
     onFilter: (t: IssueType | null) => void;
 }) {
     const total = annotations.length;
-    const summaryText = total === 0
-        ? 'Замечаний не найдено — текст готов к выступлению!'
-        : `AI выявил ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева`;
+    const micro = total === 0
+        ? 'Замечаний не найдено — текст полностью готов к выступлению.'
+        : `AI обнаружил ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева для разбора.`;
 
     return (
         <div className="h-full flex flex-col">
@@ -237,11 +235,11 @@ function SummaryPanel({ fb, annotations, categories, countByType, scoreLabel, sc
             <div className="flex flex-col items-center gap-3 px-5 pt-6 pb-5 border-b border-[var(--border-main)]">
                 <ScoreRing score={fb.overall_score} size={88} />
                 <div className="text-center">
-                    <p className="font-syne font-bold text-[18px] leading-tight mb-1" style={{ color: scoreColor }}>
+                    <p className="font-syne font-bold text-[18px] leading-tight mb-1.5" style={{ color: scoreColor }}>
                         {scoreLabel}
                     </p>
                     <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed max-w-[220px]">
-                        {summaryText}
+                        {micro}
                     </p>
                 </div>
             </div>
@@ -253,44 +251,26 @@ function SummaryPanel({ fb, annotations, categories, countByType, scoreLabel, sc
                 </div>
             )}
 
-            {/* Category breakdown — scrolls independently */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-                {total === 0 && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3">
-                        <CheckCircle2 size={28} className="text-emerald-400" strokeWidth={1.5} />
-                        <p className="text-[13px] text-[var(--text-muted)] font-inter text-center">
+            {/* CTA placeholder — дышащий пустой стейт */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-4">
+                {total === 0 ? (
+                    <>
+                        <CheckCircle2 size={32} className="text-emerald-400" strokeWidth={1.5} />
+                        <p className="text-[13px] text-[var(--text-muted)] font-inter text-center leading-relaxed">
                             Отличная работа!
                         </p>
-                    </div>
-                )}
-                {categories.map(({ key, label, text }) => {
-                    const c = ISSUE[key];
-                    const cnt = countByType[key] ?? 0;
-                    return (
-                        <div key={key}
-                            className="rounded-xl p-3.5"
-                            style={{
-                                backgroundColor: 'var(--bg-card)',
-                                borderLeftWidth: '4px',
-                                borderLeftColor: cnt > 0 ? c.pill : 'var(--border-main)',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                            }}>
-                            <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10px] font-mono uppercase tracking-wider font-bold"
-                                    style={{ color: cnt > 0 ? c.pill : 'var(--text-dim)' }}>
-                                    {label}
-                                </span>
-                                {cnt > 0 && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
-                                        style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
-                                        {cnt}
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-[11px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
+                    </>
+                ) : (
+                    <>
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                            style={{ backgroundColor: 'var(--bg-surface)' }}>
+                            <MousePointer2 size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
                         </div>
-                    );
-                })}
+                        <p className="text-[13px] font-inter text-[var(--text-muted)] leading-relaxed text-center max-w-[200px]">
+                            Кликните на любой подчёркнутый фрагмент в тексте, чтобы увидеть детальный разбор и советы
+                        </p>
+                    </>
+                )}
             </div>
         </div>
     );
@@ -309,8 +289,8 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
             {/* Header row */}
             <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--border-main)]">
                 <button onClick={onClose}
-                    className="flex items-center gap-1.5 text-[12px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer">
-                    <ArrowLeft size={13} /> К сводке
+                    className="flex items-center gap-1.5 text-[12px] font-mono px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)] transition-all cursor-pointer">
+                    <ArrowLeft size={12} /> К сводке
                 </button>
                 <div className="flex items-center gap-1">
                     <button onClick={onPrev} disabled={idx === 0}
@@ -339,8 +319,15 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
                 </div>
 
                 {/* Quote */}
-                <div className="rounded-xl px-4 py-3 mb-5"
-                    style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `4px solid ${c.pill}` }}>
+                <div className="rounded-xl px-4 py-4 mb-5"
+                    style={{
+                        backgroundColor: 'var(--bg-surface)',
+                        border: `1px solid ${c.pill}25`,
+                        borderLeftWidth: '4px',
+                        borderLeftColor: c.pill,
+                    }}>
+                    <p className="text-[8px] font-mono uppercase tracking-widest mb-2"
+                        style={{ color: c.pill, opacity: 0.7 }}>Фрагмент</p>
                     <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">
                         «{ann.text}»
                     </p>
@@ -471,7 +458,7 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                             textDecorationColor: c.pill,
                             textDecorationThickness: '2px',
                             textUnderlineOffset: '4px',
-                            backgroundColor: isActive ? c.bgHover : isHovered ? c.bg : 'transparent',
+                            backgroundColor: isActive ? c.bgHover : 'transparent',
                             borderRadius: '2px',
                             cursor: 'pointer',
                             padding: '1px 0',
@@ -708,8 +695,6 @@ export default function AnalysisPage() {
                                     <SummaryPanel
                                         fb={fb}
                                         annotations={annotations}
-                                        categories={categories}
-                                        countByType={countByType}
                                         scoreLabel={scoreLabel}
                                         scoreColor={scoreColor}
                                         activeFilter={activeFilter}
