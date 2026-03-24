@@ -92,16 +92,12 @@ jobs:
           ssh-keyscan -H "${{ secrets.VDS_HOST }}" >> ~/.ssh/known_hosts
 
       # SSH into the VDS and run the deploy script.
-      # Before running deploy.sh we temporarily set the git remote to use
-      # GITHUB_TOKEN (auto-provided by Actions) so git pull never needs a PAT.
-      # After deploy.sh the remote is restored to plain HTTPS.
+      # VDS uses SSH deploy key (~/.ssh/id_ed25519) to pull from GitHub —
+      # no GITHUB_TOKEN manipulation needed.
       - name: Deploy
         run: |
           ssh ${{ secrets.VDS_USER }}@${{ secrets.VDS_HOST }} \
-            "cd ${{ secrets.VDS_APP_DIR }} && \
-             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/cod-eon/peaktalk-last.git && \
-             bash deploy.sh ; \
-             git remote set-url origin https://github.com/cod-eon/peaktalk-last.git"
+            "cd ${{ secrets.VDS_APP_DIR }} && bash deploy.sh"
 
       # Quick sanity check: hit the health endpoint from GitHub's runner
       # (optional — only works if your VDS is publicly accessible)
