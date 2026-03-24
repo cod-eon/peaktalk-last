@@ -154,9 +154,9 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
                         onClick={() => onFilter(activeFilter === type ? null : type)}
                         className="text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer"
                         style={{
-                            backgroundColor: isA ? `${c.pill}15` : 'var(--bg-surface-alt)',
+                            backgroundColor: isA ? c.pill : 'var(--bg-surface-alt)',
                             borderColor: isA ? c.pill : 'var(--border-main)',
-                            color: isA ? c.pill : 'var(--text-dim)',
+                            color: isA ? '#fff' : 'var(--text-dim)',
                         }}>
                         {c.label} · {count}
                     </button>
@@ -252,21 +252,24 @@ function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, o
             )}
 
             {/* CTA placeholder — дышащий пустой стейт */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-4">
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-3 mt-2">
                 {total === 0 ? (
                     <>
-                        <CheckCircle2 size={32} className="text-emerald-400" strokeWidth={1.5} />
-                        <p className="text-[13px] text-[var(--text-muted)] font-inter text-center leading-relaxed">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: 'rgba(16,185,129,0.1)' }}>
+                            <CheckCircle2 size={22} className="text-emerald-400" strokeWidth={1.5} />
+                        </div>
+                        <p className="text-sm text-[var(--text-dim)] font-inter text-center leading-relaxed">
                             Отличная работа!
                         </p>
                     </>
                 ) : (
                     <>
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: 'var(--bg-surface)' }}>
                             <MousePointer2 size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
                         </div>
-                        <p className="text-[13px] font-inter text-[var(--text-muted)] leading-relaxed text-center max-w-[200px]">
+                        <p className="text-sm text-[var(--text-dim)] font-inter leading-relaxed text-center max-w-[180px]">
                             Кликните на любой подчёркнутый фрагмент в тексте, чтобы увидеть детальный разбор и советы
                         </p>
                     </>
@@ -326,15 +329,15 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
                         borderLeftWidth: '4px',
                         borderLeftColor: c.pill,
                     }}>
-                    <p className="text-[8px] font-mono uppercase tracking-widest mb-2"
-                        style={{ color: c.pill, opacity: 0.7 }}>Фрагмент</p>
+                    <p className="text-[10px] font-mono uppercase tracking-widest mb-2"
+                        style={{ color: c.pill }}>Фрагмент</p>
                     <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">
                         «{ann.text}»
                     </p>
                 </div>
 
                 {/* Full comment — never truncated */}
-                <p className="text-[14px] text-[var(--text-muted)] font-inter leading-[1.75]">
+                <p className="text-[14px] text-[var(--text-muted)] font-inter leading-[1.9]">
                     {ann.comment}
                 </p>
             </div>
@@ -455,8 +458,8 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                         style={{
                             textDecoration: 'underline',
                             textDecorationStyle: 'wavy',
-                            textDecorationColor: c.pill,
-                            textDecorationThickness: '2px',
+                            textDecorationColor: isActive ? c.pill : `${c.pill}60`,
+                            textDecorationThickness: isActive ? '2px' : '1px',
                             textUnderlineOffset: '4px',
                             backgroundColor: isActive ? c.bgHover : 'transparent',
                             borderRadius: '2px',
