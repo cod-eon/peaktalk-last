@@ -58,6 +58,8 @@ docker compose run --rm migrate
 echo ""
 echo "[4/5] Restarting services..."
 docker compose up -d api worker frontend nginx
+# Restart nginx to force DNS re-resolution of upstream IPs after container recreation
+docker compose restart nginx
 
 # ── Step 5: Health check ──────────────────────────────────────────────────────
 echo ""
@@ -67,7 +69,7 @@ echo "[5/5] Checking API health..."
 MAX_RETRIES=10
 RETRY_DELAY=3
 for i in $(seq 1 $MAX_RETRIES); do
-    if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+    if curl -sf http://localhost/health > /dev/null 2>&1; then
         echo "  API is healthy ✓"
         break
     fi
