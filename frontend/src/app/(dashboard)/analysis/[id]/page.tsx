@@ -17,6 +17,7 @@ type IssueType   = 'logic' | 'style' | 'clarity' | 'grammar';
 type Severity    = 'high' | 'medium' | 'low';
 type MobileTab   = 'text' | 'issues' | 'improved';
 type DesktopView = 'text' | 'ai';
+type Segment     = { text: string; ann?: Annotation; idx?: number };
 
 type Annotation = { text: string; issue_type: IssueType; comment: string; severity: Severity };
 
@@ -36,21 +37,27 @@ type Draft = {
 // ── Design tokens ──────────────────────────────────────────────────────────────
 
 const ISSUE: Record<IssueType, { label: string; pill: string; bg: string; bgHover: string }> = {
-    logic:   { label: 'Логика',     pill: '#3b82f6', bg: 'rgba(59,130,246,0.13)',  bgHover: 'rgba(59,130,246,0.28)' },
-    clarity: { label: 'Ясность',    pill: '#8b5cf6', bg: 'rgba(139,92,246,0.13)', bgHover: 'rgba(139,92,246,0.28)' },
-    style:   { label: 'Стиль',      pill: '#f59e0b', bg: 'rgba(245,158,11,0.13)', bgHover: 'rgba(245,158,11,0.28)' },
-    grammar: { label: 'Грамматика', pill: '#ef4444', bg: 'rgba(239,68,68,0.13)',  bgHover: 'rgba(239,68,68,0.28)'  },
+    logic:   { label: 'Логика',     pill: '#3b82f6', bg: 'rgba(59,130,246,0.08)',  bgHover: 'rgba(59,130,246,0.20)' },
+    clarity: { label: 'Ясность',    pill: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', bgHover: 'rgba(139,92,246,0.20)' },
+    style:   { label: 'Стиль',      pill: '#f59e0b', bg: 'rgba(245,158,11,0.08)', bgHover: 'rgba(245,158,11,0.20)' },
+    grammar: { label: 'Грамматика', pill: '#ef4444', bg: 'rgba(239,68,68,0.08)',  bgHover: 'rgba(239,68,68,0.20)'  },
 };
 
 const SEV: Record<Severity, { label: string; bg: string; color: string }> = {
-    high:   { label: 'Критично',      bg: 'rgba(239,68,68,0.15)',    color: '#ef4444' },
-    medium: { label: 'Важно',         bg: 'rgba(251,146,60,0.15)',   color: '#fb923c' },
+    high:   { label: 'Критично',      bg: 'rgba(239,68,68,0.15)',   color: '#ef4444' },
+    medium: { label: 'Важно',         bg: 'rgba(251,146,60,0.15)',  color: '#fb923c' },
     low:    { label: 'Незначительно', bg: 'rgba(148,163,184,0.12)', color: '#94a3b8' },
 };
 
-// ── Segment builder ────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-type Segment = { text: string; ann?: Annotation; idx?: number };
+function pl(n: number, one: string, few: string, many: string) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m100 >= 11 && m100 <= 19) return many;
+    if (m10 === 1) return one;
+    if (m10 >= 2 && m10 <= 4) return few;
+    return many;
+}
 
 function buildSegments(text: string, annotations: Annotation[]): Segment[] {
     const ivs = annotations.flatMap((ann, i) => {
@@ -69,7 +76,7 @@ function buildSegments(text: string, annotations: Annotation[]): Segment[] {
     return out;
 }
 
-// ── Score ring ─────────────────────────────────────────────────────────────────
+// ── ScoreRing ──────────────────────────────────────────────────────────────────
 
 function ScoreRing({ score, size = 64 }: { score: number; size?: number }) {
     const sw = 5, r = (size - sw) / 2, c = 2 * Math.PI * r;
@@ -118,7 +125,7 @@ function DownloadButton({ text, title }: { text: string; title: string }) {
     );
 }
 
-// ── Filter pills ───────────────────────────────────────────────────────────────
+// ── FilterPills ────────────────────────────────────────────────────────────────
 
 function FilterPills({ annotations, activeFilter, onFilter }: {
     annotations: Annotation[];
@@ -128,7 +135,6 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
     const countByType = useMemo(() => annotations.reduce<Record<string, number>>(
         (a, ann) => ({ ...a, [ann.issue_type]: (a[ann.issue_type] ?? 0) + 1 }), {}
     ), [annotations]);
-
     return (
         <div className="flex flex-wrap gap-1.5">
             <button onClick={() => onFilter(null)}
@@ -160,7 +166,7 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
     );
 }
 
-// ── Issue card ─────────────────────────────────────────────────────────────────
+// ── IssueCard (mobile issues tab) ──────────────────────────────────────────────
 
 const IssueCard = React.forwardRef<HTMLButtonElement, {
     ann: Annotation; realIdx: number;
@@ -173,26 +179,29 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
     const hi = isHovered || isActive;
     return (
         <button ref={ref}
-            className="w-full text-left rounded-[var(--radius-lg)] border transition-all cursor-pointer"
+            className="w-full text-left rounded-xl transition-all cursor-pointer"
             style={{
-                backgroundColor: hi ? 'var(--bg-card)' : 'var(--bg-surface-alt)',
-                borderColor: hi ? c.pill : 'var(--border-main)',
-                borderLeftWidth: '3px',
+                backgroundColor: 'var(--bg-card)',
+                borderLeftWidth: '4px',
                 borderLeftColor: c.pill,
+                borderTopWidth: 0, borderRightWidth: 0, borderBottomWidth: 0,
+                boxShadow: hi
+                    ? `0 0 0 1px ${c.pill}40, 0 4px 12px rgba(0,0,0,0.15)`
+                    : '0 1px 3px rgba(0,0,0,0.1)',
                 padding: '16px',
                 scrollMarginTop: '8px',
             }}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
                     style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>{c.label}</span>
                 <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full"
                     style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                 <span className="ml-auto text-[10px] font-mono text-[var(--text-dim)]">#{realIdx + 1}</span>
             </div>
-            <div className="rounded px-2.5 py-2 mb-2"
+            <div className="rounded px-2.5 py-2 mb-2.5"
                 style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `2px solid ${c.pill}50` }}>
                 <p className="text-[11px] font-mono italic leading-relaxed text-[var(--text-main)] line-clamp-2">
                     «{ann.text}»
@@ -205,7 +214,148 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
     );
 });
 
-// ── Annotation bottom sheet (mobile only) ──────────────────────────────────────
+// ── Desktop Summary Panel ──────────────────────────────────────────────────────
+
+function SummaryPanel({ fb, annotations, categories, countByType, scoreLabel, scoreColor, activeFilter, onFilter }: {
+    fb: AnalysisFeedback;
+    annotations: Annotation[];
+    categories: { key: IssueType; label: string; text: string }[];
+    countByType: Record<string, number>;
+    scoreLabel: string;
+    scoreColor: string;
+    activeFilter: IssueType | null;
+    onFilter: (t: IssueType | null) => void;
+}) {
+    const total = annotations.length;
+    const summaryText = total === 0
+        ? 'Замечаний не найдено — текст готов к выступлению!'
+        : `AI выявил ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева`;
+
+    return (
+        <div className="h-full flex flex-col">
+            {/* Score hero */}
+            <div className="flex flex-col items-center gap-3 px-5 pt-6 pb-5 border-b border-[var(--border-main)]">
+                <ScoreRing score={fb.overall_score} size={88} />
+                <div className="text-center">
+                    <p className="font-syne font-bold text-[18px] leading-tight mb-1" style={{ color: scoreColor }}>
+                        {scoreLabel}
+                    </p>
+                    <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed max-w-[220px]">
+                        {summaryText}
+                    </p>
+                </div>
+            </div>
+
+            {/* Filter pills */}
+            {total > 0 && (
+                <div className="px-4 pt-4 pb-2 shrink-0">
+                    <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={onFilter} />
+                </div>
+            )}
+
+            {/* Category breakdown — scrolls independently */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+                {total === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 gap-3">
+                        <CheckCircle2 size={28} className="text-emerald-400" strokeWidth={1.5} />
+                        <p className="text-[13px] text-[var(--text-muted)] font-inter text-center">
+                            Отличная работа!
+                        </p>
+                    </div>
+                )}
+                {categories.map(({ key, label, text }) => {
+                    const c = ISSUE[key];
+                    const cnt = countByType[key] ?? 0;
+                    return (
+                        <div key={key}
+                            className="rounded-xl p-3.5"
+                            style={{
+                                backgroundColor: 'var(--bg-card)',
+                                borderLeftWidth: '4px',
+                                borderLeftColor: cnt > 0 ? c.pill : 'var(--border-main)',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                            }}>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-mono uppercase tracking-wider font-bold"
+                                    style={{ color: cnt > 0 ? c.pill : 'var(--text-dim)' }}>
+                                    {label}
+                                </span>
+                                {cnt > 0 && (
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                                        style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
+                                        {cnt}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-[11px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// ── Desktop Detail Panel ───────────────────────────────────────────────────────
+
+function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
+    ann: Annotation; idx: number; total: number;
+    onClose: () => void; onPrev: () => void; onNext: () => void;
+}) {
+    const c = ISSUE[ann.issue_type];
+    const sev = SEV[ann.severity];
+    return (
+        <div className="h-full flex flex-col">
+            {/* Header row */}
+            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--border-main)]">
+                <button onClick={onClose}
+                    className="flex items-center gap-1.5 text-[12px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer">
+                    <ArrowLeft size={13} /> К сводке
+                </button>
+                <div className="flex items-center gap-1">
+                    <button onClick={onPrev} disabled={idx === 0}
+                        className="p-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        <ChevronLeft size={14} />
+                    </button>
+                    <span className="text-[11px] font-mono text-[var(--text-dim)] px-1">{idx + 1} / {total}</span>
+                    <button onClick={onNext} disabled={idx === total - 1}
+                        className="p-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        <ChevronRight size={14} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+                {/* Category + severity badges */}
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                        style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.pill }} />
+                        {c.label}
+                    </span>
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
+                </div>
+
+                {/* Quote */}
+                <div className="rounded-xl px-4 py-3 mb-5"
+                    style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `4px solid ${c.pill}` }}>
+                    <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">
+                        «{ann.text}»
+                    </p>
+                </div>
+
+                {/* Full comment — never truncated */}
+                <p className="text-[14px] text-[var(--text-muted)] font-inter leading-[1.75]">
+                    {ann.comment}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// ── AnnotationSheet (mobile only) ─────────────────────────────────────────────
 
 function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
     ann: Annotation; idx: number; total: number;
@@ -235,9 +385,19 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
                                 style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-mono text-[var(--text-dim)]">{idx + 1}/{total}</span>
-                            <button onClick={onClose} className="text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer p-1"><X size={16} /></button>
+                        <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-mono text-[var(--text-dim)] px-1">{idx + 1}/{total}</span>
+                            <button onClick={onPrev} disabled={idx === 0}
+                                className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                                <ChevronLeft size={15} />
+                            </button>
+                            <button onClick={onNext} disabled={idx === total - 1}
+                                className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                                <ChevronRight size={15} />
+                            </button>
+                            <button onClick={onClose} className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer">
+                                <X size={16} />
+                            </button>
                         </div>
                     </div>
                     <div className="rounded-[var(--radius-md)] px-4 py-3 mb-4 bg-[var(--bg-surface)]"
@@ -261,36 +421,63 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
     );
 }
 
-// ── Annotated text ─────────────────────────────────────────────────────────────
+// ── AnnotatedText ──────────────────────────────────────────────────────────────
 
-function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter, onTap, onHover, onLeave }: {
+function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter, spotlight, onTap, onHover, onLeave, onEmpty }: {
     text: string; annotations: Annotation[];
     activeIdx: number | null; hoveredIdx: number | null;
     activeFilter: IssueType | null;
+    spotlight: boolean;
     onTap: (idx: number) => void;
     onHover: (idx: number) => void;
     onLeave: () => void;
+    onEmpty: () => void;
 }) {
     const segments = useMemo(() => buildSegments(text, annotations), [text, annotations]);
     return (
-        <div className="font-inter text-[15px] sm:text-[16px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+        <div
+            className="font-inter text-[18px] leading-[1.75] text-[var(--text-muted)] whitespace-pre-wrap break-words"
+            onClick={onEmpty}
+        >
             {segments.map((seg, i) => {
-                if (!seg.ann || seg.idx === undefined) return <span key={i}>{seg.text}</span>;
+                if (!seg.ann || seg.idx === undefined) {
+                    return (
+                        <span key={i} style={{ transition: 'opacity 0.3s', opacity: spotlight ? 0.4 : 1 }}>
+                            {seg.text}
+                        </span>
+                    );
+                }
                 const c = ISSUE[seg.ann.issue_type];
                 const isFiltered = !activeFilter || seg.ann.issue_type === activeFilter;
-                if (!isFiltered) return <span key={i}>{seg.text}</span>;
-                const isHighlighted = activeIdx === seg.idx || hoveredIdx === seg.idx;
+                if (!isFiltered) {
+                    return (
+                        <span key={i} style={{ opacity: spotlight ? 0.3 : 1, transition: 'opacity 0.3s' }}>
+                            {seg.text}
+                        </span>
+                    );
+                }
+                const isActive  = activeIdx === seg.idx;
+                const isHovered = hoveredIdx === seg.idx;
+                const dimmed    = spotlight && !isActive;
                 return (
                     <span key={i}
-                        onClick={() => onTap(seg.idx!)}
+                        data-ann-idx={seg.idx}
+                        onClick={(e) => { e.stopPropagation(); onTap(seg.idx!); }}
                         onMouseEnter={() => onHover(seg.idx!)}
                         onMouseLeave={onLeave}
                         style={{
-                            backgroundColor: isHighlighted ? c.bgHover : c.bg,
-                            borderRadius: '3px',
+                            textDecoration: 'underline',
+                            textDecorationStyle: 'wavy',
+                            textDecorationColor: c.pill,
+                            textDecorationThickness: '2px',
+                            textUnderlineOffset: '4px',
+                            backgroundColor: isActive ? c.bgHover : isHovered ? c.bg : 'transparent',
+                            borderRadius: '2px',
                             cursor: 'pointer',
                             padding: '1px 0',
-                            transition: 'background-color 0.15s',
+                            color: isActive ? c.pill : 'inherit',
+                            opacity: dimmed ? 0.4 : 1,
+                            transition: 'background-color 0.15s, opacity 0.3s, color 0.15s',
                         }}>
                         {seg.text}
                     </span>
@@ -314,7 +501,7 @@ export default function AnalysisPage() {
     const [hoveredIdx,   setHoveredIdx]   = useState<number | null>(null);
     const [isDesktop,    setIsDesktop]    = useState(false);
 
-    const cardRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+    const leftColRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const check = () => setIsDesktop(window.innerWidth >= 1024);
@@ -323,11 +510,19 @@ export default function AnalysisPage() {
         return () => window.removeEventListener('resize', check);
     }, []);
 
+    // Scroll left column so active annotation is centered
     useEffect(() => {
-        if (isDesktop && sheetIdx !== null && cardRefs.current[sheetIdx]) {
-            cardRefs.current[sheetIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+        if (!isDesktop || sheetIdx === null || !leftColRef.current) return;
+        const span = leftColRef.current.querySelector(`[data-ann-idx="${sheetIdx}"]`);
+        if (span) span.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, [sheetIdx, isDesktop]);
+
+    // ESC closes detail panel
+    useEffect(() => {
+        const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setSheetIdx(null); };
+        window.addEventListener('keydown', h);
+        return () => window.removeEventListener('keydown', h);
+    }, []);
 
     const { data: draft, isLoading, isError } = useQuery<Draft>({
         queryKey: ['draft', draftId],
@@ -373,10 +568,10 @@ export default function AnalysisPage() {
         </div>
     );
 
-    const annotations  = fb.annotations ?? [];
-    const textContent  = draft.raw_text || draft.content || '';
-    const countByType  = annotations.reduce<Record<string, number>>((a, ann) => ({ ...a, [ann.issue_type]: (a[ann.issue_type] ?? 0) + 1 }), {});
-    const categories   = [
+    const annotations = fb.annotations ?? [];
+    const textContent = draft.raw_text || draft.content || '';
+    const countByType = annotations.reduce<Record<string, number>>((a, ann) => ({ ...a, [ann.issue_type]: (a[ann.issue_type] ?? 0) + 1 }), {});
+    const categories  = [
         { key: 'logic'   as IssueType, label: 'Логика',     text: fb.logic   },
         { key: 'clarity' as IssueType, label: 'Ясность',    text: fb.clarity },
         { key: 'style'   as IssueType, label: 'Стиль',      text: fb.style   },
@@ -397,8 +592,7 @@ export default function AnalysisPage() {
         { id: 'improved' as MobileTab, label: 'AI версия', badge: null, icon: true },
     ];
 
-    // ── Desktop header (shared, always rendered so it blocks space on desktop) ─
-
+    // ── Desktop header: Back + Title + Simulation (score & toggle moved out) ──
     const DesktopHeader = () => (
         <header className="shrink-0 border-b border-[var(--border-main)] bg-[var(--bg-main)] z-10">
             <div className="h-14 flex items-center gap-3 px-6">
@@ -407,35 +601,9 @@ export default function AnalysisPage() {
                     <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                     <span className="text-[13px] font-inter">Назад</span>
                 </button>
-
                 <h1 className="flex-1 min-w-0 font-syne text-[14px] font-semibold text-[var(--text-main)] truncate">
                     {draft.title}
                 </h1>
-
-                {/* Text / AI toggle */}
-                <div className="flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5 shrink-0">
-                    <button onClick={() => setDesktopView('text')}
-                        className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                            desktopView === 'text'
-                                ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
-                                : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
-                        }`}>Текст</button>
-                    <button onClick={() => setDesktopView('ai')}
-                        className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                            desktopView === 'ai'
-                                ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
-                                : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
-                        }`}>
-                        <Sparkles size={9} /> AI версия
-                    </button>
-                </div>
-
-                {/* Score */}
-                <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[15px] font-syne font-bold" style={{ color: scoreColor }}>{fb.overall_score}</span>
-                    <span className="text-[11px] text-[var(--text-dim)] font-mono">/10 · {scoreLabel}</span>
-                </div>
-
                 <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 shrink-0">
                     <Zap size={13} /> Симуляция
                 </Link>
@@ -443,38 +611,64 @@ export default function AnalysisPage() {
         </header>
     );
 
+    // ── iOS segmented control (above text in left column) ─────────────────────
+    const TextAiToggle = () => (
+        <div className="inline-flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5">
+            <button onClick={() => setDesktopView('text')}
+                className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                    desktopView === 'text'
+                        ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
+                        : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                }`}>Текст</button>
+            <button onClick={() => setDesktopView('ai')}
+                className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                    desktopView === 'ai'
+                        ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
+                        : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                }`}>
+                <Sparkles size={9} /> AI версия
+            </button>
+        </div>
+    );
+
     return (
         <>
             {/* ══════════════════════════════════════════════════════════════
-                DESKTOP: fixed-height panel layout (lg+)
-                - h-screen, header pinned, two independent scrollable columns
+                DESKTOP (lg+): fixed-height, independent scroll columns
             ══════════════════════════════════════════════════════════════ */}
             <div className="hidden lg:flex lg:flex-col h-screen overflow-hidden">
 
                 <DesktopHeader />
 
-                {/* Two-column body */}
                 <div className="flex-1 grid grid-cols-[1fr_400px] min-h-0 overflow-hidden">
 
-                    {/* LEFT: scrollable text column */}
-                    <div className="overflow-y-auto">
+                    {/* LEFT: scrollable text */}
+                    <div ref={leftColRef} className="overflow-y-auto">
                         <div className="max-w-3xl mx-auto px-8 py-6">
+
+                            {/* Toggle + hint */}
+                            <div className="flex items-center justify-between mb-6">
+                                <TextAiToggle />
+                                {annotations.length > 0 && desktopView === 'text' && (
+                                    <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter">
+                                        <MessageSquare size={12} className="shrink-0" />
+                                        Кликните подчёркнутый фрагмент
+                                    </p>
+                                )}
+                            </div>
+
                             <AnimatePresence mode="wait">
                                 {desktopView === 'text' ? (
                                     <motion.div key="d-text"
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                         transition={{ duration: 0.15 }}>
-                                        {annotations.length > 0 && (
-                                            <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mb-5">
-                                                <MessageSquare size={12} className="shrink-0" />
-                                                Нажмите на подсвеченный фрагмент — AI объяснит что не так
-                                            </p>
-                                        )}
                                         <AnnotatedText
                                             text={textContent} annotations={annotations}
                                             activeIdx={sheetIdx} hoveredIdx={hoveredIdx}
                                             activeFilter={activeFilter}
+                                            spotlight={sheetIdx !== null}
                                             onTap={handleTap} onHover={handleHover} onLeave={handleLeave}
+                                            onEmpty={closeSheet}
                                         />
                                     </motion.div>
                                 ) : (
@@ -484,14 +678,14 @@ export default function AnalysisPage() {
                                         <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
                                             <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
                                             <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
-                                                AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                                                AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность
                                             </p>
                                         </div>
                                         <div className="flex gap-2 mb-5">
                                             <CopyButton text={analysis.improved_text} />
                                             <DownloadButton text={analysis.improved_text} title={draft.title} />
                                         </div>
-                                        <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+                                        <p className="font-inter text-[18px] leading-[1.75] text-[var(--text-muted)] whitespace-pre-wrap break-words">
                                             {analysis.improved_text}
                                         </p>
                                     </motion.div>
@@ -500,102 +694,59 @@ export default function AnalysisPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT: scrollable cards column */}
-                    <div className="overflow-y-auto border-l border-[var(--border-main)]">
-                        <div className="px-4 py-5 space-y-4">
-
-                            {/* Score mini */}
-                            <div className="flex items-center gap-3 p-3 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)]">
-                                <ScoreRing score={fb.overall_score} size={48} />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Общий балл</p>
-                                    <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {(['grammar','logic','clarity','style'] as IssueType[]).map(type => {
-                                            const cnt = countByType[type] ?? 0;
-                                            if (!cnt) return null;
-                                            const c = ISSUE[type];
-                                            return (
-                                                <div key={type} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono"
-                                                    style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>
-                                                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: c.pill }} />
-                                                    {c.label} {cnt}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Filter pills — above cards */}
-                            {annotations.length > 0 && (
-                                <FilterPills
-                                    annotations={annotations}
-                                    activeFilter={activeFilter}
-                                    onFilter={setActiveFilter}
-                                />
-                            )}
-
-                            {/* Issue cards */}
-                            {filteredAnnotations.length > 0 ? (
-                                <div className="space-y-2">
-                                    {filteredAnnotations.map((ann) => {
-                                        const realIdx = annotations.indexOf(ann);
-                                        return (
-                                            <IssueCard
-                                                key={realIdx}
-                                                ref={(el) => { cardRefs.current[realIdx] = el; }}
-                                                ann={ann} realIdx={realIdx}
-                                                isHovered={hoveredIdx === realIdx}
-                                                isActive={sheetIdx === realIdx}
-                                                onMouseEnter={() => setHoveredIdx(realIdx)}
-                                                onMouseLeave={() => setHoveredIdx(null)}
-                                                onClick={() => handleTap(realIdx)}
-                                            />
-                                        );
-                                    })}
-                                </div>
+                    {/* RIGHT: contextual sidebar — Summary or Detail */}
+                    <div className="flex flex-col min-h-0 border-l border-[var(--border-main)] overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            {sheetIdx === null ? (
+                                <motion.div
+                                    key="summary"
+                                    className="flex-1 min-h-0 overflow-hidden"
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2, ease: 'easeInOut' }}>
+                                    <SummaryPanel
+                                        fb={fb}
+                                        annotations={annotations}
+                                        categories={categories}
+                                        countByType={countByType}
+                                        scoreLabel={scoreLabel}
+                                        scoreColor={scoreColor}
+                                        activeFilter={activeFilter}
+                                        onFilter={setActiveFilter}
+                                    />
+                                </motion.div>
                             ) : (
-                                <div className="text-center py-6">
-                                    <CheckCircle2 size={22} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
-                                    <p className="text-[13px] text-[var(--text-muted)]">Проблем не найдено</p>
-                                </div>
+                                annotations[sheetIdx] && (
+                                    <motion.div
+                                        key={`detail-${sheetIdx}`}
+                                        className="flex-1 min-h-0 overflow-hidden"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 20 }}
+                                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+                                        <DetailPanel
+                                            ann={annotations[sheetIdx]}
+                                            idx={sheetIdx}
+                                            total={annotations.length}
+                                            onClose={closeSheet}
+                                            onPrev={() => setSheetIdx(p => p !== null && p > 0 ? p - 1 : p)}
+                                            onNext={() => setSheetIdx(p => p !== null && p < annotations.length - 1 ? p + 1 : p)}
+                                        />
+                                    </motion.div>
+                                )
                             )}
-
-                            {/* Category breakdown */}
-                            <div className="pt-1">
-                                <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] mb-2">
-                                    Оценка по критериям
-                                </p>
-                                <div className="space-y-1.5">
-                                    {categories.map(({ key, label, text }) => {
-                                        const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
-                                        return (
-                                            <div key={key}
-                                                className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3"
-                                                style={{ borderLeftWidth: '2px', borderLeftColor: c.pill }}>
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
-                                                    {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt}</span>}
-                                                </div>
-                                                <p className="text-[11px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                        </div>
+                        </AnimatePresence>
                     </div>
+
                 </div>
             </div>
 
             {/* ══════════════════════════════════════════════════════════════
-                MOBILE: normal scroll with sticky header + tabs (< lg)
+                MOBILE (< lg): normal scroll, sticky header, tabs
             ══════════════════════════════════════════════════════════════ */}
             <div className="lg:hidden min-h-screen pb-24">
 
-                {/* Sticky mobile header */}
                 <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
                     <div className="h-14 flex items-center gap-2 px-4">
                         <button onClick={() => router.back()}
@@ -613,7 +764,7 @@ export default function AnalysisPage() {
                 </header>
 
                 <div className="px-4 pt-4">
-                    {/* Score card */}
+                    {/* Mobile score card */}
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
                         className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-4 mb-4">
                         <div className="flex items-center gap-3">
@@ -659,26 +810,33 @@ export default function AnalysisPage() {
 
                     <AnimatePresence mode="wait">
                         {mobileTab === 'text' && (
-                            <motion.div key="m-text" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                            <motion.div key="m-text"
+                                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.15 }}>
                                 {annotations.length > 0 && (
                                     <>
                                         <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
                                         <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mt-3 mb-4">
                                             <MessageSquare size={12} className="shrink-0" />
-                                            Нажмите на подсвеченный фрагмент
+                                            Нажмите на подчёркнутый фрагмент
                                         </p>
                                     </>
                                 )}
                                 <AnnotatedText text={textContent} annotations={annotations}
                                     activeIdx={sheetIdx} hoveredIdx={null} activeFilter={activeFilter}
-                                    onTap={handleTap} onHover={() => {}} onLeave={() => {}} />
+                                    spotlight={false}
+                                    onTap={handleTap} onHover={() => {}} onLeave={() => {}} onEmpty={() => {}} />
                             </motion.div>
                         )}
 
                         {mobileTab === 'issues' && (
-                            <motion.div key="m-issues" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                            <motion.div key="m-issues"
+                                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.15 }}>
                                 <div className="space-y-4">
-                                    {annotations.length > 0 && <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />}
+                                    {annotations.length > 0 && (
+                                        <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
+                                    )}
                                     <div className="space-y-2.5">
                                         {filteredAnnotations.map((ann) => {
                                             const realIdx = annotations.indexOf(ann);
@@ -696,11 +854,21 @@ export default function AnalysisPage() {
                                             {categories.map(({ key, label, text }) => {
                                                 const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
                                                 return (
-                                                    <div key={key} className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3.5"
-                                                        style={{ borderLeftWidth: '3px', borderLeftColor: c.pill }}>
+                                                    <div key={key} className="rounded-xl p-3.5"
+                                                        style={{
+                                                            backgroundColor: 'var(--bg-card)',
+                                                            borderLeftWidth: '4px',
+                                                            borderLeftColor: c.pill,
+                                                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                                        }}>
                                                         <div className="flex items-center justify-between mb-1.5">
                                                             <span className="text-[11px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
-                                                            {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt} {cnt === 1 ? 'проблема' : 'проблемы'}</span>}
+                                                            {cnt > 0 && (
+                                                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                                                                    style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
+                                                                    {cnt} {cnt === 1 ? 'проблема' : 'проблемы'}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
                                                     </div>
@@ -713,7 +881,9 @@ export default function AnalysisPage() {
                         )}
 
                         {mobileTab === 'improved' && (
-                            <motion.div key="m-ai" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                            <motion.div key="m-ai"
+                                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.15 }}>
                                 <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
                                     <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
                                     <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
