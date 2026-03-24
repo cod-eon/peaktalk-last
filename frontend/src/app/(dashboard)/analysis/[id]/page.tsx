@@ -179,7 +179,7 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
                 borderColor: hi ? c.pill : 'var(--border-main)',
                 borderLeftWidth: '3px',
                 borderLeftColor: c.pill,
-                padding: '11px 12px',
+                padding: '16px',
                 scrollMarginTop: '8px',
             }}
             onMouseEnter={onMouseEnter}
@@ -198,7 +198,7 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
                     «{ann.text}»
                 </p>
             </div>
-            <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed line-clamp-3">
+            <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">
                 {ann.comment}
             </p>
         </button>
