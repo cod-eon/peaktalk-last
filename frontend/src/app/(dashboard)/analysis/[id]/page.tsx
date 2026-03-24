@@ -13,9 +13,9 @@ import { api } from '@/lib/api';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type IssueType = 'logic' | 'style' | 'clarity' | 'grammar';
-type Severity  = 'high' | 'medium' | 'low';
-type MobileTab = 'text' | 'issues' | 'improved';
+type IssueType   = 'logic' | 'style' | 'clarity' | 'grammar';
+type Severity    = 'high' | 'medium' | 'low';
+type MobileTab   = 'text' | 'issues' | 'improved';
 type DesktopView = 'text' | 'ai';
 
 type Annotation = { text: string; issue_type: IssueType; comment: string; severity: Severity };
@@ -170,36 +170,31 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
 }>(function IssueCard({ ann, realIdx, isHovered, isActive, onMouseEnter, onMouseLeave, onClick }, ref) {
     const c = ISSUE[ann.issue_type];
     const sev = SEV[ann.severity];
-    const highlighted = isHovered || isActive;
+    const hi = isHovered || isActive;
     return (
         <button ref={ref}
-            className="w-full text-left rounded-[var(--radius-lg)] border transition-all cursor-pointer active:scale-[0.99]"
+            className="w-full text-left rounded-[var(--radius-lg)] border transition-all cursor-pointer"
             style={{
-                backgroundColor: highlighted ? 'var(--bg-card)' : 'var(--bg-surface-alt)',
-                borderColor: highlighted ? c.pill : 'var(--border-main)',
+                backgroundColor: hi ? 'var(--bg-card)' : 'var(--bg-surface-alt)',
+                borderColor: hi ? c.pill : 'var(--border-main)',
                 borderLeftWidth: '3px',
                 borderLeftColor: c.pill,
-                padding: '12px 14px 12px 14px',
-                scrollMarginTop: '72px',
+                padding: '11px 12px',
+                scrollMarginTop: '8px',
             }}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
-            onClick={onClick}
-        >
-            <div className="flex items-center gap-2 mb-2.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>
-                    {c.label}
-                </span>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: sev.bg, color: sev.color }}>
-                    {sev.label}
-                </span>
+            onClick={onClick}>
+            <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>{c.label}</span>
+                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                 <span className="ml-auto text-[10px] font-mono text-[var(--text-dim)]">#{realIdx + 1}</span>
             </div>
-            <div className="rounded-[var(--radius-sm)] px-3 py-2 mb-2.5"
+            <div className="rounded px-2.5 py-2 mb-2"
                 style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `2px solid ${c.pill}50` }}>
-                <p className="text-[12px] font-mono italic leading-relaxed text-[var(--text-main)] line-clamp-2">
+                <p className="text-[11px] font-mono italic leading-relaxed text-[var(--text-main)] line-clamp-2">
                     «{ann.text}»
                 </p>
             </div>
@@ -238,9 +233,7 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                                 {c.label}
                             </span>
                             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
-                                style={{ backgroundColor: sev.bg, color: sev.color }}>
-                                {sev.label}
-                            </span>
+                                style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-mono text-[var(--text-dim)]">{idx + 1}/{total}</span>
@@ -352,7 +345,6 @@ export default function AnalysisPage() {
             <div className="w-6 h-6 border-2 border-[var(--border-light)] border-t-[var(--accent-primary)] rounded-full animate-spin" />
         </div>
     );
-
     if (isError || !draft) return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
             <AlertCircle size={32} className="text-red-400" strokeWidth={1.5} />
@@ -368,7 +360,8 @@ export default function AnalysisPage() {
         <div className="w-full py-8 pb-16">
             <div className="max-w-2xl mx-auto px-4">
                 <button onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors mb-5 cursor-pointer group">
-                    <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /><span className="text-[12px] font-inter">Назад</span>
+                    <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <span className="text-[12px] font-inter">Назад</span>
                 </button>
                 <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-8 text-center">
                     <BarChart2 size={24} className="text-[var(--text-dim)] mx-auto mb-4" strokeWidth={1.5} />
@@ -399,200 +392,233 @@ export default function AnalysisPage() {
         : annotations;
 
     const mobileTabs = [
-        { id: 'text'     as MobileTab, label: 'Текст',    badge: annotations.length },
-        { id: 'issues'   as MobileTab, label: 'Разбор',   badge: null },
+        { id: 'text'     as MobileTab, label: 'Текст',     badge: annotations.length },
+        { id: 'issues'   as MobileTab, label: 'Разбор',    badge: null },
         { id: 'improved' as MobileTab, label: 'AI версия', badge: null, icon: true },
     ];
 
-    return (
-        <div className="min-h-screen pb-24">
+    // ── Desktop header (shared, always rendered so it blocks space on desktop) ─
 
-            {/* ── Sticky header ──────────────────────────────────────────────── */}
-            <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
-                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-2 sm:gap-3">
+    const DesktopHeader = () => (
+        <header className="shrink-0 border-b border-[var(--border-main)] bg-[var(--bg-main)] z-10">
+            <div className="h-14 flex items-center gap-3 px-6">
+                <button onClick={() => router.back()}
+                    className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
+                    <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <span className="text-[13px] font-inter">Назад</span>
+                </button>
 
-                    <button onClick={() => router.back()}
-                        className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
-                        <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                        <span className="text-[12px] font-inter hidden sm:inline">Назад</span>
+                <h1 className="flex-1 min-w-0 font-syne text-[14px] font-semibold text-[var(--text-main)] truncate">
+                    {draft.title}
+                </h1>
+
+                {/* Text / AI toggle */}
+                <div className="flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5 shrink-0">
+                    <button onClick={() => setDesktopView('text')}
+                        className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                            desktopView === 'text'
+                                ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
+                                : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                        }`}>Текст</button>
+                    <button onClick={() => setDesktopView('ai')}
+                        className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                            desktopView === 'ai'
+                                ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
+                                : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                        }`}>
+                        <Sparkles size={9} /> AI версия
                     </button>
-
-                    <h1 className="flex-1 min-w-0 font-syne text-[14px] font-semibold text-[var(--text-main)] truncate">
-                        {draft.title}
-                    </h1>
-
-                    {/* Desktop: text / AI version toggle */}
-                    <div className="hidden lg:flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5 shrink-0">
-                        <button onClick={() => setDesktopView('text')}
-                            className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                                desktopView === 'text'
-                                    ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
-                                    : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
-                            }`}>
-                            Текст
-                        </button>
-                        <button onClick={() => setDesktopView('ai')}
-                            className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                                desktopView === 'ai'
-                                    ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
-                                    : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
-                            }`}>
-                            <Sparkles size={9} /> AI версия
-                        </button>
-                    </div>
-
-                    {/* Score */}
-                    <div className="flex items-center gap-1 shrink-0">
-                        <span className="text-[14px] font-syne font-bold" style={{ color: scoreColor }}>{fb.overall_score}</span>
-                        <span className="text-[11px] text-[var(--text-dim)] font-mono">/10</span>
-                        <span className="hidden md:inline text-[11px] text-[var(--text-dim)] font-mono ml-1">· {scoreLabel}</span>
-                    </div>
-
-                    <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0">
-                        <Zap size={12} />
-                        <span className="hidden sm:inline">Симуляция</span>
-                    </Link>
                 </div>
-            </header>
 
-            {/* ── Main content ───────────────────────────────────────────────── */}
-            <div className="max-w-5xl mx-auto px-4 pt-6">
+                {/* Score */}
+                <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[15px] font-syne font-bold" style={{ color: scoreColor }}>{fb.overall_score}</span>
+                    <span className="text-[11px] text-[var(--text-dim)] font-mono">/10 · {scoreLabel}</span>
+                </div>
 
-                {/* ══ DESKTOP two-column (lg+) ════════════════════════════════ */}
-                <div className="hidden lg:grid lg:grid-cols-[1fr,340px] lg:gap-6 lg:items-start">
+                <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 shrink-0">
+                    <Zap size={13} /> Симуляция
+                </Link>
+            </div>
+        </header>
+    );
 
-                    {/* LEFT: text or AI version */}
-                    <div className="min-w-0">
-                        <AnimatePresence mode="wait">
-                            {desktopView === 'text' ? (
-                                <motion.div key="text-view"
-                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.15 }}>
-                                    {annotations.length > 0 && (
-                                        <div className="flex flex-wrap items-center gap-3 mb-5">
-                                            <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
-                                            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-dim)] font-inter">
-                                                <MessageSquare size={11} />
-                                                Нажмите на выделенный фрагмент
-                                            </span>
+    return (
+        <>
+            {/* ══════════════════════════════════════════════════════════════
+                DESKTOP: fixed-height panel layout (lg+)
+                - h-screen, header pinned, two independent scrollable columns
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="hidden lg:flex lg:flex-col h-screen overflow-hidden">
+
+                <DesktopHeader />
+
+                {/* Two-column body */}
+                <div className="flex-1 grid grid-cols-[1fr_400px] min-h-0 overflow-hidden">
+
+                    {/* LEFT: scrollable text column */}
+                    <div className="overflow-y-auto">
+                        <div className="max-w-3xl mx-auto px-8 py-6">
+                            <AnimatePresence mode="wait">
+                                {desktopView === 'text' ? (
+                                    <motion.div key="d-text"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}>
+                                        {annotations.length > 0 && (
+                                            <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mb-5">
+                                                <MessageSquare size={12} className="shrink-0" />
+                                                Нажмите на подсвеченный фрагмент — AI объяснит что не так
+                                            </p>
+                                        )}
+                                        <AnnotatedText
+                                            text={textContent} annotations={annotations}
+                                            activeIdx={sheetIdx} hoveredIdx={hoveredIdx}
+                                            activeFilter={activeFilter}
+                                            onTap={handleTap} onHover={handleHover} onLeave={handleLeave}
+                                        />
+                                    </motion.div>
+                                ) : (
+                                    <motion.div key="d-ai"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}>
+                                        <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
+                                            <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
+                                            <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
+                                                AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                                            </p>
                                         </div>
-                                    )}
-                                    <AnnotatedText
-                                        text={textContent}
-                                        annotations={annotations}
-                                        activeIdx={sheetIdx}
-                                        hoveredIdx={hoveredIdx}
-                                        activeFilter={activeFilter}
-                                        onTap={handleTap}
-                                        onHover={handleHover}
-                                        onLeave={handleLeave}
-                                    />
-                                </motion.div>
-                            ) : (
-                                <motion.div key="ai-view"
-                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.15 }}>
-                                    <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
-                                        <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
-                                        <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
-                                            AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                                        <div className="flex gap-2 mb-5">
+                                            <CopyButton text={analysis.improved_text} />
+                                            <DownloadButton text={analysis.improved_text} title={draft.title} />
+                                        </div>
+                                        <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+                                            {analysis.improved_text}
                                         </p>
-                                    </div>
-                                    <div className="flex gap-2 mb-5">
-                                        <CopyButton text={analysis.improved_text} />
-                                        <DownloadButton text={analysis.improved_text} title={draft.title} />
-                                    </div>
-                                    <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
-                                        {analysis.improved_text}
-                                    </p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
-                    {/* RIGHT: sticky cards panel */}
-                    <div className="sticky top-14 max-h-[calc(100vh-56px)] overflow-y-auto space-y-3 pb-6">
-                        {/* Score summary */}
-                        <div className="flex items-center gap-3 p-3 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)]">
-                            <ScoreRing score={fb.overall_score} size={48} />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Общий балл</p>
-                                <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                    {(['grammar','logic','clarity','style'] as IssueType[]).map(type => {
-                                        const cnt = countByType[type] ?? 0;
-                                        if (!cnt) return null;
-                                        const c = ISSUE[type];
+                    {/* RIGHT: scrollable cards column */}
+                    <div className="overflow-y-auto border-l border-[var(--border-main)]">
+                        <div className="px-4 py-5 space-y-4">
+
+                            {/* Score mini */}
+                            <div className="flex items-center gap-3 p-3 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)]">
+                                <ScoreRing score={fb.overall_score} size={48} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Общий балл</p>
+                                    <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {(['grammar','logic','clarity','style'] as IssueType[]).map(type => {
+                                            const cnt = countByType[type] ?? 0;
+                                            if (!cnt) return null;
+                                            const c = ISSUE[type];
+                                            return (
+                                                <div key={type} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono"
+                                                    style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>
+                                                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: c.pill }} />
+                                                    {c.label} {cnt}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Filter pills — above cards */}
+                            {annotations.length > 0 && (
+                                <FilterPills
+                                    annotations={annotations}
+                                    activeFilter={activeFilter}
+                                    onFilter={setActiveFilter}
+                                />
+                            )}
+
+                            {/* Issue cards */}
+                            {filteredAnnotations.length > 0 ? (
+                                <div className="space-y-2">
+                                    {filteredAnnotations.map((ann) => {
+                                        const realIdx = annotations.indexOf(ann);
                                         return (
-                                            <div key={type} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono"
-                                                style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>
-                                                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: c.pill }} />
-                                                {c.label} {cnt}
+                                            <IssueCard
+                                                key={realIdx}
+                                                ref={(el) => { cardRefs.current[realIdx] = el; }}
+                                                ann={ann} realIdx={realIdx}
+                                                isHovered={hoveredIdx === realIdx}
+                                                isActive={sheetIdx === realIdx}
+                                                onMouseEnter={() => setHoveredIdx(realIdx)}
+                                                onMouseLeave={() => setHoveredIdx(null)}
+                                                onClick={() => handleTap(realIdx)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <CheckCircle2 size={22} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
+                                    <p className="text-[13px] text-[var(--text-muted)]">Проблем не найдено</p>
+                                </div>
+                            )}
+
+                            {/* Category breakdown */}
+                            <div className="pt-1">
+                                <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] mb-2">
+                                    Оценка по критериям
+                                </p>
+                                <div className="space-y-1.5">
+                                    {categories.map(({ key, label, text }) => {
+                                        const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
+                                        return (
+                                            <div key={key}
+                                                className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3"
+                                                style={{ borderLeftWidth: '2px', borderLeftColor: c.pill }}>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
+                                                    {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt}</span>}
+                                                </div>
+                                                <p className="text-[11px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Cards */}
-                        {filteredAnnotations.length > 0 ? (
-                            <div className="space-y-2">
-                                {filteredAnnotations.map((ann) => {
-                                    const realIdx = annotations.indexOf(ann);
-                                    return (
-                                        <IssueCard
-                                            key={realIdx}
-                                            ref={(el) => { cardRefs.current[realIdx] = el; }}
-                                            ann={ann} realIdx={realIdx}
-                                            isHovered={hoveredIdx === realIdx}
-                                            isActive={sheetIdx === realIdx}
-                                            onMouseEnter={() => setHoveredIdx(realIdx)}
-                                            onMouseLeave={() => setHoveredIdx(null)}
-                                            onClick={() => handleTap(realIdx)}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="text-center py-6">
-                                <CheckCircle2 size={22} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
-                                <p className="text-[13px] text-[var(--text-muted)]">Проблем не найдено</p>
-                            </div>
-                        )}
-
-                        {/* Category breakdown */}
-                        <div className="pt-1">
-                            <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] mb-2 px-0.5">
-                                Оценка по критериям
-                            </p>
-                            <div className="space-y-1.5">
-                                {categories.map(({ key, label, text }) => {
-                                    const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
-                                    return (
-                                        <div key={key}
-                                            className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3"
-                                            style={{ borderLeftWidth: '2px', borderLeftColor: c.pill }}>
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
-                                                {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt}</span>}
-                                            </div>
-                                            <p className="text-[11px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* ══ MOBILE: score + tabs (< lg) ════════════════════════════ */}
-                <div className="lg:hidden">
+            {/* ══════════════════════════════════════════════════════════════
+                MOBILE: normal scroll with sticky header + tabs (< lg)
+            ══════════════════════════════════════════════════════════════ */}
+            <div className="lg:hidden min-h-screen pb-24">
+
+                {/* Sticky mobile header */}
+                <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
+                    <div className="h-14 flex items-center gap-2 px-4">
+                        <button onClick={() => router.back()}
+                            className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
+                            <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+                        </button>
+                        <h1 className="flex-1 min-w-0 font-syne text-[13px] font-semibold text-[var(--text-main)] truncate">
+                            {draft.title}
+                        </h1>
+                        <span className="text-[13px] font-syne font-bold shrink-0" style={{ color: scoreColor }}>{fb.overall_score}/10</span>
+                        <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0">
+                            <Zap size={12} />
+                        </Link>
+                    </div>
+                </header>
+
+                <div className="px-4 pt-4">
+                    {/* Score card */}
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
                         className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-4 mb-4">
-                        <div className="flex items-start gap-3">
-                            <ScoreRing score={fb.overall_score} size={56} />
-                            <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-center gap-3">
+                            <ScoreRing score={fb.overall_score} size={52} />
+                            <div className="flex-1 min-w-0">
                                 <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Разбор материала</p>
                                 <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
                                 <div className="flex flex-wrap gap-1 mt-1.5">
@@ -719,6 +745,6 @@ export default function AnalysisPage() {
                     )}
                 </AnimatePresence>
             )}
-        </div>
+        </>
     );
 }
