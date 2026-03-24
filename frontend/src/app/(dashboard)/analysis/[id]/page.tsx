@@ -15,7 +15,8 @@ import { api } from '@/lib/api';
 
 type IssueType = 'logic' | 'style' | 'clarity' | 'grammar';
 type Severity  = 'high' | 'medium' | 'low';
-type ActiveTab = 'text' | 'issues' | 'improved';
+type MobileTab = 'text' | 'issues' | 'improved';
+type DesktopView = 'text' | 'ai';
 
 type Annotation = { text: string; issue_type: IssueType; comment: string; severity: Severity };
 
@@ -41,7 +42,6 @@ const ISSUE: Record<IssueType, { label: string; pill: string; bg: string; bgHove
     grammar: { label: 'Грамматика', pill: '#ef4444', bg: 'rgba(239,68,68,0.13)',  bgHover: 'rgba(239,68,68,0.28)'  },
 };
 
-// Severity badges: colored (not opacity-based)
 const SEV: Record<Severity, { label: string; bg: string; color: string }> = {
     high:   { label: 'Критично',      bg: 'rgba(239,68,68,0.15)',    color: '#ef4444' },
     medium: { label: 'Важно',         bg: 'rgba(251,146,60,0.15)',   color: '#fb923c' },
@@ -57,7 +57,6 @@ function buildSegments(text: string, annotations: Annotation[]): Segment[] {
         const s = text.indexOf(ann.text);
         return s === -1 ? [] : [{ s, e: s + ann.text.length, ann, i }];
     }).sort((a, b) => a.s - b.s);
-
     const out: Segment[] = [];
     let cur = 0;
     for (const { s, e, ann, i } of ivs) {
@@ -131,12 +130,12 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
     ), [annotations]);
 
     return (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
             <button onClick={() => onFilter(null)}
                 className={`text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                     !activeFilter
                         ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
-                        : 'border-[var(--border-main)] text-[var(--text-dim)] bg-[var(--bg-surface-alt)] hover:border-[var(--border-light)] hover:text-[var(--text-muted)]'
+                        : 'border-[var(--border-main)] text-[var(--text-dim)] bg-[var(--bg-surface-alt)] hover:text-[var(--text-muted)]'
                 }`}>
                 Все · {annotations.length}
             </button>
@@ -187,7 +186,6 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
             onMouseLeave={onMouseLeave}
             onClick={onClick}
         >
-            {/* Header: category + severity + number */}
             <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>
@@ -199,16 +197,12 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
                 </span>
                 <span className="ml-auto text-[10px] font-mono text-[var(--text-dim)]">#{realIdx + 1}</span>
             </div>
-
-            {/* Quote — always dark text, gray bg, left accent line */}
             <div className="rounded-[var(--radius-sm)] px-3 py-2 mb-2.5"
                 style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `2px solid ${c.pill}50` }}>
                 <p className="text-[12px] font-mono italic leading-relaxed text-[var(--text-main)] line-clamp-2">
                     «{ann.text}»
                 </p>
             </div>
-
-            {/* AI comment — plain readable text */}
             <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed line-clamp-3">
                 {ann.comment}
             </p>
@@ -216,7 +210,7 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
     );
 });
 
-// ── Annotation bottom sheet (mobile) ───────────────────────────────────────────
+// ── Annotation bottom sheet (mobile only) ──────────────────────────────────────
 
 function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
     ann: Annotation; idx: number; total: number;
@@ -228,19 +222,16 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
         <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }} className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 30, stiffness: 280 }}
                 className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-card)] rounded-t-[24px] border-t border-[var(--border-main)] shadow-2xl"
-                style={{ maxWidth: '680px', margin: '0 auto' }}
-            >
+                style={{ maxWidth: '680px', margin: '0 auto' }}>
                 <div className="flex justify-center pt-3 pb-1 cursor-grab" onClick={onClose}>
                     <div className="w-10 h-1 rounded-full bg-[var(--border-main)]" />
                 </div>
-
                 <div className="px-5 pb-10 pt-2">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
                             <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
                                 style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
                                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.pill }} />
@@ -251,26 +242,16 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                                 {sev.label}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2">
                             <span className="text-[11px] font-mono text-[var(--text-dim)]">{idx + 1}/{total}</span>
-                            <button onClick={onClose} className="text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer p-1">
-                                <X size={16} />
-                            </button>
+                            <button onClick={onClose} className="text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer p-1"><X size={16} /></button>
                         </div>
                     </div>
-
-                    {/* Quote — dark text always */}
                     <div className="rounded-[var(--radius-md)] px-4 py-3 mb-4 bg-[var(--bg-surface)]"
                         style={{ borderLeft: `3px solid ${c.pill}` }}>
-                        <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">
-                            «{ann.text}»
-                        </p>
+                        <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">«{ann.text}»</p>
                     </div>
-
-                    <p className="text-[15px] text-[var(--text-muted)] font-inter leading-[1.75] mb-6">
-                        {ann.comment}
-                    </p>
-
+                    <p className="text-[15px] text-[var(--text-muted)] font-inter leading-[1.75] mb-6">{ann.comment}</p>
                     <div className="flex items-center justify-between">
                         <button onClick={onPrev} disabled={idx === 0}
                             className="flex items-center gap-1.5 text-[13px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer py-2 px-1">
@@ -317,8 +298,7 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                             cursor: 'pointer',
                             padding: '1px 0',
                             transition: 'background-color 0.15s',
-                        }}
-                    >
+                        }}>
                         {seg.text}
                     </span>
                 );
@@ -330,17 +310,17 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function AnalysisPage() {
-    const params   = useParams();
-    const router   = useRouter();
-    const draftId  = params.id as string;
+    const params  = useParams();
+    const router  = useRouter();
+    const draftId = params.id as string;
 
-    const [activeTab, setActiveTab]       = useState<ActiveTab>('text');
-    const [sheetIdx,  setSheetIdx]        = useState<number | null>(null);
+    const [mobileTab,    setMobileTab]    = useState<MobileTab>('text');
+    const [desktopView,  setDesktopView]  = useState<DesktopView>('text');
+    const [sheetIdx,     setSheetIdx]     = useState<number | null>(null);
     const [activeFilter, setActiveFilter] = useState<IssueType | null>(null);
     const [hoveredIdx,   setHoveredIdx]   = useState<number | null>(null);
     const [isDesktop,    setIsDesktop]    = useState(false);
 
-    // Refs to scroll to cards on desktop
     const cardRefs = useRef<Record<number, HTMLButtonElement | null>>({});
 
     useEffect(() => {
@@ -350,7 +330,6 @@ export default function AnalysisPage() {
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    // On desktop: scroll card into view when annotation is activated
     useEffect(() => {
         if (isDesktop && sheetIdx !== null && cardRefs.current[sheetIdx]) {
             cardRefs.current[sheetIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -363,8 +342,8 @@ export default function AnalysisPage() {
         enabled:  !!draftId,
     });
 
-    const openSheet  = useCallback((idx: number) => setSheetIdx(idx), []);
-    const closeSheet = useCallback(() => setSheetIdx(null), []);
+    const handleTap   = useCallback((idx: number) => setSheetIdx(idx), []);
+    const closeSheet  = useCallback(() => setSheetIdx(null), []);
     const handleHover = useCallback((idx: number) => setHoveredIdx(idx), []);
     const handleLeave = useCallback(() => setHoveredIdx(null), []);
 
@@ -383,7 +362,7 @@ export default function AnalysisPage() {
     );
 
     const analysis = draft.analysis_result;
-    const fb = analysis?.feedback_json;
+    const fb       = analysis?.feedback_json;
 
     if (!analysis || !fb) return (
         <div className="w-full py-8 pb-16">
@@ -412,103 +391,130 @@ export default function AnalysisPage() {
     ];
     const scoreLabel = fb.overall_score >= 8 ? 'Готов к выступлению'
         : fb.overall_score >= 6 ? 'Хорошая основа'
-        : fb.overall_score >= 4 ? 'Требует доработки'
-        : 'Нужна переработка';
+        : fb.overall_score >= 4 ? 'Требует доработки' : 'Нужна переработка';
     const scoreColor = fb.overall_score >= 7 ? '#10b981' : fb.overall_score >= 5 ? '#fbbf24' : '#ef4444';
 
     const filteredAnnotations = activeFilter
         ? annotations.filter(a => a.issue_type === activeFilter)
         : annotations;
 
-    const tabs = [
-        { id: 'text'     as ActiveTab, label: 'Текст',    badge: annotations.length },
-        { id: 'issues'   as ActiveTab, label: 'Разбор',   badge: null },
-        { id: 'improved' as ActiveTab, label: 'AI версия', badge: null, icon: true },
+    const mobileTabs = [
+        { id: 'text'     as MobileTab, label: 'Текст',    badge: annotations.length },
+        { id: 'issues'   as MobileTab, label: 'Разбор',   badge: null },
+        { id: 'improved' as MobileTab, label: 'AI версия', badge: null, icon: true },
     ];
 
     return (
         <div className="min-h-screen pb-24">
 
-            {/* ── Sticky header ─────────────────────────────────────────────── */}
+            {/* ── Sticky header ──────────────────────────────────────────────── */}
             <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
-                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-2 sm:gap-3">
+
                     <button onClick={() => router.back()}
                         className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
                         <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                         <span className="text-[12px] font-inter hidden sm:inline">Назад</span>
                     </button>
+
                     <h1 className="flex-1 min-w-0 font-syne text-[14px] font-semibold text-[var(--text-main)] truncate">
                         {draft.title}
                     </h1>
+
+                    {/* Desktop: text / AI version toggle */}
+                    <div className="hidden lg:flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5 shrink-0">
+                        <button onClick={() => setDesktopView('text')}
+                            className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                                desktopView === 'text'
+                                    ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
+                                    : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                            }`}>
+                            Текст
+                        </button>
+                        <button onClick={() => setDesktopView('ai')}
+                            className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                                desktopView === 'ai'
+                                    ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
+                                    : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                            }`}>
+                            <Sparkles size={9} /> AI версия
+                        </button>
+                    </div>
+
+                    {/* Score */}
                     <div className="flex items-center gap-1 shrink-0">
                         <span className="text-[14px] font-syne font-bold" style={{ color: scoreColor }}>{fb.overall_score}</span>
                         <span className="text-[11px] text-[var(--text-dim)] font-mono">/10</span>
                         <span className="hidden md:inline text-[11px] text-[var(--text-dim)] font-mono ml-1">· {scoreLabel}</span>
                     </div>
-                    <Link href={`/simulation?draft=${draftId}`}
-                        className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0">
+
+                    <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0">
                         <Zap size={12} />
                         <span className="hidden sm:inline">Симуляция</span>
                     </Link>
                 </div>
             </header>
 
-            {/* ── Main content ──────────────────────────────────────────────── */}
+            {/* ── Main content ───────────────────────────────────────────────── */}
             <div className="max-w-5xl mx-auto px-4 pt-6">
 
-                {/* ══ DESKTOP two-column layout (lg+) ══════════════════════════ */}
-                <div className="hidden lg:grid lg:grid-cols-[1fr,360px] lg:gap-8 lg:items-start">
+                {/* ══ DESKTOP two-column (lg+) ════════════════════════════════ */}
+                <div className="hidden lg:grid lg:grid-cols-[1fr,340px] lg:gap-6 lg:items-start">
 
-                    {/* Left: annotated text */}
-                    <div>
-                        {annotations.length > 0 && (
-                            <>
-                                <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
-                                <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mt-3 mb-5">
-                                    <MessageSquare size={12} className="shrink-0" />
-                                    Нажмите на подсвеченный фрагмент — AI объяснит что не так
-                                </p>
-                            </>
-                        )}
-                        <AnnotatedText
-                            text={textContent}
-                            annotations={annotations}
-                            activeIdx={sheetIdx}
-                            hoveredIdx={hoveredIdx}
-                            activeFilter={activeFilter}
-                            onTap={openSheet}
-                            onHover={handleHover}
-                            onLeave={handleLeave}
-                        />
-
-                        {/* AI версия below text on desktop */}
-                        {analysis.improved_text && (
-                            <div className="mt-10 pt-8 border-t border-[var(--border-main)]">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Sparkles size={15} className="text-[var(--color-ai)]" />
-                                    <h2 className="font-syne text-[15px] font-semibold text-[var(--text-main)]">AI версия текста</h2>
-                                </div>
-                                <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
-                                    <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
-                                        AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                    {/* LEFT: text or AI version */}
+                    <div className="min-w-0">
+                        <AnimatePresence mode="wait">
+                            {desktopView === 'text' ? (
+                                <motion.div key="text-view"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}>
+                                    {annotations.length > 0 && (
+                                        <div className="flex flex-wrap items-center gap-3 mb-5">
+                                            <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
+                                            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-dim)] font-inter">
+                                                <MessageSquare size={11} />
+                                                Нажмите на выделенный фрагмент
+                                            </span>
+                                        </div>
+                                    )}
+                                    <AnnotatedText
+                                        text={textContent}
+                                        annotations={annotations}
+                                        activeIdx={sheetIdx}
+                                        hoveredIdx={hoveredIdx}
+                                        activeFilter={activeFilter}
+                                        onTap={handleTap}
+                                        onHover={handleHover}
+                                        onLeave={handleLeave}
+                                    />
+                                </motion.div>
+                            ) : (
+                                <motion.div key="ai-view"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}>
+                                    <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
+                                        <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
+                                        <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
+                                            AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2 mb-5">
+                                        <CopyButton text={analysis.improved_text} />
+                                        <DownloadButton text={analysis.improved_text} title={draft.title} />
+                                    </div>
+                                    <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+                                        {analysis.improved_text}
                                     </p>
-                                </div>
-                                <div className="flex gap-2 mb-5">
-                                    <CopyButton text={analysis.improved_text} />
-                                    <DownloadButton text={analysis.improved_text} title={draft.title} />
-                                </div>
-                                <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
-                                    {analysis.improved_text}
-                                </p>
-                            </div>
-                        )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Right: sticky panel with score + filter + cards */}
-                    <div className="sticky top-14 max-h-[calc(100vh-56px)] overflow-y-auto space-y-4 pb-8">
-                        {/* Score card */}
+                    {/* RIGHT: sticky cards panel */}
+                    <div className="sticky top-14 max-h-[calc(100vh-56px)] overflow-y-auto space-y-3 pb-6">
+                        {/* Score summary */}
                         <div className="flex items-center gap-3 p-3 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)]">
-                            <ScoreRing score={fb.overall_score} size={52} />
+                            <ScoreRing score={fb.overall_score} size={48} />
                             <div className="flex-1 min-w-0">
                                 <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Общий балл</p>
                                 <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
@@ -529,7 +535,7 @@ export default function AnalysisPage() {
                             </div>
                         </div>
 
-                        {/* Issue cards */}
+                        {/* Cards */}
                         {filteredAnnotations.length > 0 ? (
                             <div className="space-y-2">
                                 {filteredAnnotations.map((ann) => {
@@ -538,36 +544,36 @@ export default function AnalysisPage() {
                                         <IssueCard
                                             key={realIdx}
                                             ref={(el) => { cardRefs.current[realIdx] = el; }}
-                                            ann={ann}
-                                            realIdx={realIdx}
+                                            ann={ann} realIdx={realIdx}
                                             isHovered={hoveredIdx === realIdx}
                                             isActive={sheetIdx === realIdx}
                                             onMouseEnter={() => setHoveredIdx(realIdx)}
                                             onMouseLeave={() => setHoveredIdx(null)}
-                                            onClick={() => openSheet(realIdx)}
+                                            onClick={() => handleTap(realIdx)}
                                         />
                                     );
                                 })}
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
-                                <p className="text-[13px] text-[var(--text-muted)]">Проблем этого типа нет</p>
+                            <div className="text-center py-6">
+                                <CheckCircle2 size={22} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
+                                <p className="text-[13px] text-[var(--text-muted)]">Проблем не найдено</p>
                             </div>
                         )}
 
                         {/* Category breakdown */}
-                        <div>
-                            <h2 className="font-syne text-[11px] font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-2 px-0.5">
+                        <div className="pt-1">
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] mb-2 px-0.5">
                                 Оценка по критериям
-                            </h2>
-                            <div className="space-y-2">
+                            </p>
+                            <div className="space-y-1.5">
                                 {categories.map(({ key, label, text }) => {
                                     const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
                                     return (
-                                        <div key={key} className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3"
-                                            style={{ borderLeftWidth: '2px', borderLeftColor: `${c.pill}60` }}>
-                                            <div className="flex items-center justify-between mb-1.5">
+                                        <div key={key}
+                                            className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3"
+                                            style={{ borderLeftWidth: '2px', borderLeftColor: c.pill }}>
+                                            <div className="flex items-center justify-between mb-1">
                                                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
                                                 {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt}</span>}
                                             </div>
@@ -580,7 +586,7 @@ export default function AnalysisPage() {
                     </div>
                 </div>
 
-                {/* ══ MOBILE: score card + tabs (< lg) ════════════════════════ */}
+                {/* ══ MOBILE: score + tabs (< lg) ════════════════════════════ */}
                 <div className="lg:hidden">
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
                         className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-4 mb-4">
@@ -609,85 +615,68 @@ export default function AnalysisPage() {
 
                     {/* Tab bar */}
                     <div className="flex bg-[var(--bg-surface-alt)] rounded-[var(--radius-md)] border border-[var(--border-main)] p-1 mb-5">
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        {mobileTabs.map(tab => (
+                            <button key={tab.id} onClick={() => setMobileTab(tab.id)}
                                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[var(--radius-sm)] text-[12px] font-mono transition-all cursor-pointer ${
-                                    activeTab === tab.id ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm' : 'text-[var(--text-dim)]'
+                                    mobileTab === tab.id ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm' : 'text-[var(--text-dim)]'
                                 }`}>
-                                {tab.icon && <Sparkles size={10} className={activeTab === tab.id ? 'text-[var(--color-ai)]' : ''} />}
+                                {tab.icon && <Sparkles size={10} className={mobileTab === tab.id ? 'text-[var(--color-ai)]' : ''} />}
                                 {tab.label}
                                 {tab.badge !== null && tab.badge > 0 && (
                                     <span className={`text-[9px] px-1.5 py-px rounded-full font-bold ${
-                                        activeTab === tab.id ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-main)] text-[var(--text-dim)]'
+                                        mobileTab === tab.id ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-main)] text-[var(--text-dim)]'
                                     }`}>{tab.badge}</span>
                                 )}
                             </button>
                         ))}
                     </div>
 
-                    {/* Tab content */}
                     <AnimatePresence mode="wait">
-
-                        {activeTab === 'text' && (
-                            <motion.div key="text" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                        {mobileTab === 'text' && (
+                            <motion.div key="m-text" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
                                 {annotations.length > 0 && (
                                     <>
                                         <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
                                         <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mt-3 mb-4">
                                             <MessageSquare size={12} className="shrink-0" />
-                                            Нажмите на подсвеченный фрагмент — AI объяснит что не так
+                                            Нажмите на подсвеченный фрагмент
                                         </p>
                                     </>
                                 )}
-                                <AnnotatedText
-                                    text={textContent}
-                                    annotations={annotations}
-                                    activeIdx={sheetIdx}
-                                    hoveredIdx={hoveredIdx}
-                                    activeFilter={activeFilter}
-                                    onTap={openSheet}
-                                    onHover={handleHover}
-                                    onLeave={handleLeave}
-                                />
+                                <AnnotatedText text={textContent} annotations={annotations}
+                                    activeIdx={sheetIdx} hoveredIdx={null} activeFilter={activeFilter}
+                                    onTap={handleTap} onHover={() => {}} onLeave={() => {}} />
                             </motion.div>
                         )}
 
-                        {activeTab === 'issues' && (
-                            <motion.div key="issues" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                        {mobileTab === 'issues' && (
+                            <motion.div key="m-issues" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
                                 <div className="space-y-4">
-                                    {annotations.length > 0 && (
-                                        <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
-                                    )}
+                                    {annotations.length > 0 && <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />}
                                     <div className="space-y-2.5">
                                         {filteredAnnotations.map((ann) => {
                                             const realIdx = annotations.indexOf(ann);
                                             return (
-                                                <IssueCard
-                                                    key={realIdx}
-                                                    ann={ann}
-                                                    realIdx={realIdx}
-                                                    isHovered={false}
-                                                    isActive={false}
-                                                    onMouseEnter={() => {}}
-                                                    onMouseLeave={() => {}}
-                                                    onClick={() => { setActiveTab('text'); setTimeout(() => openSheet(realIdx), 250); }}
-                                                />
+                                                <IssueCard key={realIdx} ann={ann} realIdx={realIdx}
+                                                    isHovered={false} isActive={false}
+                                                    onMouseEnter={() => {}} onMouseLeave={() => {}}
+                                                    onClick={() => { setMobileTab('text'); setTimeout(() => handleTap(realIdx), 250); }} />
                                             );
                                         })}
                                     </div>
                                     <div>
-                                        <h2 className="font-syne text-[14px] font-semibold text-[var(--text-main)] mb-3">Оценка по критериям</h2>
-                                        <div className="space-y-2.5">
+                                        <p className="font-syne text-[13px] font-semibold text-[var(--text-main)] mb-2.5">Оценка по критериям</p>
+                                        <div className="space-y-2">
                                             {categories.map(({ key, label, text }) => {
                                                 const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
                                                 return (
-                                                    <div key={key} className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-4"
+                                                    <div key={key} className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-md)] p-3.5"
                                                         style={{ borderLeftWidth: '3px', borderLeftColor: c.pill }}>
-                                                        <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center justify-between mb-1.5">
                                                             <span className="text-[11px] font-mono uppercase tracking-wider font-bold" style={{ color: c.pill }}>{label}</span>
                                                             {cnt > 0 && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>{cnt} {cnt === 1 ? 'проблема' : 'проблемы'}</span>}
                                                         </div>
-                                                        <p className="text-[13px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
+                                                        <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
                                                     </div>
                                                 );
                                             })}
@@ -697,8 +686,8 @@ export default function AnalysisPage() {
                             </motion.div>
                         )}
 
-                        {activeTab === 'improved' && (
-                            <motion.div key="improved" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                        {mobileTab === 'improved' && (
+                            <motion.div key="m-ai" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
                                 <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
                                     <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
                                     <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
@@ -714,24 +703,22 @@ export default function AnalysisPage() {
                                 </p>
                             </motion.div>
                         )}
-
                     </AnimatePresence>
                 </div>
             </div>
 
-            {/* Annotation sheet — mobile only (desktop uses card panel) */}
-            <AnimatePresence>
-                {sheetIdx !== null && annotations[sheetIdx] && (
-                    <AnnotationSheet
-                        ann={annotations[sheetIdx]}
-                        idx={sheetIdx}
-                        total={annotations.length}
-                        onClose={closeSheet}
-                        onPrev={() => setSheetIdx(p => p !== null && p > 0 ? p - 1 : p)}
-                        onNext={() => setSheetIdx(p => p !== null && p < annotations.length - 1 ? p + 1 : p)}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Bottom sheet — mobile only */}
+            {!isDesktop && (
+                <AnimatePresence>
+                    {sheetIdx !== null && annotations[sheetIdx] && (
+                        <AnnotationSheet ann={annotations[sheetIdx]} idx={sheetIdx} total={annotations.length}
+                            onClose={closeSheet}
+                            onPrev={() => setSheetIdx(p => p !== null && p > 0 ? p - 1 : p)}
+                            onNext={() => setSheetIdx(p => p !== null && p < annotations.length - 1 ? p + 1 : p)}
+                        />
+                    )}
+                </AnimatePresence>
+            )}
         </div>
     );
 }

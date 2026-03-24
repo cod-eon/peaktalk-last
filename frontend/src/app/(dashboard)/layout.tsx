@@ -13,7 +13,7 @@ export default function DashboardLayout({
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col relative pb-16 md:pb-0 transition-all duration-300 overflow-hidden">
+      <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col relative pb-16 md:pb-0 transition-all duration-300 overflow-x-hidden">
         {children}
       </main>
 
