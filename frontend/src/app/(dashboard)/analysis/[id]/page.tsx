@@ -456,16 +456,16 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                         onMouseEnter={() => onHover(seg.idx!)}
                         onMouseLeave={onLeave}
                         style={{
-                            textDecoration: 'underline',
+                            textDecoration: isActive ? 'none' : 'underline',
                             textDecorationStyle: 'wavy',
-                            textDecorationColor: isActive ? c.pill : `${c.pill}60`,
-                            textDecorationThickness: isActive ? '2px' : '1px',
+                            textDecorationColor: c.pill,
+                            textDecorationThickness: '2px',
                             textUnderlineOffset: '4px',
                             backgroundColor: isActive ? c.bgHover : 'transparent',
-                            borderRadius: '2px',
+                            borderRadius: '3px',
                             cursor: 'pointer',
-                            padding: '1px 0',
-                            color: isActive ? c.pill : 'inherit',
+                            padding: isActive ? '1px 3px' : '1px 0',
+                            color: isActive ? '#111827' : 'inherit',
                             opacity: dimmed ? 0.4 : 1,
                             transition: 'background-color 0.15s, opacity 0.3s, color 0.15s',
                         }}>
