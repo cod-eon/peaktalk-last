@@ -85,7 +85,7 @@ export default function DocumentsPage() {
                 </div>
                 <Link
                     href="/upload"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors shrink-0"
+                    className="btn-primary shrink-0 gap-1.5 px-4 py-2 text-sm"
                 >
                     <Plus size={14} />
                     Загрузить текст
@@ -101,7 +101,7 @@ export default function DocumentsPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по названию..."
-                        className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-lg py-2 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors"
+                        className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-md py-2 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors"
                     />
                     {search && (
                         <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -149,7 +149,7 @@ export default function DocumentsPage() {
                     <UploadCloud size={32} className="text-[var(--text-dim)] mb-4 opacity-40" />
                     <p className="text-sm font-medium text-[var(--text-main)] mb-1">Пока нет материалов</p>
                     <p className="text-xs text-[var(--text-dim)] mb-6">Загрузите файл или создайте текстовый документ</p>
-                    <Link href="/upload" className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors">
+                    <Link href="/upload" className="btn-primary gap-2 text-sm">
                         <Plus size={14} /> Загрузить текст
                     </Link>
                 </div>
