@@ -41,7 +41,8 @@ type PopoverState = {
     metricName: string;
     comment: string;
     x: number;
-    y: number;
+    rectTop: number;
+    rectBottom: number;
 };
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -141,7 +142,12 @@ function Popover({
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.18 }}
             className="fixed z-50 w-96 bg-white shadow-xl border border-gray-100 rounded-xl p-5"
-            style={{ top: state.y + 8, left: Math.min(state.x, window.innerWidth - 400) }}
+            style={{
+                top: state.rectBottom + 8 + 240 > window.innerHeight
+                    ? Math.max(8, state.rectTop - 248)
+                    : state.rectBottom + 8,
+                left: Math.min(state.x, window.innerWidth - 400),
+            }}
         >
             <div className="flex items-start justify-between gap-2 mb-3">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-tight">
@@ -268,7 +274,7 @@ export default function SimulationReportPage() {
                 setActivePopoverId(null);
                 return;
             }
-            setPopover({ metricName, comment, x: rect.left, y: rect.bottom });
+            setPopover({ metricName, comment, x: rect.left, rectTop: rect.top, rectBottom: rect.bottom });
             setActivePopoverId(id);
         },
         [activePopoverId],
@@ -450,14 +456,28 @@ export default function SimulationReportPage() {
                             {/* Metric pills row */}
                             {skill_metrics?.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-orange-100">
-                                    {skill_metrics.map((m) => (
-                                        <span
-                                            key={m.metric_name}
-                                            className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700"
-                                        >
-                                            {m.metric_name}
-                                        </span>
-                                    ))}
+                                    {skill_metrics.map((m) => {
+                                        const color = getScoreColor(m.score);
+                                        const s10 = Math.round(m.score * 10);
+                                        return (
+                                            <span
+                                                key={m.metric_name}
+                                                className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
+                                                style={{
+                                                    color,
+                                                    backgroundColor: `${color}12`,
+                                                    borderColor: `${color}30`,
+                                                }}
+                                            >
+                                                <span
+                                                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                                                    style={{ backgroundColor: color }}
+                                                />
+                                                {m.metric_name}
+                                                <span className="font-bold">{s10}/10</span>
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </motion.div>
