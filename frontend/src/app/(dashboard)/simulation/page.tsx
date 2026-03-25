@@ -96,6 +96,8 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
         ? `${Math.round(session.avg_score * 100)}%`
         : null;
     const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
+    const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
+    const RoleIcon = visual.icon;
 
     return (
         <motion.button
@@ -106,8 +108,8 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
         >
             <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
-                        <Bot size={16} />
+                    <div className={`w-8 h-8 rounded-lg ${visual.iconBg} ${visual.iconColor} flex items-center justify-center shrink-0`}>
+                        <RoleIcon size={16} />
                     </div>
                     <div className="min-w-0">
                         <div className="font-syne font-semibold text-[var(--text-main)] text-sm truncate">
