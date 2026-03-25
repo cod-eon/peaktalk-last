@@ -5,18 +5,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard,
-    FolderDot,
     FileText,
-    Zap,
-    BarChart2,
+    Bot,
+    Settings,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Проекты', path: '/projects', icon: FolderDot },
-    { name: 'Документы', path: '/documents', icon: FileText },
-    { name: 'Симуляция', path: '/simulation', icon: Zap },
-    { name: 'Аналитика', path: '/analytics', icon: BarChart2 },
+    { name: 'Тексты', path: '/documents', icon: FileText },
+    { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Настройки', path: '/settings', icon: Settings },
 ];
 
 export function MobileNav() {
