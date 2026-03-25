@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, CheckCircle2, ShieldAlert, TrendingDown,
     Download, ArrowLeft, Zap, FileText, BarChart2,
+    ChevronDown,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -65,14 +66,16 @@ const PERSONA_LABELS: Record<string, string> = {
 function getScoreColor(score01: number): string {
     if (score01 >= 0.7) return '#10b981';
     if (score01 >= 0.5) return '#fbbf24';
-    return '#ef4444';
+    return '#e11d48';
 }
 
 function getIntColor(score10: number): string {
     if (score10 >= 7) return '#10b981';
     if (score10 >= 5) return '#fbbf24';
-    return '#ef4444';
+    return '#e11d48';
 }
+
+// ── ScoreIcon ──────────────────────────────────────────────────────────────────
 
 function ScoreIcon({ score }: { score: number }) {
     const color = getScoreColor(score);
@@ -84,13 +87,17 @@ function ScoreIcon({ score }: { score: number }) {
 // ── ScoreRing ──────────────────────────────────────────────────────────────────
 
 function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
-    const sw = 5, r = (size - sw) / 2, c = 2 * Math.PI * r;
+    const sw = 5;
+    const r = (size - sw) / 2;
+    const c = 2 * Math.PI * r;
     const color = getIntColor(score);
     return (
         <div className="relative shrink-0" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={r}
-                    fill="none" stroke="var(--bg-surface-alt)" strokeWidth={sw} />
+                <circle
+                    cx={size / 2} cy={size / 2} r={r}
+                    fill="none" stroke="var(--bg-surface-alt)" strokeWidth={sw}
+                />
                 <motion.circle
                     cx={size / 2} cy={size / 2} r={r}
                     fill="none" stroke={color}
@@ -101,12 +108,178 @@ function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-syne font-bold leading-none"
-                    style={{ color, fontSize: size * 0.27 }}>{score}</span>
-                <span className="font-mono text-[var(--text-dim)]"
-                    style={{ fontSize: size * 0.13 }}>/10</span>
+                <span
+                    className="font-syne font-bold leading-none"
+                    style={{ color, fontSize: size * 0.27 }}
+                >
+                    {score}
+                </span>
+                <span
+                    className="font-mono text-[var(--text-dim)]"
+                    style={{ fontSize: size * 0.13 }}
+                >
+                    /10
+                </span>
             </div>
         </div>
+    );
+}
+
+// ── AnimatedBar ────────────────────────────────────────────────────────────────
+
+function AnimatedBar({
+    value,
+    color,
+    delay = 0,
+}: {
+    value: number;
+    color: string;
+    delay?: number;
+}) {
+    return (
+        <div className="w-full h-[3px] bg-[var(--bg-main)] rounded-full overflow-hidden">
+            <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${value * 100}%` }}
+                transition={{ duration: 0.55, delay, ease: 'easeOut' }}
+                className="h-full rounded-full"
+                style={{ backgroundColor: color }}
+            />
+        </div>
+    );
+}
+
+// ── AccordionItem ──────────────────────────────────────────────────────────────
+
+type AccordionItemProps = {
+    metric: SkillMetric;
+    index: number;
+    isOpen: boolean;
+    onToggle: () => void;
+};
+
+function AccordionItem({ metric, index, isOpen, onToggle }: AccordionItemProps) {
+    const color = getScoreColor(metric.score);
+    const score10 = Math.round(metric.score * 10);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.28, delay: index * 0.05 }}
+            className="border-b border-[var(--border-main)] last:border-b-0"
+        >
+            {/* Header row — always visible */}
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center gap-2.5 px-5 py-3.5 text-left hover:bg-[var(--bg-surface-alt)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/30"
+                aria-expanded={isOpen}
+            >
+                <ScoreIcon score={metric.score} />
+                <span className="flex-1 text-[13px] font-semibold font-inter text-[var(--text-main)] leading-snug truncate">
+                    {metric.metric_name}
+                </span>
+                <span
+                    className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0"
+                    style={{ color, backgroundColor: `${color}1a` }}
+                >
+                    {score10}/10
+                </span>
+                <motion.span
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="shrink-0 text-[var(--text-dim)]"
+                >
+                    <ChevronDown size={13} />
+                </motion.span>
+            </button>
+
+            {/* Expandable content */}
+            <AnimatePresence initial={false}>
+                {isOpen && (
+                    <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <div className="px-5 pb-4 pt-1 flex flex-col gap-3">
+                            <AnimatedBar value={metric.score} color={color} delay={0.05} />
+                            {metric.comment && (
+                                <p
+                                    className="text-[12px] leading-relaxed font-inter italic"
+                                    style={{
+                                        borderLeft: `2px solid ${color}`,
+                                        paddingLeft: 12,
+                                        color: 'var(--text-dim)',
+                                    }}
+                                >
+                                    {metric.comment}
+                                </p>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}
+
+// ── ChatMessage ────────────────────────────────────────────────────────────────
+
+type ChatMessageProps = {
+    msg: Message;
+    idx: number;
+    personaName: string;
+    isHighlighted: boolean;
+};
+
+function ChatMessage({ msg, idx, personaName, isHighlighted }: ChatMessageProps) {
+    const isUser = msg.role === 'user';
+
+    return (
+        <motion.div
+            id={`message-${msg.turn_index}`}
+            className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+                isHighlighted
+                    ? {
+                          opacity: 1,
+                          y: 0,
+                          scale: [1, 1.02, 1],
+                          boxShadow: [
+                              'none',
+                              '0 0 0 3px rgba(245,158,11,0.35)',
+                              'none',
+                          ],
+                      }
+                    : { opacity: 1, y: 0, scale: 1, boxShadow: 'none' }
+            }
+            transition={
+                isHighlighted
+                    ? { duration: 0.4, ease: 'easeInOut' }
+                    : { duration: 0.3, delay: idx * 0.06 }
+            }
+            style={{ borderRadius: 16 }}
+        >
+            <div
+                className={`max-w-[80%] px-4 py-3 ${
+                    isUser
+                        ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-2xl rounded-br-none'
+                        : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl rounded-tl-none'
+                }`}
+            >
+                <div className="label-kicker mb-1.5">
+                    {isUser ? 'Вы' : personaName}
+                </div>
+                <p className="text-[13px] leading-relaxed font-inter text-[var(--text-main)]">
+                    {msg.content}
+                </p>
+            </div>
+        </motion.div>
     );
 }
 
@@ -120,9 +293,15 @@ export default function SimulationReportPage() {
     const [report, setReport] = useState<ReportData | null>(null);
     const [loading, setLoading] = useState(true);
     const [showRightPanel, setShowRightPanel] = useState(false);
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+    const [highlightedId, setHighlightedId] = useState<number | null>(null);
+    const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // On desktop show panel by default
     useEffect(() => {
-        if (window.matchMedia('(min-width: 768px)').matches) setShowRightPanel(true);
+        if (window.matchMedia('(min-width: 768px)').matches) {
+            setShowRightPanel(true);
+        }
     }, []);
 
     useEffect(() => {
@@ -139,6 +318,46 @@ export default function SimulationReportPage() {
         }
         if (sessionId) fetchReport();
     }, [sessionId, router]);
+
+    // Clear highlight timer on unmount
+    useEffect(() => {
+        return () => {
+            if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        };
+    }, []);
+
+    const handleAccordionToggle = useCallback(
+        (idx: number, messages: Message[]) => {
+            const isClosing = openIndex === idx;
+
+            if (isClosing) {
+                setOpenIndex(null);
+                setHighlightedId(null);
+                if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+                return;
+            }
+
+            setOpenIndex(idx);
+
+            // Scroll & highlight corresponding user message
+            const userMessages = messages.filter((m) => m.role === 'user');
+            const targetIdx = Math.min(idx, userMessages.length - 1);
+            const targetMsg = userMessages[targetIdx];
+
+            if (targetMsg) {
+                document
+                    .getElementById(`message-${targetMsg.turn_index}`)
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+                setHighlightedId(targetMsg.turn_index);
+                highlightTimerRef.current = setTimeout(() => {
+                    setHighlightedId(null);
+                }, 1500);
+            }
+        },
+        [openIndex],
+    );
 
     const handleDownloadPdf = useCallback(() => {
         const existing = document.getElementById('_pdf_print_style');
@@ -159,7 +378,11 @@ export default function SimulationReportPage() {
         `;
         document.head.appendChild(style);
         window.print();
-        window.addEventListener('afterprint', () => document.getElementById('_pdf_print_style')?.remove(), { once: true });
+        window.addEventListener(
+            'afterprint',
+            () => document.getElementById('_pdf_print_style')?.remove(),
+            { once: true },
+        );
     }, []);
 
     // ── Loading ────────────────────────────────────────────────────────────────
@@ -169,7 +392,9 @@ export default function SimulationReportPage() {
             <div className="flex flex-1 items-center justify-center bg-[var(--bg-main)]">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-6 h-6 border-2 border-[var(--border-light)] border-t-[var(--accent-primary)] rounded-full animate-spin" />
-                    <span className="text-[13px] font-inter text-[var(--text-dim)]">Загрузка отчёта...</span>
+                    <span className="text-[13px] font-inter text-[var(--text-dim)]">
+                        Загрузка отчёта...
+                    </span>
                 </div>
             </div>
         );
@@ -178,7 +403,9 @@ export default function SimulationReportPage() {
     if (!report) {
         return (
             <div className="flex flex-1 items-center justify-center bg-[var(--bg-main)]">
-                <p className="text-[13px] text-[var(--text-muted)] font-inter">Отчёт не найден</p>
+                <p className="text-[13px] text-[var(--text-muted)] font-inter">
+                    Отчёт не найден
+                </p>
             </div>
         );
     }
@@ -192,7 +419,8 @@ export default function SimulationReportPage() {
         : 0;
     const overallScore = Math.round(overallScoreFloat * 10);
     const overallColor = getIntColor(overallScore);
-    const personaName = PERSONA_LABELS[persona_config?.role] || persona_config?.role || 'Тренер';
+    const personaName =
+        PERSONA_LABELS[persona_config?.role] || persona_config?.role || 'Тренер';
 
     // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -209,7 +437,9 @@ export default function SimulationReportPage() {
                         {document_title ? ` · Контекст: ${document_title}` : ''}
                     </p>
                 </div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Оценка навыков</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+                    Оценка навыков
+                </h2>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 32 }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid #ccc' }}>
@@ -231,7 +461,13 @@ export default function SimulationReportPage() {
                 <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Транскрипт</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {messages.map((msg, idx) => (
-                        <div key={idx} style={{ paddingLeft: msg.role === 'user' ? 32 : 0, paddingRight: msg.role === 'assistant' ? 32 : 0 }}>
+                        <div
+                            key={idx}
+                            style={{
+                                paddingLeft: msg.role === 'user' ? 32 : 0,
+                                paddingRight: msg.role === 'assistant' ? 32 : 0,
+                            }}
+                        >
                             <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#999', marginBottom: 4 }}>
                                 {msg.role === 'user' ? 'Вы' : personaName}
                             </div>
@@ -244,12 +480,15 @@ export default function SimulationReportPage() {
             {/* ── Screen version ────────────────────────────────────────────── */}
             <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[var(--bg-main)]">
 
-                {/* Toolbar */}
-                <div className="h-13 border-b border-[var(--border-main)] flex items-center justify-between px-4 sm:px-5 bg-[var(--bg-surface)] shrink-0 gap-2">
+                {/* ── Toolbar ─────────────────────────────────────────────────── */}
+                <div className="h-13 shrink-0 border-b border-[var(--border-main)] bg-[var(--bg-surface)] flex items-center justify-between px-4 sm:px-5 gap-2 sticky top-0 z-10">
+
+                    {/* Left side */}
                     <div className="flex items-center gap-3 min-w-0">
                         <button
                             onClick={() => router.push('/simulation')}
                             className="flex items-center gap-1 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors shrink-0"
+                            aria-label="Назад"
                         >
                             <ArrowLeft size={14} />
                         </button>
@@ -266,23 +505,26 @@ export default function SimulationReportPage() {
                         {/* Score pill */}
                         <div
                             className="hidden sm:flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold shrink-0"
-                            style={{ color: overallColor, backgroundColor: `${overallColor}18` }}
+                            style={{ color: overallColor, backgroundColor: `${overallColor}1a` }}
                         >
                             {overallScore}/10
                         </div>
                     </div>
 
+                    {/* Right side */}
                     <div className="flex items-center gap-2">
                         {/* Mobile metrics toggle */}
                         <button
                             className="md:hidden flex items-center gap-1.5 border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] px-2.5 py-1.5 rounded-[var(--radius-sm)] text-[12px] font-inter transition-colors"
-                            onClick={() => setShowRightPanel(!showRightPanel)}
+                            onClick={() => setShowRightPanel((v) => !v)}
+                            aria-label="Показать метрики"
                         >
                             <BarChart2 size={13} />
                         </button>
                         <button
                             onClick={handleDownloadPdf}
                             className="flex items-center gap-1.5 border border-[var(--border-main)] hover:border-[var(--accent-primary)]/40 text-[var(--text-dim)] hover:text-[var(--accent-primary)] px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-sm)] text-[12px] font-inter transition-colors"
+                            aria-label="Скачать PDF"
                         >
                             <Download size={13} />
                             <span className="hidden sm:inline">PDF</span>
@@ -296,10 +538,10 @@ export default function SimulationReportPage() {
                     </div>
                 </div>
 
-                {/* Main content */}
+                {/* ── Main content area ──────────────────────────────────────── */}
                 <div className="flex flex-1 min-h-0 overflow-hidden relative">
 
-                    {/* ── Left: Transcript ────────────────────────────────────── */}
+                    {/* ── Left: Transcript ──────────────────────────────────── */}
                     <div className="flex-1 overflow-y-auto p-5 sm:p-6 pb-16">
                         <div className="max-w-2xl mx-auto">
 
@@ -323,51 +565,53 @@ export default function SimulationReportPage() {
                             <p className="label-kicker mb-5">Транскрипт сессии</p>
 
                             <div className="flex flex-col gap-3.5">
-                                {messages.map((msg, idx) => {
-                                    const isUser = msg.role === 'user';
-                                    return (
-                                        <div key={idx} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-                                            <div className={`max-w-[88%] px-4 py-3 ${
-                                                isUser
-                                                    ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-2xl rounded-br-none'
-                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl rounded-tl-none'
-                                            }`}>
-                                                <div className="label-kicker mb-1.5">
-                                                    {isUser ? 'Вы' : personaName}
-                                                </div>
-                                                <p className="text-[13px] leading-relaxed font-inter text-[var(--text-main)]">
-                                                    {msg.content}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {messages.map((msg, idx) => (
+                                    <ChatMessage
+                                        key={`${msg.turn_index}-${idx}`}
+                                        msg={msg}
+                                        idx={idx}
+                                        personaName={personaName}
+                                        isHighlighted={highlightedId === msg.turn_index}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* ── Right: Metrics panel ────────────────────────────────── */}
+                    {/* ── Right: Results panel ──────────────────────────────── */}
                     <AnimatePresence>
                         {showRightPanel && (
                             <motion.div
-                                initial={{ width: 0, opacity: 0 }}
-                                animate={{ width: 'clamp(300px, 38%, 440px)', opacity: 1 }}
-                                exit={{ width: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="fixed md:relative right-0 top-13 md:top-0 bottom-0 border-l border-[var(--border-main)] bg-[var(--bg-surface)] flex flex-col z-20 shadow-[var(--shadow-elevated)] md:shadow-none overflow-hidden"
-                                style={{ minWidth: 0 }}
+                                key="right-panel"
+                                initial={{ opacity: 0, x: 40 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 40 }}
+                                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                                className="
+                                    fixed md:relative
+                                    right-0 top-13 md:top-0 bottom-0
+                                    z-20 md:z-auto
+                                    border-l border-[var(--border-main)]
+                                    bg-[var(--bg-surface)]
+                                    flex flex-col
+                                    shadow-[var(--shadow-elevated)] md:shadow-none
+                                    overflow-hidden
+                                "
+                                style={{
+                                    width: 'min(420px, 42%)',
+                                    minWidth: 300,
+                                }}
                             >
-                                {/* Panel header */}
+                                {/* ── Panel header ────────────────────────── */}
                                 <div className="px-5 py-4 border-b border-[var(--border-main)] shrink-0">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">
-                                            Результаты
-                                        </span>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="label-kicker">Результаты</span>
                                         <button
-                                            className="md:hidden text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors"
+                                            className="md:hidden icon-button w-7 h-7"
                                             onClick={() => setShowRightPanel(false)}
+                                            aria-label="Закрыть панель"
                                         >
-                                            <X size={15} />
+                                            <X size={14} />
                                         </button>
                                     </div>
 
@@ -380,7 +624,9 @@ export default function SimulationReportPage() {
                                                 style={{ color: overallColor }}
                                             >
                                                 {overallScore}
-                                                <span className="text-[13px] text-[var(--text-dim)] font-mono ml-1">/10</span>
+                                                <span className="text-[13px] text-[var(--text-dim)] font-mono ml-1">
+                                                    /10
+                                                </span>
                                             </div>
                                             <div className="text-[12px] font-inter text-[var(--text-muted)] truncate mb-0.5">
                                                 {personaName}
@@ -393,7 +639,7 @@ export default function SimulationReportPage() {
                                         </div>
                                     </div>
 
-                                    {/* Progress bar */}
+                                    {/* Overall progress bar */}
                                     <div className="mt-3 w-full h-1.5 bg-[var(--bg-main)] rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
@@ -405,55 +651,25 @@ export default function SimulationReportPage() {
                                     </div>
                                 </div>
 
-                                {/* Metrics list */}
-                                <div className="flex-1 overflow-y-auto divide-y divide-[var(--border-main)]">
-                                    {skill_metrics?.map((metric, idx) => {
-                                        const color = getScoreColor(metric.score);
-                                        const score10 = Math.round(metric.score * 10);
-                                        return (
-                                            <motion.div
+                                {/* ── Metrics accordion list ───────────────── */}
+                                <div className="flex-1 overflow-y-auto">
+                                    {skill_metrics?.length > 0 ? (
+                                        skill_metrics.map((metric, idx) => (
+                                            <AccordionItem
                                                 key={metric.metric_name}
-                                                initial={{ opacity: 0, x: 10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.28, delay: idx * 0.05 }}
-                                                className="px-5 py-4"
-                                            >
-                                                {/* Name + score */}
-                                                <div className="flex items-start gap-2 mb-2">
-                                                    <ScoreIcon score={metric.score} />
-                                                    <span className="flex-1 text-[13px] font-semibold font-inter text-[var(--text-main)] leading-snug">
-                                                        {metric.metric_name}
-                                                    </span>
-                                                    <span
-                                                        className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0"
-                                                        style={{ color, backgroundColor: `${color}18` }}
-                                                    >
-                                                        {score10}/10
-                                                    </span>
-                                                </div>
-                                                {/* Bar */}
-                                                <div className="w-full h-[3px] bg-[var(--bg-main)] rounded-full overflow-hidden mb-2.5">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${metric.score * 100}%` }}
-                                                        transition={{ duration: 0.55, delay: idx * 0.05 + 0.15, ease: 'easeOut' }}
-                                                        className="h-full rounded-full"
-                                                        style={{ backgroundColor: color }}
-                                                    />
-                                                </div>
-                                                {/* Comment */}
-                                                {metric.comment && (
-                                                    <p className="text-[11.5px] text-[var(--text-dim)] font-inter leading-relaxed">
-                                                        {metric.comment}
-                                                    </p>
-                                                )}
-                                            </motion.div>
-                                        );
-                                    })}
-
-                                    {(!skill_metrics || skill_metrics.length === 0) && (
+                                                metric={metric}
+                                                index={idx}
+                                                isOpen={openIndex === idx}
+                                                onToggle={() =>
+                                                    handleAccordionToggle(idx, messages)
+                                                }
+                                            />
+                                        ))
+                                    ) : (
                                         <div className="p-8 text-center">
-                                            <p className="text-[12px] text-[var(--text-dim)] font-inter">Метрики не найдены</p>
+                                            <p className="text-[12px] text-[var(--text-dim)] font-inter">
+                                                Метрики не найдены
+                                            </p>
                                         </div>
                                     )}
                                 </div>
