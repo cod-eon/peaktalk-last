@@ -95,6 +95,23 @@ function buildSummary(
     return [intro, ...comments].filter(Boolean);
 }
 
+// ── Markdown renderer (bold + paragraphs) ─────────────────────────────────────
+
+function renderMarkdown(text: string) {
+    return text.split(/\n\n+/).map((para, i) => {
+        const parts = para.split(/\*\*(.+?)\*\*/g);
+        return (
+            <p key={i} className={`text-sm text-gray-700 leading-relaxed${i > 0 ? ' mt-2' : ''}`}>
+                {parts.map((part, j) =>
+                    j % 2 === 1
+                        ? <strong key={j} className="font-semibold text-gray-900">{part}</strong>
+                        : part,
+                )}
+            </p>
+        );
+    });
+}
+
 // ── Popover ────────────────────────────────────────────────────────────────────
 
 function Popover({
@@ -123,10 +140,10 @@ function Popover({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-50 w-80 bg-white shadow-xl border border-gray-100 rounded-xl p-5"
-            style={{ top: state.y + 8, left: Math.min(state.x, window.innerWidth - 340) }}
+            className="fixed z-50 w-96 bg-white shadow-xl border border-gray-100 rounded-xl p-5"
+            style={{ top: state.y + 8, left: Math.min(state.x, window.innerWidth - 400) }}
         >
-            <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-start justify-between gap-2 mb-3">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-tight">
                     {state.metricName}
                 </span>
@@ -137,7 +154,7 @@ function Popover({
                     <X size={13} />
                 </button>
             </div>
-            <p className="text-sm text-gray-700 leading-relaxed">{state.comment}</p>
+            {renderMarkdown(state.comment)}
         </motion.div>
     );
 }
@@ -191,11 +208,6 @@ function UserLine({
                     msg.content
                 )}
             </p>
-            {hasIssue && (
-                <p className="mt-2 text-xs text-gray-400 italic">
-                    ↑ кликни, чтобы увидеть комментарий тренера
-                </p>
-            )}
         </motion.div>
     );
 }
@@ -419,39 +431,33 @@ export default function SimulationReportPage() {
                                 <Sparkles size={15} className="text-orange-400 shrink-0" />
                                 <h2 className="text-[15px] font-semibold text-gray-800">Разбор завершён</h2>
                             </div>
-                            <div className="flex flex-col gap-3">
-                                {summaryLines.map((line, i) => (
-                                    <p key={i} className="text-[14px] text-gray-700 leading-relaxed">
-                                        {line}
-                                    </p>
-                                ))}
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[14px] text-gray-700 leading-relaxed">
+                                    {summaryLines[0]}
+                                </p>
+                                {summaryLines.length > 1 && (
+                                    <ul className="mt-1 space-y-1.5">
+                                        {summaryLines.slice(1).map((line, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-[14px] text-gray-700 leading-relaxed">
+                                                <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-orange-300 shrink-0" />
+                                                <span>{line}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
 
                             {/* Metric pills row */}
                             {skill_metrics?.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-orange-100">
-                                    {skill_metrics.map((m) => {
-                                        const color = getScoreColor(m.score);
-                                        const s10 = Math.round(m.score * 10);
-                                        return (
-                                            <span
-                                                key={m.metric_name}
-                                                className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
-                                                style={{
-                                                    color,
-                                                    backgroundColor: `${color}12`,
-                                                    borderColor: `${color}30`,
-                                                }}
-                                            >
-                                                <span
-                                                    className="w-1.5 h-1.5 rounded-full shrink-0"
-                                                    style={{ backgroundColor: color }}
-                                                />
-                                                {m.metric_name}
-                                                <span className="font-bold">{s10}/10</span>
-                                            </span>
-                                        );
-                                    })}
+                                    {skill_metrics.map((m) => (
+                                        <span
+                                            key={m.metric_name}
+                                            className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700"
+                                        >
+                                            {m.metric_name}
+                                        </span>
+                                    ))}
                                 </div>
                             )}
                         </motion.div>
