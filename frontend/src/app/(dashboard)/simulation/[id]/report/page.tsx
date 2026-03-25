@@ -86,8 +86,8 @@ function ScoreIcon({ score }: { score: number }) {
 
 // ── ScoreRing ──────────────────────────────────────────────────────────────────
 
-function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
-    const sw = 5;
+function ScoreRing({ score, size = 80 }: { score: number; size?: number }) {
+    const sw = 9;
     const r = (size - sw) / 2;
     const c = 2 * Math.PI * r;
     const color = getIntColor(score);
@@ -96,7 +96,7 @@ function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
             <svg width={size} height={size} className="-rotate-90">
                 <circle
                     cx={size / 2} cy={size / 2} r={r}
-                    fill="none" stroke="var(--bg-surface-alt)" strokeWidth={sw}
+                    fill="none" stroke="#F3F4F6" strokeWidth={sw}
                 />
                 <motion.circle
                     cx={size / 2} cy={size / 2} r={r}
@@ -108,18 +108,8 @@ function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span
-                    className="font-syne font-bold leading-none"
-                    style={{ color, fontSize: size * 0.27 }}
-                >
-                    {score}
-                </span>
-                <span
-                    className="font-mono text-[var(--text-dim)]"
-                    style={{ fontSize: size * 0.13 }}
-                >
-                    /10
-                </span>
+                <span className="text-3xl font-bold text-gray-900 leading-none">{score}</span>
+                <span className="text-xs text-gray-400 mt-0.5">/10</span>
             </div>
         </div>
     );
@@ -164,65 +154,63 @@ function AccordionItem({ metric, index, isOpen, onToggle }: AccordionItemProps) 
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, delay: index * 0.05 }}
-            className="border-b border-[var(--border-main)] last:border-b-0"
+            className="mb-3 last:mb-0"
         >
-            {/* Header row — always visible */}
-            <button
+            <div
                 onClick={onToggle}
-                className="w-full flex items-center gap-2.5 px-5 py-3.5 text-left hover:bg-[var(--bg-surface-alt)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/30"
+                role="button"
                 aria-expanded={isOpen}
+                className={`border border-gray-200 rounded-xl shadow-sm cursor-pointer transition-all ${
+                    isOpen
+                        ? 'bg-gray-50/50 border-gray-300'
+                        : 'bg-white hover:border-gray-300'
+                }`}
             >
-                <ScoreIcon score={metric.score} />
-                <span className="flex-1 text-[13px] font-semibold font-inter text-[var(--text-main)] leading-snug truncate">
-                    {metric.metric_name}
-                </span>
-                <span
-                    className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0"
-                    style={{ color, backgroundColor: `${color}1a` }}
-                >
-                    {score10}/10
-                </span>
-                <motion.span
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="shrink-0 text-[var(--text-dim)]"
-                >
-                    <ChevronDown size={13} />
-                </motion.span>
-            </button>
+                {/* Header row */}
+                <div className="flex items-center justify-between p-4 gap-3">
+                    <span className="font-semibold text-gray-800 text-sm leading-snug flex-1 truncate">
+                        {metric.metric_name}
+                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-md text-xs font-bold">
+                            {score10}/10
+                        </span>
+                        <motion.span
+                            animate={{ rotate: isOpen ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-gray-400"
+                        >
+                            <ChevronDown size={14} />
+                        </motion.span>
+                    </div>
+                </div>
 
-            {/* Expandable content */}
-            <AnimatePresence initial={false}>
-                {isOpen && (
-                    <motion.div
-                        key="content"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-                        style={{ overflow: 'hidden' }}
-                    >
-                        <div className="px-5 pb-4 pt-1 flex flex-col gap-3">
-                            <AnimatedBar value={metric.score} color={color} delay={0.05} />
-                            {metric.comment && (
-                                <p
-                                    className="text-[12px] leading-relaxed font-inter italic"
-                                    style={{
-                                        borderLeft: `2px solid ${color}`,
-                                        paddingLeft: 12,
-                                        color: 'var(--text-dim)',
-                                    }}
-                                >
-                                    {metric.comment}
-                                </p>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                {/* Expandable content */}
+                <AnimatePresence initial={false}>
+                    {isOpen && (
+                        <motion.div
+                            key="content"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                            style={{ overflow: 'hidden' }}
+                        >
+                            <div className="px-4 pb-4 pt-0 flex flex-col gap-3">
+                                <AnimatedBar value={metric.score} color={color} delay={0.05} />
+                                {metric.comment && (
+                                    <p className="text-[12.5px] leading-relaxed font-inter italic text-gray-500 border-l-2 border-gray-300 pl-3">
+                                        {metric.comment}
+                                    </p>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 }
@@ -242,7 +230,7 @@ function ChatMessage({ msg, idx, personaName, isHighlighted }: ChatMessageProps)
     return (
         <motion.div
             id={`message-${msg.turn_index}`}
-            className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+            className={`flex flex-col gap-1 mb-6 ${isUser ? 'items-end' : 'items-start'}`}
             initial={{ opacity: 0, y: 20 }}
             animate={
                 isHighlighted
@@ -263,19 +251,19 @@ function ChatMessage({ msg, idx, personaName, isHighlighted }: ChatMessageProps)
                     ? { duration: 0.4, ease: 'easeInOut' }
                     : { duration: 0.3, delay: idx * 0.06 }
             }
-            style={{ borderRadius: 16 }}
+            style={{ borderRadius: 12 }}
         >
-            <div
-                className={`max-w-[80%] px-4 py-3 ${
-                    isUser
-                        ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-2xl rounded-br-none'
-                        : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl rounded-tl-none'
-                }`}
-            >
-                <div className="label-kicker mb-1.5">
-                    {isUser ? 'Вы' : personaName}
-                </div>
-                <p className="text-[13px] leading-relaxed font-inter text-[var(--text-main)]">
+            {/* Name outside bubble */}
+            <span className={`text-[11px] font-medium text-gray-400 uppercase tracking-wider ${isUser ? 'mr-3' : 'ml-3'}`}>
+                {isUser ? 'Вы' : personaName}
+            </span>
+            {/* Bubble */}
+            <div className={`max-w-[85%] sm:max-w-xl px-5 py-3.5 shadow-sm ${
+                isUser
+                    ? 'bg-[#FFF4ED] border border-orange-100 rounded-2xl rounded-tr-sm text-gray-900'
+                    : 'bg-white border border-gray-100 rounded-2xl rounded-tl-sm text-gray-800'
+            }`}>
+                <p className="text-[15px] leading-relaxed font-inter">
                     {msg.content}
                 </p>
             </div>
@@ -542,29 +530,29 @@ export default function SimulationReportPage() {
                 <div className="flex flex-1 min-h-0 overflow-hidden relative">
 
                     {/* ── Left: Transcript ──────────────────────────────────── */}
-                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 pb-16">
+                    <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-5 sm:p-8 pb-16">
                         <div className="max-w-2xl mx-auto">
 
                             {/* Context card */}
                             {document_title && (
-                                <div className="mb-6 p-3.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)] flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
+                                <div className="mb-6 p-3.5 rounded-xl border border-gray-200 bg-white shadow-sm flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
                                         <FileText size={13} />
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-wider mb-0.5">
+                                        <div className="text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-0.5">
                                             Контекст
                                         </div>
-                                        <div className="text-[12px] font-medium font-inter text-[var(--text-main)]">
+                                        <div className="text-[12px] font-medium text-gray-700">
                                             {document_title}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            <p className="label-kicker mb-5">Транскрипт сессии</p>
+                            <p className="text-[11px] font-mono text-gray-400 uppercase tracking-wider mb-6">Транскрипт сессии</p>
 
-                            <div className="flex flex-col gap-3.5">
+                            <div className="flex flex-col">
                                 {messages.map((msg, idx) => (
                                     <ChatMessage
                                         key={`${msg.turn_index}-${idx}`}
@@ -591,10 +579,10 @@ export default function SimulationReportPage() {
                                     fixed md:relative
                                     right-0 top-13 md:top-0 bottom-0
                                     z-20 md:z-auto
-                                    border-l border-[var(--border-main)]
-                                    bg-[var(--bg-surface)]
+                                    border-l border-gray-200
+                                    bg-white
                                     flex flex-col
-                                    shadow-[var(--shadow-elevated)] md:shadow-none
+                                    shadow-lg md:shadow-none
                                     overflow-hidden
                                 "
                                 style={{
@@ -603,11 +591,11 @@ export default function SimulationReportPage() {
                                 }}
                             >
                                 {/* ── Panel header ────────────────────────── */}
-                                <div className="px-5 py-4 border-b border-[var(--border-main)] shrink-0">
+                                <div className="px-5 py-5 border-b border-gray-100 shrink-0">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="label-kicker">Результаты</span>
+                                        <span className="text-[11px] font-mono text-gray-400 uppercase tracking-wider">Результаты</span>
                                         <button
-                                            className="md:hidden icon-button w-7 h-7"
+                                            className="md:hidden text-gray-400 hover:text-gray-600 transition-colors p-1"
                                             onClick={() => setShowRightPanel(false)}
                                             aria-label="Закрыть панель"
                                         >
@@ -617,22 +605,13 @@ export default function SimulationReportPage() {
 
                                     {/* Score row */}
                                     <div className="flex items-center gap-4">
-                                        <ScoreRing score={overallScore} size={72} />
+                                        <ScoreRing score={overallScore} size={80} />
                                         <div className="flex-1 min-w-0">
-                                            <div
-                                                className="font-syne text-[22px] font-bold leading-none mb-1"
-                                                style={{ color: overallColor }}
-                                            >
-                                                {overallScore}
-                                                <span className="text-[13px] text-[var(--text-dim)] font-mono ml-1">
-                                                    /10
-                                                </span>
-                                            </div>
-                                            <div className="text-[12px] font-inter text-[var(--text-muted)] truncate mb-0.5">
+                                            <div className="text-[12px] font-semibold text-gray-700 truncate mb-0.5">
                                                 {personaName}
                                             </div>
                                             {persona_config?.industry && (
-                                                <div className="text-[11px] font-mono text-[var(--text-dim)] truncate">
+                                                <div className="text-[11px] text-gray-400 truncate">
                                                     {persona_config.industry}
                                                 </div>
                                             )}
@@ -640,7 +619,7 @@ export default function SimulationReportPage() {
                                     </div>
 
                                     {/* Overall progress bar */}
-                                    <div className="mt-3 w-full h-1.5 bg-[var(--bg-main)] rounded-full overflow-hidden">
+                                    <div className="mt-4 w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${overallScoreFloat * 100}%` }}
@@ -652,7 +631,7 @@ export default function SimulationReportPage() {
                                 </div>
 
                                 {/* ── Metrics accordion list ───────────────── */}
-                                <div className="flex-1 overflow-y-auto">
+                                <div className="flex-1 overflow-y-auto p-4">
                                     {skill_metrics?.length > 0 ? (
                                         skill_metrics.map((metric, idx) => (
                                             <AccordionItem
