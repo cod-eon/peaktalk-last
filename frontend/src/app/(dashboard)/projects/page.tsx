@@ -53,18 +53,18 @@ export default function ProjectsPage() {
         : projects;
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-5 py-8 lg:px-8 pb-16 md:pb-10">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-5 py-6 sm:py-8 lg:px-8 pb-20 md:pb-10">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <div>
                     <p className="label-kicker mb-2">Подготовка</p>
-                    <h1 className="font-syne text-[26px] font-bold text-[var(--text-main)] tracking-tight">
+                    <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
                         Мои проекты
                     </h1>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="btn-primary w-full sm:w-auto gap-2 flex-shrink-0"
+                    className="btn-primary w-full sm:w-auto gap-2 flex-shrink-0 min-h-[44px]"
                 >
                     <Plus size={15} />
                     Новый проект
@@ -73,7 +73,7 @@ export default function ProjectsPage() {
 
             {/* Search */}
             <div className="flex items-center gap-3 mb-6">
-                <div className="relative flex-1 max-w-sm group">
+                <div className="relative flex-1 sm:max-w-sm group">
                     <Search
                         size={15}
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within:text-[var(--accent-primary)] transition-colors"
@@ -83,7 +83,7 @@ export default function ProjectsPage() {
                         placeholder="Поиск по названию..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-[var(--radius-sm)] py-2 pl-9 pr-3 text-[13px] font-inter text-[var(--text-main)] placeholder:text-[var(--text-dim)] focus:border-[var(--accent-primary)]/50 focus:outline-none transition-colors"
+                        className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-[var(--radius-sm)] py-2.5 pl-9 pr-3 text-[13px] font-inter text-[var(--text-main)] placeholder:text-[var(--text-dim)] focus:border-[var(--accent-primary)]/50 focus:outline-none transition-colors min-h-[44px]"
                     />
                 </div>
                 {projects.length > 0 && (

@@ -49,7 +49,7 @@ export default function RegisterPage() {
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white border border-[var(--border-main)] p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
+      className="bg-white border border-[var(--border-main)] p-6 sm:p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
     >
       <div className="text-center mb-8">
         <h1 className="text-2xl font-syne font-semibold text-[var(--text-main)] mb-2">Начать бесплатно</h1>

@@ -54,7 +54,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </motion.nav>
 
       {/* Main Content — centered, padded for fixed nav */}
-      <main className="flex-1 flex items-center justify-center px-6 z-10 relative" style={{ paddingTop: 88 }}>
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 z-10 relative py-6" style={{ paddingTop: 88 }}>
         <div className="w-full max-w-md">
           {children}
         </div>

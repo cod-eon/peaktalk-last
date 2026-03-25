@@ -738,14 +738,14 @@ export default function AnalysisPage() {
                 <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
                     <div className="h-14 flex items-center gap-2 px-4">
                         <button onClick={() => router.back()}
-                            className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
+                            className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0 min-h-[44px] pr-1">
                             <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                         </button>
                         <h1 className="flex-1 min-w-0 font-syne text-[13px] font-semibold text-[var(--text-main)] truncate">
                             {draft.title}
                         </h1>
                         <span className="text-[13px] font-syne font-bold shrink-0" style={{ color: scoreColor }}>{fb.overall_score}/10</span>
-                        <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0">
+                        <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0 min-h-[36px]">
                             <Zap size={12} />
                         </Link>
                     </div>

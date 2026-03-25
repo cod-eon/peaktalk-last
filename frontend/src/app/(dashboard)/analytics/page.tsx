@@ -88,11 +88,11 @@ export default function AnalyticsPage() {
     const yLabels = [10, 7, 5, 0];
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-5 py-8 lg:px-8 pb-16 md:pb-10">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-5 py-6 sm:py-8 lg:px-8 pb-20 md:pb-10">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
                 <p className="label-kicker mb-2">Прогресс</p>
-                <h1 className="font-syne text-[26px] font-bold text-[var(--text-main)] tracking-tight">
+                <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
                     Аналитика
                 </h1>
             </div>
