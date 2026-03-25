@@ -335,3 +335,46 @@ async def get_report(
             detail="Report is only available after session is completed",
         )
     return session
+
+
+@router.post("/{session_id}/abandon", status_code=status.HTTP_204_NO_CONTENT)
+async def abandon_session(
+    request: Request,
+    session_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """
+    Called when user closes the tab mid-simulation (beforeunload beacon).
+    - No user answers yet → cancelled (no AI evaluation needed)
+    - Has at least one answer → finalize with evaluation (status = completed)
+    - Already completed/cancelled → no-op (idempotent)
+    """
+    try:
+        session = await _load_session(db, session_id, current_user.id)
+    except HTTPException:
+        return  # Not found or wrong owner — ignore silently
+
+    if session.status != SessionStatus.active:
+        return  # Already finalized — idempotent
+
+    user_messages = [m for m in session.messages if m.role == MessageRole.user]
+
+    if user_messages:
+        try:
+            await _finalize_session(session, db)
+        except GeminiError:
+            # Evaluation failed — at least mark cancelled to avoid orphan active session
+            session.status = SessionStatus.cancelled
+            session.completed_at = datetime.now(timezone.utc)
+            await db.flush()
+    else:
+        session.status = SessionStatus.cancelled
+        session.completed_at = datetime.now(timezone.utc)
+        await db.flush()
+
+    await db.commit()
+    logger.info(
+        "Session abandoned user=%s session=%s had_answers=%s final_status=%s",
+        current_user.id, session_id, bool(user_messages), session.status.value,
+    )

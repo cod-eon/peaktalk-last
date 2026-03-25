@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, ArrowRight, CheckCircle2, Loader2, Flag } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -20,6 +20,10 @@ export default function SimulationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Refs for beforeunload beacon (can't use state inside event handler reliably)
+  const authTokenRef = useRef<string | null>(null);
+  const isFinishedRef = useRef(false);
 
   const PERSONA_LABELS: Record<string, string> = {
     supervisor: 'Научный руководитель',
@@ -57,6 +61,41 @@ export default function SimulationPage() {
     moderator: 'модератору дискуссии',
     listener: 'скептику из зала',
   };
+
+  // Keep isFinishedRef in sync so beforeunload can read it synchronously
+  useEffect(() => { isFinishedRef.current = isFinished; }, [isFinished]);
+
+  // Cache the Supabase auth token so it's available in the synchronous beforeunload handler
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        authTokenRef.current = session?.access_token ?? null;
+      });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        authTokenRef.current = session?.access_token ?? null;
+      });
+      cleanup = () => subscription.unsubscribe();
+    });
+    return () => cleanup?.();
+  }, []);
+
+  // Fire-and-forget abandon signal when user closes the tab
+  useEffect(() => {
+    if (!sessionId) return;
+    const handleBeforeUnload = () => {
+      if (isFinishedRef.current || !authTokenRef.current) return;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      fetch(`${apiUrl}/simulation/${sessionId}/abandon`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authTokenRef.current}` },
+        keepalive: true,
+      });
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [sessionId]);
 
   useEffect(() => {
     async function loadHistory() {
