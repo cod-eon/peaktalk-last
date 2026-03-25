@@ -57,6 +57,7 @@ class SimulationSessionListItem(BaseModel):
     completed_at: datetime | None = None
     message_count: int = 0
     avg_score: float | None = None
+    document_title: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -64,6 +65,11 @@ class SimulationSessionListItem(BaseModel):
 class SimulationSessionListResponse(BaseModel):
     items: list[SimulationSessionListItem]
     total: int
+
+
+class SimulationReportResponse(SimulationSessionResponse):
+    """Report response — extends session with resolved document title."""
+    document_title: str | None = None
 
 
 class SendMessageRequest(BaseModel):

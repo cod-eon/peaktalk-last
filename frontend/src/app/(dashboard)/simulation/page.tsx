@@ -37,6 +37,7 @@ type SessionItem = {
     completed_at: string | null;
     message_count: number;
     avg_score: number | null;
+    document_title: string | null;
 };
 
 // ─── Persona label map (for history cards) ────────────────────────────────────
@@ -93,7 +94,7 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
     const isActive = session.status === 'active';
     const isCancelled = session.status === 'cancelled';
     const scoreLabel = session.avg_score != null
-        ? `${Math.round(session.avg_score * 100)}%`
+        ? `${Math.round(session.avg_score * 10)}/10`
         : null;
     const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
     const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
@@ -150,6 +151,14 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                     <ChevronRight size={14} />
                 </div>
             </div>
+            {session.document_title && (
+                <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-[var(--border-main)]">
+                    <FileText size={10} className="text-[var(--text-dim)] shrink-0" />
+                    <span className="font-mono text-[10px] text-[var(--text-dim)] truncate">
+                        {session.document_title}
+                    </span>
+                </div>
+            )}
         </motion.button>
     );
 }

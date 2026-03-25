@@ -19,6 +19,7 @@ from app.models.user import User
 from app.schemas.simulation import (
     SendMessageRequest,
     SendMessageResponse,
+    SimulationReportResponse,
     SimulationSessionListItem,
     SimulationSessionListResponse,
     SimulationSessionResponse,
@@ -107,6 +108,15 @@ async def list_sessions(
     )
     sessions = list(res.scalars().all())
 
+    # Batch-load document names for all sessions that have a document
+    doc_ids = list({s.document_id for s in sessions if s.document_id})
+    doc_names: dict = {}
+    if doc_ids:
+        docs_res = await db.execute(
+            select(Document.id, Document.name).where(Document.id.in_(doc_ids))
+        )
+        doc_names = {row.id: row.name for row in docs_res}
+
     items = []
     for s in sessions:
         scores = [m.score for m in s.skill_metrics] if s.skill_metrics else []
@@ -118,6 +128,7 @@ async def list_sessions(
             completed_at=s.completed_at,
             message_count=len(s.messages),
             avg_score=round(sum(scores) / len(scores), 2) if scores else None,
+            document_title=doc_names.get(s.document_id) if s.document_id else None,
         ))
 
     return SimulationSessionListResponse(items=items, total=total)
@@ -321,20 +332,29 @@ async def complete_session(
     return await _load_session(db, session.id, current_user.id, populate_existing=True)
 
 
-@router.get("/{session_id}/report", response_model=SimulationSessionResponse)
+@router.get("/{session_id}/report", response_model=SimulationReportResponse)
 async def get_report(
     request: Request,
     session_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> SimulationSession:
+) -> SimulationReportResponse:
     session = await _load_session(db, session_id, current_user.id)
     if session.status != SessionStatus.completed:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Report is only available after session is completed",
         )
-    return session
+    # Resolve document title if a document was attached
+    doc_title: str | None = None
+    if session.document_id:
+        doc_res = await db.execute(
+            select(Document.name).where(Document.id == session.document_id)
+        )
+        doc_title = doc_res.scalar_one_or_none()
+
+    base = SimulationSessionResponse.model_validate(session)
+    return SimulationReportResponse(**base.model_dump(), document_title=doc_title)
 
 
 @router.post("/{session_id}/abandon", status_code=status.HTTP_204_NO_CONTENT)
