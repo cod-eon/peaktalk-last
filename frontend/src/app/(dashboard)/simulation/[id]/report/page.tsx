@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Download, Zap, FileText, Sparkles, X } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -96,22 +97,22 @@ function buildSummary(
     return [intro, ...comments].filter(Boolean);
 }
 
-// ── Markdown renderer (bold + paragraphs) ─────────────────────────────────────
+// ── Markdown prose (shared) ───────────────────────────────────────────────────
 
-function renderMarkdown(text: string) {
-    return text.split(/\n\n+/).map((para, i) => {
-        const parts = para.split(/\*\*(.+?)\*\*/g);
-        return (
-            <p key={i} className={`text-sm text-gray-700 leading-relaxed${i > 0 ? ' mt-2' : ''}`}>
-                {parts.map((part, j) =>
-                    j % 2 === 1
-                        ? <strong key={j} className="font-semibold text-gray-900">{part}</strong>
-                        : part,
-                )}
-            </p>
-        );
-    });
-}
+const MD_COMPONENTS = {
+    p: ({ children }: React.ComponentProps<'p'>) => (
+        <p className="text-sm text-gray-700 leading-relaxed mt-2 first:mt-0">{children}</p>
+    ),
+    strong: ({ children }: React.ComponentProps<'strong'>) => (
+        <strong className="font-semibold text-gray-900">{children}</strong>
+    ),
+    ul: ({ children }: React.ComponentProps<'ul'>) => (
+        <ul className="mt-2 space-y-1 pl-4 list-disc">{children}</ul>
+    ),
+    li: ({ children }: React.ComponentProps<'li'>) => (
+        <li className="text-sm text-gray-700 leading-relaxed">{children}</li>
+    ),
+};
 
 // ── Popover ────────────────────────────────────────────────────────────────────
 
@@ -160,7 +161,7 @@ function Popover({
                     <X size={13} />
                 </button>
             </div>
-            {renderMarkdown(state.comment)}
+            <ReactMarkdown components={MD_COMPONENTS}>{state.comment}</ReactMarkdown>
         </motion.div>
     );
 }
@@ -437,20 +438,19 @@ export default function SimulationReportPage() {
                                 <Sparkles size={15} className="text-orange-400 shrink-0" />
                                 <h2 className="text-[15px] font-semibold text-gray-800">Разбор завершён</h2>
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-[14px] text-gray-700 leading-relaxed">
-                                    {summaryLines[0]}
-                                </p>
-                                {summaryLines.length > 1 && (
-                                    <ul className="mt-1 space-y-1.5">
-                                        {summaryLines.slice(1).map((line, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-[14px] text-gray-700 leading-relaxed">
-                                                <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-orange-300 shrink-0" />
-                                                <span>{line}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                            <div className="flex flex-col gap-2 text-[14px]">
+                                {summaryLines.map((line, i) => (
+                                    <ReactMarkdown key={i} components={{
+                                        p: ({ children }) => (
+                                            <p className="text-[14px] text-gray-700 leading-relaxed">{children}</p>
+                                        ),
+                                        strong: ({ children }) => (
+                                            <strong className="font-semibold text-gray-900">{children}</strong>
+                                        ),
+                                    }}>
+                                        {line}
+                                    </ReactMarkdown>
+                                ))}
                             </div>
 
                             {/* Metric pills row */}
@@ -519,7 +519,7 @@ export default function SimulationReportPage() {
                             })()}
                         </div>
 
-                        <div className="h-16" />
+                        <div className="h-[40vh]" />
                     </div>
                 </div>
             </div>
