@@ -181,8 +181,10 @@ function SimulationPageContent() {
 
     // Doc combobox
     const [docDropdownOpen, setDocDropdownOpen] = useState(false);
+    const [docDropdownPlacement, setDocDropdownPlacement] = useState<'bottom' | 'top'>('bottom');
     const [docSearch, setDocSearch] = useState('');
     const docDropdownRef = useRef<HTMLDivElement>(null);
+    const docTriggerRef = useRef<HTMLButtonElement>(null);
 
     // Load sessions, personas and drafts on mount
     useEffect(() => {
@@ -228,6 +230,16 @@ function SimulationPageContent() {
             setView('setup');
         }
     }, [draftFromUrl, sessionsLoading]);
+
+    // Open doc dropdown with collision detection
+    const handleDocDropdownToggle = () => {
+        if (!docDropdownOpen && docTriggerRef.current) {
+            const rect = docTriggerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            setDocDropdownPlacement(spaceBelow < 320 ? 'top' : 'bottom');
+        }
+        setDocDropdownOpen(prev => !prev);
+    };
 
     // Close doc dropdown on outside click
     useEffect(() => {
@@ -389,7 +401,7 @@ function SimulationPageContent() {
     // ── Setup view ───────────────────────────────────────────────────────────
 
     return (
-        <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10 overflow-hidden">
+        <div className="pb-48 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10">
             <div className="flex flex-col gap-6 mb-10 sm:mb-14">
                 <div className="flex items-start gap-3">
                     {sessions.length > 0 && (
@@ -575,7 +587,8 @@ function SimulationPageContent() {
                         {/* Trigger */}
                         <button
                             type="button"
-                            onClick={() => setDocDropdownOpen(!docDropdownOpen)}
+                            ref={docTriggerRef}
+                            onClick={handleDocDropdownToggle}
                             className={`w-full h-14 flex items-center gap-3 px-4 rounded-xl border transition-all text-left cursor-pointer ${
                                 docDropdownOpen
                                     ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary-glow)] bg-[var(--bg-surface)]'
@@ -609,11 +622,13 @@ function SimulationPageContent() {
                         <AnimatePresence>
                             {docDropdownOpen && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    initial={{ opacity: 0, y: docDropdownPlacement === 'top' ? 6 : -6, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    exit={{ opacity: 0, y: docDropdownPlacement === 'top' ? 6 : -6, scale: 0.98 }}
                                     transition={{ duration: 0.13 }}
-                                    className="absolute top-full left-0 right-0 mt-2 z-30 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden"
+                                    className={`absolute left-0 right-0 z-30 max-h-[320px] flex flex-col bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden ${
+                                        docDropdownPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+                                    }`}
                                 >
                                     {/* Search — sticky */}
                                     <div className="p-2 border-b border-[var(--border-main)]">
@@ -649,7 +664,7 @@ function SimulationPageContent() {
                                     </button>
 
                                     {/* Document list */}
-                                    <div className="max-h-60 overflow-y-auto">
+                                    <div className="flex-1 overflow-y-auto min-h-0">
                                         {(() => {
                                             const filtered = drafts.filter(d =>
                                                 d.title.toLowerCase().includes(docSearch.toLowerCase())
