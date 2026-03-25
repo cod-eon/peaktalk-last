@@ -348,20 +348,20 @@ function SimulationPageContent() {
         const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
         return (
-            <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10">
+            <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-10">
                 {/* Header */}
-                <div className="flex items-start justify-between gap-4 mb-10">
+                <div className="flex items-start justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
                     <div>
-                        <h1 className="font-syne text-2xl sm:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight mb-2">
+                        <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight mb-1 sm:mb-2">
                             Симуляции
                         </h1>
-                        <p className="font-inter text-[var(--text-muted)] text-sm">
+                        <p className="font-inter text-[var(--text-muted)] text-xs sm:text-sm">
                             {sessions.length} {sessions.length === 1 ? 'сессия' : sessions.length < 5 ? 'сессии' : 'сессий'} · нажми на любую, чтобы открыть
                         </p>
                     </div>
                     <button
                         onClick={() => setView('setup')}
-                        className="btn-primary shrink-0 gap-2 px-5 py-2.5 text-sm"
+                        className="btn-primary shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px]"
                     >
                         <Plus size={16} />
                         <span className="hidden sm:inline">Новая симуляция</span>
@@ -374,16 +374,16 @@ function SimulationPageContent() {
                     const scores = completedSessions.filter(s => s.avg_score != null).map(s => s.avg_score!);
                     const avgScore = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) : null;
                     return (
-                        <div className="grid grid-cols-3 gap-3 mb-8">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
                             {[
-                                { icon: Zap, label: 'Всего сессий', value: String(sessions.length) },
+                                { icon: Zap, label: 'Всего', value: String(sessions.length) },
                                 { icon: CheckCircle2, label: 'Завершено', value: String(completedSessions.length) },
-                                { icon: BarChart2, label: 'Средний балл', value: avgScore != null ? `${avgScore}%` : '—' },
+                                { icon: BarChart2, label: 'Балл', value: avgScore != null ? `${avgScore}%` : '—' },
                             ].map(({ icon: Icon, label, value }) => (
-                                <div key={label} className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-4 text-center">
-                                    <Icon size={18} className="text-[var(--accent-primary)] mx-auto mb-2" />
-                                    <div className="font-syne font-bold text-lg text-[var(--text-main)]">{value}</div>
-                                    <div className="font-inter text-[10px] text-[var(--text-dim)] uppercase tracking-wider mt-0.5">{label}</div>
+                                <div key={label} className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 sm:p-4 text-center">
+                                    <Icon size={16} className="text-[var(--accent-primary)] mx-auto mb-1.5 sm:mb-2" />
+                                    <div className="font-syne font-bold text-base sm:text-lg text-[var(--text-main)]">{value}</div>
+                                    <div className="font-inter text-[9px] sm:text-[10px] text-[var(--text-dim)] uppercase tracking-wider mt-0.5">{label}</div>
                                 </div>
                             ))}
                         </div>
@@ -435,7 +435,7 @@ function SimulationPageContent() {
     // ── Setup view ───────────────────────────────────────────────────────────
 
     return (
-        <div className="pb-48 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10">
+        <div className="pb-48 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-10">
             <div className="flex flex-col gap-6 mb-10 sm:mb-14">
                 <div className="flex items-start gap-3">
                     {sessions.length > 0 && (
@@ -447,7 +447,7 @@ function SimulationPageContent() {
                         </button>
                     )}
                     <div>
-                        <h1 className="font-syne text-2xl sm:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight m-0 mb-2">
+                        <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight m-0 mb-2">
                             Настройка симуляции
                         </h1>
                         <p className="font-inter text-[var(--text-muted)] max-w-2xl text-sm leading-relaxed">

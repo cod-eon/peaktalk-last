@@ -63,7 +63,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-[var(--border-main)] z-[9999] flex flex-col pt-safe"
+                        className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--bg-surface)] border-r border-[var(--border-main)] z-[9999] flex flex-col pt-safe"
                     >
                         {/* Header */}
                         <div className="px-5 h-16 flex items-center justify-between border-b border-[var(--border-main)]">
