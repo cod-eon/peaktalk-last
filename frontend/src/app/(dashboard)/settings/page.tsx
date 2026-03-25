@@ -122,10 +122,10 @@ export default function SettingsPage() {
         .toUpperCase();
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-5 py-8 lg:px-8 pb-16 md:pb-10">
-            <div className="mb-8">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-5 py-6 sm:py-8 lg:px-8 pb-20 md:pb-10">
+            <div className="mb-6 sm:mb-8">
                 <p className="label-kicker mb-2">Аккаунт</p>
-                <h1 className="font-syne text-[26px] font-bold text-[var(--text-main)] tracking-tight">
+                <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
                     Настройки
                 </h1>
             </div>

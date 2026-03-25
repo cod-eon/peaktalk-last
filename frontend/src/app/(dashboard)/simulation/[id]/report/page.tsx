@@ -142,12 +142,12 @@ function Popover({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-50 w-96 bg-white shadow-xl border border-gray-100 rounded-xl p-5"
+            className="fixed z-50 w-[calc(100vw-32px)] sm:w-96 bg-white shadow-xl border border-gray-100 rounded-xl p-4 sm:p-5"
             style={{
                 top: state.rectBottom + 8 + 240 > window.innerHeight
                     ? Math.max(8, state.rectTop - 248)
                     : state.rectBottom + 8,
-                left: Math.min(state.x, window.innerWidth - 400),
+                left: Math.min(Math.max(16, state.x), window.innerWidth - Math.min(window.innerWidth - 32, 384) - 16),
             }}
         >
             <div className="flex items-start justify-between gap-2 mb-3">

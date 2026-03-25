@@ -114,14 +114,14 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="flex w-full flex-col justify-start px-6 md:pl-6 md:pr-[calc(72px+1.5rem)] py-12 md:py-20 max-w-4xl mx-auto relative z-10 box-border">
-            
+        <div className="flex w-full flex-col justify-start px-4 sm:px-6 py-8 sm:py-12 md:py-20 max-w-4xl mx-auto relative z-10 box-border">
+
             {/* Header */}
-            <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-4 tracking-tight">
+            <div className="text-center mb-6 sm:mb-10">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-3 sm:mb-4 tracking-tight">
                     Новый разбор
                 </h1>
-                <p className="text-[var(--text-muted)] text-sm md:text-base max-w-lg mx-auto leading-relaxed">
+                <p className="text-[var(--text-muted)] text-sm md:text-base max-w-lg mx-auto leading-relaxed px-2">
                     Загрузите ваш сценарий или вставьте текст напрямую. ИИ проанализирует логику, найдет слабые места и подготовит вопросы для стресс-теста.
                 </p>
             </div>
@@ -248,19 +248,19 @@ export default function UploadPage() {
                             </div>
 
                             {/* Action Bar */}
-                            <div className="flex justify-between items-center border-t border-[var(--border-main)] p-5 bg-[var(--bg-surface)]">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-t border-[var(--border-main)] p-4 sm:p-5 bg-[var(--bg-surface)] gap-3">
                                 <div className="text-xs text-[var(--text-dim)] hidden sm:block">
                                     Ваши данные надежно защищены (152-ФЗ)
                                 </div>
                                 <button
                                     onClick={startAnalysis}
                                     disabled={
-                                        (mode === 'file' && !file) || 
+                                        (mode === 'file' && !file) ||
                                         (mode === 'text' && text.length < 50)
                                     }
-                                    className="w-full sm:w-auto btn-primary relative px-6 py-2.5"
+                                    className="w-full sm:w-auto btn-primary relative px-6 py-2.5 min-h-[44px]"
                                 >
-                                    <span className="flex items-center gap-2">
+                                    <span className="flex items-center gap-2 justify-center">
                                         <Zap size={16} /> Начать анализ
                                     </span>
                                 </button>

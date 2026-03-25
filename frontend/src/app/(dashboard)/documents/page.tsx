@@ -73,35 +73,36 @@ export default function DocumentsPage() {
     }, [data, search, activeFilter]);
 
     return (
-        <div className="pt-8 pb-20 w-full max-w-4xl mx-auto px-6">
+        <div className="pt-6 sm:pt-8 pb-20 w-full max-w-4xl mx-auto px-4 sm:px-6">
 
             {/* Header */}
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex items-start justify-between gap-3 mb-6 sm:mb-8">
                 <div>
-                    <h1 className="font-syne text-2xl sm:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight mb-1">
+                    <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight mb-1">
                         Мои тексты
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Управление загруженными материалами и черновиками</p>
+                    <p className="text-sm text-gray-500 mt-1 hidden sm:block">Управление загруженными материалами и черновиками</p>
                 </div>
                 <Link
                     href="/upload"
-                    className="btn-primary shrink-0 gap-1.5 px-4 py-2 text-sm"
+                    className="btn-primary shrink-0 gap-1.5 px-3 sm:px-4 py-2 text-sm min-h-[44px]"
                 >
                     <Plus size={14} />
-                    Загрузить текст
+                    <span className="hidden sm:inline">Загрузить текст</span>
+                    <span className="sm:hidden">Загрузить</span>
                 </Link>
             </div>
 
             {/* Toolbar */}
-            <div className="flex items-center gap-4 mb-6">
-                <div className="relative max-w-xs w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
+                <div className="relative w-full sm:max-w-xs">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по названию..."
-                        className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-md py-2 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors"
+                        className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-md py-2.5 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors min-h-[44px]"
                     />
                     {search && (
                         <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -110,25 +111,27 @@ export default function DocumentsPage() {
                     )}
                 </div>
 
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                    {FILTERS.map((f) => (
-                        <button
-                            key={f}
-                            onClick={() => setActiveFilter(f)}
-                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${
-                                activeFilter === f
-                                    ? 'bg-white shadow-sm text-gray-900 font-medium'
-                                    : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </div>
+                <div className="flex items-center justify-between sm:justify-start gap-3">
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                        {FILTERS.map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setActiveFilter(f)}
+                                className={`px-3 py-1.5 rounded-md text-sm transition-all min-h-[36px] ${
+                                    activeFilter === f
+                                        ? 'bg-white shadow-sm text-gray-900 font-medium'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
 
-                {data && (
-                    <span className="ml-auto text-xs text-[var(--text-dim)]">{filtered.length} / {data.total}</span>
-                )}
+                    {data && (
+                        <span className="text-xs text-[var(--text-dim)] sm:ml-auto">{filtered.length} / {data.total}</span>
+                    )}
+                </div>
             </div>
 
             {/* States */}
@@ -160,10 +163,10 @@ export default function DocumentsPage() {
                 </div>
             ) : (
                 <>
-                    {/* Table */}
+                    {/* Table — desktop, Card list — mobile */}
                     <div className="bg-white border border-[var(--border-main)] rounded-2xl overflow-hidden">
-                        {/* Head */}
-                        <div className="grid grid-cols-[1fr_80px_110px_120px] bg-gray-50 border-b border-gray-100 px-5 py-2.5">
+                        {/* Head — desktop only */}
+                        <div className="hidden sm:grid grid-cols-[1fr_80px_110px_120px] bg-gray-50 border-b border-gray-100 px-5 py-2.5">
                             {['НАЗВАНИЕ', 'ФОРМАТ', 'ДАТА', 'ДЕЙСТВИЕ'].map((col) => (
                                 <span key={col} className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{col}</span>
                             ))}
@@ -177,42 +180,81 @@ export default function DocumentsPage() {
                             return (
                                 <div
                                     key={doc.id}
-                                    className={`grid grid-cols-[1fr_80px_110px_120px] items-center px-5 py-3.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group ${isDeleting ? 'opacity-40' : ''}`}
+                                    className={`border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group ${isDeleting ? 'opacity-40' : ''}`}
                                 >
-                                    {/* Name */}
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <DocIcon doc={doc} />
-                                        <span className="text-sm font-medium text-[var(--text-main)] truncate" title={doc.name}>
-                                            {doc.name}
-                                        </span>
+                                    {/* Mobile card layout */}
+                                    <div className="flex items-center gap-3 px-4 py-3.5 sm:hidden">
+                                        <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                                            <DocIcon doc={doc} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-[var(--text-main)] truncate" title={doc.name}>
+                                                {doc.name}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                    {ext}
+                                                </span>
+                                                <span className="text-[11px] text-[var(--text-dim)]">
+                                                    {format(new Date(doc.created_at), 'dd.MM.yyyy')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Link
+                                                href={`/analysis/${doc.id}`}
+                                                className="text-xs font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors min-h-[44px] px-2 flex items-center"
+                                            >
+                                                Разбор <ArrowRight size={12} />
+                                            </Link>
+                                            <button
+                                                onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
+                                                disabled={isDeleting}
+                                                className="text-gray-300 hover:text-red-400 transition-colors min-h-[44px] px-1 flex items-center"
+                                                aria-label="Удалить"
+                                            >
+                                                {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    {/* Format badge */}
-                                    <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit">
-                                        {ext}
-                                    </span>
+                                    {/* Desktop table row */}
+                                    <div className="hidden sm:grid grid-cols-[1fr_80px_110px_120px] items-center px-5 py-3.5">
+                                        {/* Name */}
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <DocIcon doc={doc} />
+                                            <span className="text-sm font-medium text-[var(--text-main)] truncate" title={doc.name}>
+                                                {doc.name}
+                                            </span>
+                                        </div>
 
-                                    {/* Date */}
-                                    <span className="text-sm text-[var(--text-dim)]">
-                                        {format(new Date(doc.created_at), 'dd.MM.yyyy')}
-                                    </span>
+                                        {/* Format badge */}
+                                        <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit">
+                                            {ext}
+                                        </span>
 
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-3">
-                                        <Link
-                                            href={`/analysis/${doc.id}`}
-                                            className="text-sm font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors whitespace-nowrap"
-                                        >
-                                            Разбор <ArrowRight size={13} />
-                                        </Link>
-                                        <button
-                                            onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
-                                            disabled={isDeleting}
-                                            className="text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                            aria-label="Удалить"
-                                        >
-                                            {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                                        </button>
+                                        {/* Date */}
+                                        <span className="text-sm text-[var(--text-dim)]">
+                                            {format(new Date(doc.created_at), 'dd.MM.yyyy')}
+                                        </span>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-3">
+                                            <Link
+                                                href={`/analysis/${doc.id}`}
+                                                className="text-sm font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors whitespace-nowrap"
+                                            >
+                                                Разбор <ArrowRight size={13} />
+                                            </Link>
+                                            <button
+                                                onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
+                                                disabled={isDeleting}
+                                                className="text-gray-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                                aria-label="Удалить"
+                                            >
+                                                {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );

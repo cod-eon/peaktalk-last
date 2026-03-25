@@ -176,31 +176,32 @@ export default function SimulationPage() {
 
   if (isFinished) {
     return (
-      <div className="flex-1 w-full max-w-3xl mx-auto flex flex-col items-center justify-center p-6 text-center">
+      <div className="flex-1 w-full max-w-3xl mx-auto flex flex-col items-center justify-center p-4 sm:p-6 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-10 w-full"
+          className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-10 w-full"
         >
-          <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 size={40} />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
+            <CheckCircle2 size={32} className="sm:hidden" />
+            <CheckCircle2 size={40} className="hidden sm:block" />
           </div>
-          <h2 className="text-3xl font-syne font-bold text-[var(--text-main)] mb-4">
+          <h2 className="text-2xl sm:text-3xl font-syne font-bold text-[var(--text-main)] mb-3 sm:mb-4">
             Тренировка завершена!
           </h2>
-          <p className="text-[var(--text-dim)] mb-8 max-w-md mx-auto">
+          <p className="text-[var(--text-dim)] mb-6 sm:mb-8 text-sm sm:text-base max-w-md mx-auto">
             Сессия была успешно завершена. {personaLabel} проанализировал ваши ответы — ознакомьтесь с подробным отчетом по вашим навыкам.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => router.push('/dashboard')}
-              className="btn-secondary"
+              className="btn-secondary min-h-[44px]"
             >
               В дашборд
             </button>
             <button
               onClick={() => router.push(`/simulation/${sessionId}/report`)}
-              className="btn-primary"
+              className="btn-primary min-h-[44px]"
             >
               Посмотреть полный отчет
             </button>
@@ -220,16 +221,17 @@ export default function SimulationPage() {
   const isLastQuestion = turnCount >= MAX_TURNS;
 
   return (
-    <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:p-8 min-h-[calc(100vh-2rem)] relative">
-      <div className="w-full mb-8 pt-4">
+    <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-3 sm:p-4 md:p-8 min-h-[calc(100vh-2rem)] relative">
+      <div className="w-full mb-5 sm:mb-8 pt-2 sm:pt-4">
         {/* Шапка */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 rounded-full flex items-center justify-center text-[var(--accent-primary)]">
-              <Bot size={20} />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 rounded-full flex items-center justify-center text-[var(--accent-primary)]">
+              <Bot size={16} className="sm:hidden" />
+              <Bot size={20} className="hidden sm:block" />
             </div>
             <div>
-              <div className="font-mono text-xs text-[var(--accent-primary)] tracking-wider uppercase mb-1">
+              <div className="font-mono text-[10px] sm:text-xs text-[var(--accent-primary)] tracking-wider uppercase mb-0.5 sm:mb-1 truncate max-w-[140px] sm:max-w-none">
                 {personaLabel}
               </div>
               <div className="text-sm text-[var(--text-dim)] border border-[var(--border-main)] rounded-full px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
@@ -237,7 +239,7 @@ export default function SimulationPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="text-right hidden sm:block">
               <div className="font-mono text-xs text-[var(--text-dim)]">
                 Вопрос <span className="text-[var(--text-main)] font-semibold">{turnCount}</span> из {MAX_TURNS}
@@ -246,7 +248,7 @@ export default function SimulationPage() {
             <button
               onClick={handleComplete}
               disabled={isCompleting || isAnalyzing}
-              className="text-xs font-mono border border-[var(--border-main)] hover:border-red-500/50 bg-[var(--bg-surface)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-40"
+              className="text-xs font-mono border border-[var(--border-main)] hover:border-red-500/50 bg-[var(--bg-surface)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 disabled:opacity-40 min-h-[36px]"
             >
               {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
               <span className="hidden sm:inline">Завершить досрочно</span>
@@ -288,11 +290,12 @@ export default function SimulationPage() {
             className="w-full max-w-3xl mx-auto"
           >
             {/* Карточка Вопроса */}
-            <div className="mb-8 p-6 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] rounded-2xl relative shadow-sm">
-              <div className="absolute -left-3 -top-3 text-[var(--accent-primary)] bg-[var(--bg-main)] rounded-full p-1 opacity-50">
-                <Bot size={24} />
+            <div className="mb-5 sm:mb-8 p-4 sm:p-6 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] rounded-2xl relative shadow-sm">
+              <div className="absolute -left-2 -top-2 sm:-left-3 sm:-top-3 text-[var(--accent-primary)] bg-[var(--bg-main)] rounded-full p-1 opacity-50">
+                <Bot size={18} className="sm:hidden" />
+                <Bot size={24} className="hidden sm:block" />
               </div>
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-syne font-medium leading-tight text-[var(--text-main)]">
+              <h1 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-syne font-medium leading-tight text-[var(--text-main)]">
                 {lastQuestion}
               </h1>
             </div>
@@ -305,28 +308,29 @@ export default function SimulationPage() {
                 placeholder={`Ваш ответ ${personaDative}...`}
                 autoFocus
                 disabled={isAnalyzing}
-                className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm"
+                className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm"
                 style={{ fontSize: '16px' }}
               />
-              
-              <div className="mt-4 flex justify-between items-center">
-                <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                  {answer.length} символов
+
+              <div className="mt-3 sm:mt-4 flex justify-between items-center gap-3">
+                <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider shrink-0">
+                  {answer.length} симв.
                 </div>
                 <button
                   type="submit"
                   disabled={!answer.trim() || isAnalyzing}
-                  className="btn-primary group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="btn-primary group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] flex-1 sm:flex-none justify-center sm:justify-start"
                 >
                   {isAnalyzing ? (
                     <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Анализ нейросетью...
+                      <Loader2 size={16} className="animate-spin" />
+                      <span className="hidden sm:inline">Анализ нейросетью...</span>
+                      <span className="sm:hidden">Анализ...</span>
                     </>
                   ) : (
                     <>
                       Ответить
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>
