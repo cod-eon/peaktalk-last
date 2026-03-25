@@ -84,6 +84,7 @@ def expire_abandoned_sessions_task(self) -> dict:
     from app.models.document import Document
     from app.models.draft import SpeechDraft
     from app.models.simulation import MessageRole, SessionStatus, SimulationMessage, SimulationSession, SkillMetric
+    from app.models.user import User  # noqa: F401 — required so SQLAlchemy resolves Document→User FK
     from app.services.gemini import GeminiError
     from app.services.simulation_ai import evaluate_session
 

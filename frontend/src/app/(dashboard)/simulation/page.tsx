@@ -96,6 +96,12 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
     const scoreLabel = session.avg_score != null
         ? `${Math.round(session.avg_score * 10)}/10`
         : null;
+    const scoreVal = session.avg_score != null ? Math.round(session.avg_score * 10) : null;
+    const scoreColor = scoreVal == null
+        ? 'text-[var(--text-dim)]'
+        : scoreVal >= 7 ? 'text-emerald-500'
+        : scoreVal >= 5 ? 'text-amber-400'
+        : 'text-red-400';
     const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
     const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
     const RoleIcon = visual.icon;
@@ -142,7 +148,7 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                     <span className="font-mono text-[10px]">{session.message_count} сообщ.</span>
                 </div>
                 {scoreLabel && (
-                    <div className="flex items-center gap-1.5 text-emerald-500">
+                    <div className={`flex items-center gap-1.5 ${scoreColor}`}>
                         <Trophy size={11} />
                         <span className="font-mono text-[10px] font-semibold">{scoreLabel}</span>
                     </div>
