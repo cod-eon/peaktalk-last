@@ -195,8 +195,8 @@ function SimulationPageContent() {
     const [personasData, setPersonasData] = useState<PersonasData | null>(null);
     const [personasLoading, setPersonasLoading] = useState(true);
 
-    // Drafts
-    const [drafts, setDrafts] = useState<{ id: string; title: string; content?: string; created_at?: string }[]>([]);
+    // Documents (unified — uploads + text)
+    const [documents, setDocuments] = useState<{ id: string; name: string; source?: string; created_at?: string }[]>([]);
     const [isStarting, setIsStarting] = useState(false);
 
     // Doc combobox
@@ -212,7 +212,7 @@ function SimulationPageContent() {
             const [sessionsRes, personasRes, draftsRes] = await Promise.allSettled([
                 api.get('/simulation?limit=50'),
                 api.get('/simulation/personas'),
-                api.get('/drafts'),
+                api.get('/documents?limit=200'),
             ]);
 
             // Sessions
@@ -234,9 +234,9 @@ function SimulationPageContent() {
             }
             setPersonasLoading(false);
 
-            // Drafts
+            // Documents
             if (draftsRes.status === 'fulfilled' && draftsRes.value?.items) {
-                setDrafts(draftsRes.value.items);
+                setDocuments(draftsRes.value.items);
             }
         }
         fetchAll();
@@ -306,7 +306,7 @@ function SimulationPageContent() {
             const domainName = selectedDomain === 'custom' ? customDomain : selectedDomain;
             const payload = {
                 persona_config: { role: selectedRole, industry: domainName, difficulty },
-                draft_id: selectedDoc === 'none' ? null : selectedDoc,
+                document_id: selectedDoc === 'none' ? null : selectedDoc,
             };
             const res = await api.post('/simulation/start', payload);
             if (res?.id) {
@@ -643,7 +643,7 @@ function SimulationPageContent() {
                                 {selectedDoc === 'none'
                                     ? 'Без документа — общее интервью'
                                     : selectedDoc
-                                        ? drafts.find(d => d.id === selectedDoc)?.title ?? 'Выбранный документ'
+                                        ? documents.find(d => d.id === selectedDoc)?.name ?? 'Выбранный документ'
                                         : 'Выберите контекст для тренировки...'}
                             </span>
                             <ChevronDown
@@ -700,8 +700,8 @@ function SimulationPageContent() {
                                     {/* Document list */}
                                     <div className="flex-1 overflow-y-auto min-h-0">
                                         {(() => {
-                                            const filtered = drafts.filter(d =>
-                                                d.title.toLowerCase().includes(docSearch.toLowerCase())
+                                            const filtered = documents.filter(d =>
+                                                d.name.toLowerCase().includes(docSearch.toLowerCase())
                                             );
                                             if (filtered.length === 0) {
                                                 return (
@@ -728,7 +728,7 @@ function SimulationPageContent() {
                                                             <FileText size={14} className="text-orange-400" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-sm font-medium font-inter text-[var(--text-main)] truncate">{doc.title}</div>
+                                                            <div className="text-sm font-medium font-inter text-[var(--text-main)] truncate">{doc.name}</div>
                                                         </div>
                                                         <div className="flex items-center gap-2.5 shrink-0">
                                                             {dateStr && (

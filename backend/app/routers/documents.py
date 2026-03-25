@@ -11,7 +11,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.document import Document, FileType
 from app.models.user import User
-from app.schemas.document import DocumentListResponse, DocumentResponse
+from app.schemas.document import DocumentListResponse, DocumentResponse, DocumentTextCreate
 from app.services import parser, storage
 
 logger = logging.getLogger("peaktalk.documents")
@@ -116,6 +116,30 @@ async def list_documents(
     return DocumentListResponse(items=docs, total=total, limit=limit, offset=offset)
 
 
+@router.post("/from-text", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+async def create_text_document(
+    request: Request,
+    body: DocumentTextCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Document:
+    """Create a text-only document (no file upload). Source = 'text'."""
+    doc = Document(
+        owner_id=current_user.id,
+        name=body.title,
+        storage_path=None,
+        file_type=FileType.other,
+        extracted_text=body.text,
+        parsed_at=datetime.now(timezone.utc),
+        source="text",
+    )
+    db.add(doc)
+    await db.flush()
+    await db.refresh(doc)
+    logger.info("Text document created user=%s doc=%s", current_user.id, doc.id)
+    return doc
+
+
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_document(
     request: Request,
@@ -132,6 +156,7 @@ async def delete_document(
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
 
-    await storage.delete_file(doc.storage_path)
+    if doc.storage_path:
+        await storage.delete_file(doc.storage_path)
     await db.delete(doc)
     logger.info("Document deleted user=%s document=%s", current_user.id, document_id)

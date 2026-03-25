@@ -24,7 +24,8 @@ class Document(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(512), nullable=False)
-    storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    storage_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    source: Mapped[str] = mapped_column(String(8), nullable=False, server_default="upload")
     file_type: Mapped[FileType] = mapped_column(
         Enum(FileType, name="file_type"), nullable=False, default=FileType.other
     )
