@@ -53,7 +53,7 @@ const PERSONA_LABELS: Record<string, string> = {
 function getScoreColor(score: number): string {
     if (score >= 0.8) return '#10b981';
     if (score >= 0.5) return '#f59e0b';
-    return '#ef4444';
+    return '#f43f5e';
 }
 
 function ScoreIcon({ score }: { score: number }) {
@@ -263,10 +263,10 @@ export default function SimulationReportPage() {
                                     const isUser = msg.role === 'user';
                                     return (
                                         <div key={idx} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-                                            <div className={`max-w-[88%] rounded-[var(--radius-lg)] p-4 ${
+                                            <div className={`max-w-[88%] p-4 ${
                                                 isUser
-                                                    ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-br-[var(--radius-sm)]'
-                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-bl-[var(--radius-sm)]'
+                                                    ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-2xl rounded-br-none'
+                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl rounded-tl-none'
                                             }`}>
                                                 <div className="label-kicker mb-2">
                                                     {isUser ? 'Вы' : personaName}
@@ -345,7 +345,7 @@ export default function SimulationReportPage() {
 
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <ScoreIcon score={metric.score} />
-                                                    <span className={`text-[12px] font-medium font-inter flex-1 ${isActive ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
+                                                    <span className={`text-[12px] font-semibold font-inter flex-1 ${isActive ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
                                                         {metric.metric_name}
                                                     </span>
                                                     <span className="text-[11px] font-mono font-bold shrink-0" style={{ color }}>
@@ -359,7 +359,7 @@ export default function SimulationReportPage() {
                                                     <motion.p
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: 'auto' }}
-                                                        className="text-[11px] text-[var(--text-dim)] font-inter leading-relaxed mt-2"
+                                                        className="text-[12px] text-[var(--text-dim)] font-inter leading-relaxed mt-3"
                                                     >
                                                         {metric.comment}
                                                     </motion.p>

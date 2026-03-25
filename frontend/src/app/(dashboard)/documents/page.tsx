@@ -235,8 +235,8 @@ export default function DocumentsPage() {
                                         {format(new Date(doc.created_at), 'dd.MM.yyyy')}
                                     </div>
                                     {analysisDraftId ? (
-                                        <div className="flex items-center gap-1 font-mono text-[10px] text-[var(--accent-primary)]">
-                                            Разбор <ArrowRight size={10} />
+                                        <div className="flex items-center gap-1.5 text-[13px] font-semibold text-orange-500">
+                                            Разбор <ArrowRight size={12} />
                                         </div>
                                     ) : isParsed ? (
                                         <div className="font-mono text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">

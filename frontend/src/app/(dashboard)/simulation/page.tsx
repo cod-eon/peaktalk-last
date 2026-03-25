@@ -4,8 +4,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
-    Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2
+    Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2,
+    TrendingUp, Mic, Search,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -55,6 +57,30 @@ const PERSONA_LABELS: Record<string, string> = {
     moderator: 'Модератор дискуссии',
     listener: 'Скептик из зала',
 };
+
+// ─── Role visual config ───────────────────────────────────────────────────────
+
+type RoleVisual = { icon: LucideIcon; iconColor: string; iconBg: string };
+
+const ROLE_VISUALS: Record<string, RoleVisual> = {
+    investor:   { icon: TrendingUp,    iconColor: 'text-amber-600',  iconBg: 'bg-amber-50' },
+    partner:    { icon: Users,         iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
+    customer:   { icon: MessageSquare, iconColor: 'text-green-600',  iconBg: 'bg-green-50' },
+    tech_lead:  { icon: Briefcase,     iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
+    hr:         { icon: Users,         iconColor: 'text-pink-600',   iconBg: 'bg-pink-50' },
+    senior_dev: { icon: Zap,           iconColor: 'text-cyan-600',   iconBg: 'bg-cyan-50' },
+    supervisor: { icon: Bot,           iconColor: 'text-purple-600', iconBg: 'bg-purple-50' },
+    reviewer:   { icon: Search,        iconColor: 'text-red-500',    iconBg: 'bg-red-50' },
+    peer:       { icon: Users,         iconColor: 'text-teal-600',   iconBg: 'bg-teal-50' },
+    board:      { icon: Briefcase,     iconColor: 'text-slate-600',  iconBg: 'bg-slate-100' },
+    subordinate:{ icon: Users,         iconColor: 'text-amber-500',  iconBg: 'bg-amber-50' },
+    journalist: { icon: Mic,           iconColor: 'text-orange-500', iconBg: 'bg-orange-50' },
+    audience:   { icon: Mic,           iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
+    moderator:  { icon: MessageSquare, iconColor: 'text-stone-600',  iconBg: 'bg-stone-100' },
+    listener:   { icon: MessageSquare, iconColor: 'text-rose-500',   iconBg: 'bg-rose-50' },
+};
+
+const DEFAULT_VISUAL: RoleVisual = { icon: Bot, iconColor: 'text-[var(--text-dim)]', iconBg: 'bg-[var(--bg-surface-alt)]' };
 
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -200,10 +226,10 @@ function SimulationPageContent() {
     // ── Derived setup state ──────────────────────────────────────────────────
 
     const fallbackRoles = [
-        { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций.', icon: Briefcase },
-        { id: 'tech_lead', name: 'Тимлид / Principal Engineer', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Bot },
-        { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и soft skills.', icon: Users },
-        { id: 'audience', name: 'Общая аудитория', desc: 'Провокационный. Задаёт каверзные вопросы, ищет слабые места.', icon: MessageSquare },
+        { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций.', icon: TrendingUp, iconColor: 'text-amber-600', iconBg: 'bg-amber-50' },
+        { id: 'tech_lead', name: 'Тимлид / Principal Engineer', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-blue-600', iconBg: 'bg-blue-50' },
+        { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и soft skills.', icon: Users, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
+        { id: 'audience', name: 'Общая аудитория', desc: 'Провокационный. Задаёт каверзные вопросы, ищет слабые места.', icon: Mic, iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     ];
 
     const fallbackIndustries = ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"];
@@ -414,25 +440,25 @@ function SimulationPageContent() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {Object.entries(personasData.personas).map(([key, persona]) => {
                                     const isSelected = selectedRole === key;
+                                    const visual = ROLE_VISUALS[key] || DEFAULT_VISUAL;
+                                    const IconComp = visual.icon;
                                     return (
                                         <button
                                             key={key}
                                             onClick={() => setSelectedRole(key)}
                                             className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-[var(--accent-primary-bg)] border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-primary-glow)]'
-                                                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                                                    ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
+                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-[var(--accent-primary)]">
+                                                <div className="absolute top-4 right-4 text-orange-500">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${
-                                                isSelected ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-[var(--text-dim)] group-hover:text-[var(--text-muted)]'
-                                            }`}>
-                                                <Bot size={20} />
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${visual.iconBg} border border-[var(--border-light)] ${visual.iconColor}`}>
+                                                <IconComp size={20} />
                                             </div>
                                             <div className="font-syne text-lg font-semibold text-[var(--text-main)] mb-2">
                                                 {persona.title}
@@ -453,20 +479,18 @@ function SimulationPageContent() {
                                         <button
                                             key={role.id}
                                             onClick={() => setSelectedRole(role.id)}
-                                            className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                                            className={`text-left p-5 rounded-xl transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-[var(--accent-primary-bg)] border-[var(--accent-primary)] shadow-[0_0_20px_var(--accent-primary-glow)]'
-                                                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                                                    ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
+                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-[var(--accent-primary)]">
+                                                <div className="absolute top-4 right-4 text-orange-500">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${
-                                                isSelected ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'bg-[var(--bg-surface-alt)] border border-[var(--border-light)] text-[var(--text-dim)] group-hover:text-[var(--text-muted)]'
-                                            }`}>
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 border border-[var(--border-light)] ${role.iconBg} ${role.iconColor}`}>
                                                 <Icon size={20} />
                                             </div>
                                             <div className="font-syne text-lg font-semibold text-[var(--text-main)] mb-2">

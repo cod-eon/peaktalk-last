@@ -255,7 +255,7 @@
 
   .sidebar-item-active {
     background-color: #FFF7ED;
-    border-color: rgba(249, 115, 22, 0.20) !important;
+    border-color: #FED7AA !important;
   }
 
   /* ─── Icon buttons ─── */

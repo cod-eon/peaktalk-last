@@ -118,7 +118,7 @@ export default function UploadPage() {
             
             {/* Header */}
             <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-4 tracking-tight shadow-sm">
+                <h1 className="text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-4 tracking-tight">
                     Новый разбор
                 </h1>
                 <p className="text-[var(--text-muted)] text-sm md:text-base max-w-lg mx-auto leading-relaxed">
@@ -143,9 +143,9 @@ export default function UploadPage() {
                                 <button
                                     onClick={() => setMode('file')}
                                     className={`flex-1 py-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                                        mode === 'file' 
-                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]' 
-                                            : 'text-[var(--text-dim)] hover:text-[var(--text-muted)] hover:bg-[var(--bg-surface-alt)]'
+                                        mode === 'file'
+                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]'
+                                            : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]'
                                     }`}
                                 >
                                     <FileText size={16} /> Документ (PDF, DOCX)
@@ -153,9 +153,9 @@ export default function UploadPage() {
                                 <button
                                     onClick={() => setMode('text')}
                                     className={`flex-1 py-4 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                                        mode === 'text' 
-                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]' 
-                                            : 'text-[var(--text-dim)] hover:text-[var(--text-muted)] hover:bg-[var(--bg-surface-alt)]'
+                                        mode === 'text'
+                                            ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)] bg-[var(--bg-surface-hover)]'
+                                            : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]'
                                     }`}
                                 >
                                     <Type size={16} /> Текст
