@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ArrowLeft, Zap, Download, FileText,
-    CheckCircle2, ShieldAlert, TrendingDown, Bot,
+    X, CheckCircle2, ShieldAlert, TrendingDown,
+    Download, ArrowLeft, Zap, FileText, BarChart2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -60,38 +60,31 @@ const PERSONA_LABELS: Record<string, string> = {
     listener: 'Скептик из зала',
 };
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-function getScoreColor(score01: number) {
+function getScoreColor(score01: number): string {
     if (score01 >= 0.7) return '#10b981';
     if (score01 >= 0.5) return '#fbbf24';
     return '#ef4444';
 }
 
-function getIntColor(score10: number) {
+function getIntColor(score10: number): string {
     if (score10 >= 7) return '#10b981';
     if (score10 >= 5) return '#fbbf24';
     return '#ef4444';
 }
 
-function formatDate(iso: string | null) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('ru-RU', {
-        day: 'numeric', month: 'long', year: 'numeric',
-    });
-}
-
 function ScoreIcon({ score }: { score: number }) {
     const color = getScoreColor(score);
-    if (score >= 0.7) return <CheckCircle2 size={15} style={{ color }} className="shrink-0 mt-0.5" />;
-    if (score >= 0.5) return <ShieldAlert size={15} style={{ color }} className="shrink-0 mt-0.5" />;
-    return <TrendingDown size={15} style={{ color }} className="shrink-0 mt-0.5" />;
+    if (score >= 0.7) return <CheckCircle2 size={14} style={{ color }} className="shrink-0" />;
+    if (score >= 0.5) return <ShieldAlert size={14} style={{ color }} className="shrink-0" />;
+    return <TrendingDown size={14} style={{ color }} className="shrink-0" />;
 }
 
-// ── ScoreRing ────────────────────────────────────────────────────────────────
+// ── ScoreRing ──────────────────────────────────────────────────────────────────
 
-function ScoreRing({ score, size = 88 }: { score: number; size?: number }) {
-    const sw = 6, r = (size - sw) / 2, c = 2 * Math.PI * r;
+function ScoreRing({ score, size = 72 }: { score: number; size?: number }) {
+    const sw = 5, r = (size - sw) / 2, c = 2 * Math.PI * r;
     const color = getIntColor(score);
     return (
         <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -104,72 +97,20 @@ function ScoreRing({ score, size = 88 }: { score: number; size?: number }) {
                     strokeWidth={sw} strokeLinecap="round" strokeDasharray={c}
                     initial={{ strokeDashoffset: c }}
                     animate={{ strokeDashoffset: c - (score / 10) * c }}
-                    transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="font-syne font-bold leading-none"
-                    style={{ color, fontSize: size * 0.28 }}>{score}</span>
+                    style={{ color, fontSize: size * 0.27 }}>{score}</span>
                 <span className="font-mono text-[var(--text-dim)]"
-                    style={{ fontSize: size * 0.14 }}>/10</span>
+                    style={{ fontSize: size * 0.13 }}>/10</span>
             </div>
         </div>
     );
 }
 
-// ── MetricCard ───────────────────────────────────────────────────────────────
-
-function MetricCard({ metric, idx }: { metric: SkillMetric; idx: number }) {
-    const color = getScoreColor(metric.score);
-    const score10 = Math.round(metric.score * 10);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 + idx * 0.05 }}
-            className="p-5 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-surface)] flex flex-col gap-3"
-        >
-            {/* Top row */}
-            <div className="flex items-start gap-2.5">
-                <ScoreIcon score={metric.score} />
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-[13px] font-semibold font-inter text-[var(--text-main)]">
-                            {metric.metric_name}
-                        </span>
-                        <span
-                            className="text-[12px] font-mono font-bold px-2.5 py-0.5 rounded-full shrink-0"
-                            style={{ color, backgroundColor: `${color}18` }}
-                        >
-                            {score10}/10
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full h-[4px] bg-[var(--bg-surface-alt)] rounded-full overflow-hidden">
-                <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${metric.score * 100}%` }}
-                    transition={{ duration: 0.7, delay: 0.15 + idx * 0.05, ease: 'easeOut' }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: color }}
-                />
-            </div>
-
-            {/* Comment */}
-            {metric.comment && (
-                <p className="text-[12px] text-[var(--text-dim)] font-inter leading-relaxed">
-                    {metric.comment}
-                </p>
-            )}
-        </motion.div>
-    );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function SimulationReportPage() {
     const params = useParams();
@@ -178,6 +119,11 @@ export default function SimulationReportPage() {
 
     const [report, setReport] = useState<ReportData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showRightPanel, setShowRightPanel] = useState(false);
+
+    useEffect(() => {
+        if (window.matchMedia('(min-width: 768px)').matches) setShowRightPanel(true);
+    }, []);
 
     useEffect(() => {
         async function fetchReport() {
@@ -216,7 +162,7 @@ export default function SimulationReportPage() {
         window.addEventListener('afterprint', () => document.getElementById('_pdf_print_style')?.remove(), { once: true });
     }, []);
 
-    // ── Loading ──────────────────────────────────────────────────────────────
+    // ── Loading ────────────────────────────────────────────────────────────────
 
     if (loading) {
         return (
@@ -237,7 +183,9 @@ export default function SimulationReportPage() {
         );
     }
 
-    const { persona_config, messages, skill_metrics, document_title, completed_at } = report;
+    // ── Derived ────────────────────────────────────────────────────────────────
+
+    const { persona_config, messages, skill_metrics, document_title } = report;
 
     const overallScoreFloat = skill_metrics?.length
         ? skill_metrics.reduce((acc, m) => acc + m.score, 0) / skill_metrics.length
@@ -246,34 +194,27 @@ export default function SimulationReportPage() {
     const overallColor = getIntColor(overallScore);
     const personaName = PERSONA_LABELS[persona_config?.role] || persona_config?.role || 'Тренер';
 
-    const scoreLabel = overallScore >= 8
-        ? 'Отличный результат'
-        : overallScore >= 6
-        ? 'Хороший результат'
-        : overallScore >= 4
-        ? 'Есть над чем поработать'
-        : 'Нужно больше практики';
+    // ── Render ─────────────────────────────────────────────────────────────────
 
     return (
         <>
-            {/* ── Printable ────────────────────────────────────────────────── */}
+            {/* ── Printable version ─────────────────────────────────────────── */}
             <div id="print-report" style={{ display: 'none' }} className="font-inter text-black bg-white">
                 <div style={{ borderBottom: '2px solid black', paddingBottom: 16, marginBottom: 24 }}>
                     <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, marginBottom: 4 }}>
                         Отчёт по симуляции PeakTalk
                     </h1>
                     <p style={{ fontSize: 13, color: '#555', margin: 0 }}>
-                        Персона: {personaName} · Балл: {overallScore}/10
-                        {document_title ? ` · Документ: ${document_title}` : ''}
-                        {completed_at ? ` · ${formatDate(completed_at)}` : ''}
+                        Персона: {personaName} · Средний балл: {overallScore}/10
+                        {document_title ? ` · Контекст: ${document_title}` : ''}
                     </p>
                 </div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Навыки</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Оценка навыков</h2>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 32 }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid #ccc' }}>
                             <th style={{ textAlign: 'left', padding: '6px 12px 6px 0', fontWeight: 600 }}>Навык</th>
-                            <th style={{ textAlign: 'left', padding: '6px 12px 6px 0', fontWeight: 600, width: 60 }}>Балл</th>
+                            <th style={{ textAlign: 'left', padding: '6px 12px 6px 0', fontWeight: 600, width: 80 }}>Балл</th>
                             <th style={{ textAlign: 'left', padding: '6px 0', fontWeight: 600 }}>Комментарий</th>
                         </tr>
                     </thead>
@@ -300,17 +241,17 @@ export default function SimulationReportPage() {
                 </div>
             </div>
 
-            {/* ── Screen ───────────────────────────────────────────────────── */}
-            <div className="flex flex-col flex-1 min-h-0 overflow-y-auto bg-[var(--bg-main)]">
+            {/* ── Screen version ────────────────────────────────────────────── */}
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[var(--bg-main)]">
 
                 {/* Toolbar */}
-                <div className="sticky top-0 z-10 h-13 border-b border-[var(--border-main)] flex items-center justify-between px-4 sm:px-6 bg-[var(--bg-surface)] shrink-0 gap-3">
+                <div className="h-13 border-b border-[var(--border-main)] flex items-center justify-between px-4 sm:px-5 bg-[var(--bg-surface)] shrink-0 gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                         <button
                             onClick={() => router.push('/simulation')}
-                            className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors shrink-0"
+                            className="flex items-center gap-1 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors shrink-0"
                         >
-                            <ArrowLeft size={16} />
+                            <ArrowLeft size={14} />
                         </button>
                         <div className="hidden sm:block h-4 w-px bg-[var(--border-main)]" />
                         <div className="flex items-center gap-2 min-w-0">
@@ -318,12 +259,27 @@ export default function SimulationReportPage() {
                             <span className="text-[13px] font-medium font-inter text-[var(--text-main)] truncate">
                                 Отчёт симуляции
                             </span>
-                            <span className="hidden sm:inline text-[11px] text-[var(--text-dim)] font-mono">
+                            <span className="hidden sm:inline text-[11px] text-[var(--text-dim)] font-mono truncate">
                                 · {personaName}
                             </span>
                         </div>
+                        {/* Score pill */}
+                        <div
+                            className="hidden sm:flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold shrink-0"
+                            style={{ color: overallColor, backgroundColor: `${overallColor}18` }}
+                        >
+                            {overallScore}/10
+                        </div>
                     </div>
+
                     <div className="flex items-center gap-2">
+                        {/* Mobile metrics toggle */}
+                        <button
+                            className="md:hidden flex items-center gap-1.5 border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] px-2.5 py-1.5 rounded-[var(--radius-sm)] text-[12px] font-inter transition-colors"
+                            onClick={() => setShowRightPanel(!showRightPanel)}
+                        >
+                            <BarChart2 size={13} />
+                        </button>
                         <button
                             onClick={handleDownloadPdf}
                             className="flex items-center gap-1.5 border border-[var(--border-main)] hover:border-[var(--accent-primary)]/40 text-[var(--text-dim)] hover:text-[var(--accent-primary)] px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-sm)] text-[12px] font-inter transition-colors"
@@ -340,127 +296,170 @@ export default function SimulationReportPage() {
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-8 flex flex-col gap-6">
+                {/* Main content */}
+                <div className="flex flex-1 min-h-0 overflow-hidden relative">
 
-                    {/* ── Hero card ──────────────────────────────────────────── */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="p-6 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-surface)]"
-                    >
-                        <div className="flex items-center gap-5">
-                            <ScoreRing score={overallScore} size={88} />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                    <span
-                                        className="text-2xl font-syne font-bold"
-                                        style={{ color: overallColor }}
-                                    >
-                                        {overallScore}/10
-                                    </span>
-                                    <span
-                                        className="text-[11px] font-mono px-2.5 py-0.5 rounded-full font-semibold"
-                                        style={{ color: overallColor, backgroundColor: `${overallColor}18` }}
-                                    >
-                                        {scoreLabel}
-                                    </span>
-                                </div>
-                                <div className="text-[13px] font-medium font-inter text-[var(--text-main)] mb-0.5">
-                                    {personaName}
-                                </div>
-                                <div className="text-[11px] font-mono text-[var(--text-dim)] flex items-center gap-3 flex-wrap">
-                                    {persona_config?.industry && <span>{persona_config.industry}</span>}
-                                    {completed_at && <span>{formatDate(completed_at)}</span>}
-                                </div>
-                            </div>
-                        </div>
-                        {/* Full-width progress bar */}
-                        <div className="mt-4 w-full h-2 bg-[var(--bg-surface-alt)] rounded-full overflow-hidden">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${overallScoreFloat * 100}%` }}
-                                transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
-                                className="h-full rounded-full"
-                                style={{ backgroundColor: overallColor }}
-                            />
-                        </div>
-                    </motion.div>
+                    {/* ── Left: Transcript ────────────────────────────────────── */}
+                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 pb-16">
+                        <div className="max-w-2xl mx-auto">
 
-                    {/* ── Context card (only when document) ──────────────────── */}
-                    {document_title && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.35, delay: 0.08 }}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)]"
-                        >
-                            <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
-                                <FileText size={14} />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-wider mb-0.5">
-                                    Контекст симуляции
-                                </div>
-                                <div className="text-[13px] font-medium font-inter text-[var(--text-main)]">
-                                    {document_title}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* ── Metrics grid ───────────────────────────────────────── */}
-                    {skill_metrics && skill_metrics.length > 0 && (
-                        <section>
-                            <p className="label-kicker mb-4">Оценка навыков</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {skill_metrics.map((metric, idx) => (
-                                    <MetricCard key={metric.metric_name} metric={metric} idx={idx} />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* ── Transcript ─────────────────────────────────────────── */}
-                    <section>
-                        <div className="flex items-center gap-2 mb-4">
-                            <p className="label-kicker">Транскрипт сессии</p>
-                            <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
-                                <Bot size={12} />
-                                <span className="text-[10px] font-mono">{personaName}</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            {messages.map((msg, idx) => {
-                                const isUser = msg.role === 'user';
-                                return (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.25, delay: idx * 0.03 }}
-                                        className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
-                                    >
-                                        <div className={`max-w-[85%] px-4 py-3 rounded-2xl ${
-                                            isUser
-                                                ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-br-none'
-                                                : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-tl-none'
-                                        }`}>
-                                            <div className="label-kicker mb-1.5">
-                                                {isUser ? 'Вы' : personaName}
-                                            </div>
-                                            <p className="text-[13px] leading-relaxed font-inter text-[var(--text-main)]">
-                                                {msg.content}
-                                            </p>
+                            {/* Context card */}
+                            {document_title && (
+                                <div className="mb-6 p-3.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)] flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
+                                        <FileText size={13} />
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-wider mb-0.5">
+                                            Контекст
                                         </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    </section>
+                                        <div className="text-[12px] font-medium font-inter text-[var(--text-main)]">
+                                            {document_title}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
-                    <div className="h-8" />
+                            <p className="label-kicker mb-5">Транскрипт сессии</p>
+
+                            <div className="flex flex-col gap-3.5">
+                                {messages.map((msg, idx) => {
+                                    const isUser = msg.role === 'user';
+                                    return (
+                                        <div key={idx} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                                            <div className={`max-w-[88%] px-4 py-3 ${
+                                                isUser
+                                                    ? 'bg-[var(--accent-primary-bg)] border border-[var(--accent-primary-glow)] rounded-2xl rounded-br-none'
+                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl rounded-tl-none'
+                                            }`}>
+                                                <div className="label-kicker mb-1.5">
+                                                    {isUser ? 'Вы' : personaName}
+                                                </div>
+                                                <p className="text-[13px] leading-relaxed font-inter text-[var(--text-main)]">
+                                                    {msg.content}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Right: Metrics panel ────────────────────────────────── */}
+                    <AnimatePresence>
+                        {showRightPanel && (
+                            <motion.div
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 'clamp(300px, 38%, 440px)', opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="fixed md:relative right-0 top-13 md:top-0 bottom-0 border-l border-[var(--border-main)] bg-[var(--bg-surface)] flex flex-col z-20 shadow-[var(--shadow-elevated)] md:shadow-none overflow-hidden"
+                                style={{ minWidth: 0 }}
+                            >
+                                {/* Panel header */}
+                                <div className="px-5 py-4 border-b border-[var(--border-main)] shrink-0">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">
+                                            Результаты
+                                        </span>
+                                        <button
+                                            className="md:hidden text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors"
+                                            onClick={() => setShowRightPanel(false)}
+                                        >
+                                            <X size={15} />
+                                        </button>
+                                    </div>
+
+                                    {/* Score row */}
+                                    <div className="flex items-center gap-4">
+                                        <ScoreRing score={overallScore} size={72} />
+                                        <div className="flex-1 min-w-0">
+                                            <div
+                                                className="font-syne text-[22px] font-bold leading-none mb-1"
+                                                style={{ color: overallColor }}
+                                            >
+                                                {overallScore}
+                                                <span className="text-[13px] text-[var(--text-dim)] font-mono ml-1">/10</span>
+                                            </div>
+                                            <div className="text-[12px] font-inter text-[var(--text-muted)] truncate mb-0.5">
+                                                {personaName}
+                                            </div>
+                                            {persona_config?.industry && (
+                                                <div className="text-[11px] font-mono text-[var(--text-dim)] truncate">
+                                                    {persona_config.industry}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Progress bar */}
+                                    <div className="mt-3 w-full h-1.5 bg-[var(--bg-main)] rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${overallScoreFloat * 100}%` }}
+                                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                                            className="h-full rounded-full"
+                                            style={{ backgroundColor: overallColor }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Metrics list */}
+                                <div className="flex-1 overflow-y-auto divide-y divide-[var(--border-main)]">
+                                    {skill_metrics?.map((metric, idx) => {
+                                        const color = getScoreColor(metric.score);
+                                        const score10 = Math.round(metric.score * 10);
+                                        return (
+                                            <motion.div
+                                                key={metric.metric_name}
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ duration: 0.28, delay: idx * 0.05 }}
+                                                className="px-5 py-4"
+                                            >
+                                                {/* Name + score */}
+                                                <div className="flex items-start gap-2 mb-2">
+                                                    <ScoreIcon score={metric.score} />
+                                                    <span className="flex-1 text-[13px] font-semibold font-inter text-[var(--text-main)] leading-snug">
+                                                        {metric.metric_name}
+                                                    </span>
+                                                    <span
+                                                        className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0"
+                                                        style={{ color, backgroundColor: `${color}18` }}
+                                                    >
+                                                        {score10}/10
+                                                    </span>
+                                                </div>
+                                                {/* Bar */}
+                                                <div className="w-full h-[3px] bg-[var(--bg-main)] rounded-full overflow-hidden mb-2.5">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${metric.score * 100}%` }}
+                                                        transition={{ duration: 0.55, delay: idx * 0.05 + 0.15, ease: 'easeOut' }}
+                                                        className="h-full rounded-full"
+                                                        style={{ backgroundColor: color }}
+                                                    />
+                                                </div>
+                                                {/* Comment */}
+                                                {metric.comment && (
+                                                    <p className="text-[11.5px] text-[var(--text-dim)] font-inter leading-relaxed">
+                                                        {metric.comment}
+                                                    </p>
+                                                )}
+                                            </motion.div>
+                                        );
+                                    })}
+
+                                    {(!skill_metrics || skill_metrics.length === 0) && (
+                                        <div className="p-8 text-center">
+                                            <p className="text-[12px] text-[var(--text-dim)] font-inter">Метрики не найдены</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </>

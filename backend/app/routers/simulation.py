@@ -108,7 +108,9 @@ async def list_sessions(
     )
     sessions = list(res.scalars().all())
 
-    # Batch-load document names for all sessions that have a document
+    from app.models.draft import SpeechDraft
+
+    # Batch-load document names
     doc_ids = list({s.document_id for s in sessions if s.document_id})
     doc_names: dict = {}
     if doc_ids:
@@ -117,9 +119,23 @@ async def list_sessions(
         )
         doc_names = {row.id: row.name for row in docs_res}
 
+    # Batch-load draft titles
+    draft_ids = list({s.draft_id for s in sessions if s.draft_id})
+    draft_titles: dict = {}
+    if draft_ids:
+        drafts_res = await db.execute(
+            select(SpeechDraft.id, SpeechDraft.title).where(SpeechDraft.id.in_(draft_ids))
+        )
+        draft_titles = {row.id: row.title for row in drafts_res}
+
     items = []
     for s in sessions:
         scores = [m.score for m in s.skill_metrics] if s.skill_metrics else []
+        context_title = (
+            doc_names.get(s.document_id) if s.document_id
+            else draft_titles.get(s.draft_id) if s.draft_id
+            else None
+        )
         items.append(SimulationSessionListItem(
             id=s.id,
             persona_config=s.persona_config,
@@ -128,7 +144,7 @@ async def list_sessions(
             completed_at=s.completed_at,
             message_count=len(s.messages),
             avg_score=round(sum(scores) / len(scores), 2) if scores else None,
-            document_title=doc_names.get(s.document_id) if s.document_id else None,
+            document_title=context_title,
         ))
 
     return SimulationSessionListResponse(items=items, total=total)
@@ -345,16 +361,22 @@ async def get_report(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Report is only available after session is completed",
         )
-    # Resolve document title if a document was attached
-    doc_title: str | None = None
+    # Resolve context title from document or draft
+    context_title: str | None = None
     if session.document_id:
         doc_res = await db.execute(
             select(Document.name).where(Document.id == session.document_id)
         )
-        doc_title = doc_res.scalar_one_or_none()
+        context_title = doc_res.scalar_one_or_none()
+    elif session.draft_id:
+        from app.models.draft import SpeechDraft
+        draft_res = await db.execute(
+            select(SpeechDraft.title).where(SpeechDraft.id == session.draft_id)
+        )
+        context_title = draft_res.scalar_one_or_none()
 
     base = SimulationSessionResponse.model_validate(session)
-    return SimulationReportResponse(**base.model_dump(), document_title=doc_title)
+    return SimulationReportResponse(**base.model_dump(), document_title=context_title)
 
 
 @router.post("/{session_id}/abandon", status_code=status.HTTP_204_NO_CONTENT)
