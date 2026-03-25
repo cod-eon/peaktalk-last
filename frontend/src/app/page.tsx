@@ -230,8 +230,7 @@ function Hero() {
     <section style={{
       position: 'relative',
       paddingTop: 'clamp(100px, 15vh, 220px)',
-      paddingBottom: 'clamp(60px, 10vh, 160px)',
-      overflow: 'hidden',
+      paddingBottom: 0,
       backgroundColor: '#FFFFFF',
     }}>
       <div className="bg-grid" />
@@ -352,54 +351,236 @@ function Hero() {
           </motion.div>
         </div>
 
-        {/* Mock representation of the interface */}
+        {/* UPGRADE 1: Big floating Safari-style browser mockup */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            marginTop: 'clamp(64px, 10vw, 96px)',
-            border: '1px solid var(--border-light)',
-            borderRadius: 8,
-            overflow: 'hidden',
-            backgroundColor: 'var(--bg-surface)',
-            boxShadow: '0 20px 40px -8px rgba(0, 0, 0, 0.10)',
+            marginTop: 'clamp(48px, 8vw, 80px)',
+            marginBottom: '-60px',
             position: 'relative',
+            zIndex: 2,
           }}
         >
-          <div style={{ height: 48, borderBottom: '1px solid var(--border-main)', display: 'flex', alignItems: 'center', padding: '0 20px', gap: 8 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'var(--border-light)' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'var(--border-light)' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'var(--border-light)' }} />
+          <div style={{
+            borderRadius: '16px 16px 0 0',
+            overflow: 'hidden',
+            boxShadow: '0 40px 100px -12px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)',
+            backgroundColor: '#FFFFFF',
+          }}>
+            {/* Safari chrome bar */}
             <div style={{
-              marginLeft: 'auto',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              color: 'var(--text-dim)',
-              letterSpacing: '0.05em',
+              height: 48,
+              backgroundColor: '#F0F0F0',
+              borderBottom: '1px solid #E0E0E0',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 16px',
+              gap: 8,
+              flexShrink: 0,
             }}>
-              peaktalk / simulation / pitch_investor.md
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: 'clamp(16px, 4vw, 32px)', fontFamily: 'var(--font-mono)', fontSize: 'clamp(11px, 2.5vw, 13px)', color: 'var(--text-muted)', lineHeight: 1.8, position: 'relative' }}>
-              <div><span style={{ color: 'var(--accent-primary)' }}>[00:00]</span> Здравствуйте, сегодня я хочу представить вам наш стартап.</div>
-              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-primary)' }}>[00:15]</span> Мы решаем острую проблему рынка... <span style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', color: '#fca5a5', padding: '0 4px', borderRadius: 2 }}>как бы так сказать, довольно сложную</span> <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>(⚠ Вода / Неуверенность)</span></div>
-              <div style={{ marginTop: 12 }}><span style={{ color: 'var(--accent-primary)' }}>[00:42]</span> Наш TAM составляет 2 миллиарда долларов.</div>
-
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4" style={{
-                marginTop: 'clamp(24px, 4vw, 32px)',
-                padding: 'clamp(12px, 3vw, 16px)',
-                backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                borderLeft: '2px solid var(--accent-primary)',
-                fontFamily: 'var(--font-inter)',
+              {/* Traffic lights */}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FF5F57' }} />
+                <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#FEBC2E' }} />
+                <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28C840' }} />
+              </div>
+              {/* URL pill */}
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                justifyContent: 'center',
               }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative', border: '1px solid var(--border-light)' }}>
-                  <Image src="/investor_avatar.png" alt="Investor Avatar" fill sizes="40px" className="object-cover" />
+                <div style={{
+                  backgroundColor: '#E8E8E8',
+                  borderRadius: 8,
+                  padding: '4px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  color: '#666666',
+                  letterSpacing: '0.02em',
+                  maxWidth: 320,
+                  width: '100%',
+                  textAlign: 'center',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                }}>
+                  peaktalk.ru/simulation/pitch_investor
                 </div>
-                <div>
-                  <div style={{ color: 'var(--text-main)', fontWeight: 600, marginBottom: 8, fontSize: 14 }}>AI-Инвестор:</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>&quot;TAM 2 млрд — это красиво. Но вы не объяснили стратегию Go-to-Market. Кто ваш первый платящий сегмент и почему именно он? Рекомендую добавить это сразу после объёма рынка.&quot;</div>
+              </div>
+              <div style={{ width: 72 }} />
+            </div>
+
+            {/* App UI inside browser */}
+            <div style={{ display: 'flex', height: 'clamp(320px, 45vw, 520px)', backgroundColor: '#F9FAFB' }}>
+              {/* Thin left sidebar */}
+              <div style={{
+                width: 56,
+                flexShrink: 0,
+                backgroundColor: '#FAFAFA',
+                borderRight: '1px solid #E5E7EB',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                paddingTop: 16,
+                gap: 16,
+              }}>
+                {/* P logo */}
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  backgroundColor: '#F97316',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-syne)',
+                  fontWeight: 800,
+                  fontSize: 14,
+                  color: '#FFFFFF',
+                  flexShrink: 0,
+                }}>
+                  P
+                </div>
+                {/* Nav placeholder bars */}
+                {[36, 28, 32, 24].map((w, idx) => (
+                  <div key={idx} style={{
+                    width: w,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: '#E5E7EB',
+                  }} />
+                ))}
+              </div>
+
+              {/* Main content area */}
+              <div style={{
+                flex: 1,
+                padding: 'clamp(16px, 3vw, 28px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(12px, 2vw, 20px)',
+                overflow: 'hidden',
+              }}>
+                {/* Top row: label + progress */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'clamp(9px, 1.5vw, 11px)',
+                    color: '#6B7280',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                  }}>
+                    ИНВЕСТОР · Тренировка
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 'clamp(9px, 1.5vw, 11px)',
+                      color: '#6B7280',
+                    }}>
+                      Вопрос 3 из 10
+                    </div>
+                    <div style={{ width: 120, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ width: '30%', height: '100%', backgroundColor: '#F97316', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI question card */}
+                <div style={{
+                  backgroundColor: '#F3F4F6',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: 12,
+                  padding: 'clamp(12px, 2vw, 18px)',
+                  flexShrink: 0,
+                }}>
+                  <p style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: 'clamp(11px, 1.8vw, 14px)',
+                    color: '#111827',
+                    lineHeight: 1.55,
+                    margin: '0 0 10px 0',
+                    fontStyle: 'italic',
+                  }}>
+                    &laquo;TAM 2 млрд — красиво. Но вы не объяснили стратегию Go-to-Market. Кто ваш первый платящий сегмент и почему именно он?&raquo;
+                  </p>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'clamp(9px, 1.3vw, 10px)',
+                    color: '#F97316',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                  }}>
+                    AI-Инвестор
+                  </div>
+                </div>
+
+                {/* Textarea answer */}
+                <div style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1.5px solid #F97316',
+                  borderRadius: 12,
+                  padding: 'clamp(10px, 1.8vw, 16px)',
+                  position: 'relative',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minHeight: 0,
+                }}>
+                  <p style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: 'clamp(10px, 1.6vw, 13px)',
+                    color: '#374151',
+                    lineHeight: 1.6,
+                    margin: 0,
+                    flex: 1,
+                  }}>
+                    Наш первый сегмент — студенты финтех-специальностей в топ-20 вузах России...
+                  </p>
+                  {/* Orange send button */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      backgroundColor: '#F97316',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score chips */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
+                  {[
+                    { label: 'Структура', score: '78%', color: '#F97316', bg: '#FFF7ED' },
+                    { label: 'Аргументы', score: '65%', color: '#3B82F6', bg: '#EFF6FF' },
+                    { label: 'Уверенность', score: '82%', color: '#22C55E', bg: '#F0FDF4' },
+                  ].map((chip) => (
+                    <div key={chip.label} style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      backgroundColor: chip.bg,
+                      border: `1px solid ${chip.color}22`,
+                      borderRadius: 20,
+                      padding: '4px 10px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 'clamp(9px, 1.3vw, 11px)',
+                      color: chip.color,
+                    }}>
+                      <span>{chip.label}</span>
+                      <span style={{ fontWeight: 700 }}>{chip.score}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -452,19 +633,52 @@ function HowItWorks() {
   const steps = [
     {
       title: "ЗАГРУЗКА",
-      desc: "Вставь текст или загрузи файл — диплом, питч-дек, план собеседования. Ничего не нужно форматировать заранее: AI сам разберётся со структурой."
+      desc: "Вставь текст или загрузи файл — диплом, питч-дек, план собеседования. Ничего не нужно форматировать заранее: AI сам разберётся со структурой.",
+      num: "01",
+      iconBg: '#FFF7ED',
+      iconColor: '#F97316',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 15V3M12 3L8 7M12 3L16 7M3 17V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
     },
     {
       title: "АНАЛИЗ",
-      desc: "AI читает твой текст целиком и находит логические дыры, «воду», слабые аргументы и неуверенные формулировки. Получаешь конкретные правки — не «улучши здесь», а «вот почему это не работает и как исправить»."
+      desc: "AI читает твой текст целиком и находит логические дыры, «воду», слабые аргументы и неуверенные формулировки. Получаешь конкретные правки — не «улучши здесь», а «вот почему это не работает и как исправить».",
+      num: "02",
+      iconBg: '#EFF6FF',
+      iconColor: '#3B82F6',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      ),
     },
     {
       title: "ИНТЕРВЬЮ",
-      desc: "Выбираешь персонажа: придирчивый инвестор, жёсткий HR, скептичный техдир. AI задаёт именно те каверзные вопросы, которые чаще всего ставят в тупик — прямо по твоему тексту."
+      desc: "Выбираешь персонажа: придирчивый инвестор, жёсткий HR, скептичный техдир. AI задаёт именно те каверзные вопросы, которые чаще всего ставят в тупик — прямо по твоему тексту.",
+      num: "03",
+      iconBg: '#F5F3FF',
+      iconColor: '#8B5CF6',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
     },
     {
       title: "РЕЗУЛЬТАТ",
-      desc: "Получаешь PDF с разбором: что исправлено в тексте, где ты отвечал уверенно, а где терял аргументацию. Берёшь на реальное выступление как шпаргалку — и уже знаешь, чего ждать."
+      desc: "Получаешь PDF с разбором: что исправлено в тексте, где ты отвечал уверенно, а где терял аргументацию. Берёшь на реальное выступление как шпаргалку — и уже знаешь, чего ждать.",
+      num: "04",
+      iconBg: '#F0FDF4',
+      iconColor: '#22C55E',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
     },
   ];
 
@@ -493,34 +707,75 @@ function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              style={{ borderLeft: '1px solid var(--border-light)', paddingLeft: 24 }}
+              style={{
+                borderLeft: '1px solid var(--border-light)',
+                paddingLeft: 24,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
             >
+              {/* UPGRADE 2: Big background number */}
               <div style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: 'var(--accent-primary)',
-                letterSpacing: '0.1em',
-                marginBottom: 16,
-              }}>
-                [ {String(i + 1).padStart(2, '0')} ]
-              </div>
-              <h3 style={{
+                position: 'absolute',
+                top: -20,
+                right: 16,
+                fontSize: 120,
                 fontFamily: 'var(--font-syne)',
-                fontSize: 20,
-                fontWeight: 600,
-                marginBottom: 12,
-                color: 'var(--text-main)',
+                fontWeight: 900,
+                color: 'rgba(249,115,22,0.07)',
+                lineHeight: 1,
+                pointerEvents: 'none',
+                zIndex: 0,
+                userSelect: 'none',
               }}>
-                {step.title}
-              </h3>
-              <p style={{
-                fontFamily: 'var(--font-inter)',
-                fontSize: 14,
-                color: 'var(--text-muted)',
-                lineHeight: 1.6,
-              }}>
-                {step.desc}
-              </p>
+                {step.num}
+              </div>
+
+              {/* Content wrapper with zIndex above background number */}
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                {/* UPGRADE 2: Icon box */}
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  backgroundColor: step.iconBg,
+                  color: step.iconColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  flexShrink: 0,
+                }}>
+                  {step.icon}
+                </div>
+
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--accent-primary)',
+                  letterSpacing: '0.1em',
+                  marginBottom: 16,
+                }}>
+                  [ {step.num} ]
+                </div>
+                <h3 style={{
+                  fontFamily: 'var(--font-syne)',
+                  fontSize: 20,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  color: 'var(--text-main)',
+                }}>
+                  {step.title}
+                </h3>
+                <p style={{
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: 14,
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.6,
+                }}>
+                  {step.desc}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -537,18 +792,21 @@ function WhoIsItFor() {
       kicker: 'ЗАЩИТА / ДОКЛАД',
       desc: 'Защита диплома через неделю, а комиссия задаёт вопросы, которых ты не ждал? Тренируйся с AI-научруком — строгим, но безопасным.',
       scenarios: ['Дипломная защита', 'Дебаты', 'Стажировочное интервью'],
+      picsumSeed: 237,
     },
     {
       label: 'Специалистам',
       kicker: 'ИНТЕРВЬЮ / ОНБОРДИНГ',
       desc: 'Технически силён, но на собеседовании теряешься на поведенческих вопросах? AI-рекрутер задаст их первым — у тебя будет время подготовить ответ.',
       scenarios: ['Техническое интервью', 'Оффер-презентация', 'Митинг с командой'],
+      picsumSeed: 1062,
     },
     {
       label: 'Фаундерам',
       kicker: 'ПИТЧ / ПЕРЕГОВОРЫ',
       desc: 'Инвестор спросит про unit-экономику именно в тот момент, когда ты забыл цифры. Лучше он спросит на тренировке — а не на Demo Day.',
       scenarios: ['Питч инвестору', 'Demo Day', 'Переговоры о партнёрстве'],
+      picsumSeed: 633,
     },
   ];
 
@@ -579,52 +837,78 @@ function WhoIsItFor() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               style={{
                 border: '1px solid var(--border-main)',
-                padding: 'clamp(24px, 3vw, 32px)',
                 backgroundColor: 'var(--bg-card)',
+                overflow: 'hidden',
+                borderRadius: 12,
               }}
             >
+              {/* UPGRADE 3: Photo area */}
               <div style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: 'var(--accent-primary)',
-                letterSpacing: '0.1em',
-                marginBottom: 16,
+                width: '100%',
+                height: 180,
+                overflow: 'hidden',
+                borderRadius: '8px 8px 0 0',
+                flexShrink: 0,
               }}>
-                {seg.kicker}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://picsum.photos/seed/${seg.picsumSeed}/600/280`}
+                  alt={seg.label}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: 'grayscale(30%) sepia(20%) brightness(0.95)',
+                    display: 'block',
+                  }}
+                />
               </div>
-              <h3 style={{
-                fontFamily: 'var(--font-syne)',
-                fontSize: 22,
-                fontWeight: 600,
-                color: 'var(--text-main)',
-                marginBottom: 16,
-              }}>
-                {seg.label}
-              </h3>
-              <p style={{
-                fontFamily: 'var(--font-inter)',
-                fontSize: 14,
-                color: 'var(--text-muted)',
-                lineHeight: 1.6,
-                marginBottom: 24,
-              }}>
-                {seg.desc}
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {seg.scenarios.map((s) => (
-                  <div key={s} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
-                    color: 'var(--text-dim)',
-                    letterSpacing: '0.05em',
-                  }}>
-                    <span style={{ color: 'var(--accent-primary)', fontSize: 10 }}>→</span>
-                    {s}
-                  </div>
-                ))}
+
+              {/* Text content with padding */}
+              <div style={{ padding: 'clamp(24px, 3vw, 32px)' }}>
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--accent-primary)',
+                  letterSpacing: '0.1em',
+                  marginBottom: 16,
+                }}>
+                  {seg.kicker}
+                </div>
+                <h3 style={{
+                  fontFamily: 'var(--font-syne)',
+                  fontSize: 22,
+                  fontWeight: 600,
+                  color: 'var(--text-main)',
+                  marginBottom: 16,
+                }}>
+                  {seg.label}
+                </h3>
+                <p style={{
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: 14,
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.6,
+                  marginBottom: 24,
+                }}>
+                  {seg.desc}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {seg.scenarios.map((s) => (
+                    <div key={s} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      color: 'var(--text-dim)',
+                      letterSpacing: '0.05em',
+                    }}>
+                      <span style={{ color: 'var(--accent-primary)', fontSize: 10 }}>→</span>
+                      {s}
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           ))}
@@ -687,12 +971,13 @@ function WhyNotChatGPT() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--border-main)' }}>
-          {/* Header row */}
+          {/* UPGRADE 4: Header row with border on PeakTalk column */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '1px solid var(--border-main)' }}>
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Критерий
             </div>
-            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: '#FFF7ED' }}>
+            {/* PeakTalk header with orange border */}
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: '#FFF7ED', fontWeight: 700 }}>
               PeakTalk
             </div>
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -712,10 +997,14 @@ function WhyNotChatGPT() {
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                 {row.feature}
               </div>
-              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: '#FFF7ED' }}>
+              {/* UPGRADE 4: PeakTalk cell with green checkmark */}
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: '#FFF7ED' }}>
+                <span style={{ color: '#22C55E', fontWeight: 700, marginRight: 8 }}>✓</span>
                 {row.peaktalk}
               </div>
-              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-dim)' }}>
+              {/* UPGRADE 4: ChatGPT cell with gray X and dimmed text */}
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'rgba(0,0,0,0.45)' }}>
+                <span style={{ color: '#D1D5DB', marginRight: 8 }}>✕</span>
                 {row.chatgpt}
               </div>
             </motion.div>
@@ -896,17 +1185,30 @@ function Testimonials() {
     {
       quote: "Загрузила текст диплома за три дня до защиты. AI нашёл три логические дыры, которые я не видела месяц. На защите комиссия спросила ровно те вопросы, которые мы разбирали в симуляции. Получила пятёрку.",
       name: "Катя Соколова",
+      initials: "КС",
       role: "Студентка 4 курса, ВШЭ",
+      // UPGRADE 5
+      avatarGradient: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+      avatarColor: '#92400E',
+      badge: 'ВШЭ',
     },
     {
       quote: "Я технически сильный, но на интервью терялся при поведенческих вопросах. Прогнал три симуляции с AI-HR — на четвёртый раз почувствовал себя уверенно. Оффер от Яндекса пришёл через две недели.",
       name: "Данила Крылов",
+      initials: "ДК",
       role: "Junior Backend Developer",
+      avatarGradient: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)',
+      avatarColor: '#1E40AF',
+      badge: 'Яндекс offer',
     },
     {
       quote: "Инвестор на Demo Day спросил: «Почему вы?» — я уже отрабатывал этот вопрос с AI-инвестором в PeakTalk. Ответил чётко, без паузы. Привлекли pre-seed раунд через месяц после питча.",
       name: "Максим Дорохов",
+      initials: "МД",
       role: "Co-founder edtech-стартапа",
+      avatarGradient: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)',
+      avatarColor: '#065F46',
+      badge: 'pre-seed round',
     },
   ];
 
@@ -962,26 +1264,43 @@ function Testimonials() {
                 {t.quote}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {/* UPGRADE 5: Two-letter gradient avatar */}
                 <div style={{
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
                   borderRadius: '50%',
-                  backgroundColor: 'var(--bg-surface-hover)',
-                  border: '1px solid var(--border-light)',
+                  background: t.avatarGradient,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontFamily: 'var(--font-syne)',
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: 700,
-                  color: 'var(--accent-primary)',
+                  color: t.avatarColor,
                   flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                  letterSpacing: '0.02em',
                 }}>
-                  {t.name.charAt(0)}
+                  {t.initials}
                 </div>
                 <div>
                   <div style={{ fontFamily: 'var(--font-inter)', fontSize: 13, fontWeight: 600, color: 'var(--text-main)' }}>{t.name}</div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.03em' }}>{t.role}</div>
+                  {/* UPGRADE 5: Institution badge */}
+                  <div style={{
+                    display: 'inline-flex',
+                    marginTop: 6,
+                    padding: '2px 8px',
+                    backgroundColor: '#F9FAFB',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: 100,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    color: 'var(--text-dim)',
+                    letterSpacing: '0.04em',
+                  }}>
+                    {t.badge}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1000,6 +1319,8 @@ function Pricing() {
       price: "0",
       badge: null,
       cta: "Попробовать бесплатно",
+      // UPGRADE 6: trust text
+      trustText: "Без привязки карты",
       features: [
         "3 разбора текста в месяц",
         "1 сессия стресс-интервью",
@@ -1014,6 +1335,7 @@ function Pricing() {
       accent: true,
       badge: "Популярный выбор",
       cta: "Получить PRO",
+      trustText: "Отмените в 1 клик · в любой момент",
       features: [
         "Безлимитный разбор любых текстов",
         "Безлимитные сессии стресс-интервью",
@@ -1027,6 +1349,7 @@ function Pricing() {
       price: "2490",
       badge: "Для команд и курсов",
       cta: "Подключить команду",
+      trustText: "Безопасная оплата картой РФ",
       features: [
         "До 5 пользователей на аккаунте",
         "Всё из тарифа PRO для каждого",
@@ -1123,6 +1446,17 @@ function Pricing() {
                 <a href="/register" className={plan.accent ? "btn-primary" : "btn-secondary"} style={{ width: '100%', justifyContent: 'center' }}>
                   {plan.cta}
                 </a>
+                {/* UPGRADE 6: Trust micro-copy under CTA */}
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--text-dim)',
+                  textAlign: 'center',
+                  marginTop: 12,
+                  letterSpacing: '0.04em',
+                }}>
+                  {plan.trustText}
+                </div>
               </div>
             </motion.div>
           ))}
@@ -1148,15 +1482,17 @@ function CTABanner() {
   return (
     <section style={{
       padding: 'clamp(60px, 10vw, 100px) 0',
-      borderTop: '1px solid var(--border-main)',
-      borderBottom: '1px solid var(--border-main)',
+      borderTop: 'none',
+      borderBottom: 'none',
       position: 'relative',
       overflow: 'hidden',
+      background: 'linear-gradient(135deg, #0F0E0D 0%, #1A1208 60%, #261500 100%)',
     }}>
+      {/* UPGRADE 6: Orange radial overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.07) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse at 70% 30%, rgba(249,115,22,0.15) 0%, transparent 60%)',
         pointerEvents: 'none',
       }} />
       <div className="container-custom" style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
@@ -1169,7 +1505,7 @@ function CTABanner() {
           <div style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 11,
-            color: 'var(--accent-primary)',
+            color: '#F97316',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             marginBottom: 20,
@@ -1180,7 +1516,7 @@ function CTABanner() {
             fontFamily: 'var(--font-syne)',
             fontSize: 'clamp(28px, 5vw, 48px)',
             fontWeight: 700,
-            color: 'var(--text-main)',
+            color: '#FFFFFF',
             marginBottom: 20,
             textWrap: 'balance',
             maxWidth: 700,
@@ -1191,7 +1527,7 @@ function CTABanner() {
           <p style={{
             fontFamily: 'var(--font-inter)',
             fontSize: 16,
-            color: 'var(--text-muted)',
+            color: 'rgba(255,255,255,0.6)',
             marginBottom: 40,
             maxWidth: 520,
             marginInline: 'auto',
@@ -1199,9 +1535,26 @@ function CTABanner() {
           }}>
             Загрузи текст, пройди стресс-тест с AI и узнай, где ты уязвим — прежде чем это выяснит реальная аудитория. Первые три сессии бесплатно.
           </p>
-          <a href="/register" className="btn-primary" style={{ padding: '16px 36px', fontSize: 13 }}>
+          {/* UPGRADE 6: White button with Framer hover */}
+          <motion.a
+            href="/register"
+            whileHover={{ scale: 1.03, boxShadow: '0 8px 32px rgba(255,255,255,0.15)' }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#0F0E0D',
+              padding: '16px 36px',
+              borderRadius: 'var(--radius-sm)',
+              fontFamily: 'var(--font-inter)',
+              fontWeight: 600,
+              fontSize: 13,
+              textDecoration: 'none',
+              display: 'inline-block',
+              transition: 'box-shadow 0.2s ease',
+            }}
+          >
             Попробовать бесплатно — без карты
-          </a>
+          </motion.a>
         </motion.div>
       </div>
     </section>
