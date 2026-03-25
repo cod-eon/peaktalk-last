@@ -174,7 +174,7 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
 function SimulationPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const draftFromUrl = searchParams.get('draft');
+    const draftFromUrl = searchParams.get('draft') ?? searchParams.get('doc');
 
     // View state
     const [view, setView] = useState<'loading' | 'history' | 'setup'>('loading');

@@ -3,8 +3,16 @@ from datetime import datetime, timezone
 
 from celery import Celery
 from celery.schedules import crontab
+from sqlalchemy.pool import NullPool
 
 from app.config import settings
+
+
+def _make_session():
+    """Create a fresh async engine + session per task to avoid event loop conflicts in Celery."""
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    _engine = create_async_engine(settings.database_url, poolclass=NullPool)
+    return async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 celery_app = Celery(
     "peaktalk",
@@ -35,12 +43,11 @@ def parse_document_task(self, document_id: str) -> dict:
 
     from sqlalchemy import select
 
-    from app.database import AsyncSessionLocal
     from app.models.document import Document
     from app.services import parser, storage
 
     async def _run() -> dict:
-        async with AsyncSessionLocal() as db:
+        async with _make_session()() as db:
             result = await db.execute(
                 select(Document).where(Document.id == uuid.UUID(document_id))
             )
@@ -80,7 +87,6 @@ def expire_abandoned_sessions_task(self) -> dict:
     from sqlalchemy import and_, select
     from sqlalchemy.orm import selectinload
 
-    from app.database import AsyncSessionLocal
     from app.models.document import Document
     from app.models.draft import SpeechDraft
     from app.models.simulation import MessageRole, SessionStatus, SimulationMessage, SimulationSession, SkillMetric
@@ -110,7 +116,7 @@ def expire_abandoned_sessions_task(self) -> dict:
         finalized = 0
         cancelled = 0
 
-        async with AsyncSessionLocal() as db:
+        async with _make_session()() as db:
             result = await db.execute(
                 select(SimulationSession)
                 .options(
