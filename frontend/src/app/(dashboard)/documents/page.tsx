@@ -200,7 +200,7 @@ export default function DocumentsPage() {
                                     {/* Actions */}
                                     <div className="flex items-center gap-3">
                                         <Link
-                                            href={`/simulation?doc=${doc.id}`}
+                                            href={`/analysis/${doc.id}`}
                                             className="text-sm font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors whitespace-nowrap"
                                         >
                                             Разбор <ArrowRight size={13} />
