@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
     Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2,
-    TrendingUp, Mic, Search,
+    TrendingUp, Mic, Search, ChevronDown, Ban, FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -175,8 +176,13 @@ function SimulationPageContent() {
     const [personasLoading, setPersonasLoading] = useState(true);
 
     // Drafts
-    const [drafts, setDrafts] = useState<{ id: string; title: string; content?: string }[]>([]);
+    const [drafts, setDrafts] = useState<{ id: string; title: string; content?: string; created_at?: string }[]>([]);
     const [isStarting, setIsStarting] = useState(false);
+
+    // Doc combobox
+    const [docDropdownOpen, setDocDropdownOpen] = useState(false);
+    const [docSearch, setDocSearch] = useState('');
+    const docDropdownRef = useRef<HTMLDivElement>(null);
 
     // Load sessions, personas and drafts on mount
     useEffect(() => {
@@ -223,6 +229,19 @@ function SimulationPageContent() {
         }
     }, [draftFromUrl, sessionsLoading]);
 
+    // Close doc dropdown on outside click
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (docDropdownRef.current && !docDropdownRef.current.contains(e.target as Node)) {
+                setDocDropdownOpen(false);
+            }
+        }
+        if (docDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [docDropdownOpen]);
+
     // ── Derived setup state ──────────────────────────────────────────────────
 
     const fallbackRoles = [
@@ -239,8 +258,11 @@ function SimulationPageContent() {
         { id: 'custom', name: 'Своя сфера...' },
     ];
 
-    const isReady = selectedRole && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0);
-    const currentStep = !selectedRole ? 1 : !selectedDomain || (selectedDomain === 'custom' && !customDomain.trim()) ? 2 : 3;
+    const isReady = selectedRole && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0) && selectedDoc !== null;
+    const currentStep = !selectedRole ? 1
+        : !selectedDomain || (selectedDomain === 'custom' && !customDomain.trim()) ? 2
+        : selectedDoc === null ? 3
+        : 4;
     const selectedRoleName = personasData
         ? (personasData.personas[selectedRole ?? '']?.title ?? null)
         : (fallbackRoles.find(r => r.id === selectedRole)?.name ?? null);
@@ -544,57 +566,147 @@ function SimulationPageContent() {
 
                 {/* 3. DOCUMENT SELECTION */}
                 <section>
-                    <h2 className="label-kicker mb-4 flex items-center gap-3 border-b border-[var(--border-main)] pb-3">
-                        Контекст для тренера
-                        <span className="font-inter text-[10px] normal-case tracking-normal bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] border border-[var(--accent-primary-glow)] px-2 py-0.5 rounded-full">
-                            Необязательно
-                        </span>
+                    <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
+                        <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {/* Combobox */}
+                    <div className="relative max-w-lg" ref={docDropdownRef}>
+                        {/* Trigger */}
                         <button
-                            onClick={() => setSelectedDoc('none')}
-                            className={`text-left p-4 rounded-xl border transition-all flex items-start gap-4 ${
-                                selectedDoc === 'none'
-                                    ? 'bg-[var(--accent-primary)]/5 border-[var(--accent-primary)] shadow-[0_0_15px_rgba(245,158,11,0.15)]'
-                                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                            type="button"
+                            onClick={() => setDocDropdownOpen(!docDropdownOpen)}
+                            className={`w-full h-14 flex items-center gap-3 px-4 rounded-xl border transition-all text-left cursor-pointer ${
+                                docDropdownOpen
+                                    ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary-glow)] bg-[var(--bg-surface)]'
+                                    : selectedDoc !== null
+                                        ? 'border-orange-300 bg-orange-50'
+                                        : 'border-[var(--border-main)] bg-[var(--bg-surface)] hover:border-[var(--border-light)]'
                             }`}
                         >
-                            <div className={`mt-0.5 min-w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                                selectedDoc === 'none' ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-light)] bg-[var(--bg-surface-alt)]'
-                            }`}>
-                                {selectedDoc === 'none' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[var(--bg-surface-alt)] border border-[var(--border-light)]">
+                                {selectedDoc === 'none'
+                                    ? <Ban size={16} className="text-[var(--text-dim)]" />
+                                    : selectedDoc
+                                        ? <FileText size={16} className="text-orange-500" />
+                                        : <FileText size={16} className="text-[var(--text-dim)]" />
+                                }
                             </div>
-                            <div>
-                                <div className="font-inter font-medium text-[var(--text-main)] mb-1">Без документа</div>
-                                <div className="font-inter text-xs text-[var(--text-muted)]">Общее интервью по сфере и роли</div>
-                            </div>
+                            <span className={`flex-1 text-sm font-inter truncate ${selectedDoc !== null ? 'text-[var(--text-main)] font-medium' : 'text-[var(--text-dim)]'}`}>
+                                {selectedDoc === 'none'
+                                    ? 'Без документа — общее интервью'
+                                    : selectedDoc
+                                        ? drafts.find(d => d.id === selectedDoc)?.title ?? 'Выбранный документ'
+                                        : 'Выберите контекст для тренировки...'}
+                            </span>
+                            <ChevronDown
+                                size={16}
+                                className={`shrink-0 text-[var(--text-dim)] transition-transform duration-200 ${docDropdownOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
-                        {drafts.map((doc) => {
-                            const isSelected = selectedDoc === doc.id;
-                            return (
-                                <button
-                                    key={doc.id}
-                                    onClick={() => setSelectedDoc(doc.id)}
-                                    className={`text-left p-4 rounded-xl border transition-all flex items-start gap-4 ${
-                                        isSelected
-                                            ? 'bg-[var(--accent-primary-bg)] border-[var(--accent-primary)] shadow-[0_0_15px_var(--accent-primary-glow)]'
-                                            : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
-                                    }`}
+
+                        {/* Dropdown */}
+                        <AnimatePresence>
+                            {docDropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    transition={{ duration: 0.13 }}
+                                    className="absolute top-full left-0 right-0 mt-2 z-30 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden"
                                 >
-                                    <div className={`mt-0.5 min-w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                                        isSelected ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-light)] bg-[var(--bg-surface-alt)]'
-                                    }`}>
-                                        {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-inter font-medium text-[var(--text-main)] truncate mb-1">{doc.title}</div>
-                                        <div className="font-inter text-xs text-[var(--text-muted)] line-clamp-1">
-                                            {doc.content ? doc.content.substring(0, 60) + '...' : 'Нет предпросмотра'}
+                                    {/* Search — sticky */}
+                                    <div className="p-2 border-b border-[var(--border-main)]">
+                                        <div className="relative">
+                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                placeholder="Поиск по документам..."
+                                                value={docSearch}
+                                                onChange={(e) => setDocSearch(e.target.value)}
+                                                autoFocus
+                                                className="w-full pl-9 pr-3 py-2 text-sm font-inter bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-lg text-[var(--text-main)] placeholder:text-[var(--text-dim)] outline-none focus:border-[var(--accent-primary)] transition-colors"
+                                            />
                                         </div>
                                     </div>
-                                </button>
-                            );
-                        })}
+
+                                    {/* «Без документа» — pinned */}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSelectedDoc('none'); setDocDropdownOpen(false); setDocSearch(''); }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-[var(--border-main)] ${
+                                            selectedDoc === 'none' ? 'bg-orange-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                        }`}
+                                    >
+                                        <div className="w-7 h-7 rounded-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
+                                            <Ban size={14} className="text-[var(--text-dim)]" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium font-inter text-[var(--text-main)]">Без документа</div>
+                                            <div className="text-xs text-[var(--text-dim)] font-inter">Общее интервью по выбранной роли и сфере</div>
+                                        </div>
+                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-orange-500 shrink-0" />}
+                                    </button>
+
+                                    {/* Document list */}
+                                    <div className="max-h-60 overflow-y-auto">
+                                        {(() => {
+                                            const filtered = drafts.filter(d =>
+                                                d.title.toLowerCase().includes(docSearch.toLowerCase())
+                                            );
+                                            if (filtered.length === 0) {
+                                                return (
+                                                    <div className="py-8 text-center text-sm text-[var(--text-dim)] font-inter">
+                                                        {docSearch ? `Ничего не найдено по «${docSearch}»` : 'Нет загруженных документов'}
+                                                    </div>
+                                                );
+                                            }
+                                            return filtered.map((doc) => {
+                                                const isSelected = selectedDoc === doc.id;
+                                                const dateStr = doc.created_at
+                                                    ? new Date(doc.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+                                                    : null;
+                                                return (
+                                                    <button
+                                                        key={doc.id}
+                                                        type="button"
+                                                        onClick={() => { setSelectedDoc(doc.id); setDocDropdownOpen(false); setDocSearch(''); }}
+                                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                                                            isSelected ? 'bg-orange-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                                        }`}
+                                                    >
+                                                        <div className="w-7 h-7 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                                                            <FileText size={14} className="text-orange-400" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-medium font-inter text-[var(--text-main)] truncate">{doc.title}</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2.5 shrink-0">
+                                                            {dateStr && (
+                                                                <span className="text-[11px] font-mono text-[var(--text-dim)]">{dateStr}</span>
+                                                            )}
+                                                            {isSelected && <CheckCircle2 size={15} className="text-orange-500" />}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+
+                                    {/* Upload link — bottom */}
+                                    <div className="p-2 border-t border-[var(--border-main)]">
+                                        <Link
+                                            href="/upload"
+                                            onClick={() => setDocDropdownOpen(false)}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium font-inter text-[var(--accent-primary)] hover:bg-[var(--accent-primary-bg)] rounded-lg transition-colors"
+                                        >
+                                            <Plus size={15} />
+                                            Загрузить новый документ
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </section>
 
@@ -603,7 +715,11 @@ function SimulationPageContent() {
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
-                        className={`btn-primary gap-2 px-6 py-3 ${!isReady || isStarting ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-[var(--radius-sm)] text-sm font-semibold font-inter transition-all duration-200 ${
+                            isReady && !isStarting
+                                ? 'bg-[var(--accent-primary)] text-white cursor-pointer shadow-[0_4px_16px_rgba(249,115,22,0.35)] hover:bg-[var(--accent-primary-hover)] hover:shadow-[0_6px_24px_rgba(249,115,22,0.45)]'
+                                : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                        }`}
                     >
                         {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать симуляцию'}
                         {!isStarting && <ChevronRight size={18} />}
@@ -624,7 +740,11 @@ function SimulationPageContent() {
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
-                        className={`btn-primary text-sm px-4 py-2.5 shrink-0 gap-2 ${!isReady || isStarting ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        className={`inline-flex items-center gap-2 text-sm px-4 py-2.5 shrink-0 rounded-[var(--radius-sm)] font-semibold font-inter transition-all ${
+                            isReady && !isStarting
+                                ? 'bg-[var(--accent-primary)] text-white shadow-[0_4px_14px_rgba(249,115,22,0.35)] hover:bg-[var(--accent-primary-hover)]'
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
                     >
                         {isStarting ? <Loader2 className="animate-spin" size={16} /> : <><span>Начать</span><ChevronRight size={16} /></>}
                     </button>
