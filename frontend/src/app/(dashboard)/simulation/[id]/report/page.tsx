@@ -126,13 +126,17 @@ function Popover({
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        function handleClick(e: MouseEvent) {
+        function handleOutside(e: MouseEvent | TouchEvent) {
             if (ref.current && !ref.current.contains(e.target as Node)) {
                 onClose();
             }
         }
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
+        document.addEventListener('mousedown', handleOutside);
+        document.addEventListener('touchstart', handleOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleOutside);
+            document.removeEventListener('touchstart', handleOutside);
+        };
     }, [onClose]);
 
     return (
@@ -200,10 +204,10 @@ function UserLine({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className="mb-10 pl-5 border-l-2 border-orange-200"
+            className="mb-6 sm:mb-10 pl-4 sm:pl-5 border-l-2 border-orange-200"
         >
             <p className="text-sm font-semibold text-orange-500 mb-2 uppercase tracking-wide">Вы</p>
-            <p className="text-[17px] text-gray-900 leading-relaxed">
+            <p className="text-[15px] sm:text-[17px] text-gray-900 leading-relaxed">
                 {hasIssue ? (
                     <span
                         className={`${highlightClass} ${isActive ? 'ring-2 ring-yellow-300' : ''}`}
@@ -233,10 +237,10 @@ function AILine({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className="mb-10"
+            className="mb-6 sm:mb-10"
         >
             <p className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wide">{personaName}</p>
-            <p className="text-[17px] text-gray-900 leading-relaxed">{msg.content}</p>
+            <p className="text-[15px] sm:text-[17px] text-gray-900 leading-relaxed">{msg.content}</p>
         </motion.div>
     );
 }
@@ -379,35 +383,35 @@ export default function SimulationReportPage() {
 
                 {/* Toolbar */}
                 <div className="h-13 shrink-0 border-b border-gray-100 bg-white flex items-center justify-between px-4 sm:px-6 gap-2 sticky top-0 z-10 shadow-sm">
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <button
                             onClick={() => router.push('/simulation')}
-                            className="text-gray-400 hover:text-gray-700 transition-colors shrink-0"
+                            className="text-gray-400 hover:text-gray-700 transition-colors shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center"
                             aria-label="Назад"
                         >
                             <ArrowLeft size={16} />
                         </button>
                         <div className="h-4 w-px bg-gray-200 hidden sm:block" />
-                        <div className="flex items-center gap-2 min-w-0">
-                            <Zap size={14} className="text-orange-400 shrink-0" />
-                            <span className="text-[13px] font-medium text-gray-700 truncate">
-                                Отчёт симуляции
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Zap size={13} className="text-orange-400 shrink-0" />
+                            <span className="text-[12px] sm:text-[13px] font-medium text-gray-700 truncate">
+                                Отчёт
                             </span>
-                            <span className="hidden sm:inline text-[11px] text-gray-400 truncate">
+                            <span className="text-[11px] text-gray-400 truncate hidden xs:inline sm:inline">
                                 · {personaName}
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <button
                             onClick={handleDownloadPdf}
-                            className="flex items-center gap-1.5 border border-gray-200 hover:border-gray-400 text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg text-[12px] transition-colors"
+                            className="flex items-center gap-1.5 border border-gray-200 hover:border-gray-400 text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors min-h-[32px]"
                         >
                             <Download size={13} />
                             <span className="hidden sm:inline">PDF</span>
                         </button>
                         <button
-                            className="px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 text-gray-600 text-[12px] transition-colors"
+                            className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 text-gray-600 text-[12px] transition-colors min-h-[32px] hidden sm:block"
                             onClick={() => router.push('/dashboard')}
                         >
                             Дашборд
@@ -417,7 +421,7 @@ export default function SimulationReportPage() {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+                    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
 
                         {/* Context pill */}
                         {document_title && (
@@ -432,7 +436,7 @@ export default function SimulationReportPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
-                            className="bg-orange-50/60 border border-orange-100 rounded-2xl p-6 mb-12"
+                            className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12"
                         >
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles size={15} className="text-orange-400 shrink-0" />
