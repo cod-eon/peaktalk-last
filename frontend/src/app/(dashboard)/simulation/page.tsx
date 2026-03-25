@@ -32,7 +32,7 @@ type PersonasData = {
 type SessionItem = {
     id: string;
     persona_config: { role: string; industry: string; difficulty: number };
-    status: 'active' | 'completed';
+    status: 'active' | 'completed' | 'cancelled';
     created_at: string;
     completed_at: string | null;
     message_count: number;
@@ -91,6 +91,7 @@ function formatDate(iso: string): string {
 
 function SessionCard({ session, onClick }: { session: SessionItem; onClick: () => void }) {
     const isActive = session.status === 'active';
+    const isCancelled = session.status === 'cancelled';
     const scoreLabel = session.avg_score != null
         ? `${Math.round(session.avg_score * 100)}%`
         : null;
@@ -120,9 +121,11 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                 <span className={`shrink-0 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                     isActive
                         ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
-                        : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                        : isCancelled
+                            ? 'bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border-[var(--border-main)]'
+                            : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
                 }`}>
-                    {isActive ? 'Активна' : 'Завершена'}
+                    {isActive ? 'Активна' : isCancelled ? 'Прервана' : 'Завершена'}
                 </span>
             </div>
 
@@ -304,9 +307,10 @@ function SimulationPageContent() {
     const handleSessionClick = (session: SessionItem) => {
         if (session.status === 'active') {
             router.push(`/simulation/${session.id}`);
-        } else {
+        } else if (session.status === 'completed') {
             router.push(`/simulation/${session.id}/report`);
         }
+        // cancelled — not clickable (no report available)
     };
 
     // ── Loading splash ───────────────────────────────────────────────────────
@@ -324,6 +328,7 @@ function SimulationPageContent() {
     if (view === 'history') {
         const activeSessions = sessions.filter(s => s.status === 'active');
         const completedSessions = sessions.filter(s => s.status === 'completed');
+        const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
         return (
             <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-6 lg:px-10">
@@ -385,10 +390,22 @@ function SimulationPageContent() {
 
                 {/* Completed sessions */}
                 {completedSessions.length > 0 && (
-                    <div>
+                    <div className={cancelledSessions.length > 0 ? 'mb-8' : ''}>
                         <h2 className="label-kicker mb-3">Завершённые</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {completedSessions.map(s => (
+                                <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Cancelled sessions */}
+                {cancelledSessions.length > 0 && (
+                    <div>
+                        <h2 className="label-kicker mb-3 text-[var(--text-dim)]">Прерванные</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-50">
+                            {cancelledSessions.map(s => (
                                 <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} />
                             ))}
                         </div>
