@@ -43,10 +43,13 @@ echo "[3/4] Starting services..."
 # Postgres и Redis не трогаем — их данные в именованных volumes, контейнеры
 # перезапустятся автоматически через depends_on.
 for svc in api worker migrate beat frontend nginx; do
+    # По label: убивает хеш-префиксные контейнеры вида {hash}_peaktalk-{svc}-1
     docker ps -aq \
         --filter "label=com.docker.compose.project=peaktalk" \
         --filter "label=com.docker.compose.service=${svc}" \
     | xargs -r docker rm -f 2>/dev/null || true
+    # По имени: убивает peaktalk-{svc}-1 (остановленный контейнер без префикса)
+    docker rm -f "peaktalk-${svc}-1" 2>/dev/null || true
 done
 
 docker compose up -d --remove-orphans
