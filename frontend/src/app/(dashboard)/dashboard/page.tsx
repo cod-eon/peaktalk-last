@@ -83,14 +83,6 @@ export default function DashboardPage() {
 
   const drafts = data?.items ?? [];
   const totalDrafts = data?.total ?? 0;
-  const analyzedDrafts = drafts.filter((d) => d.analysis_result !== null);
-  const avgScore =
-    analyzedDrafts.length
-      ? Math.round(
-        analyzedDrafts.reduce((acc, d) => acc + d.analysis_result!.feedback_json.overall_score, 0) /
-        analyzedDrafts.length
-      )
-      : null;
 
   const simSessions = simData?.items ?? [];
   const completedSims = simSessions.filter(s => s.status === 'completed');
@@ -120,11 +112,12 @@ export default function DashboardPage() {
   const sparkColor = progressDelta == null ? '#cbd5e1'
     : progressDelta > 0 ? '#10b981'
     : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
+  // y: 3 (score=10, top) → 23 (score=0, bottom) — 3px padding for r=2.5 dots
+  const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
   const sparkPoints = sparkScores.length >= 2
     ? sparkScores.map((s, i) => {
         const x = (i / (sparkScores.length - 1)) * 80;
-        const y = 24 - (s / 10) * 20 + 2;
-        return `${x},${y}`;
+        return `${x},${sparkY(s)}`;
       }).join(' ')
     : null;
 
@@ -275,7 +268,7 @@ export default function DashboardPage() {
                       <circle
                         key={i}
                         cx={(i / (sparkScores.length - 1)) * 80}
-                        cy={24 - (s / 10) * 20 + 2}
+                        cy={sparkY(s)}
                         r={i === sparkScores.length - 1 ? 2.5 : 1.5}
                         fill={sparkColor}
                         opacity={i === sparkScores.length - 1 ? 1 : 0.5}
