@@ -71,7 +71,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
                                     <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={32} height={32} />
                                 </div>
-                                <span className="text-[15px] font-bold tracking-tight text-[var(--text-main)]" style={{ letterSpacing: '-0.02em' }}>
+                                <span className="text-[var(--text-main)]" style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
                                     PeakTalk
                                 </span>
                             </Link>

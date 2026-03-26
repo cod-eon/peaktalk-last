@@ -131,7 +131,7 @@ export default function RegisterPage() {
       <p className="mt-5 text-xs text-center text-[var(--text-dim)]">
         Нажимая кнопку, вы соглашаетесь с{" "}
         <a href="#" className="underline hover:text-[var(--text-main)]">Условиями</a> и{" "}
-        <a href="#" className="underline hover:text-[var(--text-main)]">Политикой 152-ФЗ</a>.
+        <a href="#" className="underline hover:text-[var(--text-main)]">Политикой конфиденциальности</a>.
       </p>
 
       <div className="mt-8 text-center text-sm text-[var(--text-muted)]">

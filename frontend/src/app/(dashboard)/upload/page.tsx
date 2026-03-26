@@ -250,7 +250,7 @@ export default function UploadPage() {
                             {/* Action Bar */}
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-t border-[var(--border-main)] p-4 sm:p-5 bg-[var(--bg-surface)] gap-3">
                                 <div className="text-xs text-[var(--text-dim)] hidden sm:block">
-                                    Ваши данные надежно защищены (152-ФЗ)
+                                    Ваши данные надежно защищены
                                 </div>
                                 <button
                                     onClick={startAnalysis}

@@ -60,7 +60,7 @@ export function Sidebar() {
                                 transition={{ duration: 0.15 }}
                                 className="overflow-hidden"
                             >
-                                <span className="text-[15px] font-bold tracking-tight text-[var(--text-main)] whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                                <span className="whitespace-nowrap text-[var(--text-main)]" style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
                                     PeakTalk
                                 </span>
                             </motion.div>
