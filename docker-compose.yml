@@ -111,6 +111,27 @@ services:
     networks:
       - internal
 
+  # ── Celery Beat scheduler ────────────────────────────────────────────────────
+  # Sends periodic tasks (e.g. expire abandoned sessions every 30 min).
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-peaktalk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-peaktalk}
+      REDIS_URL: redis://redis:6379/0
+      APP_ENV: production
+    command: ["celery", "-A", "app.worker.celery_app", "beat", "--loglevel=info"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+
   # ── Next.js frontend ─────────────────────────────────────────────────────────
   # Built as a standalone Next.js app (output: standalone in next.config.ts).
   # The build reads NEXT_PUBLIC_* vars at build time — they are baked into the
