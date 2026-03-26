@@ -160,31 +160,25 @@ export default function DashboardPage() {
         </Link>
 
         {/* Metric cards column */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
 
           {/* Card: texts */}
-          <div
-            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-          >
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-[var(--accent-primary)]" />
-            <div className="flex items-center justify-between mb-2">
-              <span className="label-kicker">Тексты</span>
-              <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center">
-                <FileText size={14} className="text-[var(--accent-primary)]" />
-              </div>
+          <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Тексты</span>
+              <FileText size={20} className="text-gray-400" />
             </div>
             <div>
-              <div className="text-[32px] font-bold text-[var(--text-main)] leading-none mb-0.5" style={{ letterSpacing: '-0.03em' }}>
+              <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                 {isLoading ? <span className="opacity-25">—</span> : totalDrafts}
               </div>
-              <p className="text-[11px] text-[var(--text-dim)] mb-2">
-                {totalDrafts > 0 ? `${analyzedDrafts.length} из ${totalDrafts} разобрано` : 'загружено материалов'}
+              <p className="text-sm text-gray-500 mt-1 mb-3">
+                {totalDrafts > 0 ? `${analyzedDrafts.length} из ${totalDrafts} разобрано` : 'Загружено материалов'}
               </p>
               {totalDrafts > 0 && (
-                <div className="h-1 bg-orange-100 rounded-full overflow-hidden">
+                <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-700"
+                    className="h-full bg-gray-400 rounded-full transition-all duration-700"
                     style={{ width: `${Math.round((analyzedDrafts.length / totalDrafts) * 100)}%` }}
                   />
                 </div>
@@ -193,23 +187,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Card: simulations */}
-          <div
-            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-          >
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-violet-500" />
-            <div className="flex items-center justify-between mb-2">
-              <span className="label-kicker">Симуляции</span>
-              <div className="w-7 h-7 rounded-md bg-violet-50 flex items-center justify-center">
-                <Sparkles size={14} className="text-violet-600" />
-              </div>
+          <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Симуляции</span>
+              <Sparkles size={20} className="text-gray-400" />
             </div>
             <div>
-              <div className="text-[32px] font-bold text-violet-600 leading-none mb-0.5" style={{ letterSpacing: '-0.03em' }}>
-                {simData == null ? <span className="opacity-25 text-[var(--text-main)]">—</span> : completedSims.length}
+              <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+                {simData == null ? <span className="opacity-25">—</span> : completedSims.length}
               </div>
-              <p className="text-[11px] text-[var(--text-dim)]">
-                {simSessions.length > 0 ? `из ${simSessions.length} запущено` : 'пройдено симуляций'}
+              <p className="text-sm text-gray-500 mt-1">
+                {simSessions.length > 0 ? `Из ${simSessions.length} запущено` : 'Пройдено симуляций'}
               </p>
             </div>
           </div>
@@ -218,50 +206,32 @@ export default function DashboardPage() {
           {(() => {
             const displayScore = simAvgScore10 ?? avgScore;
             const scoreSource = simAvgScore10 != null ? 'по симуляциям' : avgScore != null ? 'по разборам' : null;
-            const scoreClass = displayScore == null ? 'text-[var(--text-dim)]'
-              : displayScore >= 7 ? 'text-emerald-600'
-              : displayScore >= 5 ? 'text-amber-500'
-              : 'text-red-500';
-            const accentBg = displayScore == null ? 'bg-gray-200'
-              : displayScore >= 7 ? 'bg-emerald-500'
-              : displayScore >= 5 ? 'bg-amber-400'
-              : 'bg-red-400';
-            const iconBg = displayScore == null ? 'bg-gray-50'
-              : displayScore >= 7 ? 'bg-emerald-50'
-              : displayScore >= 5 ? 'bg-amber-50'
-              : 'bg-red-50';
             const scoreSub = displayScore != null
               ? displayScore >= 7 ? 'Отличная форма'
               : displayScore >= 5 ? 'Есть куда расти'
               : 'Нужна доработка'
-              : 'Нет данных';
+              : null;
             return (
-              <div
-                className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
-                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-              >
-                <div className={`absolute top-0 left-0 right-0 h-[3px] ${accentBg}`} />
-                <div className="flex items-center justify-between mb-2">
-                  <span className="label-kicker">Ср. балл</span>
-                  <div className={`w-7 h-7 rounded-md flex items-center justify-center ${iconBg}`}>
-                    <TrendingUp size={14} className={scoreClass} />
-                  </div>
+              <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ср. балл</span>
+                  <TrendingUp size={20} className="text-gray-400" />
                 </div>
                 <div>
-                  <div className={`text-[32px] font-bold leading-none mb-0.5 ${scoreClass}`} style={{ letterSpacing: '-0.03em' }}>
+                  <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                     {isLoading ? (
-                      <span className="opacity-25 text-[var(--text-main)]">—</span>
+                      <span className="opacity-25">—</span>
                     ) : displayScore != null ? (
                       <>
                         {displayScore}
-                        <span className={`text-[18px] font-medium ml-0.5 opacity-60 ${scoreClass}`}>/10</span>
+                        <span className="text-xl font-medium text-gray-400 ml-0.5">/10</span>
                       </>
                     ) : (
-                      <span className="text-[var(--text-dim)] text-2xl">—</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </div>
-                  <p className="text-[11px] text-[var(--text-dim)]">
-                    {scoreSource ? `${scoreSub} · ${scoreSource}` : 'Запустите анализ'}
+                  <p className="text-sm text-gray-500 mt-1">
+                    {scoreSource && scoreSub ? `${scoreSub} · ${scoreSource}` : 'Запустите анализ'}
                   </p>
                 </div>
               </div>
