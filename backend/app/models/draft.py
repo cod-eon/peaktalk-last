@@ -16,7 +16,7 @@ class SpeechDraft(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     document_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=True
     )
     title: Mapped[str] = mapped_column(String(512), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
