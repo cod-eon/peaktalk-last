@@ -6,9 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from app.limiter import limiter
 
 logger = logging.getLogger("peaktalk.simulation")
-from sqlalchemy import select
+from sqlalchemy import func as sqlfunc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.cache import cache_get, cache_set, cache_invalidate_prefix
 
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -29,6 +31,17 @@ from app.services.gemini import GeminiError
 from app.services.simulation_ai import evaluate_session, generate_question
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
+
+# Cache TTL for simulation list (seconds)
+_SIM_LIST_TTL = 60
+
+
+def _sim_cache_prefix(user_id: uuid.UUID) -> str:
+    return f"sim_list:{user_id}"
+
+
+def _sim_cache_key(user_id: uuid.UUID, limit: int, offset: int) -> str:
+    return f"sim_list:{user_id}:{limit}:{offset}"
 
 MAX_TURNS = 10  # Maximum AI questions per session
 
@@ -90,9 +103,29 @@ async def list_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSessionListResponse:
-    from sqlalchemy import func as sqlfunc
-    from app.models.simulation import SkillMetric
+    # ── Cache-aside: try Redis first ─────────────────────────────────────────
+    cache_key = _sim_cache_key(current_user.id, limit, offset)
+    cached = await cache_get(cache_key)
+    if cached:
+        return SimulationSessionListResponse.model_validate(cached)
 
+    # ── Correlated subqueries: compute counts/avg in DB, no Python iteration ─
+    # Counts all messages for each session
+    msg_count_sub = (
+        select(sqlfunc.count(SimulationMessage.id))
+        .where(SimulationMessage.session_id == SimulationSession.id)
+        .correlate(SimulationSession)
+        .scalar_subquery()
+    )
+    # Averages all skill metric scores (0.0–1.0) for each session
+    avg_score_sub = (
+        select(sqlfunc.avg(SkillMetric.score))
+        .where(SkillMetric.session_id == SimulationSession.id)
+        .correlate(SimulationSession)
+        .scalar_subquery()
+    )
+
+    # Single query: sessions + aggregates + total via window function
     total_res = await db.execute(
         select(sqlfunc.count()).select_from(SimulationSession)
         .where(SimulationSession.user_id == current_user.id)
@@ -100,18 +133,19 @@ async def list_sessions(
     total = total_res.scalar_one()
 
     res = await db.execute(
-        select(SimulationSession)
-        .options(selectinload(SimulationSession.messages), selectinload(SimulationSession.skill_metrics))
+        select(
+            SimulationSession,
+            msg_count_sub.label("message_count"),
+            avg_score_sub.label("avg_score"),
+        )
         .where(SimulationSession.user_id == current_user.id)
         .order_by(SimulationSession.created_at.desc())
         .limit(limit).offset(offset)
     )
-    sessions = list(res.scalars().all())
+    rows = res.all()
 
-    from app.models.draft import SpeechDraft
-
-    # Batch-load document names
-    doc_ids = list({s.document_id for s in sessions if s.document_id})
+    # ── Batch-load document names and draft titles ───────────────────────────
+    doc_ids = list({r.SimulationSession.document_id for r in rows if r.SimulationSession.document_id})
     doc_names: dict = {}
     if doc_ids:
         docs_res = await db.execute(
@@ -119,8 +153,7 @@ async def list_sessions(
         )
         doc_names = {row.id: row.name for row in docs_res}
 
-    # Batch-load draft titles
-    draft_ids = list({s.draft_id for s in sessions if s.draft_id})
+    draft_ids = list({r.SimulationSession.draft_id for r in rows if r.SimulationSession.draft_id})
     draft_titles: dict = {}
     if draft_ids:
         drafts_res = await db.execute(
@@ -128,9 +161,12 @@ async def list_sessions(
         )
         draft_titles = {row.id: row.title for row in drafts_res}
 
+    # ── Build response ───────────────────────────────────────────────────────
     items = []
-    for s in sessions:
-        scores = [m.score for m in s.skill_metrics] if s.skill_metrics else []
+    for row in rows:
+        s = row.SimulationSession
+        raw_avg = row.avg_score
+        avg_score = round(float(raw_avg), 2) if raw_avg is not None else None
         context_title = (
             doc_names.get(s.document_id) if s.document_id
             else draft_titles.get(s.draft_id) if s.draft_id
@@ -142,12 +178,18 @@ async def list_sessions(
             status=s.status,
             created_at=s.created_at,
             completed_at=s.completed_at,
-            message_count=len(s.messages),
-            avg_score=round(sum(scores) / len(scores), 2) if scores else None,
+            message_count=int(row.message_count or 0),
+            avg_score=avg_score,
             document_title=context_title,
         ))
 
-    return SimulationSessionListResponse(items=items, total=total)
+    result = SimulationSessionListResponse(items=items, total=total)
+
+    # ── Populate cache ───────────────────────────────────────────────────────
+    await cache_set(cache_key, result.model_dump(mode="json"), ttl=_SIM_LIST_TTL)
+    logger.debug("list_sessions cached key=%s items=%d", cache_key, len(items))
+
+    return result
 
 
 @router.get("/personas")
@@ -209,6 +251,7 @@ async def start_simulation(
     db.add(first_message)
     await db.flush()
 
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
     return await _load_session(db, session.id, current_user.id)
 
@@ -258,6 +301,7 @@ async def send_message(
         except GeminiError as exc:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
         await db.refresh(user_msg)
+        await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
         logger.info("Session auto-completed at MAX_TURNS=%d session=%s", MAX_TURNS, session_id)
         return SendMessageResponse(user_message=user_msg, assistant_message=None, session_completed=True)
 
@@ -285,6 +329,9 @@ async def send_message(
     await db.flush()
     await db.refresh(user_msg)
     await db.refresh(assistant_msg)
+
+    # Invalidate list cache (message_count changed)
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
 
     return SendMessageResponse(user_message=user_msg, assistant_message=assistant_msg)
 
@@ -344,6 +391,7 @@ async def complete_session(
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Session completed by user user=%s session=%s", current_user.id, session_id)
     return await _load_session(db, session.id, current_user.id, populate_existing=True)
 
@@ -416,6 +464,7 @@ async def abandon_session(
         await db.flush()
 
     await db.commit()
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info(
         "Session abandoned user=%s session=%s had_answers=%s final_status=%s",
         current_user.id, session_id, bool(user_messages), session.status.value,
