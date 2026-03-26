@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
     Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2,
-    TrendingUp, Mic, Search, ChevronDown, Ban, FileText,
+    TrendingUp, TrendingDown, Flame, Target, Mic, Search, ChevronDown, Ban, FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -83,6 +83,15 @@ const ROLE_VISUALS: Record<string, RoleVisual> = {
 };
 
 const DEFAULT_VISUAL: RoleVisual = { icon: Bot, iconColor: 'text-[var(--text-dim)]', iconBg: 'bg-[var(--bg-surface-alt)]' };
+
+// Short labels for KPI "Сложнее всего" card
+const SHORT_PERSONA: Record<string, string> = {
+    investor: 'Инвестор', partner: 'Партнёр', customer: 'Клиент',
+    tech_lead: 'Тимлид', hr: 'HR', senior_dev: 'Dev',
+    supervisor: 'Науч. рук.', reviewer: 'Рецензент', peer: 'Коллега',
+    board: 'Совет', subordinate: 'Подчин.', journalist: 'Журналист',
+    audience: 'Аудитория', moderator: 'Модератор', listener: 'Скептик',
+};
 
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -370,75 +379,126 @@ function SimulationPageContent() {
 
                 {/* Stats strip */}
                 {sessions.length > 0 && (() => {
-                    const scores = completedSessions.filter(s => s.avg_score != null).map(s => s.avg_score!);
-                    const avgScoreRaw = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+                    const scores = completedSessions
+                        .filter(s => s.avg_score != null)
+                        .map(s => s.avg_score!);
+                    const avgScoreRaw = scores.length
+                        ? scores.reduce((a, b) => a + b, 0) / scores.length
+                        : null;
                     const avgScore10 = avgScoreRaw != null ? Math.round(avgScoreRaw * 10) : null;
-                    const totalMessages = sessions.reduce((a, s) => a + s.message_count, 0);
-                    const completionRate = Math.round(completedSessions.length / sessions.length * 100);
-                    const scoreSub = avgScore10 != null
-                        ? avgScore10 >= 7 ? 'Хороший результат'
-                        : avgScore10 >= 5 ? 'Есть куда расти'
-                        : 'Нужна практика'
-                        : 'Нет данных';
+                    const bestScore10 = scores.length ? Math.round(Math.max(...scores) * 10) : null;
+
+                    // Прогресс: последняя сессия vs первая (хронологически)
+                    const scoredByDate = completedSessions
+                        .filter(s => s.avg_score != null)
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                    const progressDelta = scoredByDate.length >= 2
+                        ? Math.round(scoredByDate[scoredByDate.length - 1].avg_score! * 10)
+                          - Math.round(scoredByDate[0].avg_score! * 10)
+                        : null;
+
+                    // Сложнее всего: роль с наименьшим средним баллом
+                    const roleMap: Record<string, number[]> = {};
+                    completedSessions.forEach(s => {
+                        if (s.avg_score != null) {
+                            const r = s.persona_config.role;
+                            roleMap[r] = [...(roleMap[r] ?? []), s.avg_score];
+                        }
+                    });
+                    const hardestRole = Object.entries(roleMap)
+                        .map(([role, sc]) => ({
+                            role,
+                            avg: Math.round((sc.reduce((a, b) => a + b, 0) / sc.length) * 10),
+                        }))
+                        .sort((a, b) => a.avg - b.avg)[0] ?? null;
+
+                    const readinessSub = avgScore10 == null ? 'Пройди симуляцию'
+                        : avgScore10 >= 8 ? 'Готов к питчу'
+                        : avgScore10 >= 6 ? 'Есть потенциал'
+                        : avgScore10 >= 4 ? 'Нужна практика'
+                        : 'Серьёзная работа';
+
+                    const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
+                    const trendIconBg = progressDelta == null ? 'bg-gray-50'
+                        : progressDelta > 0 ? 'bg-emerald-50'
+                        : progressDelta < 0 ? 'bg-rose-50' : 'bg-gray-50';
+                    const trendIconColor = progressDelta == null ? 'text-gray-400'
+                        : progressDelta > 0 ? 'text-emerald-500'
+                        : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
+                    const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
+                        : progressDelta > 0 ? 'Ты растёшь!'
+                        : progressDelta < 0 ? 'Бывает — встряхнись'
+                        : 'Держишь уровень';
 
                     const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200";
+
                     return (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 
-                            {/* Всего */}
+                            {/* Индекс готовности */}
                             <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Всего</span>
-                                    <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
-                                        <Zap size={18} className="text-violet-500" />
-                                    </div>
-                                </div>
-                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {sessions.length}
-                                </div>
-                                <p className="text-sm text-gray-500 mt-1">сессий запущено</p>
-                            </div>
-
-                            {/* Завершено */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Завершено</span>
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
                                     <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-                                        <CheckCircle2 size={18} className="text-emerald-500" />
+                                        <Target size={18} className="text-emerald-500" />
                                     </div>
                                 </div>
-                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {completedSessions.length}
-                                </div>
-                                <p className="text-sm text-gray-500 mt-1">Конверсия {completionRate}%</p>
-                            </div>
-
-                            {/* Ср. балл */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Ср. балл</span>
-                                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                        <BarChart2 size={18} className="text-blue-500" />
-                                    </div>
-                                </div>
-                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {avgScore10 != null ? `${avgScore10}/10` : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">{scoreSub}</p>
+                                <p className="text-sm text-gray-500 mt-1">{readinessSub}</p>
                             </div>
 
-                            {/* Сообщений */}
+                            {/* Тренд роста */}
                             <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сообщений</span>
-                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-                                        <MessageSquare size={18} className="text-orange-500" />
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${trendIconBg}`}>
+                                        <TrendIcon size={18} className={trendIconColor} />
                                     </div>
                                 </div>
-                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {totalMessages}
+                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                    {progressDelta != null
+                                        ? `${progressDelta > 0 ? '+' : ''}${progressDelta}`
+                                        : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">Обменов в диалоге</p>
+                                <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
+                            </div>
+
+                            {/* Личный рекорд */}
+                            <div className={kpiCard}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
+                                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+                                        <Trophy size={18} className="text-amber-500" />
+                                    </div>
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                    {bestScore10 != null ? `${bestScore10}/10` : '—'}
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {bestScore10 != null ? 'Личный рекорд' : 'Пройди симуляцию'}
+                                </p>
+                            </div>
+
+                            {/* Сложнее всего */}
+                            <div className={kpiCard}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                                        <Flame size={18} className="text-orange-500" />
+                                    </div>
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900 truncate" style={{ letterSpacing: '-0.02em' }}>
+                                    {hardestRole
+                                        ? (SHORT_PERSONA[hardestRole.role] ?? hardestRole.role)
+                                        : '—'}
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {hardestRole
+                                        ? `Ср. балл ${hardestRole.avg}/10`
+                                        : 'Пройди 2+ сессии'}
+                                </p>
                             </div>
                         </div>
                     );

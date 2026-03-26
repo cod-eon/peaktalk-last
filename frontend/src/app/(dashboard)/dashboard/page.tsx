@@ -9,9 +9,11 @@ import {
   UploadCloud,
   AlertCircle,
   TrendingUp,
+  TrendingDown,
   ChevronRight,
   Sparkles,
   Plus,
+  Target,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -73,7 +75,7 @@ export default function DashboardPage() {
     staleTime: 30_000,
   });
 
-  const { data: simData } = useQuery<{ items: Array<{ status: string; avg_score: number | null }> }>({
+  const { data: simData } = useQuery<{ items: Array<{ status: string; avg_score: number | null; message_count: number; created_at: string }> }>({
     queryKey: ['simulations-dashboard'],
     queryFn: () => api.get('/simulation?limit=50'),
     staleTime: 30_000,
@@ -96,6 +98,22 @@ export default function DashboardPage() {
   const simAvgScore10 = simScores.length
     ? Math.round((simScores.reduce((a, b) => a + b, 0) / simScores.length) * 10)
     : null;
+
+  // Progress trend: last scored session vs first scored session
+  const scoredByDate = completedSims
+    .filter(s => s.avg_score != null)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const progressDelta = scoredByDate.length >= 2
+    ? Math.round(scoredByDate[scoredByDate.length - 1].avg_score! * 10)
+      - Math.round(scoredByDate[0].avg_score! * 10)
+    : null;
+
+  // Practice time: message_count × 1.5 min
+  const totalMessages = simSessions.reduce((sum, s) => sum + (s.message_count ?? 0), 0);
+  const totalMinutes = Math.round(totalMessages * 1.5);
+  const practiceDisplay = totalMinutes >= 60
+    ? `~${Math.round(totalMinutes / 60)} ч`
+    : totalMinutes > 0 ? `~${totalMinutes} мин` : null;
 
   return (
     <div className="pb-16 md:pb-10 pt-8 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
@@ -162,87 +180,93 @@ export default function DashboardPage() {
         {/* Metric cards column */}
         <div className="flex flex-col gap-4">
 
-          {/* Card: texts */}
+          {/* Card: Индекс готовности */}
           <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тексты</span>
-              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-                <FileText size={18} className="text-orange-500" />
+              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                <Target size={18} className="text-emerald-500" />
               </div>
             </div>
             <div>
               <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
-                {isLoading ? <span className="opacity-25">—</span> : totalDrafts}
-              </div>
-              <p className="text-sm text-gray-500 mt-1 mb-3">
-                {totalDrafts > 0 ? `${analyzedDrafts.length} из ${totalDrafts} разобрано` : 'Загружено материалов'}
-              </p>
-              {totalDrafts > 0 && (
-                <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-orange-300 rounded-full transition-all duration-700"
-                    style={{ width: `${Math.round((analyzedDrafts.length / totalDrafts) * 100)}%` }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card: simulations */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Симуляции</span>
-              <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
-                <Sparkles size={18} className="text-violet-500" />
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
-                {simData == null ? <span className="opacity-25">—</span> : completedSims.length}
+                {simData == null ? (
+                  <span className="opacity-25">—</span>
+                ) : simAvgScore10 != null ? (
+                  <>{simAvgScore10}<span className="text-2xl font-bold text-gray-400 ml-0.5">/10</span></>
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                {simSessions.length > 0 ? `Из ${simSessions.length} запущено` : 'Пройдено симуляций'}
+                {simAvgScore10 == null
+                  ? 'Пройди симуляцию'
+                  : simAvgScore10 >= 8 ? 'Готов к питчу'
+                  : simAvgScore10 >= 6 ? 'Есть потенциал'
+                  : simAvgScore10 >= 4 ? 'Нужна практика'
+                  : 'Серьёзная работа'}
               </p>
             </div>
           </div>
 
-          {/* Card: avg score */}
+          {/* Card: Тренд роста */}
           {(() => {
-            const displayScore = simAvgScore10 ?? avgScore;
-            const scoreSource = simAvgScore10 != null ? 'по симуляциям' : avgScore != null ? 'по разборам' : null;
-            const scoreSub = displayScore != null
-              ? displayScore >= 7 ? 'Отличная форма'
-              : displayScore >= 5 ? 'Есть куда расти'
-              : 'Нужна доработка'
-              : null;
+            const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
+            const trendBg = progressDelta == null ? 'bg-gray-50'
+              : progressDelta > 0 ? 'bg-emerald-50' : progressDelta < 0 ? 'bg-rose-50' : 'bg-gray-50';
+            const trendColor = progressDelta == null ? 'text-gray-400'
+              : progressDelta > 0 ? 'text-emerald-500' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
+            const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
+              : progressDelta > 0 ? 'Ты растёшь!'
+              : progressDelta < 0 ? 'Бывает — встряхнись' : 'Держишь уровень';
+            const trendValColor = progressDelta == null ? 'text-gray-300'
+              : progressDelta > 0 ? 'text-emerald-600'
+              : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
             return (
               <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Ср. балл</span>
-                  <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-                    <TrendingUp size={18} className="text-emerald-500" />
+                  <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
+                  <div className={`w-10 h-10 rounded-full ${trendBg} flex items-center justify-center`}>
+                    <TrendIcon size={18} className={trendColor} />
                   </div>
                 </div>
                 <div>
-                  <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
-                    {isLoading ? (
-                      <span className="opacity-25">—</span>
-                    ) : displayScore != null ? (
-                      <>
-                        {displayScore}
-                        <span className="text-2xl font-bold text-gray-400 ml-0.5">/10</span>
-                      </>
+                  <div className={`text-4xl font-extrabold ${trendValColor}`} style={{ letterSpacing: '-0.03em' }}>
+                    {progressDelta == null ? (
+                      '—'
                     ) : (
-                      <span className="text-gray-300">—</span>
+                      <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {scoreSource && scoreSub ? `${scoreSub} · ${scoreSource}` : 'Запустите анализ'}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
                 </div>
               </div>
             );
           })()}
+
+          {/* Card: Время практики */}
+          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Практика</span>
+              <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
+                <Clock size={18} className="text-violet-500" />
+              </div>
+            </div>
+            <div>
+              <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+                {simData == null ? (
+                  <span className="opacity-25">—</span>
+                ) : practiceDisplay != null ? (
+                  practiceDisplay
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {totalMessages > 0 ? `${totalMessages} сообщений` : 'Начни тренировку'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
