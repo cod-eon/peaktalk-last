@@ -56,6 +56,7 @@ export default function DocumentsPage() {
             toast.success('Удалено');
             setDeleteTarget(null);
             queryClient.invalidateQueries({ queryKey: ['documents'] });
+            queryClient.invalidateQueries({ queryKey: ['drafts-dashboard'] });
         },
         onError: (err: Error) => toast.error(err.message || 'Ошибка удаления'),
     });
