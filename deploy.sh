@@ -11,9 +11,9 @@
 # Flow:
 #   1. git pull (get latest code)
 #   2. Build Docker images (api, worker, frontend)
-#   3. Run Alembic migrations
-#   4. Restart services with zero-downtime (rolling restart)
-#   5. Health check
+#   3. Start all services — migrate runs automatically before api
+#      (api depends_on migrate: condition: service_completed_successfully)
+#   4. Health check
 # =============================================================================
 
 set -euo pipefail
@@ -28,7 +28,7 @@ echo "=============================================="
 
 # ── Step 1: Pull latest code ──────────────────────────────────────────────────
 echo ""
-echo "[1/5] Pulling latest code from main..."
+echo "[1/4] Pulling latest code from main..."
 git pull origin main
 
 # ── Step 2: Build Docker images ───────────────────────────────────────────────
@@ -37,39 +37,25 @@ git pull origin main
 # the JS bundle at build time, and BuildKit cache on VDS can silently reuse
 # a stale image even when source files changed.
 echo ""
-echo "[2/5] Building Docker images..."
+echo "[2/4] Building Docker images..."
 docker compose build api worker
 docker compose build --no-cache frontend
 
-# ── Step 3: Run database migrations ──────────────────────────────────────────
-# The migrate service is a one-shot container that runs alembic upgrade head.
-# It waits for postgres to be healthy before running.
-echo ""
-echo "[3/5] Running database migrations..."
-docker compose run --rm migrate
-
-# ── Step 4: Restart services ──────────────────────────────────────────────────
+# ── Step 3: Start / update services ───────────────────────────────────────────
 # docker compose up -d will:
-#   - Start services that aren't running
-#   - Restart services whose image has changed
-#   - Leave services unchanged if nothing changed
-# This gives us a near-zero-downtime restart (nginx keeps accepting requests
-# while containers restart one by one).
+#   - Recreate containers whose image changed
+#   - Leave unchanged containers running (no downtime for postgres/redis)
+#   - The migrate service runs first (api depends_on it via service_completed_successfully)
+#   - Restart nginx after to force DNS re-resolution of upstream IPs
 echo ""
-echo "[4/5] Restarting services..."
-# Полный down (контейнеры удаляются, данные в volumes сохраняются),
-# затем prune для гарантированного освобождения имён, затем чистый up.
-docker compose down --remove-orphans
-docker container prune -f
-docker compose up -d
-# Restart nginx to force DNS re-resolution of upstream IPs after container recreation
+echo "[3/4] Starting services..."
+docker compose up -d --remove-orphans
 docker compose restart nginx
 
-# ── Step 5: Health check ──────────────────────────────────────────────────────
+# ── Step 4: Health check ───────────────────────────────────────────────────────
 echo ""
-echo "[5/5] Checking API health..."
+echo "[4/4] Checking API health..."
 
-# Wait up to 30 seconds for the API to respond
 MAX_RETRIES=10
 RETRY_DELAY=3
 for i in $(seq 1 $MAX_RETRIES); do
@@ -86,7 +72,6 @@ for i in $(seq 1 $MAX_RETRIES); do
     sleep $RETRY_DELAY
 done
 
-# Print running containers
 echo ""
 echo "Running containers:"
 docker compose ps
