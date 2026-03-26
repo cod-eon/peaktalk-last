@@ -428,7 +428,7 @@ function SimulationPageContent() {
                     const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
                         : progressDelta > 0 ? 'Ты растёшь!'
                         : progressDelta < 0 ? 'Бывает — встряхнись'
-                        : 'Держишь уровень';
+                        : 'Нет изменений';
 
                     const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200";
 
@@ -457,10 +457,10 @@ function SimulationPageContent() {
                                         <TrendIcon size={18} className={trendIconColor} />
                                     </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {progressDelta != null
-                                        ? `${progressDelta > 0 ? '+' : ''}${progressDelta}`
-                                        : '—'}
+                                <div className={`text-3xl font-bold ${progressDelta == null ? 'text-gray-300' : progressDelta > 0 ? 'text-emerald-600' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400'}`} style={{ letterSpacing: '-0.02em' }}>
+                                    {progressDelta == null ? '—'
+                                        : progressDelta === 0 ? '= 0'
+                                        : `${progressDelta > 0 ? '+' : ''}${progressDelta}б`}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
                             </div>
@@ -489,9 +489,9 @@ function SimulationPageContent() {
                                         <Flame size={18} className="text-orange-500" />
                                     </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900 truncate" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-lg font-bold text-gray-900 leading-snug" style={{ letterSpacing: '-0.01em' }}>
                                     {hardestRole
-                                        ? (SHORT_PERSONA[hardestRole.role] ?? hardestRole.role)
+                                        ? (PERSONA_LABELS[hardestRole.role] ?? hardestRole.role)
                                         : '—'}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">

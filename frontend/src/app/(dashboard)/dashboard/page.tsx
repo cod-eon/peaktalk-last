@@ -218,7 +218,7 @@ export default function DashboardPage() {
               : progressDelta > 0 ? 'text-emerald-500' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
             const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
               : progressDelta > 0 ? 'Ты растёшь!'
-              : progressDelta < 0 ? 'Бывает — встряхнись' : 'Держишь уровень';
+              : progressDelta < 0 ? 'Бывает — встряхнись' : 'Нет изменений';
             const trendValColor = progressDelta == null ? 'text-gray-300'
               : progressDelta > 0 ? 'text-emerald-600'
               : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
@@ -232,11 +232,9 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className={`text-4xl font-extrabold ${trendValColor}`} style={{ letterSpacing: '-0.03em' }}>
-                    {progressDelta == null ? (
-                      '—'
-                    ) : (
-                      <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>
-                    )}
+                    {progressDelta == null ? '—'
+                      : progressDelta === 0 ? '= 0'
+                      : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>}
                   </div>
                   <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
                 </div>
