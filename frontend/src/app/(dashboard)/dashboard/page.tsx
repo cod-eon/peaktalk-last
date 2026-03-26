@@ -115,6 +115,19 @@ export default function DashboardPage() {
     ? `~${Math.round(totalMinutes / 60)} ч`
     : totalMinutes > 0 ? `~${totalMinutes} мин` : null;
 
+  // Sparkline for trend card
+  const sparkScores = scoredByDate.slice(-7).map(s => Math.round(s.avg_score! * 10));
+  const sparkColor = progressDelta == null ? '#cbd5e1'
+    : progressDelta > 0 ? '#10b981'
+    : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
+  const sparkPoints = sparkScores.length >= 2
+    ? sparkScores.map((s, i) => {
+        const x = (i / (sparkScores.length - 1)) * 80;
+        const y = 24 - (s / 10) * 20 + 2;
+        return `${x},${y}`;
+      }).join(' ')
+    : null;
+
   return (
     <div className="pb-16 md:pb-10 pt-8 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
 
@@ -181,14 +194,14 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
 
           {/* Card: Индекс готовности */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
                 <Target size={18} className="text-emerald-500" />
               </div>
             </div>
-            <div>
+            <div className="flex-1">
               <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                 {simData == null ? (
                   <span className="opacity-25">—</span>
@@ -198,7 +211,7 @@ export default function DashboardPage() {
                   <span className="text-gray-300">—</span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 mt-1 mb-3">
                 {simAvgScore10 == null
                   ? 'Пройди симуляцию'
                   : simAvgScore10 >= 8 ? 'Готов к питчу'
@@ -206,6 +219,15 @@ export default function DashboardPage() {
                   : simAvgScore10 >= 4 ? 'Нужна практика'
                   : 'Серьёзная работа'}
               </p>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${(simAvgScore10 ?? 0) * 10}%`,
+                  background: (simAvgScore10 ?? 0) >= 7 ? '#10b981' : (simAvgScore10 ?? 0) >= 4 ? '#f59e0b' : '#f43f5e',
+                }}
+              />
             </div>
           </div>
 
@@ -223,21 +245,44 @@ export default function DashboardPage() {
               : progressDelta > 0 ? 'text-emerald-600'
               : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
             return (
-              <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+              <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
                   <div className={`w-10 h-10 rounded-full ${trendBg} flex items-center justify-center`}>
                     <TrendIcon size={18} className={trendColor} />
                   </div>
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className={`text-4xl font-extrabold ${trendValColor}`} style={{ letterSpacing: '-0.03em' }}>
                     {progressDelta == null ? '—'
                       : progressDelta === 0 ? '= 0'
                       : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
+                  <p className="text-sm text-gray-500 mt-1 mb-2">{trendSub}</p>
                 </div>
+                {sparkPoints && (
+                  <svg viewBox="0 0 80 26" className="w-full h-8 mt-auto" preserveAspectRatio="none">
+                    <polyline
+                      points={sparkPoints}
+                      fill="none"
+                      stroke={sparkColor}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.7"
+                    />
+                    {sparkScores.map((s, i) => (
+                      <circle
+                        key={i}
+                        cx={(i / (sparkScores.length - 1)) * 80}
+                        cy={24 - (s / 10) * 20 + 2}
+                        r={i === sparkScores.length - 1 ? 2.5 : 1.5}
+                        fill={sparkColor}
+                        opacity={i === sparkScores.length - 1 ? 1 : 0.5}
+                      />
+                    ))}
+                  </svg>
+                )}
               </div>
             );
           })()}

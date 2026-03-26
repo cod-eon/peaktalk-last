@@ -430,7 +430,24 @@ function SimulationPageContent() {
                         : progressDelta < 0 ? 'Бывает — встряхнись'
                         : 'Нет изменений';
 
-                    const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200";
+                    // Sparkline: последние 7 scored сессий
+                    const sparkScores = scoredByDate.slice(-7).map(s => Math.round(s.avg_score! * 10));
+                    const sparkColor = progressDelta == null ? '#cbd5e1'
+                        : progressDelta > 0 ? '#10b981'
+                        : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
+                    const sparkPoints = sparkScores.length >= 2
+                        ? sparkScores.map((s, i) => {
+                            const x = (i / (sparkScores.length - 1)) * 80;
+                            const y = 24 - (s / 10) * 20 + 2;
+                            return `${x},${y}`;
+                        }).join(' ')
+                        : null;
+
+                    // Persona icon for "Сложнее всего"
+                    const hardestVisual = hardestRole ? (ROLE_VISUALS[hardestRole.role] ?? DEFAULT_VISUAL) : DEFAULT_VISUAL;
+                    const HardestIcon = hardestVisual.icon;
+
+                    const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
 
                     return (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -444,9 +461,20 @@ function SimulationPageContent() {
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {avgScore10 != null ? `${avgScore10}/10` : '—'}
+                                    {avgScore10 != null ? (
+                                        <>{avgScore10}<span className="text-xl font-semibold text-gray-400">/10</span></>
+                                    ) : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">{readinessSub}</p>
+                                <p className="text-sm text-gray-500 mt-1 mb-3">{readinessSub}</p>
+                                <div className="mt-auto h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full transition-all duration-700"
+                                        style={{
+                                            width: `${(avgScore10 ?? 0) * 10}%`,
+                                            background: (avgScore10 ?? 0) >= 7 ? '#10b981' : (avgScore10 ?? 0) >= 4 ? '#f59e0b' : '#f43f5e',
+                                        }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Тренд роста */}
@@ -462,7 +490,32 @@ function SimulationPageContent() {
                                         : progressDelta === 0 ? '= 0'
                                         : `${progressDelta > 0 ? '+' : ''}${progressDelta}б`}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">{trendSub}</p>
+                                <p className="text-sm text-gray-500 mt-1 mb-2">{trendSub}</p>
+                                {sparkPoints && (
+                                    <div className="mt-auto">
+                                        <svg viewBox="0 0 80 26" className="w-full h-8" preserveAspectRatio="none">
+                                            <polyline
+                                                points={sparkPoints}
+                                                fill="none"
+                                                stroke={sparkColor}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                opacity="0.7"
+                                            />
+                                            {sparkScores.map((s, i) => (
+                                                <circle
+                                                    key={i}
+                                                    cx={(i / (sparkScores.length - 1)) * 80}
+                                                    cy={24 - (s / 10) * 20 + 2}
+                                                    r={i === sparkScores.length - 1 ? 2.5 : 1.5}
+                                                    fill={sparkColor}
+                                                    opacity={i === sparkScores.length - 1 ? 1 : 0.5}
+                                                />
+                                            ))}
+                                        </svg>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Личный рекорд */}
@@ -474,22 +527,30 @@ function SimulationPageContent() {
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {bestScore10 != null ? `${bestScore10}/10` : '—'}
+                                    {bestScore10 != null ? (
+                                        <>{bestScore10}<span className="text-xl font-semibold text-gray-400">/10</span></>
+                                    ) : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-gray-500 mt-1 mb-3">
                                     {bestScore10 != null ? 'Личный рекорд' : 'Пройди симуляцию'}
                                 </p>
+                                <div className="mt-auto h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-amber-300 rounded-full transition-all duration-700"
+                                        style={{ width: `${(bestScore10 ?? 0) * 10}%` }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Сложнее всего */}
                             <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
-                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-                                        <Flame size={18} className="text-orange-500" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
+                                        <HardestIcon size={18} className={hardestRole ? hardestVisual.iconColor : 'text-gray-400'} />
                                     </div>
                                 </div>
-                                <div className="text-lg font-bold text-gray-900 leading-snug" style={{ letterSpacing: '-0.01em' }}>
+                                <div className="text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
                                     {hardestRole
                                         ? (PERSONA_LABELS[hardestRole.role] ?? hardestRole.role)
                                         : '—'}
@@ -499,6 +560,14 @@ function SimulationPageContent() {
                                         ? `Ср. балл ${hardestRole.avg}/10`
                                         : 'Пройди 2+ сессии'}
                                 </p>
+                                {hardestRole && (
+                                    <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-rose-300 rounded-full transition-all duration-700"
+                                            style={{ width: `${hardestRole.avg * 10}%` }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );
