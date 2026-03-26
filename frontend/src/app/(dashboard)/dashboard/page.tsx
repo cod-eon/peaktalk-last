@@ -163,13 +163,15 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
 
           {/* Card: texts */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Тексты</span>
-              <FileText size={20} className="text-gray-400" />
+              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тексты</span>
+              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                <FileText size={18} className="text-orange-500" />
+              </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+              <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                 {isLoading ? <span className="opacity-25">—</span> : totalDrafts}
               </div>
               <p className="text-sm text-gray-500 mt-1 mb-3">
@@ -178,7 +180,7 @@ export default function DashboardPage() {
               {totalDrafts > 0 && (
                 <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gray-400 rounded-full transition-all duration-700"
+                    className="h-full bg-orange-300 rounded-full transition-all duration-700"
                     style={{ width: `${Math.round((analyzedDrafts.length / totalDrafts) * 100)}%` }}
                   />
                 </div>
@@ -187,13 +189,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Card: simulations */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Симуляции</span>
-              <Sparkles size={20} className="text-gray-400" />
+              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Симуляции</span>
+              <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
+                <Sparkles size={18} className="text-violet-500" />
+              </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+              <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                 {simData == null ? <span className="opacity-25">—</span> : completedSims.length}
               </div>
               <p className="text-sm text-gray-500 mt-1">
@@ -212,19 +216,21 @@ export default function DashboardPage() {
               : 'Нужна доработка'
               : null;
             return (
-              <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between">
+              <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ср. балл</span>
-                  <TrendingUp size={20} className="text-gray-400" />
+                  <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Ср. балл</span>
+                  <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                    <TrendingUp size={18} className="text-emerald-500" />
+                  </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+                  <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
                     {isLoading ? (
                       <span className="opacity-25">—</span>
                     ) : displayScore != null ? (
                       <>
                         {displayScore}
-                        <span className="text-xl font-medium text-gray-400 ml-0.5">/10</span>
+                        <span className="text-2xl font-bold text-gray-400 ml-0.5">/10</span>
                       </>
                     ) : (
                       <span className="text-gray-300">—</span>

@@ -98,10 +98,9 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
         : null;
     const scoreVal = session.avg_score != null ? Math.round(session.avg_score * 10) : null;
     const scoreColor = scoreVal == null
-        ? 'text-[var(--text-dim)]'
-        : scoreVal >= 7 ? 'text-emerald-500'
-        : scoreVal >= 5 ? 'text-amber-400'
-        : 'text-red-400';
+        ? 'text-gray-400'
+        : scoreVal >= 5 ? 'text-gray-700'
+        : 'text-rose-500';
     const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
     const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
     const RoleIcon = visual.icon;
@@ -113,7 +112,7 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
             animate={{ opacity: 1, y: 0 }}
             className="text-left w-full p-5 rounded-xl border bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)] transition-all group"
         >
-            <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-start justify-between gap-3 pb-3 mb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2.5 min-w-0">
                     <div className={`w-8 h-8 rounded-lg ${visual.iconBg} ${visual.iconColor} flex items-center justify-center shrink-0`}>
                         <RoleIcon size={16} />
@@ -127,40 +126,40 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                         </div>
                     </div>
                 </div>
-                <span className={`shrink-0 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-md ${
                     isActive
-                        ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
+                        ? 'bg-gray-100 text-gray-700'
                         : isCancelled
-                            ? 'bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border-[var(--border-main)]'
-                            : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                            ? 'bg-gray-100 text-gray-400'
+                            : 'bg-gray-100 text-gray-600'
                 }`}>
                     {isActive ? 'Активна' : isCancelled ? 'Прервана' : 'Завершена'}
                 </span>
             </div>
 
-            <div className="flex items-center gap-4 mt-3">
-                <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 text-gray-400">
                     <Clock size={11} />
                     <span className="font-mono text-[10px]">{formatDate(session.created_at)}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
+                <div className="flex items-center gap-1.5 text-gray-400">
                     <MessageSquare size={11} />
                     <span className="font-mono text-[10px]">{session.message_count} сообщ.</span>
                 </div>
                 {scoreLabel && (
-                    <div className={`flex items-center gap-1.5 ${scoreColor}`}>
-                        <Trophy size={11} />
-                        <span className="font-mono text-[10px] font-semibold">{scoreLabel}</span>
+                    <div className="flex items-center gap-1.5">
+                        <Trophy size={11} className="text-gray-400" />
+                        <span className={`font-mono text-[10px] font-semibold ${scoreColor}`}>{scoreLabel}</span>
                     </div>
                 )}
-                <div className="ml-auto text-[var(--text-dim)] group-hover:text-[var(--accent-primary)] transition-colors">
+                <div className="ml-auto text-gray-400 group-hover:text-[var(--accent-primary)] transition-colors">
                     <ChevronRight size={14} />
                 </div>
             </div>
             {session.document_title && (
-                <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-[var(--border-main)]">
-                    <FileText size={10} className="text-[var(--text-dim)] shrink-0" />
-                    <span className="font-mono text-[10px] text-[var(--text-dim)] truncate">
+                <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-gray-100">
+                    <FileText size={10} className="text-gray-400 shrink-0" />
+                    <span className="font-mono text-[10px] text-gray-400 truncate">
                         {session.document_title}
                     </span>
                 </div>
@@ -382,52 +381,61 @@ function SimulationPageContent() {
                         : 'Нужна практика'
                         : 'Нет данных';
 
+                    const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200";
                     return (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 
                             {/* Всего */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                            <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Всего</span>
-                                    <Zap size={20} className="text-gray-400" />
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Всего</span>
+                                    <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
+                                        <Zap size={18} className="text-violet-500" />
+                                    </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {sessions.length}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">сессий запущено</p>
                             </div>
 
                             {/* Завершено */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                            <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Завершено</span>
-                                    <CheckCircle2 size={20} className="text-gray-400" />
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Завершено</span>
+                                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                                        <CheckCircle2 size={18} className="text-emerald-500" />
+                                    </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {completedSessions.length}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">Конверсия {completionRate}%</p>
                             </div>
 
                             {/* Ср. балл */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                            <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ср. балл</span>
-                                    <BarChart2 size={20} className="text-gray-400" />
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Ср. балл</span>
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                                        <BarChart2 size={18} className="text-blue-500" />
+                                    </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {avgScore10 != null ? `${avgScore10}/10` : '—'}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">{scoreSub}</p>
                             </div>
 
                             {/* Сообщений */}
-                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                            <div className={kpiCard}>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Сообщений</span>
-                                    <MessageSquare size={20} className="text-gray-400" />
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сообщений</span>
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                                        <MessageSquare size={18} className="text-orange-500" />
+                                    </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {totalMessages}
                                 </div>
                                 <p className="text-sm text-gray-500 mt-1">Обменов в диалоге</p>
