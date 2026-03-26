@@ -58,8 +58,9 @@ docker compose run --rm migrate
 echo ""
 echo "[4/5] Restarting services..."
 # Полный down (контейнеры удаляются, данные в volumes сохраняются),
-# затем чистый up. Это гарантированно устраняет конфликты имён и сирот.
+# затем prune для гарантированного освобождения имён, затем чистый up.
 docker compose down --remove-orphans
+docker container prune -f
 docker compose up -d
 # Restart nginx to force DNS re-resolution of upstream IPs after container recreation
 docker compose restart nginx
