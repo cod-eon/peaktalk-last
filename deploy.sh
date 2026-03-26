@@ -57,6 +57,8 @@ docker compose run --rm migrate
 # while containers restart one by one).
 echo ""
 echo "[4/5] Restarting services..."
+# Remove stale stopped containers to avoid name conflicts on recreation
+docker compose rm -f api worker frontend 2>/dev/null || true
 docker compose up -d api worker frontend nginx
 # Restart nginx to force DNS re-resolution of upstream IPs after container recreation
 docker compose restart nginx
