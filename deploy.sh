@@ -5,20 +5,16 @@
 # Runs on the VDS to pull latest code and restart all services.
 # Called by GitHub Actions on every push to main.
 #
-# Can also be run manually on the VDS:
-#   cd /opt/peaktalk && ./deploy.sh
-#
 # Flow:
-#   1. git pull (get latest code)
-#   2. Build Docker images (api, worker, frontend)
-#   3. Start all services — migrate runs automatically before api
-#      (api depends_on migrate: condition: service_completed_successfully)
-#   4. Health check
+#   1. git pull
+#   2. Build Docker images (api + worker with cache, frontend no-cache)
+#   3. Remove application containers by compose label (keeps postgres/redis)
+#   4. docker compose up -d  (migrate runs before api via depends_on)
+#   5. Health check
 # =============================================================================
 
 set -euo pipefail
 
-# Change to the directory containing this script (project root)
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 echo ""
@@ -32,29 +28,30 @@ echo "[1/4] Pulling latest code from main..."
 git pull origin main
 
 # ── Step 2: Build Docker images ───────────────────────────────────────────────
-# api and worker use layer cache (Python deps rarely change).
-# frontend is always built --no-cache: NEXT_PUBLIC_* vars are baked into
-# the JS bundle at build time, and BuildKit cache on VDS can silently reuse
-# a stale image even when source files changed.
 echo ""
 echo "[2/4] Building Docker images..."
 docker compose build api worker
 docker compose build --no-cache frontend
 
 # ── Step 3: Start / update services ───────────────────────────────────────────
-# docker compose up -d will:
-#   - Recreate containers whose image changed
-#   - Leave unchanged containers running (no downtime for postgres/redis)
-#   - The migrate service runs first (api depends_on it via service_completed_successfully)
-#   - Restart nginx after to force DNS re-resolution of upstream IPs
 echo ""
 echo "[3/4] Starting services..."
-# Удалить контейнеры с устаревшим форматом имён вида "{hash}_peaktalk-*"
-# (артефакты Docker Compose v1). Блокируют пересоздание контейнеров.
-docker ps -a --format '{{.Names}}' \
-  | grep -E '^[a-f0-9]+_peaktalk-' \
-  | xargs -r docker rm -f 2>/dev/null || true
+
+# Удаляем контейнеры приложения по compose-label — это находит в том числе
+# контейнеры с хеш-префиксом ({hash}_peaktalk-*), которые Docker Compose
+# оставляет после неудачных пересозданий и которые блокируют следующий деплой.
+# Postgres и Redis не трогаем — их данные в именованных volumes, контейнеры
+# перезапустятся автоматически через depends_on.
+for svc in api worker migrate beat frontend nginx; do
+    docker ps -aq \
+        --filter "label=com.docker.compose.project=peaktalk" \
+        --filter "label=com.docker.compose.service=${svc}" \
+    | xargs -r docker rm -f 2>/dev/null || true
+done
+
 docker compose up -d --remove-orphans
+
+# Restart nginx to force DNS re-resolution of upstream IPs after recreation
 docker compose restart nginx
 
 # ── Step 4: Health check ───────────────────────────────────────────────────────
