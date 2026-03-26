@@ -57,8 +57,12 @@ docker compose run --rm migrate
 # while containers restart one by one).
 echo ""
 echo "[4/5] Restarting services..."
-# Remove stale stopped containers to avoid name conflicts on recreation
-docker compose rm -f api worker frontend 2>/dev/null || true
+# Force-remove any containers whose names match our services (including stale ones
+# with old hash-prefixed names like "abc123_peaktalk-api-1") to avoid name conflicts.
+docker ps -aq --filter "name=peaktalk-api-1" \
+             --filter "name=peaktalk-worker-1" \
+             --filter "name=peaktalk-frontend-1" \
+  | xargs -r docker rm -f 2>/dev/null || true
 docker compose up -d api worker frontend nginx
 # Restart nginx to force DNS re-resolution of upstream IPs after container recreation
 docker compose restart nginx
