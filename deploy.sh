@@ -57,9 +57,10 @@ docker compose run --rm migrate
 # while containers restart one by one).
 echo ""
 echo "[4/5] Restarting services..."
-# --force-recreate: пересоздать контейнеры даже если образ не менялся
-# --remove-orphans: удалить контейнеры сервисов, которых нет в compose-файле
-docker compose up -d --force-recreate --remove-orphans api worker frontend nginx
+# Полный down (контейнеры удаляются, данные в volumes сохраняются),
+# затем чистый up. Это гарантированно устраняет конфликты имён и сирот.
+docker compose down --remove-orphans
+docker compose up -d
 # Restart nginx to force DNS re-resolution of upstream IPs after container recreation
 docker compose restart nginx
 
