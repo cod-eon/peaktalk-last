@@ -49,6 +49,11 @@ docker compose build --no-cache frontend
 #   - Restart nginx after to force DNS re-resolution of upstream IPs
 echo ""
 echo "[3/4] Starting services..."
+# Удалить контейнеры с устаревшим форматом имён вида "{hash}_peaktalk-*"
+# (артефакты Docker Compose v1). Блокируют пересоздание контейнеров.
+docker ps -a --format '{{.Names}}' \
+  | grep -E '^[a-f0-9]+_peaktalk-' \
+  | xargs -r docker rm -f 2>/dev/null || true
 docker compose up -d --remove-orphans
 docker compose restart nginx
 
