@@ -370,22 +370,99 @@ function SimulationPageContent() {
                 </div>
 
                 {/* Stats strip */}
-                {completedSessions.length > 0 && (() => {
+                {sessions.length > 0 && (() => {
                     const scores = completedSessions.filter(s => s.avg_score != null).map(s => s.avg_score!);
-                    const avgScore = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) : null;
+                    const avgScoreRaw = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+                    const avgScore10 = avgScoreRaw != null ? Math.round(avgScoreRaw * 10) : null;
+                    const bestScore10 = scores.length ? Math.round(Math.max(...scores) * 10) : null;
+                    const totalMessages = sessions.reduce((a, s) => a + s.message_count, 0);
+                    const completionRate = Math.round(completedSessions.length / sessions.length * 100);
+
+                    const scoreTextClass = avgScore10 == null ? 'text-[var(--text-dim)]'
+                        : avgScore10 >= 7 ? 'text-emerald-600'
+                        : avgScore10 >= 5 ? 'text-amber-500'
+                        : 'text-red-500';
+                    const scoreIconBg = avgScore10 == null ? 'bg-gray-50'
+                        : avgScore10 >= 7 ? 'bg-emerald-50'
+                        : avgScore10 >= 5 ? 'bg-amber-50'
+                        : 'bg-red-50';
+                    const scoreAccentBg = avgScore10 == null ? 'bg-gray-200'
+                        : avgScore10 >= 7 ? 'bg-emerald-500'
+                        : avgScore10 >= 5 ? 'bg-amber-400'
+                        : 'bg-red-400';
+                    const scoreSub = avgScore10 != null
+                        ? avgScore10 >= 7 ? 'хороший результат'
+                        : avgScore10 >= 5 ? 'есть куда расти'
+                        : 'нужна практика'
+                        : 'нет данных';
+
                     return (
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
-                            {[
-                                { icon: Zap, label: 'Всего', value: String(sessions.length) },
-                                { icon: CheckCircle2, label: 'Завершено', value: String(completedSessions.length) },
-                                { icon: BarChart2, label: 'Балл', value: avgScore != null ? `${avgScore}%` : '—' },
-                            ].map(({ icon: Icon, label, value }) => (
-                                <div key={label} className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-3 sm:p-4 text-center">
-                                    <Icon size={16} className="text-[var(--accent-primary)] mx-auto mb-1.5 sm:mb-2" />
-                                    <div className="font-syne font-bold text-base sm:text-lg text-[var(--text-main)]">{value}</div>
-                                    <div className="font-inter text-[9px] sm:text-[10px] text-[var(--text-dim)] uppercase tracking-wider mt-0.5">{label}</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-8">
+
+                            {/* Всего */}
+                            <div className="bg-white rounded-xl border border-[var(--border-main)] p-4 sm:p-5 relative overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-[var(--accent-primary)]" />
+                                <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center mb-3">
+                                    <Zap size={14} className="text-[var(--accent-primary)]" />
                                 </div>
-                            ))}
+                                <div className="font-syne font-bold text-2xl sm:text-[28px] text-[var(--text-main)] leading-none mb-1" style={{ letterSpacing: '-0.02em' }}>
+                                    {sessions.length}
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-dim)]">Всего</div>
+                                <div className="text-[10px] text-[var(--text-dim)] mt-1">сессий запущено</div>
+                            </div>
+
+                            {/* Завершено */}
+                            <div className="bg-white rounded-xl border border-[var(--border-main)] p-4 sm:p-5 relative overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-emerald-500" />
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
+                                    <CheckCircle2 size={14} className="text-emerald-600" />
+                                </div>
+                                <div className="font-syne font-bold text-2xl sm:text-[28px] text-emerald-600 leading-none mb-1" style={{ letterSpacing: '-0.02em' }}>
+                                    {completedSessions.length}
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-dim)]">Завершено</div>
+                                <div className="text-[10px] text-[var(--text-dim)] mt-1">{completionRate}% завершаемость</div>
+                            </div>
+
+                            {/* Ср. балл */}
+                            <div className="bg-white rounded-xl border border-[var(--border-main)] p-4 sm:p-5 relative overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                <div className={`absolute top-0 left-0 right-0 h-[3px] ${scoreAccentBg}`} />
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-3 ${scoreIconBg}`}>
+                                    <BarChart2 size={14} className={scoreTextClass} />
+                                </div>
+                                <div className={`font-syne font-bold text-2xl sm:text-[28px] leading-none mb-1 ${scoreTextClass}`} style={{ letterSpacing: '-0.02em' }}>
+                                    {avgScore10 != null ? `${avgScore10}/10` : '—'}
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-dim)]">Ср. балл</div>
+                                <div className="text-[10px] text-[var(--text-dim)] mt-1">{scoreSub}</div>
+                            </div>
+
+                            {/* Рекорд */}
+                            <div className="bg-white rounded-xl border border-[var(--border-main)] p-4 sm:p-5 relative overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-amber-400" />
+                                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
+                                    <Trophy size={14} className="text-amber-500" />
+                                </div>
+                                <div className={`font-syne font-bold text-2xl sm:text-[28px] leading-none mb-1 ${bestScore10 != null ? 'text-amber-500' : 'text-[var(--text-dim)]'}`} style={{ letterSpacing: '-0.02em' }}>
+                                    {bestScore10 != null ? `${bestScore10}/10` : '—'}
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-dim)]">Рекорд</div>
+                                <div className="text-[10px] text-[var(--text-dim)] mt-1">лучший результат</div>
+                            </div>
+
+                            {/* Сообщений */}
+                            <div className="bg-white rounded-xl border border-[var(--border-main)] p-4 sm:p-5 relative overflow-hidden col-span-2 sm:col-span-1" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-violet-500" />
+                                <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center mb-3">
+                                    <MessageSquare size={14} className="text-violet-600" />
+                                </div>
+                                <div className="font-syne font-bold text-2xl sm:text-[28px] text-[var(--text-main)] leading-none mb-1" style={{ letterSpacing: '-0.02em' }}>
+                                    {totalMessages}
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-dim)]">Сообщений</div>
+                                <div className="text-[10px] text-[var(--text-dim)] mt-1">обменов в диалоге</div>
+                            </div>
                         </div>
                     );
                 })()}

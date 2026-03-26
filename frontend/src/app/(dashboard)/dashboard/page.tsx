@@ -73,6 +73,12 @@ export default function DashboardPage() {
     staleTime: 30_000,
   });
 
+  const { data: simData } = useQuery<{ items: Array<{ status: string; avg_score: number | null }> }>({
+    queryKey: ['simulations-dashboard'],
+    queryFn: () => api.get('/simulation?limit=50'),
+    staleTime: 30_000,
+  });
+
   const drafts = data?.items ?? [];
   const totalDrafts = data?.total ?? 0;
   const analyzedDrafts = drafts.filter((d) => d.analysis_result !== null);
@@ -83,6 +89,13 @@ export default function DashboardPage() {
         analyzedDrafts.length
       )
       : null;
+
+  const simSessions = simData?.items ?? [];
+  const completedSims = simSessions.filter(s => s.status === 'completed');
+  const simScores = completedSims.filter(s => s.avg_score != null).map(s => s.avg_score as number);
+  const simAvgScore10 = simScores.length
+    ? Math.round((simScores.reduce((a, b) => a + b, 0) / simScores.length) * 10)
+    : null;
 
   return (
     <div className="pb-16 md:pb-10 pt-8 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
@@ -147,66 +160,113 @@ export default function DashboardPage() {
         </Link>
 
         {/* Metric cards column */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
 
-          {/* Card: texts uploaded */}
+          {/* Card: texts */}
           <div
-            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-5 flex flex-col justify-between"
+            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className="label-kicker">Текстов загружено</span>
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-[var(--accent-primary)]" />
+            <div className="flex items-center justify-between mb-2">
+              <span className="label-kicker">Тексты</span>
               <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center">
                 <FileText size={14} className="text-[var(--accent-primary)]" />
               </div>
             </div>
             <div>
-              <div className="text-[36px] font-bold text-[var(--text-main)] leading-none mb-1" style={{ letterSpacing: '-0.03em' }}>
+              <div className="text-[32px] font-bold text-[var(--text-main)] leading-none mb-0.5" style={{ letterSpacing: '-0.03em' }}>
                 {isLoading ? <span className="opacity-25">—</span> : totalDrafts}
               </div>
-              <p className="text-[12px] text-[var(--text-dim)]">
-                {totalDrafts > 0
-                  ? `${analyzedDrafts.length} из ${totalDrafts} проанализировано`
-                  : 'материалов'}
+              <p className="text-[11px] text-[var(--text-dim)] mb-2">
+                {totalDrafts > 0 ? `${analyzedDrafts.length} из ${totalDrafts} разобрано` : 'загружено материалов'}
+              </p>
+              {totalDrafts > 0 && (
+                <div className="h-1 bg-orange-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-700"
+                    style={{ width: `${Math.round((analyzedDrafts.length / totalDrafts) * 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card: simulations */}
+          <div
+            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
+            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-violet-500" />
+            <div className="flex items-center justify-between mb-2">
+              <span className="label-kicker">Симуляции</span>
+              <div className="w-7 h-7 rounded-md bg-violet-50 flex items-center justify-center">
+                <Sparkles size={14} className="text-violet-600" />
+              </div>
+            </div>
+            <div>
+              <div className="text-[32px] font-bold text-violet-600 leading-none mb-0.5" style={{ letterSpacing: '-0.03em' }}>
+                {simData == null ? <span className="opacity-25 text-[var(--text-main)]">—</span> : completedSims.length}
+              </div>
+              <p className="text-[11px] text-[var(--text-dim)]">
+                {simSessions.length > 0 ? `из ${simSessions.length} запущено` : 'пройдено симуляций'}
               </p>
             </div>
           </div>
 
           {/* Card: avg score */}
-          <div
-            className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-5 flex flex-col justify-between"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="label-kicker">Средний балл</span>
-              <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center">
-                <TrendingUp size={14} className="text-emerald-600" />
+          {(() => {
+            const displayScore = simAvgScore10 ?? avgScore;
+            const scoreSource = simAvgScore10 != null ? 'по симуляциям' : avgScore != null ? 'по разборам' : null;
+            const scoreClass = displayScore == null ? 'text-[var(--text-dim)]'
+              : displayScore >= 7 ? 'text-emerald-600'
+              : displayScore >= 5 ? 'text-amber-500'
+              : 'text-red-500';
+            const accentBg = displayScore == null ? 'bg-gray-200'
+              : displayScore >= 7 ? 'bg-emerald-500'
+              : displayScore >= 5 ? 'bg-amber-400'
+              : 'bg-red-400';
+            const iconBg = displayScore == null ? 'bg-gray-50'
+              : displayScore >= 7 ? 'bg-emerald-50'
+              : displayScore >= 5 ? 'bg-amber-50'
+              : 'bg-red-50';
+            const scoreSub = displayScore != null
+              ? displayScore >= 7 ? 'Отличная форма'
+              : displayScore >= 5 ? 'Есть куда расти'
+              : 'Нужна доработка'
+              : 'Нет данных';
+            return (
+              <div
+                className="flex-1 bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+              >
+                <div className={`absolute top-0 left-0 right-0 h-[3px] ${accentBg}`} />
+                <div className="flex items-center justify-between mb-2">
+                  <span className="label-kicker">Ср. балл</span>
+                  <div className={`w-7 h-7 rounded-md flex items-center justify-center ${iconBg}`}>
+                    <TrendingUp size={14} className={scoreClass} />
+                  </div>
+                </div>
+                <div>
+                  <div className={`text-[32px] font-bold leading-none mb-0.5 ${scoreClass}`} style={{ letterSpacing: '-0.03em' }}>
+                    {isLoading ? (
+                      <span className="opacity-25 text-[var(--text-main)]">—</span>
+                    ) : displayScore != null ? (
+                      <>
+                        {displayScore}
+                        <span className={`text-[18px] font-medium ml-0.5 opacity-60 ${scoreClass}`}>/10</span>
+                      </>
+                    ) : (
+                      <span className="text-[var(--text-dim)] text-2xl">—</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[var(--text-dim)]">
+                    {scoreSource ? `${scoreSub} · ${scoreSource}` : 'Запустите анализ'}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-[36px] font-bold text-[var(--text-main)] leading-none mb-1" style={{ letterSpacing: '-0.03em' }}>
-                {isLoading ? (
-                  <span className="opacity-25">—</span>
-                ) : avgScore !== null ? (
-                  <>
-                    {avgScore}
-                    <span className="text-[20px] text-[var(--text-dim)] font-medium ml-0.5">/10</span>
-                  </>
-                ) : (
-                  <span className="text-[var(--text-dim)] text-2xl">—</span>
-                )}
-              </div>
-              <p className="text-[12px] text-[var(--text-dim)]">
-                {avgScore !== null
-                  ? avgScore >= 7
-                    ? 'Логика улучшилась'
-                    : avgScore >= 5
-                      ? 'Есть куда расти'
-                      : 'Нужна доработка'
-                  : 'Запустите анализ'}
-              </p>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </div>
 
