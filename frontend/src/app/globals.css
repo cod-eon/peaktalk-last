@@ -134,10 +134,12 @@
     -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 90%);
   }
 
-  /* Subtle dot-grid page background */
+  /* Line-grid page background — same as onboarding */
   .bg-page-geo {
-    background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
-    background-size: 28px 28px;
+    background-image:
+      linear-gradient(var(--border-main) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-main) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 
   /* Subtle top-border highlight for elevated cards */
