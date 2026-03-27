@@ -15,6 +15,7 @@ class DocumentResponse(BaseModel):
     extracted_text: str | None = None
     parsed_at: datetime | None = None
     created_at: datetime
+    draft_id: uuid.UUID | None = None
 
     model_config = {"from_attributes": True}
 

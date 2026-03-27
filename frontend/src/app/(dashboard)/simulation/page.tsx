@@ -215,10 +215,10 @@ function SimulationPageContent() {
     const docDropdownRef = useRef<HTMLDivElement>(null);
     const docTriggerRef = useRef<HTMLButtonElement>(null);
 
-    // Load sessions, personas and drafts on mount
+    // Load sessions, personas and documents on mount
     useEffect(() => {
         async function fetchAll() {
-            const [sessionsRes, personasRes, draftsRes] = await Promise.allSettled([
+            const [sessionsRes, personasRes, docsRes] = await Promise.allSettled([
                 api.get('/simulation?limit=50'),
                 api.get('/simulation/personas'),
                 api.get('/documents?limit=200'),
@@ -244,21 +244,35 @@ function SimulationPageContent() {
             setPersonasLoading(false);
 
             // Documents
-            if (draftsRes.status === 'fulfilled' && draftsRes.value?.items) {
-                setDocuments(draftsRes.value.items);
+            let docsItems: { id: string; name: string; source?: string; created_at?: string }[] = [];
+            if (docsRes.status === 'fulfilled' && docsRes.value?.items) {
+                docsItems = docsRes.value.items;
             }
+
+            // If navigated from analysis page with a draft ID, fetch the draft and inject it
+            if (draftFromUrl) {
+                const alreadyPresent = docsItems.some(d => d.id === draftFromUrl);
+                if (!alreadyPresent) {
+                    try {
+                        const draftData = await api.get(`/drafts/${draftFromUrl}`);
+                        if (draftData?.id) {
+                            docsItems = [
+                                { id: draftData.id, name: draftData.title || 'Черновик', source: 'draft', created_at: draftData.created_at },
+                                ...docsItems,
+                            ];
+                        }
+                    } catch {
+                        // draft not found — proceed without pre-selection
+                    }
+                }
+                setSelectedDoc(draftFromUrl);
+                setView('setup');
+            }
+            setDocuments(docsItems);
         }
         fetchAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // Auto-select draft from URL param once data is loaded
-    useEffect(() => {
-        if (draftFromUrl && !sessionsLoading) {
-            setSelectedDoc(draftFromUrl);
-            setView('setup');
-        }
-    }, [draftFromUrl, sessionsLoading]);
 
     // Open doc dropdown with collision detection
     const handleDocDropdownToggle = () => {
@@ -313,9 +327,13 @@ function SimulationPageContent() {
         setIsStarting(true);
         try {
             const domainName = selectedDomain === 'custom' ? customDomain : selectedDomain;
+            const selectedDocItem = documents.find(d => d.id === selectedDoc);
+            const isDraft = selectedDocItem?.source === 'draft';
+            const hasDoc = selectedDoc !== null && selectedDoc !== 'none';
             const payload = {
                 persona_config: { role: selectedRole, industry: domainName, difficulty },
-                document_id: selectedDoc === 'none' ? null : selectedDoc,
+                document_id: (hasDoc && !isDraft) ? selectedDoc : null,
+                draft_id: (hasDoc && isDraft) ? selectedDoc : null,
             };
             const res = await api.post('/simulation/start', payload);
             if (res?.id) {

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.document import Document, FileType
+from app.models.draft import SpeechDraft
 from app.models.user import User
 from app.schemas.document import DocumentListResponse, DocumentResponse, DocumentTextCreate
 from app.services import parser, storage
@@ -113,7 +114,38 @@ async def list_documents(
         .offset(offset)
     )
     docs = list(result.scalars().all())
-    return DocumentListResponse(items=docs, total=total, limit=limit, offset=offset)
+
+    # Fetch latest draft_id for each document
+    draft_map: dict[uuid.UUID, uuid.UUID] = {}
+    if docs:
+        doc_ids = [d.id for d in docs]
+        draft_rows = await db.execute(
+            select(SpeechDraft.document_id, SpeechDraft.id)
+            .where(
+                SpeechDraft.user_id == current_user.id,
+                SpeechDraft.document_id.in_(doc_ids),
+            )
+            .order_by(SpeechDraft.created_at.desc())
+        )
+        for row in draft_rows:
+            if row.document_id not in draft_map:
+                draft_map[row.document_id] = row.id
+
+    items = []
+    for doc in docs:
+        dr = DocumentResponse(
+            id=doc.id,
+            name=doc.name,
+            file_type=doc.file_type,
+            storage_path=doc.storage_path,
+            source=doc.source or "upload",
+            extracted_text=doc.extracted_text,
+            parsed_at=doc.parsed_at,
+            created_at=doc.created_at,
+            draft_id=draft_map.get(doc.id),
+        )
+        items.append(dr)
+    return DocumentListResponse(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.post("/from-text", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)

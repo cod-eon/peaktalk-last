@@ -16,6 +16,7 @@ type Doc = {
     storage_path: string | null;
     parsed_at: string | null;
     created_at: string;
+    draft_id: string | null;
 };
 
 type DocListResponse = { items: Doc[]; total: number };
@@ -219,7 +220,7 @@ export default function DocumentsPage() {
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <Link
-                                                href={`/analysis/${doc.id}`}
+                                                href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
                                                 className="text-xs font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors min-h-[44px] px-2 flex items-center"
                                             >
                                                 Разбор <ArrowRight size={12} />
@@ -258,7 +259,7 @@ export default function DocumentsPage() {
                                         {/* Actions */}
                                         <div className="flex items-center gap-3">
                                             <Link
-                                                href={`/analysis/${doc.id}`}
+                                                href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
                                                 className="text-sm font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors whitespace-nowrap"
                                             >
                                                 Разбор <ArrowRight size={13} />
