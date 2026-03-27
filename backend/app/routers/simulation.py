@@ -27,7 +27,7 @@ from app.schemas.simulation import (
     SimulationSessionResponse,
     SimulationStartRequest,
 )
-from app.services.gemini import GeminiError
+from app.services.gemini import GeminiError, detect_ai_content
 from app.services.simulation_ai import evaluate_session, generate_question
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
@@ -272,6 +272,11 @@ async def send_message(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Session is {session.status.value}, not active",
         )
+
+    # AI-generated content detection — fail open (never blocks on error)
+    if await detect_ai_content(body.content):
+        logger.info("AI-generated content detected session=%s", session_id)
+        return SendMessageResponse(ai_detected=True)
 
     next_turn_index = len(session.messages)
 

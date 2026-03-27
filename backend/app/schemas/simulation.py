@@ -77,6 +77,7 @@ class SendMessageRequest(BaseModel):
 
 
 class SendMessageResponse(BaseModel):
-    user_message: SimulationMessageResponse
+    user_message: SimulationMessageResponse | None = None
     assistant_message: SimulationMessageResponse | None = None
     session_completed: bool = False
+    ai_detected: bool = False

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ArrowRight, CheckCircle2, Loader2, Flag } from 'lucide-react';
+import { Bot, ArrowRight, CheckCircle2, Loader2, Flag, AlertTriangle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ export default function SimulationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [aiWarning, setAiWarning] = useState(false);
 
   // Refs for beforeunload beacon (can't use state inside event handler reliably)
   const authTokenRef = useRef<string | null>(null);
@@ -102,6 +103,15 @@ export default function SimulationPage() {
       if (!sessionId) return;
       try {
         const res = await api.get(`/simulation/${sessionId}/history`);
+        // Redirect away from chat if session is no longer active
+        if (res.status === 'completed') {
+          router.replace(`/simulation/${sessionId}/report`);
+          return;
+        }
+        if (res.status === 'cancelled') {
+          router.replace('/simulation');
+          return;
+        }
         setMessages(res.messages || []);
         if (res.persona_config) setPersonaConfig(res.persona_config);
       } catch (err: unknown) {
@@ -119,15 +129,25 @@ export default function SimulationPage() {
     if (!answer.trim() || isAnalyzing) return;
 
     setIsAnalyzing(true);
+    setAiWarning(false);
     const currentAnswer = answer;
-    
+
     // Add optimistic user message for instant UI feedback
     const optimisticUserMsg = { role: 'user', content: currentAnswer, turn_index: 999 };
     setMessages(prev => [...prev, optimisticUserMsg]);
     setAnswer("");
-    
+
     try {
       const res = await api.post(`/simulation/${sessionId}/message`, { content: currentAnswer });
+
+      // AI-generated content detected — reject the answer, let user rewrite
+      if (res.ai_detected) {
+        setMessages(prev => prev.filter(m => m !== optimisticUserMsg));
+        setAnswer(currentAnswer);
+        setAiWarning(true);
+        return;
+      }
+
       setMessages(prev => {
         const filtered = prev.filter(m => m !== optimisticUserMsg);
         const newMsgs = [res.user_message, ...(res.assistant_message ? [res.assistant_message] : [])];
@@ -300,11 +320,32 @@ export default function SimulationPage() {
               </h1>
             </div>
 
+            {/* AI detection warning */}
+            <AnimatePresence>
+              {aiWarning && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="mb-4 flex items-start gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl"
+                >
+                  <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Обнаружен ИИ-сгенерированный ответ</p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Тренер видит, что текст написан нейросетью. Напишите ответ своими словами — только так вы получите честную оценку и реальную пользу от тренировки.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Ввод ответа */}
             <form onSubmit={handleSubmit} className="relative">
               <textarea
                 value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
+                onChange={(e) => { setAnswer(e.target.value); if (aiWarning) setAiWarning(false); }}
                 placeholder={`Ваш ответ ${personaDative}...`}
                 autoFocus
                 disabled={isAnalyzing}

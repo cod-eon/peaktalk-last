@@ -199,7 +199,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: transparent;
+    background-color: var(--bg-surface);
     color: var(--text-main);
     font-family: var(--font-inter), sans-serif;
     font-size: 14px;
