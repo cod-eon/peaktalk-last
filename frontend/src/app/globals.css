@@ -134,6 +134,12 @@
     -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 90%);
   }
 
+  /* Subtle dot-grid page background */
+  .bg-page-geo {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
   /* Subtle top-border highlight for elevated cards */
   .card-highlight::before {
     content: '';

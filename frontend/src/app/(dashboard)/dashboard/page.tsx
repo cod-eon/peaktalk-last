@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   ArrowRight,
   FileText,
@@ -151,7 +152,15 @@ export default function DashboardPage() {
           style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
         >
           {/* Background gradient accent */}
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-violet-50/60 rounded-[var(--radius-lg)] pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
+          {/* Decorative AI-pulse geometry */}
+          <svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.10] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
+            <circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"/>
+            <circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"/>
+            <circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"/>
+            <circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.12"/>
+            <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5"/>
+          </svg>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2.5 mb-4">
@@ -172,7 +181,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="relative z-10 mt-6 flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] border border-violet-200 bg-violet-50 text-violet-700 text-[13px] font-semibold transition-all group-hover:bg-violet-100 group-hover:border-violet-300">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)]">
               <Sparkles size={13} />
               Начать тренировку
             </span>
@@ -187,7 +196,8 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
 
           {/* Card: Индекс готовности */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300 rounded-t-xl" />
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -238,7 +248,8 @@ export default function DashboardPage() {
               : progressDelta > 0 ? 'text-emerald-600'
               : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
             return (
-              <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+              <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
                   <div className={`w-10 h-10 rounded-full ${trendBg} flex items-center justify-center`}>
@@ -281,7 +292,8 @@ export default function DashboardPage() {
           })()}
 
           {/* Card: Время практики */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-violet-400 to-violet-300 rounded-t-xl" />
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Практика</span>
               <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
@@ -343,7 +355,7 @@ export default function DashboardPage() {
               },
             ].map((step, i) => (
               <React.Fragment key={i}>
-                <div className={`flex items-center gap-4 py-3 ${!step.active ? 'opacity-40' : ''}`}>
+                <div className={`flex items-center gap-4 py-3 ${!step.active ? 'opacity-60' : ''}`}>
                   <div className={`w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center shrink-0 border ${step.active ? 'border-orange-200 ' + step.iconBg : 'border-[var(--border-main)] bg-[var(--bg-surface-alt)]'}`}>
                     <step.icon size={15} className={step.active ? step.iconColor : 'text-[var(--text-dim)]'} />
                   </div>
@@ -370,7 +382,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 {i < 2 && (
-                  <div className="ml-10 w-px h-3 bg-[var(--border-main)]" />
+                  <motion.div
+                    className="ml-10 w-px bg-[var(--border-main)]"
+                    initial={{ height: 0 }}
+                    animate={{ height: 12 }}
+                    transition={{ duration: 0.4, delay: i * 0.12 }}
+                  />
                 )}
               </React.Fragment>
             ))}
@@ -423,8 +440,15 @@ export default function DashboardPage() {
 
             {!isLoading && !isError && drafts.length === 0 && (
               <div className="px-5 py-14 text-center">
-                <div className="w-11 h-11 rounded-[var(--radius-md)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center mx-auto mb-3">
-                  <FileText size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+                <div className="mx-auto mb-4 flex items-center justify-center">
+                  <svg width="64" height="52" viewBox="0 0 64 52" fill="none" aria-hidden="true">
+                    <rect x="10" y="4" width="34" height="44" rx="4" stroke="#E5E7EB" strokeWidth="1.5" fill="#F9FAFB" />
+                    <rect x="16" y="13" width="22" height="2" rx="1" fill="#E5E7EB" />
+                    <rect x="16" y="19" width="16" height="2" rx="1" fill="#E5E7EB" />
+                    <rect x="16" y="25" width="19" height="2" rx="1" fill="#E5E7EB" />
+                    <circle cx="50" cy="36" r="9" stroke="#F97316" strokeWidth="1.5" fill="rgba(249,115,22,0.07)" />
+                    <path d="M46.5 36 L53.5 36 M50 32.5 L50 39.5" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
                 </div>
                 <p className="text-[14px] text-[var(--text-dim)] mb-4">
                   Пока нет материалов для разбора

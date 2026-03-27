@@ -23,6 +23,14 @@ type DocListResponse = { items: Doc[]; total: number };
 const FILTERS = ['Все', 'Файлы', 'Тексты'] as const;
 type Filter = (typeof FILTERS)[number];
 
+function getExtBadgeClass(doc: Doc): string {
+    const ext = getExt(doc);
+    if (ext === 'PDF') return 'bg-red-50 text-red-600 border border-red-100';
+    if (ext === 'DOCX' || ext === 'DOC') return 'bg-blue-50 text-blue-600 border border-blue-100';
+    if (ext === 'ТЕКСТ') return 'bg-violet-50 text-violet-600 border border-violet-100';
+    return 'bg-gray-100 text-gray-500';
+}
+
 function getExt(doc: Doc): string {
     if (doc.source === 'text') return 'ТЕКСТ';
     const ext = doc.name.split('.').pop()?.toUpperCase() ?? '';
@@ -105,6 +113,11 @@ export default function DocumentsPage() {
                         placeholder="Поиск по названию..."
                         className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-md py-2.5 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors min-h-[44px]"
                     />
+                    {!search && (
+                        <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded font-mono pointer-events-none">
+                            /
+                        </kbd>
+                    )}
                     {search && (
                         <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <X size={13} />
@@ -150,7 +163,9 @@ export default function DocumentsPage() {
                 </div>
             ) : (data?.items ?? []).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-[var(--border-main)] rounded-2xl">
-                    <UploadCloud size={32} className="text-[var(--text-dim)] mb-4 opacity-40" />
+                    <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-5">
+                        <UploadCloud size={28} className="text-orange-400" />
+                    </div>
                     <p className="text-sm font-medium text-[var(--text-main)] mb-1">Пока нет материалов</p>
                     <p className="text-xs text-[var(--text-dim)] mb-6">Загрузите файл или создайте текстовый документ</p>
                     <Link href="/upload" className="btn-primary gap-2 text-sm">
@@ -181,8 +196,9 @@ export default function DocumentsPage() {
                             return (
                                 <div
                                     key={doc.id}
-                                    className={`border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group ${isDeleting ? 'opacity-40' : ''}`}
+                                    className={`relative border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group ${isDeleting ? 'opacity-40' : ''}`}
                                 >
+                                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--accent-primary)] opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full" />
                                     {/* Mobile card layout */}
                                     <div className="flex items-center gap-3 px-4 py-3.5 sm:hidden">
                                         <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
@@ -193,7 +209,7 @@ export default function DocumentsPage() {
                                                 {doc.name}
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${getExtBadgeClass(doc)}`}>
                                                     {ext}
                                                 </span>
                                                 <span className="text-[11px] text-[var(--text-dim)]">
@@ -230,7 +246,7 @@ export default function DocumentsPage() {
                                         </div>
 
                                         {/* Format badge */}
-                                        <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit">
+                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded w-fit ${getExtBadgeClass(doc)}`}>
                                             {ext}
                                         </span>
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Bell, Shield, Wallet, Loader2, CheckCircle2, Clock } from 'lucide-react';
+import { User, Bell, Shield, Wallet, Loader2, CheckCircle2, Clock, Lock } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api';
@@ -40,6 +40,18 @@ const inputClass =
     'w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[var(--radius-sm)] px-3.5 py-2.5 text-[13px] font-inter text-[var(--text-main)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors';
 
 function ComingSoonTab({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
+    const isBell = Icon === Bell;
+    const isWallet = Icon === Wallet;
+    const iconBgClass = isBell
+        ? 'bg-amber-50 border-amber-100'
+        : isWallet
+            ? 'bg-emerald-50 border-emerald-100'
+            : 'bg-[var(--bg-surface-alt)] border-[var(--border-main)]';
+    const iconColorClass = isBell
+        ? 'text-amber-500'
+        : isWallet
+            ? 'text-emerald-600'
+            : 'text-[var(--text-dim)]';
     return (
         <motion.div
             key="coming-soon"
@@ -48,15 +60,18 @@ function ComingSoonTab({ label, icon: Icon }: { label: string; icon: React.Eleme
             exit={{ opacity: 0, y: -8 }}
             className="flex flex-col items-center justify-center h-full min-h-[280px] gap-4 text-center"
         >
-            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] flex items-center justify-center">
-                <Icon size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+            <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center ${iconBgClass}`}>
+                <Icon size={24} className={iconColorClass} strokeWidth={1.5} />
             </div>
             <div>
-                <h3 className="font-syne text-[15px] font-semibold text-[var(--text-main)] mb-1">{label}</h3>
-                <p className="text-[12px] text-[var(--text-dim)] font-inter flex items-center gap-1.5 justify-center">
+                <h3 className="font-syne text-[15px] font-semibold text-[var(--text-main)] mb-2">{label}</h3>
+                <p className="text-[12px] text-[var(--text-dim)] font-inter flex items-center gap-1.5 justify-center mb-3">
                     <Clock size={11} />
                     Будет доступно в следующих обновлениях
                 </p>
+                <span className="inline-block text-[10px] font-mono text-[var(--text-dim)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] px-2 py-0.5 rounded-full tracking-widest">
+                    СКОРО
+                </span>
             </div>
         </motion.div>
     );
@@ -141,7 +156,7 @@ export default function SettingsPage() {
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-all duration-150 text-[13px] font-medium font-inter text-left whitespace-nowrap border relative ${
                                     isActive
-                                        ? 'sidebar-item-active text-[var(--accent-primary)] border-[var(--accent-primary-glow)]'
+                                        ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] border-[var(--accent-primary-glow)]'
                                         : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'
                                 }`}
                             >
@@ -170,8 +185,8 @@ export default function SettingsPage() {
 
                                 {/* Avatar row */}
                                 <div className="flex items-center gap-4 pb-5 border-b border-[var(--border-main)]">
-                                    <div className="w-14 h-14 rounded-full bg-[var(--accent-primary-bg)] border-2 border-[var(--accent-primary-glow)] flex items-center justify-center shrink-0">
-                                        <span className="font-syne text-[18px] font-bold text-[var(--accent-primary)]">
+                                    <div className="w-20 h-20 rounded-full bg-[var(--accent-primary-bg)] border-2 border-orange-200 ring-4 ring-offset-2 ring-orange-100 flex items-center justify-center shrink-0">
+                                        <span className="font-syne text-2xl font-bold text-[var(--accent-primary)]">
                                             {avatarInitials}
                                         </span>
                                     </div>
@@ -213,12 +228,15 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label className="label-kicker">Email</label>
-                                        <input
-                                            type="email"
-                                            value={user?.email || ''}
-                                            readOnly
-                                            className={`${inputClass} opacity-40 cursor-not-allowed`}
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="email"
+                                                value={user?.email || ''}
+                                                readOnly
+                                                className={`${inputClass} bg-[var(--bg-surface-alt)] cursor-not-allowed pr-9`}
+                                            />
+                                            <Lock size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
+                                        </div>
                                         <p className="text-[11px] text-[var(--text-dim)] font-inter">
                                             Для изменения email обратитесь в поддержку
                                         </p>

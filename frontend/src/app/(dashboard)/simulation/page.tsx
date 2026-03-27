@@ -135,13 +135,14 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                         </div>
                     </div>
                 </div>
-                <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-md ${
+                <span className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md ${
                     isActive
-                        ? 'bg-gray-100 text-gray-700'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : isCancelled
                             ? 'bg-gray-100 text-gray-400'
-                            : 'bg-gray-100 text-gray-600'
+                            : 'bg-blue-50 text-blue-700 border border-blue-100'
                 }`}>
+                    {isActive && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />}
                     {isActive ? 'Активна' : isCancelled ? 'Прервана' : 'Завершена'}
                 </span>
             </div>
@@ -366,6 +367,21 @@ function SimulationPageContent() {
                         <p className="font-inter text-[var(--text-muted)] text-xs sm:text-sm">
                             {sessions.length} {sessions.length === 1 ? 'сессия' : sessions.length < 5 ? 'сессии' : 'сессий'} · нажми на любую, чтобы открыть
                         </p>
+                        {(activeSessions.length > 0 || completedSessions.length > 0) && (
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                {activeSessions.length > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                        {activeSessions.length} активных
+                                    </span>
+                                )}
+                                {completedSessions.length > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full font-medium">
+                                        {completedSessions.length} завершено
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <button
                         onClick={() => setView('setup')}
@@ -448,13 +464,14 @@ function SimulationPageContent() {
                     const hardestVisual = hardestRole ? (ROLE_VISUALS[hardestRole.role] ?? DEFAULT_VISUAL) : DEFAULT_VISUAL;
                     const HardestIcon = hardestVisual.icon;
 
-                    const kpiCard = "bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
+                    const kpiCard = "relative overflow-hidden bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
 
                     return (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 
                             {/* Индекс готовности */}
                             <div className={kpiCard}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300 rounded-t-xl" />
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
                                     <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -480,6 +497,7 @@ function SimulationPageContent() {
 
                             {/* Тренд роста */}
                             <div className={kpiCard}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${trendIconBg}`}>
@@ -521,6 +539,7 @@ function SimulationPageContent() {
 
                             {/* Личный рекорд */}
                             <div className={kpiCard}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-orange-300 rounded-t-xl" />
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
                                     <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
@@ -545,6 +564,7 @@ function SimulationPageContent() {
 
                             {/* Сложнее всего */}
                             <div className={kpiCard}>
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300 rounded-t-xl" />
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
@@ -708,6 +728,12 @@ function SimulationPageContent() {
                                                 <div className="absolute top-4 right-4 text-orange-500">
                                                     <CheckCircle2 size={18} />
                                                 </div>
+                                            )}
+                                            {!isSelected && (
+                                                <svg className="absolute bottom-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 pointer-events-none" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+                                                    <circle cx="60" cy="60" r="48" stroke="#6B7280" strokeWidth="1.5" />
+                                                    <circle cx="60" cy="60" r="30" stroke="#6B7280" strokeWidth="1" />
+                                                </svg>
                                             )}
                                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${visual.iconBg} border border-[var(--border-light)] ${visual.iconColor}`}>
                                                 <IconComp size={20} />
