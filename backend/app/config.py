@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     def get_allowed_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
+    # Admin panel — comma-separated list of emails with admin access
+    admin_emails: str = ""
+
+    def get_admin_emails(self) -> list[str]:
+        return [e.strip() for e in self.admin_emails.split(",") if e.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:
