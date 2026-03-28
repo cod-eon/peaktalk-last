@@ -156,17 +156,27 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get('/admin/stats')
-      .then(() => {
+
+    async function check() {
+      // Wait for Supabase session before hitting the API
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        if (!cancelled) router.replace('/login');
+        return;
+      }
+
+      try {
+        await api.get('/admin/stats');
         if (!cancelled) setChecking(false);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) router.replace('/');
-      });
-    return () => {
-      cancelled = true;
-    };
+      }
+    }
+
+    check();
+    return () => { cancelled = true; };
   }, [router]);
 
   if (checking) {
