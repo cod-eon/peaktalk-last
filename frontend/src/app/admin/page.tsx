@@ -139,35 +139,35 @@ export default function AdminStatsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             label="Всего пользователей"
-            value={data.total_users}
+            value={data.users_total}
             icon={<Users size={18} />}
             accent="default"
             delay={0}
           />
           <MetricCard
             label="PRO пользователи"
-            value={data.pro_users}
+            value={data.users_pro}
             icon={<Zap size={18} />}
             accent="orange"
             delay={0.05}
           />
           <MetricCard
             label="Starter пользователи"
-            value={data.starter_users}
+            value={data.users_starter}
             icon={<UserPlus size={18} />}
             accent="default"
             delay={0.1}
           />
           <MetricCard
-            label="Team пользователи"
-            value={data.team_users}
+            label="Платежей всего"
+            value={data.payments_count_total}
             icon={<UserCheck size={18} />}
             accent="violet"
             delay={0.15}
           />
           <MetricCard
             label="Всего симуляций"
-            value={data.total_simulations}
+            value={data.simulations_total}
             icon={<Activity size={18} />}
             accent="blue"
             delay={0.2}
@@ -181,7 +181,7 @@ export default function AdminStatsPage() {
           />
           <MetricCard
             label="Общая выручка"
-            value={data.total_revenue.toLocaleString('ru-RU')}
+            value={Number(data.payments_total_rub).toLocaleString('ru-RU')}
             icon={<RussianRuble size={18} />}
             accent="emerald"
             delay={0.3}
@@ -189,7 +189,7 @@ export default function AdminStatsPage() {
           />
           <MetricCard
             label="Выручка в этом месяце"
-            value={data.revenue_this_month.toLocaleString('ru-RU')}
+            value={Number(data.payments_this_month_rub).toLocaleString('ru-RU')}
             icon={<TrendingUp size={18} />}
             accent="orange"
             delay={0.35}
@@ -197,7 +197,7 @@ export default function AdminStatsPage() {
           />
           <MetricCard
             label="Активных подписок"
-            value={data.active_subscriptions}
+            value={data.active_subs_count}
             icon={<CreditCard size={18} />}
             accent="violet"
             delay={0.4}
