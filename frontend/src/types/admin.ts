@@ -3,15 +3,15 @@ import type { PlanId, PaymentStatus } from './billing';
 // ─── Admin Stats ──────────────────────────────────────────────────────────────
 
 export interface AdminStats {
-  total_users: number;
-  pro_users: number;
-  starter_users: number;
-  team_users: number;
-  total_simulations: number;
+  users_total: number;
+  users_pro: number;
+  users_starter: number;
+  simulations_total: number;
   simulations_today: number;
-  total_revenue: number;
-  revenue_this_month: number;
-  active_subscriptions: number;
+  payments_total_rub: number;
+  payments_this_month_rub: number;
+  payments_count_total: number;
+  active_subs_count: number;
 }
 
 // ─── Admin Users ──────────────────────────────────────────────────────────────
