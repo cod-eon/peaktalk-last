@@ -519,21 +519,21 @@ function HowItWorks() {
   return (
     <section id="how" style={{ padding: 'clamp(80px, 15vw, 140px) 0', backgroundColor: '#FFFFFF' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 80 }}>
-          <h2 style={{
+        <div className="flex items-center gap-4 md:gap-6 mb-12 md:mb-20">
+          <h2 className="section-heading-text" style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontSize: 'clamp(20px, 4vw, 32px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             От черновика до уверенного выступления
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 32 }}>
           {steps.map((step, i) => (
             <motion.div
               key={i}
@@ -647,21 +647,21 @@ function WhoIsItFor() {
   return (
     <section style={{ padding: 'clamp(60px, 10vw, 100px) 0', backgroundColor: 'var(--bg-main)' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 60 }}>
+        <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontSize: 'clamp(22px, 4vw, 32px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             Кому это подходит
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 24 }}>
           {segments.map((seg, i) => (
             <motion.div
               key={i}
@@ -799,27 +799,26 @@ function WhyNotChatGPT() {
   return (
     <section style={{ padding: 'clamp(80px, 12vw, 120px) 0', backgroundColor: '#FFFFFF' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 60 }}>
+        <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(22px, 4vw, 30px)',
+            fontSize: 'clamp(20px, 4vw, 30px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             ChatGPT — универсал. PeakTalk — снайпер.
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--border-main)' }}>
-          {/* UPGRADE 4: Header row with border on PeakTalk column */}
+        {/* Desktop table */}
+        <div className="hidden md:flex flex-col" style={{ gap: 0, border: '1px solid var(--border-main)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '1px solid var(--border-main)' }}>
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Критерий
             </div>
-            {/* PeakTalk header with orange border */}
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: '#FFF7ED', fontWeight: 700 }}>
               PeakTalk
             </div>
@@ -840,14 +839,72 @@ function WhyNotChatGPT() {
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                 {row.feature}
               </div>
-              {/* UPGRADE 4: PeakTalk cell with green checkmark */}
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: '#FFF7ED' }}>
                 <span style={{ color: '#22C55E', fontWeight: 700, marginRight: 8 }}>✓</span>
                 {row.peaktalk}
               </div>
-              {/* UPGRADE 4: ChatGPT cell with gray X and dimmed text */}
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'rgba(0,0,0,0.45)' }}>
                 <span style={{ color: '#D1D5DB', marginRight: 8 }}>✕</span>
+                {row.chatgpt}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Mobile cards */}
+        <div className="flex md:hidden flex-col gap-4">
+          {comparisons.map((row, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: i * 0.06 }}
+              style={{
+                border: '1px solid var(--border-main)',
+                borderRadius: 12,
+                overflow: 'hidden',
+              }}
+            >
+              {/* Feature name */}
+              <div style={{
+                padding: '12px 16px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                color: 'var(--text-main)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontWeight: 600,
+                borderBottom: '1px solid var(--border-main)',
+                backgroundColor: 'var(--bg-surface)',
+              }}>
+                {row.feature}
+              </div>
+              {/* PeakTalk row */}
+              <div style={{
+                padding: '12px 16px',
+                fontFamily: 'var(--font-inter)',
+                fontSize: 13,
+                color: 'var(--text-main)',
+                backgroundColor: '#FFF7ED',
+                borderBottom: '1px solid var(--border-main)',
+                borderLeft: '3px solid #F97316',
+                lineHeight: 1.5,
+              }}>
+                <span style={{ color: '#22C55E', fontWeight: 700, marginRight: 8 }}>✓</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-primary)', fontWeight: 700, letterSpacing: '0.06em', marginRight: 6 }}>PEAKTALK</span>
+                {row.peaktalk}
+              </div>
+              {/* ChatGPT row */}
+              <div style={{
+                padding: '12px 16px',
+                fontFamily: 'var(--font-inter)',
+                fontSize: 13,
+                color: 'rgba(0,0,0,0.45)',
+                lineHeight: 1.5,
+              }}>
+                <span style={{ color: '#D1D5DB', marginRight: 8 }}>✕</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', fontWeight: 500, letterSpacing: '0.06em', marginRight: 6 }}>CHATGPT</span>
                 {row.chatgpt}
               </div>
             </motion.div>
@@ -914,20 +971,20 @@ function Features() {
   return (
     <section id="features" style={{ padding: 'clamp(60px, 10vw, 80px) 0', backgroundColor: 'var(--bg-main)' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 60 }}>
+        <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontSize: 'clamp(22px, 4vw, 32px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             Возможности
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 24 }}>
           <FeatureCard
             tag="КРИТИЧЕСКИЙ РАЗБОР"
             title="Логические дыры — до аудитории, не после"
@@ -1058,21 +1115,21 @@ function Testimonials() {
   return (
     <section id="testimonials" style={{ padding: 'clamp(80px, 15vw, 140px) 0', backgroundColor: '#FFFFFF' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 60 }}>
+        <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontSize: 'clamp(22px, 4vw, 32px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             Истории
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 24 }}>
           {testimonials.map((t, i) => (
             <motion.div
               key={i}
@@ -1206,18 +1263,18 @@ function Pricing() {
   return (
     <section id="pricing" style={{ padding: 'clamp(60px, 10vw, 80px) 0 clamp(80px, 15vw, 140px) 0', backgroundColor: 'var(--bg-surface)' }}>
       <div className="container-custom">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 24 }}>
+        <div className="flex items-center gap-4 md:gap-6 mb-6">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
-            fontSize: 'clamp(24px, 4vw, 32px)',
+            fontSize: 'clamp(22px, 4vw, 32px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             margin: 0,
-            whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             Тарифы
           </h2>
-          <div style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
+          <div className="hidden md:block" style={{ flex: 1, height: 1, backgroundColor: 'var(--border-main)' }} />
         </div>
 
         <p style={{
@@ -1229,7 +1286,7 @@ function Pricing() {
           Начни бесплатно — переходи на PRO, когда готов.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 0 }}>
+        <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 0 }}>
           {plans.map((plan, i) => (
             <motion.div
               key={i}
@@ -1239,7 +1296,6 @@ function Pricing() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               style={{
                 border: '1px solid var(--border-light)',
-                marginLeft: i > 0 ? -1 : 0,
                 padding: 'clamp(24px, 4vw, 40px)',
                 backgroundColor: plan.accent ? 'var(--bg-surface-hover)' : 'var(--bg-surface)',
                 position: 'relative',

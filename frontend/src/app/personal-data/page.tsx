@@ -30,13 +30,15 @@ function SectionHeading({ title }: { title: string }) {
           fontSize: 17,
           letterSpacing: "-0.02em",
           color: "var(--text-main)",
-          whiteSpace: "nowrap",
           margin: 0,
+          lineHeight: 1.3,
+          minWidth: 0,
         }}
       >
         {title}
       </h2>
       <div
+        className="hidden sm:block"
         style={{
           flex: 1,
           height: 1,
@@ -121,7 +123,7 @@ export default function PersonalDataPage() {
             style={{
               fontFamily: "var(--font-syne)",
               fontWeight: 800,
-              fontSize: 36,
+              fontSize: "clamp(24px, 6vw, 36px)",
               letterSpacing: "-0.03em",
               color: "var(--text-main)",
               margin: 0,
