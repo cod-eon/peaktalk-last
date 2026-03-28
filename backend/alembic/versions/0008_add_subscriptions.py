@@ -26,131 +26,95 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # ── ENUM types ────────────────────────────────────────────────────────────
-    op.execute(
-        "CREATE TYPE plan_type AS ENUM ('starter', 'pro', 'team')"
-    )
-    op.execute(
-        "CREATE TYPE subscription_status AS ENUM "
-        "('active', 'cancelled', 'past_due', 'trialing')"
-    )
-    op.execute(
-        "CREATE TYPE payment_status AS ENUM "
-        "('pending', 'succeeded', 'failed', 'refunded')"
-    )
+    # ── ENUM types (idempotent) ───────────────────────────────────────────────
+    # Using PL/pgSQL exception handling because PostgreSQL has no
+    # "CREATE TYPE IF NOT EXISTS" syntax.
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE plan_type AS ENUM ('starter', 'pro', 'team');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE subscription_status AS ENUM
+                ('active', 'cancelled', 'past_due', 'trialing');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE payment_status AS ENUM
+                ('pending', 'succeeded', 'failed', 'refunded');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+    """)
 
     # ── subscriptions ─────────────────────────────────────────────────────────
-    op.create_table(
-        "subscriptions",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column(
-            "plan",
-            sa.Enum("starter", "pro", "team", name="plan_type", create_type=False),
-            nullable=False,
-            server_default="starter",
-        ),
-        sa.Column(
-            "status",
-            sa.Enum(
-                "active", "cancelled", "past_due", "trialing",
-                name="subscription_status",
-                create_type=False,
-            ),
-            nullable=False,
-            server_default="active",
-        ),
-        sa.Column(
-            "period_start",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("period_end", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("yookassa_payment_method_id", sa.String(255), nullable=True),
-        sa.Column("yookassa_subscription_id", sa.String(255), nullable=True),
-        sa.Column("cancelled_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", name="uq_subscriptions_user_id"),
-    )
-    op.create_index("ix_subscriptions_user_id", "subscriptions", ["user_id"])
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS subscriptions (
+            id                          UUID NOT NULL DEFAULT gen_random_uuid(),
+            user_id                     UUID NOT NULL,
+            plan                        plan_type NOT NULL DEFAULT 'starter',
+            status                      subscription_status NOT NULL DEFAULT 'active',
+            period_start                TIMESTAMPTZ NOT NULL DEFAULT now(),
+            period_end                  TIMESTAMPTZ,
+            yookassa_payment_method_id  VARCHAR(255),
+            yookassa_subscription_id    VARCHAR(255),
+            cancelled_at                TIMESTAMPTZ,
+            created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            CONSTRAINT pk_subscriptions PRIMARY KEY (id),
+            CONSTRAINT uq_subscriptions_user_id UNIQUE (user_id),
+            CONSTRAINT fk_subscriptions_user_id FOREIGN KEY (user_id)
+                REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_subscriptions_user_id
+            ON subscriptions (user_id)
+    """)
 
     # ── payments ──────────────────────────────────────────────────────────────
-    op.create_table(
-        "payments",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("subscription_id", sa.UUID(), nullable=True),
-        sa.Column("amount", sa.Numeric(10, 2), nullable=False),
-        sa.Column("currency", sa.String(3), nullable=False, server_default="RUB"),
-        sa.Column(
-            "status",
-            sa.Enum(
-                "pending", "succeeded", "failed", "refunded",
-                name="payment_status",
-                create_type=False,
-            ),
-            nullable=False,
-            server_default="pending",
-        ),
-        sa.Column("yookassa_payment_id", sa.String(255), nullable=False),
-        sa.Column("description", sa.String(512), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["subscription_id"], ["subscriptions.id"], ondelete="SET NULL"
-        ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("yookassa_payment_id", name="uq_payments_yookassa_id"),
-    )
-    op.create_index("ix_payments_user_id", "payments", ["user_id"])
-    op.create_index("ix_payments_subscription_id", "payments", ["subscription_id"])
-    op.create_index(
-        "ix_payments_yookassa_payment_id", "payments", ["yookassa_payment_id"], unique=True
-    )
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+            id                   UUID NOT NULL DEFAULT gen_random_uuid(),
+            user_id              UUID NOT NULL,
+            subscription_id      UUID,
+            amount               NUMERIC(10, 2) NOT NULL,
+            currency             VARCHAR(3) NOT NULL DEFAULT 'RUB',
+            status               payment_status NOT NULL DEFAULT 'pending',
+            yookassa_payment_id  VARCHAR(255) NOT NULL,
+            description          VARCHAR(512),
+            created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+            CONSTRAINT pk_payments PRIMARY KEY (id),
+            CONSTRAINT uq_payments_yookassa_id UNIQUE (yookassa_payment_id),
+            CONSTRAINT fk_payments_user_id FOREIGN KEY (user_id)
+                REFERENCES users(id) ON DELETE CASCADE,
+            CONSTRAINT fk_payments_subscription_id FOREIGN KEY (subscription_id)
+                REFERENCES subscriptions(id) ON DELETE SET NULL
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_payments_user_id ON payments (user_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_payments_subscription_id ON payments (subscription_id)")
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_yookassa_payment_id ON payments (yookassa_payment_id)")
 
     # ── usage_counters ────────────────────────────────────────────────────────
-    op.create_table(
-        "usage_counters",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("simulations_used", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("documents_uploaded", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column(
-            "period_start",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", name="uq_usage_counters_user_id"),
-    )
-    op.create_index("ix_usage_counters_user_id", "usage_counters", ["user_id"])
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS usage_counters (
+            id                   UUID NOT NULL DEFAULT gen_random_uuid(),
+            user_id              UUID NOT NULL,
+            simulations_used     INTEGER NOT NULL DEFAULT 0,
+            documents_uploaded   INTEGER NOT NULL DEFAULT 0,
+            period_start         TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+            CONSTRAINT pk_usage_counters PRIMARY KEY (id),
+            CONSTRAINT uq_usage_counters_user_id UNIQUE (user_id),
+            CONSTRAINT fk_usage_counters_user_id FOREIGN KEY (user_id)
+                REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_usage_counters_user_id ON usage_counters (user_id)")
 
     # ── Backfill existing users ───────────────────────────────────────────────
     # Create a starter subscription for every user that does not yet have one.
