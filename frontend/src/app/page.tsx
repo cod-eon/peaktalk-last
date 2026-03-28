@@ -330,9 +330,9 @@ function Hero() {
             }}
           >
             {[
-              { icon: '📵', label: 'без камеры' },
-              { icon: '🔇', label: 'без микрофона' },
-              { icon: '🔒', label: 'данные защищены' },
+              { label: 'без камеры' },
+              { label: 'без микрофона' },
+              { label: 'данные защищены' },
             ].map((item) => (
               <div key={item.label} style={{
                 display: 'flex',
@@ -344,14 +344,13 @@ function Hero() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}>
-                <span style={{ fontSize: 13 }}>{item.icon}</span>
                 {item.label}
               </div>
             ))}
           </motion.div>
         </div>
 
-        {/* UPGRADE 1: Big floating Safari-style browser mockup */}
+        {/* Dashboard screenshot mockup */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -387,11 +386,7 @@ function Hero() {
                 <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28C840' }} />
               </div>
               {/* URL pill */}
-              <div style={{
-                flex: 1,
-                display: 'flex',
-                justifyContent: 'center',
-              }}>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                 <div style={{
                   backgroundColor: '#E8E8E8',
                   borderRadius: 8,
@@ -413,176 +408,16 @@ function Hero() {
               <div style={{ width: 72 }} />
             </div>
 
-            {/* App UI inside browser */}
-            <div style={{ display: 'flex', height: 'clamp(320px, 45vw, 520px)', backgroundColor: '#F9FAFB' }}>
-              {/* Thin left sidebar */}
-              <div style={{
-                width: 56,
-                flexShrink: 0,
-                backgroundColor: '#FAFAFA',
-                borderRight: '1px solid #E5E7EB',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                paddingTop: 16,
-                gap: 16,
-              }}>
-                {/* P logo */}
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  backgroundColor: '#F97316',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: 'var(--font-syne)',
-                  fontWeight: 800,
-                  fontSize: 14,
-                  color: '#FFFFFF',
-                  flexShrink: 0,
-                }}>
-                  P
-                </div>
-                {/* Nav placeholder bars */}
-                {[36, 28, 32, 24].map((w, idx) => (
-                  <div key={idx} style={{
-                    width: w,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: '#E5E7EB',
-                  }} />
-                ))}
-              </div>
-
-              {/* Main content area */}
-              <div style={{
-                flex: 1,
-                padding: 'clamp(16px, 3vw, 28px)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(12px, 2vw, 20px)',
-                overflow: 'hidden',
-              }}>
-                {/* Top row: label + progress */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'clamp(9px, 1.5vw, 11px)',
-                    color: '#6B7280',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}>
-                    ИНВЕСТОР · Тренировка
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 'clamp(9px, 1.5vw, 11px)',
-                      color: '#6B7280',
-                    }}>
-                      Вопрос 3 из 10
-                    </div>
-                    <div style={{ width: 120, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden' }}>
-                      <div style={{ width: '30%', height: '100%', backgroundColor: '#F97316', borderRadius: 2 }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI question card */}
-                <div style={{
-                  backgroundColor: '#F3F4F6',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: 12,
-                  padding: 'clamp(12px, 2vw, 18px)',
-                  flexShrink: 0,
-                }}>
-                  <p style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: 'clamp(11px, 1.8vw, 14px)',
-                    color: '#111827',
-                    lineHeight: 1.55,
-                    margin: '0 0 10px 0',
-                    fontStyle: 'italic',
-                  }}>
-                    &laquo;TAM 2 млрд — красиво. Но вы не объяснили стратегию Go-to-Market. Кто ваш первый платящий сегмент и почему именно он?&raquo;
-                  </p>
-                  <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'clamp(9px, 1.3vw, 10px)',
-                    color: '#F97316',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}>
-                    AI-Инвестор
-                  </div>
-                </div>
-
-                {/* Textarea answer */}
-                <div style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1.5px solid #F97316',
-                  borderRadius: 12,
-                  padding: 'clamp(10px, 1.8vw, 16px)',
-                  position: 'relative',
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: 0,
-                }}>
-                  <p style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: 'clamp(10px, 1.6vw, 13px)',
-                    color: '#374151',
-                    lineHeight: 1.6,
-                    margin: 0,
-                    flex: 1,
-                  }}>
-                    Наш первый сегмент — студенты финтех-специальностей в топ-20 вузах России...
-                  </p>
-                  {/* Orange send button */}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                    <div style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      backgroundColor: '#F97316',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Score chips */}
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-                  {[
-                    { label: 'Структура', score: '78%', color: '#F97316', bg: '#FFF7ED' },
-                    { label: 'Аргументы', score: '65%', color: '#3B82F6', bg: '#EFF6FF' },
-                    { label: 'Уверенность', score: '82%', color: '#22C55E', bg: '#F0FDF4' },
-                  ].map((chip) => (
-                    <div key={chip.label} style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      backgroundColor: chip.bg,
-                      border: `1px solid ${chip.color}22`,
-                      borderRadius: 20,
-                      padding: '4px 10px',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 'clamp(9px, 1.3vw, 11px)',
-                      color: chip.color,
-                    }}>
-                      <span>{chip.label}</span>
-                      <span style={{ fontWeight: 700 }}>{chip.score}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Real dashboard screenshot */}
+            <div style={{ width: '100%', lineHeight: 0 }}>
+              <Image
+                src="/dashboard-preview.png"
+                alt="PeakTalk simulation interface"
+                width={1440}
+                height={900}
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+                priority
+              />
             </div>
           </div>
         </motion.div>
@@ -792,21 +627,21 @@ function WhoIsItFor() {
       kicker: 'ЗАЩИТА / ДОКЛАД',
       desc: 'Защита диплома через неделю, а комиссия задаёт вопросы, которых ты не ждал? Тренируйся с AI-научруком — строгим, но безопасным.',
       scenarios: ['Дипломная защита', 'Дебаты', 'Стажировочное интервью'],
-      picsumSeed: 237,
+      image: '/audience-student.jpg',
     },
     {
       label: 'Специалистам',
       kicker: 'ИНТЕРВЬЮ / ОНБОРДИНГ',
       desc: 'Технически силён, но на собеседовании теряешься на поведенческих вопросах? AI-рекрутер задаст их первым — у тебя будет время подготовить ответ.',
       scenarios: ['Техническое интервью', 'Оффер-презентация', 'Митинг с командой'],
-      picsumSeed: 1062,
+      image: '/audience-specialist.png',
     },
     {
       label: 'Фаундерам',
       kicker: 'ПИТЧ / ПЕРЕГОВОРЫ',
       desc: 'Инвестор спросит про unit-экономику именно в тот момент, когда ты забыл цифры. Лучше он спросит на тренировке — а не на Demo Day.',
       scenarios: ['Питч инвестору', 'Demo Day', 'Переговоры о партнёрстве'],
-      picsumSeed: 633,
+      image: '/audience-founder.jpg',
     },
   ];
 
@@ -842,26 +677,35 @@ function WhoIsItFor() {
                 borderRadius: 12,
               }}
             >
-              {/* UPGRADE 3: Photo area */}
+              {/* Photo area with local image */}
               <div style={{
                 width: '100%',
-                height: 180,
+                height: 192,
                 overflow: 'hidden',
-                borderRadius: '8px 8px 0 0',
+                borderRadius: '11px 11px 0 0',
                 flexShrink: 0,
+                position: 'relative',
               }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://picsum.photos/seed/${seg.picsumSeed}/600/280`}
+                  src={seg.image}
                   alt={seg.label}
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    filter: 'grayscale(30%) sepia(20%) brightness(0.95)',
+                    objectPosition: 'center',
                     display: 'block',
+                    filter: 'blur(1.5px) brightness(0.92)',
                   }}
                 />
+                {/* Dark overlay for atmosphere */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.20)',
+                  pointerEvents: 'none',
+                }} />
               </div>
 
               {/* Text content with padding */}
