@@ -357,7 +357,6 @@ function Hero() {
           transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
             marginTop: 'clamp(48px, 8vw, 80px)',
-            marginBottom: '-60px',
             position: 'relative',
             zIndex: 2,
           }}
@@ -402,7 +401,7 @@ function Hero() {
                   whiteSpace: 'nowrap',
                   textOverflow: 'ellipsis',
                 }}>
-                  peaktalk.ru/simulation/pitch_investor
+                  peaktalk.ru/simulation
                 </div>
               </div>
               <div style={{ width: 72 }} />
@@ -1027,7 +1026,7 @@ function Features() {
 function Testimonials() {
   const testimonials = [
     {
-      quote: "Загрузила текст диплома за три дня до защиты. AI нашёл три логические дыры, которые я не видела месяц. На защите комиссия спросила ровно те вопросы, которые мы разбирали в симуляции. Получила пятёрку.",
+      quote: "Загрузила диплом за три дня до защиты — уже почти смирилась, что «как-нибудь сойдёт». AI нашёл три дыры в логике, которых я не замечала целый месяц. На защите комиссия спросила ровно про это. Получила пятёрку.",
       name: "Катя Соколова",
       initials: "КС",
       role: "Студентка 4 курса, ВШЭ",
@@ -1037,7 +1036,7 @@ function Testimonials() {
       badge: 'ВШЭ',
     },
     {
-      quote: "Я технически сильный, но на интервью терялся при поведенческих вопросах. Прогнал три симуляции с AI-HR — на четвёртый раз почувствовал себя уверенно. Оффер от Яндекса пришёл через две недели.",
+      quote: "С кодом проблем нет — а вот «расскажи о себе», и всё, теряюсь. Прогнал три симуляции с AI-HR, на четвёртый раз уже отвечал нормально. Через две недели — оффер от Яндекса.",
       name: "Данила Крылов",
       initials: "ДК",
       role: "Junior Backend Developer",
@@ -1046,7 +1045,7 @@ function Testimonials() {
       badge: 'Яндекс offer',
     },
     {
-      quote: "Инвестор на Demo Day спросил: «Почему вы?» — я уже отрабатывал этот вопрос с AI-инвестором в PeakTalk. Ответил чётко, без паузы. Привлекли pre-seed раунд через месяц после питча.",
+      quote: "На Demo Day инвестор спросил: «Почему именно вы?». Я разбирал этот вопрос с AI-инвестором накануне — ответил без паузы, без «ну как бы». Через месяц закрыли pre-seed.",
       name: "Максим Дорохов",
       initials: "МД",
       role: "Co-founder edtech-стартапа",
@@ -1408,26 +1407,64 @@ function CTABanner() {
 // ─── FOOTER ────────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid var(--border-main)', padding: '64px 0', backgroundColor: 'var(--bg-surface)' }}>
-      <div className="container-custom" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
-        <div>
-          <Logo size={20} />
-          <p style={{ marginTop: 16, fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)' }} suppressHydrationWarning>
+    <footer style={{ borderTop: '1px solid var(--border-main)', padding: '64px 0 40px', backgroundColor: 'var(--bg-surface)' }}>
+      <div className="container-custom">
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 40, marginBottom: 48 }}>
+          {/* Brand block */}
+          <div style={{ maxWidth: 280 }}>
+            <Logo size={20} />
+            <p style={{ marginTop: 12, fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              AI-тренер для подготовки к публичным выступлениям, собеседованиям и питчам.
+            </p>
+          </div>
+
+          {/* Links */}
+          <div style={{ display: 'flex', gap: 'clamp(24px, 5vw, 64px)', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+                Продукт
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { label: 'Как работает', href: '#how' },
+                  { label: 'Возможности', href: '#features' },
+                  { label: 'Тарифы', href: '#pricing' },
+                ].map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-main)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+                  >{label}</a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+                Документы
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { label: 'Конфиденциальность', href: '/privacy' },
+                  { label: 'Обработка ПД', href: '/personal-data' },
+                  { label: 'Контакты', href: '/contacts' },
+                ].map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-main)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+                  >{label}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.03em', margin: 0 }} suppressHydrationWarning>
             © {new Date().getFullYear()} PeakTalk. Все права защищены.
           </p>
-        </div>
-        <div style={{ display: 'flex', gap: 'clamp(16px, 4vw, 40px)', flexWrap: 'wrap' }}>
-          {['Конфиденциальность', 'Условия', 'Контакты'].map((link) => (
-            <a href="#" key={link} style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              textTransform: 'uppercase',
-              color: 'var(--text-dim)',
-              textDecoration: 'none',
-            }}>
-              {link}
-            </a>
-          ))}
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.03em', margin: 0 }}>
+            Самозанятый · ИНН 583414998055
+          </p>
         </div>
       </div>
     </footer>
