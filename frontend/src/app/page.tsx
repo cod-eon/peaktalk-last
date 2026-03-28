@@ -7,7 +7,9 @@ import Image from 'next/image';
 const smoothScroll = (id: string) => {
   const element = document.querySelector(id);
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth' });
+    const navHeight = 88;
+    const y = element.getBoundingClientRect().top + window.scrollY - navHeight;
+    window.scrollTo({ top: y, behavior: 'smooth' });
   }
 };
 
@@ -1482,14 +1484,14 @@ function Footer() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { label: 'Как работает', href: '#how' },
-                  { label: 'Возможности', href: '#features' },
-                  { label: 'Тарифы', href: '#pricing' },
-                ].map(({ label, href }) => (
-                  <a key={label} href={href} style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}
+                  { label: 'Как работает', anchor: '#how' },
+                  { label: 'Возможности', anchor: '#features' },
+                  { label: 'Тарифы', anchor: '#pricing' },
+                ].map(({ label, anchor }) => (
+                  <button key={label} onClick={() => smoothScroll(anchor)} style={{ fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-main)')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                  >{label}</a>
+                  >{label}</button>
                 ))}
               </div>
             </div>
