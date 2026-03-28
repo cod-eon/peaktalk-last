@@ -12,6 +12,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { useBilling } from '@/hooks/useBilling';
+import { useBillingStore } from '@/store/billingStore';
+import { UpgradeModal } from '@/components/UpgradeModal';
+import { UpgradeBanner } from '@/components/UpgradeBanner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,6 +189,10 @@ function SimulationPageContent() {
     const searchParams = useSearchParams();
     const draftFromUrl = searchParams.get('draft') ?? searchParams.get('doc');
 
+    // Billing
+    const { canStartSimulation, simulationsLeft, openUpgrade } = useBilling();
+    const { upgradeModalOpen, upgradeModalReason, closeUpgradeModal } = useBillingStore();
+
     // View state
     const [view, setView] = useState<'loading' | 'history' | 'setup'>('loading');
 
@@ -324,6 +332,10 @@ function SimulationPageContent() {
 
     const handleStart = async () => {
         if (!isReady) return;
+        if (!canStartSimulation) {
+            openUpgrade('simulations');
+            return;
+        }
         setIsStarting(true);
         try {
             const domainName = selectedDomain === 'custom' ? customDomain : selectedDomain;
@@ -375,7 +387,10 @@ function SimulationPageContent() {
         const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
         return (
-            <div className="pb-10 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-10">
+            <div className="pb-10 pt-0 sm:pt-0 w-full max-w-5xl mx-auto">
+                <UpgradeModal isOpen={upgradeModalOpen} onClose={closeUpgradeModal} reason={upgradeModalReason} />
+                {simulationsLeft !== null && simulationsLeft <= 1 && <UpgradeBanner />}
+                <div className="px-4 sm:px-6 lg:px-10 pt-4 sm:pt-8">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
                     <div>
@@ -402,7 +417,13 @@ function SimulationPageContent() {
                         )}
                     </div>
                     <button
-                        onClick={() => setView('setup')}
+                        onClick={() => {
+                            if (!canStartSimulation) {
+                                openUpgrade('simulations');
+                            } else {
+                                setView('setup');
+                            }
+                        }}
                         className="btn-primary shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px]"
                     >
                         <Plus size={16} />
@@ -650,6 +671,7 @@ function SimulationPageContent() {
                         </div>
                     </div>
                 )}
+                </div>
             </div>
         );
     }

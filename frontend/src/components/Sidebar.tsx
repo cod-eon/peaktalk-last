@@ -9,16 +9,20 @@ import {
     Bot,
     FileText,
     LogOut,
+    CreditCard,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
+import { useBillingStore } from '@/store/billingStore';
+import { PlanBadge } from '@/components/PlanBadge';
 
 const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Мои тексты', path: '/documents', icon: FileText },
     { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Подписка', path: '/billing', icon: CreditCard },
 ];
 
 export function Sidebar() {
@@ -35,6 +39,8 @@ export function Sidebar() {
     };
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
+    const billingStatus = useBillingStore((s) => s.status);
+    const currentPlan = billingStatus?.subscription.plan ?? 'starter';
 
     return (
         <motion.aside
@@ -191,9 +197,12 @@ export function Sidebar() {
                                     {displayName.charAt(0).toUpperCase()}
                                 </span>
                             </div>
-                            <span className="text-[12px] text-[var(--text-dim)] font-inter truncate">
-                                {displayName}
-                            </span>
+                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                                <span className="text-[12px] text-[var(--text-dim)] font-inter truncate leading-none">
+                                    {displayName}
+                                </span>
+                                <PlanBadge plan={currentPlan} />
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -8,12 +8,14 @@ import {
     FileText,
     Bot,
     Settings,
+    CreditCard,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Тексты', path: '/documents', icon: FileText },
     { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Подписка', path: '/billing', icon: CreditCard },
     { name: 'Настройки', path: '/settings', icon: Settings },
 ];
 

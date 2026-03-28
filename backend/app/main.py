@@ -11,7 +11,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.limiter import limiter
-from app.routers import documents, drafts, simulation, users, projects, webhooks
+from app.routers import billing, documents, drafts, simulation, users, projects, webhooks
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -105,6 +105,7 @@ app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(drafts.router)
 app.include_router(simulation.router)
+app.include_router(billing.router)
 app.include_router(webhooks.router)
 
 

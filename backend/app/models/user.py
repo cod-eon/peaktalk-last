@@ -8,6 +8,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
+# Forward references to subscription models — imported at module level to allow
+# SQLAlchemy to resolve relationships without circular import issues at runtime.
+# The actual classes live in app.models.subscription.
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.subscription import Payment, Subscription, UsageCounter
+
 
 class UserSegment(str, enum.Enum):
     student = "student"
@@ -41,6 +49,18 @@ class User(Base):
 
     onboarding_profile: Mapped["OnboardingProfile | None"] = relationship(
         "OnboardingProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+
+    # Billing relationships
+    subscription: Mapped["Subscription | None"] = relationship(
+        "Subscription", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    payments: Mapped[list["Payment"]] = relationship(
+        "Payment", back_populates="user", cascade="all, delete-orphan",
+        foreign_keys="Payment.user_id",
+    )
+    usage_counter: Mapped["UsageCounter | None"] = relationship(
+        "UsageCounter", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
 
 

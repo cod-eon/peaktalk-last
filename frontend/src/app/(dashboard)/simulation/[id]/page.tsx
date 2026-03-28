@@ -6,12 +6,17 @@ import { Bot, ArrowRight, CheckCircle2, Loader2, Flag, AlertTriangle } from 'luc
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { useBillingStore } from '@/store/billingStore';
+import { UpgradeModal } from '@/components/UpgradeModal';
 
 export default function SimulationPage() {
   const router = useRouter();
   const params = useParams();
   const sessionId = params?.id as string;
   
+  // Billing
+  const { upgradeModalOpen, upgradeModalReason, openUpgradeModal, closeUpgradeModal } = useBillingStore();
+
   // States
   const [messages, setMessages] = useState<{role: string; content: string; turn_index: number}[]>([]);
   const [personaConfig, setPersonaConfig] = useState<{role: string; industry: string} | null>(null);
@@ -158,7 +163,17 @@ export default function SimulationPage() {
       }
     } catch(err: unknown) {
       const message = err instanceof Error ? err.message : 'Сбой сети';
-      toast.error('Ошибка отправки сообщения: ' + message);
+      // Detect 402-style limit errors and show upgrade modal
+      const isLimitError =
+        message.toLowerCase().includes('лимит') ||
+        message.toLowerCase().includes('limit') ||
+        message.toLowerCase().includes('exceeded') ||
+        message.toLowerCase().includes('симуляц');
+      if (isLimitError) {
+        openUpgradeModal('simulations');
+      } else {
+        toast.error('Ошибка отправки сообщения: ' + message);
+      }
       setAnswer(currentAnswer); // restore
       setMessages(prev => prev.filter(m => m !== optimisticUserMsg)); // remove optimistic
     } finally {
@@ -242,6 +257,7 @@ export default function SimulationPage() {
 
   return (
     <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-3 sm:p-4 md:p-8 min-h-[calc(100vh-2rem)] relative">
+      <UpgradeModal isOpen={upgradeModalOpen} onClose={closeUpgradeModal} reason={upgradeModalReason} />
       <div className="w-full mb-5 sm:mb-8 pt-2 sm:pt-4">
         {/* Шапка */}
         <div className="flex items-center justify-between mb-3">

@@ -14,6 +14,7 @@ from app.models.draft import SpeechDraft
 from app.models.user import User
 from app.schemas.document import DocumentListResponse, DocumentResponse, DocumentTextCreate
 from app.services import parser, storage
+from app.services.limits import check_document_limit, increment_document_counter
 
 logger = logging.getLogger("peaktalk.documents")
 
@@ -34,6 +35,7 @@ async def upload_document(
     request: Request,
     file: UploadFile,
     file_type: FileType = Form(FileType.other),
+    _limit_check: None = Depends(check_document_limit),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Document:
@@ -90,6 +92,7 @@ async def upload_document(
             detail="Failed to save document record",
         )
 
+    await increment_document_counter(str(current_user.id), db)
     return doc
 
 
@@ -152,6 +155,7 @@ async def list_documents(
 async def create_text_document(
     request: Request,
     body: DocumentTextCreate,
+    _limit_check: None = Depends(check_document_limit),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Document:
@@ -168,6 +172,7 @@ async def create_text_document(
     db.add(doc)
     await db.flush()
     await db.refresh(doc)
+    await increment_document_counter(str(current_user.id), db)
     logger.info("Text document created user=%s doc=%s", current_user.id, doc.id)
     return doc
 

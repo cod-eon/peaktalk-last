@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     # Supabase webhook secret (set in Supabase Dashboard → Database → Webhooks → custom header)
     supabase_webhook_secret: str = ""
 
+    # YooKassa payment integration
+    yookassa_shop_id: str = ""
+    yookassa_secret_key: str = ""
+    yookassa_webhook_secret: str = ""
+
+    # Public frontend URL (used as default return_url fallback)
+    frontend_url: str = "https://peaktalk.ru"
+
     # CORS — comma-separated origins, e.g. "http://localhost:3000,https://peaktalk.io"
     allowed_origins: str = "http://localhost:3000"
 

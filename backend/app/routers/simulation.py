@@ -28,6 +28,7 @@ from app.schemas.simulation import (
     SimulationStartRequest,
 )
 from app.services.gemini import GeminiError, detect_ai_content
+from app.services.limits import check_simulation_limit, increment_simulation_counter
 from app.services.simulation_ai import evaluate_session, generate_question
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
@@ -213,6 +214,7 @@ async def get_personas(
 async def start_simulation(
     request: Request,
     body: SimulationStartRequest,
+    _limit_check: None = Depends(check_simulation_limit),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
@@ -251,6 +253,7 @@ async def start_simulation(
     db.add(first_message)
     await db.flush()
 
+    await increment_simulation_counter(str(current_user.id), db)
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
     return await _load_session(db, session.id, current_user.id)
