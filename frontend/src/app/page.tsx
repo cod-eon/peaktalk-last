@@ -103,8 +103,10 @@ function Nav() {
             </div>
           </div>
 
-          <div style={{ display: 'none', justifySelf: 'end' }} className="hidden lg:flex">
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          {/* Right slot — desktop auth + mobile burger (always col-3) */}
+          <div style={{ justifySelf: 'end', display: 'flex', alignItems: 'center' }}>
+            {/* Desktop auth */}
+            <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center', display: 'none' }}>
               <a href="/login" style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 12,
@@ -117,26 +119,26 @@ function Nav() {
                 Начать бесплатно
               </a>
             </div>
-          </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="lg:hidden"
-            onClick={() => setMobileMenuOpen(true)}
-            style={{
-              justifySelf: 'end',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-main)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 12,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            [ Меню ]
-          </button>
+            {/* Mobile burger */}
+            <button
+              className="lg:hidden"
+              onClick={() => setMobileMenuOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-main)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                padding: '6px 0',
+              }}
+            >
+              [ Меню ]
+            </button>
+          </div>
         </div>
       </motion.nav>
 
