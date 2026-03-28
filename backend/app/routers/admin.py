@@ -33,6 +33,7 @@ from app.models.subscription import (
 from app.models.simulation import SimulationSession
 from app.models.user import User
 from app.schemas.admin import (
+    AdminChartsResponse,
     AdminPaymentItem,
     AdminPaymentsResponse,
     AdminStatsResponse,
@@ -41,6 +42,7 @@ from app.schemas.admin import (
     AdminUserDetail,
     AdminUserItem,
     AdminUsersResponse,
+    DayPoint,
     SetPlanRequest,
     SetPlanResponse,
 )
@@ -209,6 +211,68 @@ async def get_stats(
         payments_this_month_rub=payments_this_month_rub,
         payments_count_total=payments_count_total,
         active_subs_count=active_subs_count,
+    )
+
+
+# ---------------------------------------------------------------------------
+# GET /admin/charts
+# ---------------------------------------------------------------------------
+
+
+@router.get("/charts", response_model=AdminChartsResponse)
+async def get_charts(
+    days: int = Query(30, ge=7, le=90, description="Number of days to look back"),
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> AdminChartsResponse:
+    """Return day-by-day time-series for revenue, simulations, and new users."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Revenue per day (succeeded payments only)
+    rev_rows = await db.execute(
+        select(
+            func.date(Payment.created_at).label("day"),
+            func.coalesce(func.sum(Payment.amount), 0).label("total"),
+        )
+        .where(
+            and_(
+                Payment.status == PaymentStatus.succeeded,
+                Payment.created_at >= cutoff,
+            )
+        )
+        .group_by(func.date(Payment.created_at))
+        .order_by(func.date(Payment.created_at))
+    )
+
+    # Simulations per day
+    sim_rows = await db.execute(
+        select(
+            func.date(SimulationSession.created_at).label("day"),
+            func.count(SimulationSession.id).label("total"),
+        )
+        .where(SimulationSession.created_at >= cutoff)
+        .group_by(func.date(SimulationSession.created_at))
+        .order_by(func.date(SimulationSession.created_at))
+    )
+
+    # New users per day
+    usr_rows = await db.execute(
+        select(
+            func.date(User.created_at).label("day"),
+            func.count(User.id).label("total"),
+        )
+        .where(User.created_at >= cutoff)
+        .group_by(func.date(User.created_at))
+        .order_by(func.date(User.created_at))
+    )
+
+    def to_points(rows: list) -> list[DayPoint]:
+        return [DayPoint(date=str(row.day), value=float(row.total)) for row in rows]
+
+    return AdminChartsResponse(
+        revenue_by_day=to_points(rev_rows.all()),
+        simulations_by_day=to_points(sim_rows.all()),
+        users_by_day=to_points(usr_rows.all()),
     )
 
 

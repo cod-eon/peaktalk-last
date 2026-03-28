@@ -29,6 +29,22 @@ class AdminStatsResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Charts (time-series)
+# ---------------------------------------------------------------------------
+
+
+class DayPoint(BaseModel):
+    date: str   # ISO date "YYYY-MM-DD"
+    value: float
+
+
+class AdminChartsResponse(BaseModel):
+    revenue_by_day: list[DayPoint]
+    simulations_by_day: list[DayPoint]
+    users_by_day: list[DayPoint]
+
+
+# ---------------------------------------------------------------------------
 # User list
 # ---------------------------------------------------------------------------
 

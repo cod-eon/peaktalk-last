@@ -14,6 +14,19 @@ export interface AdminStats {
   active_subs_count: number;
 }
 
+// ─── Admin Charts ─────────────────────────────────────────────────────────────
+
+export interface DayPoint {
+  date: string; // "YYYY-MM-DD"
+  value: number;
+}
+
+export interface AdminChartsData {
+  revenue_by_day: DayPoint[];
+  simulations_by_day: DayPoint[];
+  users_by_day: DayPoint[];
+}
+
 // ─── Admin Users ──────────────────────────────────────────────────────────────
 
 export interface AdminUser {

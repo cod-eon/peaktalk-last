@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import {
   BarChart3,
   Users,
   CreditCard,
   LogOut,
-  ShieldCheck,
   Menu,
   X,
 } from 'lucide-react';
@@ -45,12 +45,12 @@ function AdminNavbar() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center">
-              <ShieldCheck size={14} className="text-white" />
+            <div className="w-7 h-7 flex items-center justify-center">
+              <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
             </div>
             <span
-              className="text-[15px] font-bold text-[var(--text-main)] tracking-tight"
-              style={{ fontFamily: 'var(--font-syne)' }}
+              className="text-[var(--text-main)]"
+              style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}
             >
               PeakTalk <span className="text-[var(--accent-primary)]">Admin</span>
             </span>
