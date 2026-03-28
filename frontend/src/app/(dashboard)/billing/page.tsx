@@ -147,6 +147,20 @@ export default function BillingPage() {
 
   const paymentsEnabled = status?.payments_enabled ?? true;
 
+  const handleTestSetPlan = useCallback(
+    async (plan: 'starter' | 'pro' | 'team', periodDays?: number) => {
+      try {
+        await api.post('/billing/test/set-plan', { plan, period_days: periodDays ?? 30 });
+        toast.success(`Тест: план изменён на ${plan.toUpperCase()}`);
+        await refetch();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Ошибка';
+        toast.error(message);
+      }
+    },
+    [refetch],
+  );
+
   const { data: payments, isLoading: paymentsLoading } = useQuery<Payment[]>({
     queryKey: ['billing-payments'],
     queryFn: () => api.get('/billing/payments'),
@@ -233,6 +247,49 @@ export default function BillingPage() {
             <span className="font-semibold">Платёжная система скоро заработает.</span>{' '}
             На время запуска все функции доступны без ограничений. Подписки будут активированы позже.
           </p>
+        </motion.div>
+      )}
+
+      {!isLoading && !paymentsEnabled && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="rounded-xl border border-dashed border-violet-400 bg-violet-50/60 p-4 mb-2"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+            <span
+              className="text-xs font-bold tracking-widest uppercase text-violet-600"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              Тест-режим
+            </span>
+          </div>
+          <p className="text-xs text-violet-700 mb-3">
+            Платёжная система отключена. Переключай план вручную чтобы тестировать лимиты и интерфейс.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['starter', 'pro', 'team'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => handleTestSetPlan(p, p === 'starter' ? undefined : 30)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  plan === p
+                    ? 'bg-violet-600 text-white border-violet-600'
+                    : 'bg-white text-violet-700 border-violet-300 hover:bg-violet-100'
+                }`}
+              >
+                {plan === p ? '✓ ' : ''}{p.toUpperCase()}
+              </button>
+            ))}
+            <button
+              onClick={() => handleTestSetPlan('pro', -1)}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border bg-white text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
+              PRO (истёк вчера)
+            </button>
+          </div>
         </motion.div>
       )}
 

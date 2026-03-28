@@ -1,7 +1,7 @@
 """Billing router: plan info, subscription management, and payment creation."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,7 @@ from app.schemas.subscription import (
     PlanInfo,
     PlanLimits,
     SubscriptionResponse,
+    TestSetPlanRequest,
     UsageStats,
 )
 from app.services.limits import (
@@ -243,3 +244,53 @@ async def list_payments(
         )
         for p in payments
     ]
+
+
+# ---------------------------------------------------------------------------
+# Test helpers (only available when payments_enabled=False)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/test/set-plan", response_model=SubscriptionResponse)
+async def test_set_plan(
+    body: TestSetPlanRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubscriptionResponse:
+    """Directly set the current user's plan without payment.
+
+    Only available when PAYMENTS_ENABLED=false (development / staging).
+    Use this to test subscription limits and UI flows locally.
+    """
+    if settings.payments_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"detail": "Тест-режим недоступен при включённой платёжной системе.", "code": "test_mode_disabled"},
+        )
+
+    subscription = await get_user_subscription(str(current_user.id), db)
+    now = datetime.now(timezone.utc)
+
+    subscription.plan = body.plan
+    subscription.status = SubscriptionStatus.active
+    subscription.cancelled_at = None
+
+    if body.plan == PlanType.starter:
+        subscription.period_end = None
+    else:
+        days = body.period_days if body.period_days is not None else 30
+        subscription.period_end = now + timedelta(days=days)
+
+    subscription.period_start = now
+    await db.flush()
+
+    logger.info(
+        "billing[test]: plan set user_id=%s plan=%s period_days=%s",
+        current_user.id, body.plan.value, body.period_days,
+    )
+
+    return SubscriptionResponse(
+        plan=subscription.plan,
+        status=subscription.status,
+        period_end=subscription.period_end,
+    )

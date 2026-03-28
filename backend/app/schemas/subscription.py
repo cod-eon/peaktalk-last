@@ -66,6 +66,19 @@ class PaymentResponse(BaseModel):
     created_at: datetime
 
 
+class TestSetPlanRequest(BaseModel):
+    plan: PlanType = Field(..., description="Plan to set: starter, pro, or team")
+    period_days: int | None = Field(
+        None,
+        description=(
+            "Days until period_end (pro/team). Defaults to 30. Ignored for starter. "
+            "Negative value = already expired by that many days ago."
+        ),
+        ge=-365,
+        le=365,
+    )
+
+
 class YookassaWebhookEvent(BaseModel):
     """YooKassa webhook event envelope."""
 
