@@ -45,6 +45,7 @@ export interface BillingStatus {
   limits: BillingLimits;
   can_start_simulation: boolean;
   can_upload_document: boolean;
+  payments_enabled: boolean;
 }
 
 export interface PaymentInitResponse {

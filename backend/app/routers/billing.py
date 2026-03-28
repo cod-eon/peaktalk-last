@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.subscription import (
@@ -111,8 +112,9 @@ async def get_billing_status(
             period_start=counter.period_start,
         ),
         limits=eff_limits,
-        can_start_simulation=can_sim,
-        can_upload_document=can_doc,
+        can_start_simulation=True if not settings.payments_enabled else can_sim,
+        can_upload_document=True if not settings.payments_enabled else can_doc,
+        payments_enabled=settings.payments_enabled,
     )
 
 
@@ -131,6 +133,12 @@ async def create_subscription_payment(
 
     Returns a redirect URL that the frontend should open for the user to complete payment.
     """
+    if not settings.payments_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"detail": "Платёжная система временно отключена. Скоро заработает.", "code": "payments_disabled"},
+        )
+
     if body.plan == PlanType.starter:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

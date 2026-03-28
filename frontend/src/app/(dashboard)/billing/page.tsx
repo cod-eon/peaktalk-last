@@ -145,6 +145,8 @@ export default function BillingPage() {
     useBillingStore();
   const { refetch } = useBilling();
 
+  const paymentsEnabled = status?.payments_enabled ?? true;
+
   const { data: payments, isLoading: paymentsLoading } = useQuery<Payment[]>({
     queryKey: ['billing-payments'],
     queryFn: () => api.get('/billing/payments'),
@@ -219,6 +221,21 @@ export default function BillingPage() {
         </div>
       )}
 
+      {!isLoading && !paymentsEnabled && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-start gap-3 p-4 rounded-xl border border-violet-200 bg-violet-50 text-sm text-violet-800 mb-2"
+        >
+          <AlertCircle size={16} className="shrink-0 mt-0.5 text-violet-500" />
+          <p>
+            <span className="font-semibold">Платёжная система скоро заработает.</span>{' '}
+            На время запуска все функции доступны без ограничений. Подписки будут активированы позже.
+          </p>
+        </motion.div>
+      )}
+
       {!isLoading && (
         <div className="flex flex-col gap-6">
 
@@ -282,7 +299,7 @@ export default function BillingPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {plan === 'starter' && (
+                {paymentsEnabled && plan === 'starter' && (
                   <button
                     onClick={() => openUpgradeModal('simulations')}
                     className="btn-primary gap-2 text-sm cursor-pointer"
@@ -291,7 +308,13 @@ export default function BillingPage() {
                     Перейти на PRO
                   </button>
                 )}
-                {plan === 'pro' && (
+                {!paymentsEnabled && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-violet-700 text-xs font-medium">
+                    <Zap size={11} />
+                    Скоро
+                  </span>
+                )}
+                {paymentsEnabled && plan === 'pro' && (
                   <>
                     <button
                       onClick={() => handleUpgrade('team')}
@@ -397,7 +420,7 @@ export default function BillingPage() {
                         </li>
                       ))}
                     </ul>
-                    {!isCurrent && p.id !== 'starter' && (
+                    {!isCurrent && p.id !== 'starter' && paymentsEnabled && (
                       <button
                         onClick={() => handleUpgrade(p.id as 'pro' | 'team')}
                         className={`w-full py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
@@ -408,6 +431,11 @@ export default function BillingPage() {
                       >
                         Выбрать {p.name}
                       </button>
+                    )}
+                    {!isCurrent && p.id !== 'starter' && !paymentsEnabled && (
+                      <div className="w-full py-2 rounded-lg text-[12px] font-semibold text-center text-violet-500 bg-violet-50 border border-violet-200">
+                        Скоро
+                      </div>
                     )}
                     {isCurrent && plan !== 'starter' && (
                       <div className="text-[11px] text-[var(--text-dim)] text-center pt-1">
@@ -488,7 +516,7 @@ export default function BillingPage() {
           </motion.div>
 
           {/* Notice */}
-          {!isPro && (
+          {!isPro && paymentsEnabled && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

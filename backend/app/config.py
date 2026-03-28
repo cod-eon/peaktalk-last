@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # Supabase webhook secret (set in Supabase Dashboard → Database → Webhooks → custom header)
     supabase_webhook_secret: str = ""
 
+    # Payment gateway toggle — set to false to disable all payment checks
+    # (everyone gets PRO behaviour, no limit enforcement, payment buttons hidden)
+    payments_enabled: bool = True
+
     # YooKassa payment integration
     yookassa_shop_id: str = ""
     yookassa_secret_key: str = ""

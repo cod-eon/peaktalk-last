@@ -42,6 +42,7 @@ class BillingStatusResponse(BaseModel):
     limits: PlanLimits
     can_start_simulation: bool
     can_upload_document: bool
+    payments_enabled: bool = True
 
 
 class CreatePaymentRequest(BaseModel):

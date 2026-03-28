@@ -5,6 +5,7 @@ feature access based on the user's active subscription plan.
 """
 
 import logging
+import uuid as _uuid_module
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
@@ -13,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.config import settings
 from app.models.subscription import (
     PlanType,
     Subscription,
@@ -101,15 +103,16 @@ def _is_subscription_active(subscription: Subscription) -> bool:
 
 async def get_user_subscription(user_id: str, db: AsyncSession) -> Subscription:
     """Get or auto-create a Subscription for the user (default: starter)."""
+    uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
     result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user_id)
+        select(Subscription).where(Subscription.user_id == uid)
     )
     subscription = result.scalar_one_or_none()
 
     if subscription is None:
         now = datetime.now(timezone.utc)
         subscription = Subscription(
-            user_id=user_id,
+            user_id=uid,
             plan=PlanType.starter,
             status=SubscriptionStatus.active,
             period_start=now,
@@ -124,8 +127,9 @@ async def get_user_subscription(user_id: str, db: AsyncSession) -> Subscription:
 
 async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
     """Get or auto-create a UsageCounter. Resets simulation counter if new billing period."""
+    uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
     result = await db.execute(
-        select(UsageCounter).where(UsageCounter.user_id == user_id)
+        select(UsageCounter).where(UsageCounter.user_id == uid)
     )
     counter = result.scalar_one_or_none()
 
@@ -133,7 +137,7 @@ async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
 
     if counter is None:
         counter = UsageCounter(
-            user_id=user_id,
+            user_id=uid,
             simulations_used=0,
             documents_uploaded=0,
             period_start=now,
@@ -180,6 +184,9 @@ async def check_simulation_limit(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """FastAPI Dependency. Raises HTTP 402 if monthly simulation limit is exceeded."""
+    if not settings.payments_enabled:
+        return  # Payments disabled — no limits enforced
+
     subscription, counter, limits = await get_plan_limits_for_user(str(current_user.id), db)
 
     if limits.simulations_per_month is None:
@@ -209,6 +216,9 @@ async def check_document_limit(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """FastAPI Dependency. Raises HTTP 402 if total document limit is exceeded."""
+    if not settings.payments_enabled:
+        return  # Payments disabled — no limits enforced
+
     subscription, counter, limits = await get_plan_limits_for_user(str(current_user.id), db)
 
     if limits.documents_total is None:
