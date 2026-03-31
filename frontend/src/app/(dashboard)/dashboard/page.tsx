@@ -135,7 +135,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/upload"
-          className="btn-primary flex-shrink-0 gap-2 self-start"
+          className="btn-primary flex-shrink-0 gap-2 self-start min-h-[48px] px-5 flex items-center justify-center cursor-pointer"
         >
           <Plus size={15} />
           Новый разбор
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         {/* Hero card — AI Simulation */}
         <Link
           href="/simulation"
-          className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 sm:p-7 flex flex-col justify-between overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200"
+          className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 sm:p-7 flex flex-col justify-between overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer min-h-[200px]"
           style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
         >
           {/* Background gradient accent */}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="relative z-10 mt-6 flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)]">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)] min-h-[44px]">
               <Sparkles size={13} />
               Начать тренировку
             </span>
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                     {step.href ? (
                       <Link
                         href={step.href}
-                        className="text-[13px] font-semibold text-[var(--text-main)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 w-fit"
+                        className="text-[13px] font-semibold text-[var(--text-main)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 w-fit min-h-[44px] cursor-pointer"
                       >
                         {step.title}
                         <ArrowRight size={12} className="opacity-60" />
@@ -403,7 +403,7 @@ export default function DashboardPage() {
           </h2>
           <Link
             href="/upload"
-            className="flex items-center gap-1 text-[var(--text-dim)] hover:text-[var(--accent-primary)] transition-colors group text-[13px] font-medium"
+            className="flex items-center justify-center gap-1 text-[var(--text-dim)] hover:text-[var(--accent-primary)] transition-colors group text-[13px] font-medium min-h-[44px] px-3 -mr-3 rounded-lg cursor-pointer"
           >
             Добавить
             <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                 <p className="text-[14px] text-[var(--text-dim)] mb-4">
                   Пока нет материалов для разбора
                 </p>
-                <Link href="/upload" className="btn-primary text-sm gap-1.5">
+                <Link href="/upload" className="btn-primary text-sm gap-1.5 flex items-center justify-center min-h-[48px] w-full sm:w-auto px-6 cursor-pointer">
                   <UploadCloud size={13} />
                   Загрузить первый
                 </Link>
@@ -472,7 +472,7 @@ export default function DashboardPage() {
                 <Link
                   href={`/analysis/${draft.id}`}
                   key={draft.id}
-                  className="group flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_160px_150px_44px] lg:items-center px-4 py-4 sm:px-5 hover:bg-[var(--bg-surface-alt)] transition-colors duration-150 relative"
+                  className="group flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_160px_150px_44px] lg:items-center px-4 py-4 sm:px-5 hover:bg-[var(--bg-surface-alt)] transition-colors duration-150 relative cursor-pointer min-h-[64px]"
                 >
                   {/* Active left bar */}
                   <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--accent-primary)] opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full" />

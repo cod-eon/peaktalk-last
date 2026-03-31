@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 
 const smoothScroll = (id: string) => {
   const element = document.querySelector(id);
@@ -67,46 +68,44 @@ function Nav() {
           transition: 'all 0.3s ease',
         }}
       >
-        <div className="container-custom" style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) auto minmax(120px, 1fr)', alignItems: 'center' }}>
-          <div style={{ justifySelf: 'start' }}>
+        <div className="container-custom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+          <div>
             <Logo />
           </div>
 
           {/* Desktop Nav */}
-          <div style={{ display: 'none', justifySelf: 'center' }} className="hidden lg:flex">
-            <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-              {['Как это работает', 'Возможности', 'Отзывы', 'Тарифы'].map((item, i) => {
-                const mapIds = ['#how', '#features', '#testimonials', '#pricing'];
-                return (
-                  <button
-                    key={item}
-                    onClick={() => smoothScroll(mapIds[i])}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 13,
-                      color: 'var(--text-main)',
-                      opacity: 0.7,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.02em',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'opacity 0.2s',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                    onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="hidden lg:flex" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', gap: 32, alignItems: 'center' }}>
+            {['Как это работает', 'Возможности', 'Отзывы', 'Тарифы'].map((item, i) => {
+              const mapIds = ['#how', '#features', '#testimonials', '#pricing'];
+              return (
+                <button
+                  key={item}
+                  onClick={() => smoothScroll(mapIds[i])}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 13,
+                    color: 'var(--text-main)',
+                    opacity: 0.7,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.02em',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                >
+                  {item}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Right slot — desktop auth + mobile burger (always col-3) */}
-          <div style={{ justifySelf: 'end', display: 'flex', alignItems: 'center' }}>
+          {/* Right slot — desktop auth + mobile burger */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* Desktop auth */}
-            <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center', display: 'none' }}>
+            <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center' }}>
               <a href="/login" style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 12,
@@ -129,14 +128,16 @@ function Nav() {
                 border: 'none',
                 cursor: 'pointer',
                 color: 'var(--text-main)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                padding: '6px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 48,
+                height: 48,
+                marginRight: -12, // Offset padding to align visually
               }}
+              aria-label="Открыть меню"
             >
-              [ Меню ]
+              <Menu size={28} />
             </button>
           </div>
         </div>
@@ -146,15 +147,17 @@ function Nav() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(32px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 100,
               background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(32px)',
+              WebkitBackdropFilter: 'blur(32px)',
               display: 'flex',
               flexDirection: 'column',
               padding: 24,
@@ -169,17 +172,20 @@ function Nav() {
                   border: 'none',
                   cursor: 'pointer',
                   color: 'var(--text-main)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 12,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 48,
+                  height: 48,
+                  marginRight: -12, // Match alignment
                 }}
+                aria-label="Закрыть меню"
               >
-                [ Закрыть ]
+                <X size={32} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'flex-start' }}>
               {['Как это работает', 'Возможности', 'Отзывы', 'Тарифы'].map((item, i) => {
                 const mapIds = ['#how', '#features', '#testimonials', '#pricing'];
                 return (
@@ -190,15 +196,16 @@ function Nav() {
                       setTimeout(() => smoothScroll(mapIds[i]), 300);
                     }}
                     style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 16,
+                      fontFamily: 'var(--font-syne)',
+                      fontSize: 24,
+                      fontWeight: 700,
                       color: 'var(--text-main)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
+                      letterSpacing: '-0.02em',
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
                       textAlign: 'left',
+                      padding: '8px 0',
                     }}
                   >
                     {item}
@@ -209,15 +216,15 @@ function Nav() {
               <div style={{ width: '100%', height: 1, backgroundColor: 'var(--border-main)', margin: '16px 0' }} />
 
               <a href="/login" style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 14,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
+                fontFamily: 'var(--font-syne)',
+                fontSize: 18,
+                fontWeight: 600,
+                color: 'var(--text-dim)',
                 textDecoration: 'none',
-              }}>Войти в систему</a>
+                padding: '8px 0',
+              }}>Личный кабинет</a>
 
-              <a href="/register" className="btn-primary" style={{ width: '100%', padding: '16px 0', marginTop: 16 }}>
+              <a href="/register" className="btn-primary flex items-center justify-center w-full" style={{ padding: '20px 0', marginTop: 16, fontSize: 15 }}>
                 Начать бесплатно
               </a>
             </div>
