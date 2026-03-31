@@ -98,7 +98,7 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   const progressDelta = scoredByDate.length >= 2
     ? Math.round(scoredByDate[scoredByDate.length - 1].avg_score! * 10)
-      - Math.round(scoredByDate[0].avg_score! * 10)
+    - Math.round(scoredByDate[0].avg_score! * 10)
     : null;
 
   // Practice time: message_count × 1.5 min
@@ -112,14 +112,14 @@ export default function DashboardPage() {
   const sparkScores = scoredByDate.slice(-7).map(s => Math.round(s.avg_score! * 10));
   const sparkColor = progressDelta == null ? '#cbd5e1'
     : progressDelta > 0 ? '#10b981'
-    : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
+      : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
   // y: 3 (score=10, top) → 23 (score=0, bottom) — 3px padding for r=2.5 dots
   const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
   const sparkPoints = sparkScores.length >= 2
     ? sparkScores.map((s, i) => {
-        const x = (i / (sparkScores.length - 1)) * 80;
-        return `${x},${sparkY(s)}`;
-      }).join(' ')
+      const x = (i / (sparkScores.length - 1)) * 80;
+      return `${x},${sparkY(s)}`;
+    }).join(' ')
     : null;
 
   return (
@@ -155,11 +155,11 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
           {/* Decorative AI-pulse geometry */}
           <svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.10] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
-            <circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"/>
-            <circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"/>
-            <circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"/>
-            <circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.12"/>
-            <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5"/>
+            <circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5" />
+            <circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1" />
+            <circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5" />
+            <circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.12" />
+            <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5" />
           </svg>
 
           <div className="relative z-10">
@@ -218,9 +218,9 @@ export default function DashboardPage() {
                 {simAvgScore10 == null
                   ? 'Пройди симуляцию'
                   : simAvgScore10 >= 8 ? 'Готов к питчу'
-                  : simAvgScore10 >= 6 ? 'Есть потенциал'
-                  : simAvgScore10 >= 4 ? 'Нужна практика'
-                  : 'Серьёзная работа'}
+                    : simAvgScore10 >= 6 ? 'Есть потенциал'
+                      : simAvgScore10 >= 4 ? 'Нужна практика'
+                        : 'Серьёзная работа'}
               </p>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -243,10 +243,10 @@ export default function DashboardPage() {
               : progressDelta > 0 ? 'text-emerald-500' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
             const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
               : progressDelta > 0 ? 'Ты растёшь!'
-              : progressDelta < 0 ? 'Бывает — встряхнись' : 'Нет изменений';
+                : progressDelta < 0 ? 'Бывает — встряхнись' : 'Нет изменений';
             const trendValColor = progressDelta == null ? 'text-gray-300'
               : progressDelta > 0 ? 'text-emerald-600'
-              : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
+                : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
             return (
               <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                   <div className={`text-4xl font-extrabold ${trendValColor}`} style={{ letterSpacing: '-0.03em' }}>
                     {progressDelta == null ? '—'
                       : progressDelta === 0 ? '= 0'
-                      : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>}
+                        : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-2xl font-bold text-gray-400 ml-0.5">б</span></>}
                   </div>
                   <p className="text-sm text-gray-500 mt-1 mb-2">{trendSub}</p>
                 </div>
@@ -322,13 +322,13 @@ export default function DashboardPage() {
       {!isLoading && !isError && totalDrafts === 0 && (
         <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 mb-8" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
           <h2 className="text-[15px] font-semibold text-[var(--text-main)] mb-5" style={{ letterSpacing: '-0.01em' }}>
-            С чего начать
+            Твой путь к идеальному питчу
           </h2>
           <div className="flex flex-col gap-0">
             {[
               {
                 icon: UploadCloud,
-                title: 'Загрузите материал',
+                title: 'Заложи фундамент',
                 desc: 'Текст выступления, питча или сценария',
                 href: '/upload',
                 active: true,
@@ -337,7 +337,7 @@ export default function DashboardPage() {
               },
               {
                 icon: FileText,
-                title: 'Запустите анализ',
+                title: 'Найди слепые зоны',
                 desc: 'AI разберёт структуру и логику текста',
                 href: null,
                 active: false,
@@ -346,7 +346,7 @@ export default function DashboardPage() {
               },
               {
                 icon: Sparkles,
-                title: 'Начните симуляцию',
+                title: 'Проверь себя на прочность',
                 desc: 'Стресс-тест с AI-собеседником по вашему материалу',
                 href: null,
                 active: false,
@@ -399,7 +399,7 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[17px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.015em' }}>
-            Последние разборы
+            Твои выступления
           </h2>
           <Link
             href="/upload"
@@ -451,11 +451,11 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <p className="text-[14px] text-[var(--text-dim)] mb-4">
-                  Пока нет материалов для разбора
+                  Твоя трибуна пока пуста
                 </p>
                 <Link href="/upload" className="btn-primary text-sm gap-1.5 flex items-center justify-center min-h-[48px] w-full sm:w-auto px-6 cursor-pointer">
                   <UploadCloud size={13} />
-                  Загрузить первый
+                  Загрузить первый питч
                 </Link>
               </div>
             )}

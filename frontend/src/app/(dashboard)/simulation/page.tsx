@@ -427,7 +427,7 @@ function SimulationPageContent() {
                         className="btn-primary shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px]"
                     >
                         <Plus size={16} />
-                        <span className="hidden sm:inline">Новая симуляция</span>
+                        <span className="hidden sm:inline">Новая тренировка</span>
                         <span className="sm:hidden">Новая</span>
                     </button>
                 </div>
@@ -692,10 +692,10 @@ function SimulationPageContent() {
                     )}
                     <div>
                         <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight m-0 mb-2">
-                            Настройка симуляции
+                            Выбери себе вызов
                         </h1>
                         <p className="font-inter text-[var(--text-muted)] max-w-2xl text-sm leading-relaxed">
-                            Выберите AI-собеседника, сферу и материал для тренировки.
+                            Кто сегодня по ту сторону стола? Настрой контекст и покажи класс.
                         </p>
                     </div>
                 </div>
@@ -740,7 +740,7 @@ function SimulationPageContent() {
                 {/* 1. ROLE SELECTION */}
                 <section>
                     <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 1:</span> Выбор собеседника
+                        <span className="text-[var(--text-muted)]">Шаг 1:</span> Кого нужно убедить?
                     </h2>
                     <AnimatePresence mode="wait">
                         {personasLoading ? (

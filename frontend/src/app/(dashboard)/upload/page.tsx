@@ -119,10 +119,10 @@ export default function UploadPage() {
             {/* Header */}
             <div className="text-center mb-6 sm:mb-10">
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-syne font-bold text-[var(--text-main)] mb-3 sm:mb-4 tracking-tight">
-                    Новый разбор
+                    Прокачай свой материал
                 </h1>
                 <p className="text-[var(--text-muted)] text-sm md:text-base max-w-lg mx-auto leading-relaxed px-2">
-                    Загрузите ваш сценарий или вставьте текст напрямую. ИИ проанализирует логику, найдет слабые места и подготовит вопросы для стресс-теста.
+                    Загрузи сценарий или черновик. Мы проверим его на прочность, найдем логические дыры и подготовим вопросы для стресс-теста.
                 </p>
             </div>
 
@@ -207,8 +207,8 @@ export default function UploadPage() {
                                                         <div className={`p-4 rounded-full mb-4 transition-colors ${isDragging ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]' : 'bg-[var(--bg-surface)] border border-[var(--border-light)] text-[var(--text-muted)]'}`}>
                                                             <UploadCloud size={28} strokeWidth={1.5} />
                                                         </div>
-                                                        <h3 className="text-[var(--text-main)] font-medium mb-1">Перетащите файл сюда</h3>
-                                                        <p className="text-[var(--text-dim)] text-xs mb-6 text-center max-w-[240px]">Или кликните, чтобы выбрать на устройстве</p>
+                                                        <h3 className="text-[var(--text-main)] font-medium mb-1">Брось черновик сюда</h3>
+                                                        <p className="text-[var(--text-dim)] text-xs mb-6 text-center max-w-[240px]">(AI разберется, или просто кликни)</p>
                                                         
                                                         <div className="flex gap-2 flex-wrap justify-center">
                                                             {['PDF', 'DOCX', 'TXT'].map((ext) => (
@@ -261,7 +261,7 @@ export default function UploadPage() {
                                     className="w-full sm:w-auto btn-primary relative px-6 py-2.5 min-h-[44px]"
                                 >
                                     <span className="flex items-center gap-2 justify-center">
-                                        <Zap size={16} /> Начать анализ
+                                        <Zap size={16} /> Сделать текст сильнее
                                     </span>
                                 </button>
                             </div>
