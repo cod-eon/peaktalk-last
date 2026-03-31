@@ -104,7 +104,7 @@ async def get_current_user(
             await db.rollback()
             # Fallback 1: same UUID (concurrent request created the user)
             # Fallback 2: same email but different UUID (OAuth account not yet linked in Supabase)
-            from sqlalchemy import or_, update as sa_update
+            from sqlalchemy import or_
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.onboarding_profile))
@@ -114,11 +114,15 @@ async def get_current_user(
             if user is None:
                 logger.error("auth: user not found after rollback, user_id=%s email=%s", user_id, email)
                 raise credentials_exception
-            # If UUID mismatch (different OAuth provider), update UUID so next requests are fast
+            # If UUID mismatch (different OAuth provider / re-registration via Google),
+            # do NOT attempt UPDATE users SET id=... — child tables reference users.id
+            # without ON UPDATE CASCADE, so that would raise ForeignKeyViolationError.
+            # The user is authenticated correctly using their existing record.
             if user.id != user_id:
-                logger.info("auth: migrating user UUID %s → %s for email=%s", user.id, user_id, email)
-                await db.execute(sa_update(User).where(User.id == user.id).values(id=user_id))
-                await db.flush()
-                user.id = user_id
+                logger.info(
+                    "auth: UUID mismatch for email=%s — local=%s supabase=%s; "
+                    "keeping local UUID to avoid FK violation",
+                    email, user.id, user_id,
+                )
 
     return user
