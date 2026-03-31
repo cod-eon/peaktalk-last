@@ -155,12 +155,23 @@ export default function SettingsPage() {
 
     return (
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-5 py-6 sm:py-8 lg:px-8 pb-20 md:pb-10">
-            <div className="mb-6 sm:mb-8">
-                <p className="label-kicker mb-2">Аккаунт</p>
-                <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
-                    Настройки
-                </h1>
-            </div>
+                <div className="mb-6 sm:mb-8 flex justify-between items-end">
+                    <div>
+                        <p className="label-kicker mb-2">Аккаунт</p>
+                        <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
+                            Настройки
+                        </h1>
+                    </div>
+                    {/* Mobile high-visibility logout */}
+                    <button
+                        onClick={handleSignOut}
+                        disabled={isLoggingOut}
+                        className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-[var(--color-destructive)] text-[12px] font-medium active:scale-95 transition-all"
+                    >
+                        {isLoggingOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+                        Выйти
+                    </button>
+                </div>
 
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Tab nav */}
