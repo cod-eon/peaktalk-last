@@ -68,10 +68,11 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
@@ -79,15 +80,17 @@
     color: var(--text-main);
   }
 
-  /* Heading typography */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  /* Heading typography - Standard Inter for professional feel */
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-inter), sans-serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+
+  /* Decorative/Brand Heading Styling */
+  .font-syne {
+    font-family: var(--font-syne), sans-serif;
+    letter-spacing: -0.04em;
   }
 
   .font-mono {

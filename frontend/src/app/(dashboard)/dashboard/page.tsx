@@ -156,8 +156,8 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-6 mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
           <div>
-            <p className="text-[13px] text-[var(--text-dim)] mb-1.5 font-medium">Добро пожаловать</p>
-            <h1 className="text-[26px] sm:text-[30px] font-bold text-[var(--text-main)] leading-tight" style={{ letterSpacing: '-0.025em' }}>
+            <p className="text-[12px] text-[var(--text-dim)] mb-1 uppercase tracking-widest font-semibold">Добро пожаловать</p>
+            <h1 className="text-[28px] sm:text-[34px] font-syne font-bold text-[var(--text-main)] leading-tight tracking-tight">
               Привет, {displayName}!
             </h1>
           </div>
@@ -442,10 +442,9 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* ─── Recent drafts ─── */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.015em' }}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[18px] font-syne font-bold text-[var(--text-main)] uppercase tracking-tight">
             Твои выступления
           </h2>
           <Link
