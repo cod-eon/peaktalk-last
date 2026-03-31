@@ -65,10 +65,11 @@ async def get_current_user(
     except Exception:
         pass
 
+    from sqlalchemy import or_
     result = await db.execute(
         select(User)
         .options(selectinload(User.onboarding_profile))
-        .where(User.id == user_id)
+        .where(or_(User.id == user_id, User.email == email))
     )
     user = result.scalar_one_or_none()
 
@@ -79,13 +80,19 @@ async def get_current_user(
         local_created = user.created_at
         if local_created.tzinfo is None:
             local_created = local_created.replace(tzinfo=timezone.utc)
-        if sb_created_at > local_created + timedelta(seconds=60):
+        # Trigger wipe if:
+        # A) IDs don't match (user deleted in Supabase and re-registered with same email)
+        # B) Supabase account is much newer than our record
+        is_new_uuid = user.id != user_id
+        is_newer_sb = sb_created_at > local_created + timedelta(seconds=60)
+        
+        if is_new_uuid or is_newer_sb:
             logger.info(
-                "auth: re-registration detected for user_id=%s (sb=%s local=%s) — wiping stale data",
-                user_id, sb_created_at, local_created,
+                "auth: stale data detected for email=%s (reason: %s) — wiping local record",
+                email, "new UUID" if is_new_uuid else "newer account"
             )
             await db.delete(user)
-            await db.flush()
+            await db.commit() # Commit deletion before provisioning fresh
             user = None  # will be provisioned fresh below
 
     if user is None:
@@ -101,10 +108,7 @@ async def get_current_user(
             logger.info("auth: provisioned new user id=%s email=%s", user_id, email)
         except Exception as exc:
             logger.warning("auth: provision failed (race/conflict): %s", exc)
-            await db.rollback()
-            # Fallback 1: same UUID (concurrent request created the user)
-            # Fallback 2: same email but different UUID (OAuth account not yet linked in Supabase)
-            from sqlalchemy import or_
+            # This block is now mostly for race conditions during provisioning
             result = await db.execute(
                 select(User)
                 .options(selectinload(User.onboarding_profile))
@@ -112,17 +116,12 @@ async def get_current_user(
             )
             user = result.scalar_one_or_none()
             if user is None:
-                logger.error("auth: user not found after rollback, user_id=%s email=%s", user_id, email)
+                logger.error("auth: user not found after provision failure, user_id=%s email=%s", user_id, email)
                 raise credentials_exception
-            # If UUID mismatch (different OAuth provider / re-registration via Google),
-            # do NOT attempt UPDATE users SET id=... — child tables reference users.id
-            # without ON UPDATE CASCADE, so that would raise ForeignKeyViolationError.
-            # The user is authenticated correctly using their existing record.
+            
+            # If we STILL have a record but different UUID here, it means deletion failed
+            # or it's a very specific race. We just log and use it.
             if user.id != user_id:
-                logger.info(
-                    "auth: UUID mismatch for email=%s — local=%s supabase=%s; "
-                    "keeping local UUID to avoid FK violation",
-                    email, user.id, user_id,
-                )
+                logger.info("auth: using existing user %s for new supabase user %s", user.id, user_id)
 
     return user
