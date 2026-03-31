@@ -281,6 +281,19 @@ function SimulationPageContent() {
     const docDropdownRef = useRef<HTMLDivElement>(null);
     const docTriggerRef = useRef<HTMLButtonElement>(null);
 
+    // Step section refs for auto-scroll on mobile
+    const step2Ref = useRef<HTMLElement>(null);
+    const step3Ref = useRef<HTMLElement>(null);
+
+    // Auto-scroll to next step on mobile when a selection is made
+    const scrollToStep = (ref: React.RefObject<HTMLElement | null>) => {
+        if (window.innerWidth < 768 && ref.current) {
+            setTimeout(() => {
+                ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+        }
+    };
+
     // Load sessions, personas and documents on mount
     useEffect(() => {
         async function fetchAll() {
@@ -823,7 +836,7 @@ function SimulationPageContent() {
                                     return (
                                         <button
                                             key={key}
-                                            onClick={() => setSelectedRole(key)}
+                                            onClick={() => { setSelectedRole(key); scrollToStep(step2Ref); }}
                                             className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
                                                     ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
@@ -862,7 +875,7 @@ function SimulationPageContent() {
                                     return (
                                         <button
                                             key={role.id}
-                                            onClick={() => setSelectedRole(role.id)}
+                                            onClick={() => { setSelectedRole(role.id); scrollToStep(step2Ref); }}
                                             className={`text-left p-5 rounded-xl transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
                                                     ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
@@ -892,7 +905,7 @@ function SimulationPageContent() {
                 </section>
 
                 {/* 2. DOMAIN SELECTION */}
-                <section>
+                <section ref={step2Ref}>
                     <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
                         <span className="text-[var(--text-muted)]">Шаг 2:</span> Индустрия / Ниша
                     </h2>
@@ -900,7 +913,7 @@ function SimulationPageContent() {
                         {domains.map((domain) => (
                             <button
                                 key={domain.id}
-                                onClick={() => setSelectedDomain(domain.id)}
+                                onClick={() => { setSelectedDomain(domain.id); scrollToStep(step3Ref); }}
                                 className={`px-4 py-2.5 rounded-lg border text-sm font-inter transition-all ${
                                     selectedDomain === domain.id
                                         ? 'bg-[var(--accent-primary-bg)] border-[var(--accent-primary)] text-[var(--accent-primary)]'
@@ -927,7 +940,7 @@ function SimulationPageContent() {
                 </section>
 
                 {/* 3. DOCUMENT SELECTION */}
-                <section>
+                <section ref={step3Ref}>
                     <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
                         <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера
                     </h2>
@@ -990,7 +1003,8 @@ function SimulationPageContent() {
                                                 value={docSearch}
                                                 onChange={(e) => setDocSearch(e.target.value)}
                                                 autoFocus
-                                                className="w-full pl-9 pr-3 py-2 text-sm font-inter bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-lg text-[var(--text-main)] placeholder:text-[var(--text-dim)] outline-none focus:border-[var(--accent-primary)] transition-colors"
+                                            className="w-full pl-9 pr-3 py-2 text-sm font-inter bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-lg text-[var(--text-main)] placeholder:text-[var(--text-dim)] outline-none focus:border-[var(--accent-primary)] transition-colors"
+                                                style={{ fontSize: '16px' }}
                                             />
                                         </div>
                                     </div>

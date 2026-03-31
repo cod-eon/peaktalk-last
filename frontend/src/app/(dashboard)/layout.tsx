@@ -8,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] bg-page-geo-subtle text-white flex">
+    <div className="min-h-screen bg-[var(--bg-main)] md:bg-page-geo-subtle text-white flex">
       {/* Desktop Sidebar (Fixed) */}
       <Sidebar />
 

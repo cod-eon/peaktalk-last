@@ -373,12 +373,12 @@ export default function SimulationPage() {
             className="w-full max-w-3xl mx-auto"
           >
             {/* Карточка Вопроса */}
-            <div className="mb-5 sm:mb-8 p-4 sm:p-6 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] rounded-2xl relative shadow-sm">
+            <div className="mb-5 sm:mb-8 p-5 sm:p-6 md:p-8 bg-[var(--bg-surface-alt)] border border-[var(--border-light)] rounded-2xl relative shadow-sm">
               <div className="absolute -left-2 -top-2 sm:-left-3 sm:-top-3 text-[var(--accent-primary)] bg-[var(--bg-main)] rounded-full p-1 opacity-50">
                 <Bot size={18} className="sm:hidden" />
                 <Bot size={24} className="hidden sm:block" />
               </div>
-              <h1 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-syne font-medium leading-tight text-[var(--text-main)]">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-inter font-medium leading-relaxed sm:leading-tight text-[var(--text-main)]">
                 {lastQuestion}
               </h1>
             </div>

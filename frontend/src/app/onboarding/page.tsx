@@ -35,6 +35,11 @@ export default function OnboardingPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
 
+    // Scroll to top whenever step changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [step]);
+
     // Skip onboarding if already completed
     useEffect(() => {
         async function checkProfile() {
@@ -76,8 +81,8 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen bg-[var(--bg-main)] flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-            {/* Background grid */}
-            <div className="fixed inset-0 pointer-events-none opacity-40"
+            {/* Background grid — hidden on mobile for clean look */}
+            <div className="fixed inset-0 pointer-events-none opacity-40 hidden md:block"
                 style={{ backgroundImage: 'linear-gradient(var(--border-main) 1px, transparent 1px), linear-gradient(90deg, var(--border-main) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
             />
 
