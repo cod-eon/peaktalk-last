@@ -17,8 +17,7 @@ import {
   Target,
   Bot,
   Flame,
-  Zap,
-  LogOut
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -26,7 +25,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { createClient } from '@/lib/supabase/client';
 
 type AnalysisResult = {
   feedback_json: { overall_score: number };
@@ -155,25 +153,11 @@ export default function DashboardPage() {
     <div className="pb-16 md:pb-10 pt-8 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
 
       {/* ─── Header ─── */}
-      <div className="flex flex-col gap-6 mb-8 sm:flex-row sm:items-center sm:justify-between relative">
-        <button
-          onClick={() => {
-            if (confirm('Вы уверены, что хотите выйти?')) {
-              createClient().auth.signOut().then(() => {
-                 window.location.href = '/';
-              });
-            }
-          }}
-          className="md:hidden absolute top-0 right-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-          title="Выйти"
-        >
-          <LogOut size={22} />
-        </button>
-
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6 pt-2 sm:pt-0">
+      <div className="flex flex-col gap-6 mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
           <div>
             <p className="text-[12px] text-[var(--text-dim)] mb-1 uppercase tracking-widest font-semibold">Добро пожаловать</p>
-            <h1 className="text-[28px] sm:text-[34px] font-syne font-bold text-[var(--text-main)] leading-tight tracking-tight max-w-[80vw] overflow-hidden text-ellipsis">
+            <h1 className="text-[28px] sm:text-[34px] font-syne font-bold text-[var(--text-main)] leading-tight tracking-tight">
               Привет, {displayName}!
             </h1>
           </div>
@@ -215,127 +199,70 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* ─── Coach's Tip ─── */}
-      {!isLoading && !isError && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gradient-to-r from-violet-50/80 to-orange-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-8 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
+      {/* ─── Main grid: hero card + metric cards ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+
+        {/* Hero card — AI Simulation */}
+        <Link
+          href="/simulation"
+          className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 sm:p-7 flex flex-col justify-between overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer min-h-[200px]"
+          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
         >
-          {/* Subtle glow effect */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-200/30 rounded-full blur-[40px] pointer-events-none" />
-          
-          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-violet-100 relative z-10">
-            <Bot size={24} className="text-violet-600" />
-          </div>
-          
-          <div className="flex-1 relative z-10">
-            <h3 className="text-[15px] font-bold text-violet-900 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
-              {getCoachTip(simAvgScore10, progressDelta).title}
-            </h3>
-            <p className="text-[14px] text-violet-800/80 leading-relaxed max-w-2xl">
-              {getCoachTip(simAvgScore10, progressDelta).text}
+          {/* Background gradient accent */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
+          {/* Decorative AI-pulse geometry */}
+          <motion.svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.25] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
+            <motion.circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"
+              animate={{ r: [80, 84, 80], opacity: [0.6, 0.2, 0.6] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"
+              animate={{ r: [58, 62, 58], opacity: [0.7, 0.3, 0.7] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+            <motion.circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"
+              animate={{ r: [38, 40, 38], opacity: [0.8, 0.4, 0.8] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.2"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5" />
+          </motion.svg>
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
+                <Sparkles size={18} className="text-violet-600" />
+              </div>
+              <div>
+                <h2 className="text-[17px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.015em' }}>
+                  AI Симуляция
+                </h2>
+                <p className="text-[11px] text-[var(--text-dim)] font-medium">Нейронный собеседник</p>
+              </div>
+            </div>
+
+            <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">
+              Пройди стресс-тест по своему тексту с AI-собеседником — HR, Инвестор или Клиент. Живые вопросы, честная обратная связь.
             </p>
           </div>
-        </motion.div>
-      )}
 
-      {/* ─── Main Content Area ─── */}
-      <div className={completedSims.length > 0 ? "flex flex-col gap-4 mb-8" : "grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8"}>
+          <div className="relative z-10 mt-6 flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)] min-h-[44px]">
+              <Sparkles size={13} />
+              Начать тренировку
+            </span>
+            <ChevronRight
+              size={18}
+              className="text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
+            />
+          </div>
+        </Link>
 
-        {completedSims.length > 0 ? (
-          <Link
-            href="/simulation"
-            className="group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer min-h-[72px]"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-          >
-             <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-                  <Sparkles size={18} className="text-violet-600" />
-                </div>
-                <div>
-                   <h2 className="text-[15px] sm:text-[17px] font-semibold text-[var(--text-main)] leading-tight mb-0.5" style={{ letterSpacing: '-0.01em' }}>
-                     AI Симуляция
-                   </h2>
-                   <p className="text-[12px] text-[var(--text-dim)] hidden sm:block">Продолжить тренировку общения с нейронным собеседником</p>
-                   <p className="text-[12px] text-[var(--text-dim)] sm:hidden">Новая тренировка</p>
-                </div>
-             </div>
-             <div className="flex items-center gap-3 shrink-0">
-               <span className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--color-ai)] text-white text-[13px] font-semibold transition-all group-hover:bg-violet-700 min-h-[44px]">
-                 Продолжить
-               </span>
-               <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center sm:hidden text-violet-600 group-hover:bg-violet-100 transition-colors">
-                  <ArrowRight size={18} />
-               </div>
-             </div>
-          </Link>
-        ) : (
-          <>
-            {/* Hero card — AI Simulation Large */}
-            <Link
-            href="/simulation"
-            className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 sm:p-7 flex flex-col justify-between overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer min-h-[200px]"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-          >
-            {/* Background gradient accent */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
-            {/* Decorative AI-pulse geometry */}
-            <motion.svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.25] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
-              <motion.circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"
-                animate={{ r: [80, 84, 80], opacity: [0.6, 0.2, 0.6] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"
-                animate={{ r: [58, 62, 58], opacity: [0.7, 0.3, 0.7] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              />
-              <motion.circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"
-                animate={{ r: [38, 40, 38], opacity: [0.8, 0.4, 0.8] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.2"
-                animate={{ opacity: [0.2, 0.5, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5" />
-            </motion.svg>
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
-                  <Sparkles size={18} className="text-violet-600" />
-                </div>
-                <div>
-                  <h2 className="text-[17px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.015em' }}>
-                    AI Симуляция
-                  </h2>
-                  <p className="text-[11px] text-[var(--text-dim)] font-medium">Нейронный собеседник</p>
-                </div>
-              </div>
-
-              <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">
-                Пройди стресс-тест по своему тексту с AI-собеседником — HR, Инвестор или Клиент. Живые вопросы, честная обратная связь.
-              </p>
-            </div>
-
-            <div className="relative z-10 mt-6 flex items-center justify-between">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)] min-h-[44px]">
-                <Sparkles size={13} />
-                Начать тренировку
-              </span>
-              <ChevronRight
-                size={18}
-                className="text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-              />
-            </div>
-          </Link>
-          </>
-        )}
-
-        {/* Metric cards */}
-        <div className={completedSims.length > 0 ? "grid grid-cols-1 sm:grid-cols-3 gap-4" : "flex flex-col gap-4"}>
+        {/* Metric cards column */}
+        <div className="flex flex-col gap-4">
 
           {/* Card: Индекс готовности */}
           <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
@@ -459,6 +386,32 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Coach's Tip ─── */}
+      {!isLoading && !isError && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative bg-gradient-to-r from-violet-50/80 to-orange-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-8 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
+        >
+          {/* Subtle glow effect */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-200/30 rounded-full blur-[40px] pointer-events-none" />
+          
+          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-violet-100 relative z-10">
+            <Bot size={24} className="text-violet-600" />
+          </div>
+          
+          <div className="flex-1 relative z-10">
+            <h3 className="text-[15px] font-bold text-violet-900 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
+              {getCoachTip(simAvgScore10, progressDelta).title}
+            </h3>
+            <p className="text-[14px] text-violet-800/80 leading-relaxed max-w-2xl">
+              {getCoachTip(simAvgScore10, progressDelta).text}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── Zero State (new users only) ─── */}
       {!isLoading && !isError && totalDrafts === 0 && (
