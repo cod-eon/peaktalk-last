@@ -15,6 +15,7 @@ import {
   Sparkles,
   Plus,
   Target,
+  Bot
 } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -64,6 +65,22 @@ function ScoreBadge({ score }: { score: number }) {
       {score}/10
     </span>
   );
+}
+
+function getCoachTip(score: number | null, progress: number | null) {
+  if (score == null) {
+    return { title: 'Твой первый шаг', text: 'Тренер ждёт твою первую симуляцию. Не бойся ошибаться — мы здесь, чтобы учиться. Приготовь текст и начнём!', type: 'neutral' };
+  }
+  if (score >= 8) {
+    return { title: 'Почти безупречно!', text: 'Отличный уровень. Теперь переведи фокус на харизму, интонацию и мелкие детали. Ты звучишь убедительно.', type: 'positive' };
+  }
+  if (progress != null && progress > 0) {
+    return { title: 'Отличная динамика', text: 'С каждой попыткой всё увереннее. Обрати особое внимание на логические переходы между модулями питча.', type: 'positive' };
+  }
+  if (score >= 6) {
+    return { title: 'Прочный фундамент', text: 'База есть, но не хватает уверенности. Попробуй говорить чуть медленнее, делай паузы — это добавит веса словам.', type: 'warning' };
+  }
+  return { title: 'Структура — наше всё', text: 'Питчинг — это навык. Сфокусируйся на самом главном: чётком вступлении и логичных аргументах. Поехали ещё раз.', type: 'warning' };
 }
 
 export default function DashboardPage() {
@@ -154,13 +171,25 @@ export default function DashboardPage() {
           {/* Background gradient accent */}
           <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
           {/* Decorative AI-pulse geometry */}
-          <svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.10] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
-            <circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5" />
-            <circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1" />
-            <circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5" />
-            <circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.12" />
+          <motion.svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.25] pointer-events-none" viewBox="0 0 208 160" fill="none" aria-hidden="true">
+            <motion.circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"
+              animate={{ r: [80, 84, 80], opacity: [0.6, 0.2, 0.6] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"
+              animate={{ r: [58, 62, 58], opacity: [0.7, 0.3, 0.7] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+            <motion.circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"
+              animate={{ r: [38, 40, 38], opacity: [0.8, 0.4, 0.8] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.2"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
             <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5" />
-          </svg>
+          </motion.svg>
 
           <div className="relative z-10">
             <div className="flex items-center gap-2.5 mb-4">
@@ -317,6 +346,32 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Coach's Tip ─── */}
+      {!isLoading && !isError && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative bg-gradient-to-r from-violet-50/80 to-orange-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-8 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
+        >
+          {/* Subtle glow effect */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-200/30 rounded-full blur-[40px] pointer-events-none" />
+          
+          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-violet-100 relative z-10">
+            <Bot size={24} className="text-violet-600" />
+          </div>
+          
+          <div className="flex-1 relative z-10">
+            <h3 className="text-[15px] font-bold text-violet-900 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
+              {getCoachTip(simAvgScore10, progressDelta).title}
+            </h3>
+            <p className="text-[14px] text-violet-800/80 leading-relaxed max-w-2xl">
+              {getCoachTip(simAvgScore10, progressDelta).text}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── Onboarding checklist (new users only) ─── */}
       {!isLoading && !isError && totalDrafts === 0 && (

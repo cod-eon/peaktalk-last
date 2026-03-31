@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ArrowRight, CheckCircle2, Loader2, Flag, AlertTriangle } from 'lucide-react';
+import { Bot, ArrowRight, CheckCircle2, Loader2, Flag, AlertTriangle, Mic } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useBillingStore } from '@/store/billingStore';
@@ -26,6 +27,18 @@ export default function SimulationPage() {
   const [isFinished, setIsFinished] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [aiWarning, setAiWarning] = useState(false);
+  const [interimText, setInterimText] = useState('');
+
+  const handleSpeechResult = useCallback((text: string, isFinal: boolean) => {
+    if (isFinal) {
+      setAnswer(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text + ' ');
+      setInterimText('');
+    } else {
+      setInterimText(text);
+    }
+  }, []);
+
+  const { isListening, isSupported, startListening, stopListening } = useSpeechRecognition(handleSpeechResult);
 
   // Refs for beforeunload beacon (can't use state inside event handler reliably)
   const authTokenRef = useRef<string | null>(null);
@@ -131,6 +144,9 @@ export default function SimulationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isListening) stopListening();
+    setInterimText('');
+    
     if (!answer.trim() || isAnalyzing) return;
 
     setIsAnalyzing(true);
@@ -359,38 +375,67 @@ export default function SimulationPage() {
 
             {/* Ввод ответа */}
             <form onSubmit={handleSubmit} className="relative">
+              {isListening && interimText && (
+                <div className="absolute -top-12 sm:-top-14 left-0 right-0 flex justify-center pointer-events-none z-10 w-full px-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-zinc-800 border border-[var(--accent-primary)]/40 px-4 py-2 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center max-w-full truncate"
+                  >
+                    <span className="text-sm font-medium text-[var(--accent-primary)]">{interimText}</span>
+                    <span className="animate-pulse ml-1 text-[var(--accent-primary)]">...</span>
+                  </motion.div>
+                </div>
+              )}
               <textarea
                 value={answer}
                 onChange={(e) => { setAnswer(e.target.value); if (aiWarning) setAiWarning(false); }}
                 placeholder={`Ваш ответ ${personaDative}...`}
                 autoFocus
                 disabled={isAnalyzing}
-                className="w-full bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm"
+                className={`w-full bg-[var(--bg-surface)] border ${isListening ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)] shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-[var(--border-main)]'} rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm relative z-0`}
                 style={{ fontSize: '16px' }}
               />
 
-              <div className="mt-3 sm:mt-4 flex justify-between items-center gap-3">
-                <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider shrink-0">
+              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider shrink-0 w-full sm:w-auto text-left pl-1">
                   {answer.length} симв.
                 </div>
-                <button
-                  type="submit"
-                  disabled={!answer.trim() || isAnalyzing}
-                  className="btn-primary group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-h-[44px] flex-1 sm:flex-none justify-center sm:justify-start"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span className="hidden sm:inline">Анализ нейросетью...</span>
-                      <span className="sm:hidden">Анализ...</span>
-                    </>
-                  ) : (
-                    <>
-                      Ответить
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </>
+                
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  {isSupported && (
+                    <button
+                      type="button"
+                      onClick={isListening ? stopListening : startListening}
+                      className={`flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300 ${
+                        isListening 
+                          ? 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] border border-rose-500 w-[64px] h-[64px] sm:w-[56px] sm:h-[56px] scale-105' 
+                          : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)] text-[var(--text-main)] w-[64px] h-[64px] sm:w-[56px] sm:h-[56px] hover:bg-[var(--bg-surface-hover)]'
+                      }`}
+                      title={isListening ? "Остановить запись" : "Начать диктовку"}
+                    >
+                      <Mic size={isListening ? 28 : 24} className={isListening ? "animate-pulse" : ""} />
+                    </button>
                   )}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={!answer.trim() || isAnalyzing}
+                    className="btn-primary group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-1 sm:flex-none justify-center h-[64px] sm:h-[56px] rounded-2xl min-w-[160px]"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        <span className="hidden sm:inline">Анализ нейросетью...</span>
+                        <span className="sm:hidden">Анализ...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-syne font-semibold text-lg sm:text-base">Ответить</span>
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </motion.div>

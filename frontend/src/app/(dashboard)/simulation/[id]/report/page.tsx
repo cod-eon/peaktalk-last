@@ -81,12 +81,12 @@ function buildSummary(
 ): string[] {
     const intro =
         avgScore >= 8
-            ? `${personaName} остался в целом доволен — вы показали уверенность и структуру мышления.`
+            ? `Браво! ${personaName} под впечатлением. Отличная структура и мощная подача — это победа!`
             : avgScore >= 6
-            ? `Сессия прошла неплохо, но есть точки роста, на которые стоит обратить внимание.`
+            ? `Хорошая попытка, ${personaName} увидел потенциал. Но местами ты «плавал(а)» — давай точечно усилим защиту.`
             : avgScore >= 4
-            ? `Видна хорошая основа, однако несколько ключевых моментов требуют дополнительной работы.`
-            : `${personaName} задал непростые вопросы. Разбор ниже поможет подготовиться лучше к следующему разу.`;
+            ? `Ты выстоял(а), но фундамент пошатнулся. ${personaName} выявил слепые зоны, требующие проработки.`
+            : `Тяжело в учении — легко в бою. ${personaName} задал жару, но этот разбор поможет тебе пересобрать питч.`;
 
     const comments = metrics
         .filter((m) => m.comment && m.score < 0.85)
@@ -256,6 +256,7 @@ export default function SimulationReportPage() {
     const [loading, setLoading] = useState(true);
     const [popover, setPopover] = useState<PopoverState | null>(null);
     const [activePopoverId, setActivePopoverId] = useState<number | null>(null);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     useEffect(() => {
         async function fetchReport() {
@@ -271,6 +272,18 @@ export default function SimulationReportPage() {
         }
         if (sessionId) fetchReport();
     }, [sessionId, router]);
+
+    useEffect(() => {
+        if (report) {
+            const sum = report.skill_metrics?.reduce((acc, m) => acc + m.score, 0) || 0;
+            const avg = report.skill_metrics?.length ? Math.round((sum / report.skill_metrics.length) * 10) : 0;
+            if (avg >= 8) {
+                setShowConfetti(true);
+                const timer = setTimeout(() => setShowConfetti(false), 6000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [report]);
 
     const handlePopover = useCallback(
         (id: number, metricName: string, comment: string, rect: DOMRect) => {
@@ -379,7 +392,38 @@ export default function SimulationReportPage() {
             </div>
 
             {/* ── Screen ───────────────────────────────────────────────────── */}
-            <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[#FAFAFA]">
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[#FAFAFA] relative">
+                
+                {/* 🎉 Confetti animation */}
+                <AnimatePresence>
+                    {showConfetti && (
+                        <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
+                            {[...Array(60)].map((_, i) => (
+                                <motion.div
+                                    key={`confetti-${i}`}
+                                    className="absolute w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-sm"
+                                    style={{
+                                        backgroundColor: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                                        top: -20,
+                                        left: `${Math.random() * 100}%`,
+                                    }}
+                                    initial={{ y: -20, x: 0, rotate: 0, opacity: 1 }}
+                                    animate={{
+                                        y: typeof window !== 'undefined' ? window.innerHeight + 40 : 1000,
+                                        x: (Math.random() - 0.5) * 500,
+                                        rotate: Math.random() * 720,
+                                        opacity: [1, 1, 1, 0.8, 0],
+                                    }}
+                                    transition={{
+                                        duration: 3.5 + Math.random() * 3,
+                                        ease: "easeOut",
+                                        delay: Math.random() * 0.8,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </AnimatePresence>
 
                 {/* Toolbar */}
                 <div className="h-13 shrink-0 border-b border-gray-100 bg-white flex items-center justify-between px-4 sm:px-6 gap-2 sticky top-0 z-10 shadow-sm">
