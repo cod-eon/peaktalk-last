@@ -25,7 +25,8 @@ echo "=============================================="
 # ── Step 1: Pull latest code ──────────────────────────────────────────────────
 echo ""
 echo "[1/4] Pulling latest code from main..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 # ── Step 2: Build Docker images ───────────────────────────────────────────────
 echo ""
