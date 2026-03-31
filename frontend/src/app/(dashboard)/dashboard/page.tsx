@@ -83,6 +83,14 @@ function getCoachTip(score: number | null, progress: number | null) {
   return { title: 'Структура — наше всё', text: 'Питчинг — это навык. Сфокусируйся на самом главном: чётком вступлении и логичных аргументах. Поехали ещё раз.', type: 'warning' };
 }
 
+function getGamificationLevel(totalSims: number) {
+  if (totalSims < 1) return { title: 'Новичок', xp: 0, next: 1, percent: 0, badge: '🌱', color: 'bg-emerald-400' };
+  if (totalSims < 3) return { title: 'Студент', xp: totalSims, next: 3, percent: (totalSims / 3) * 100, badge: '🥉', color: 'bg-amber-400' };
+  if (totalSims < 10) return { title: 'Оратор', xp: totalSims, next: 10, percent: (totalSims / 10) * 100, badge: '🥈', color: 'bg-slate-300' };
+  if (totalSims < 25) return { title: 'Эксперт', xp: totalSims, next: 25, percent: (totalSims / 25) * 100, badge: '🥇', color: 'bg-yellow-400' };
+  return { title: 'Мастер', xp: totalSims, next: totalSims, percent: 100, badge: '👑', color: 'bg-violet-500' };
+}
+
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
@@ -143,16 +151,40 @@ export default function DashboardPage() {
     <div className="pb-16 md:pb-10 pt-8 sm:pt-10 w-full max-w-5xl mx-auto px-5 lg:px-8">
 
       {/* ─── Header ─── */}
-      <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[13px] text-[var(--text-dim)] mb-1.5 font-medium">Добро пожаловать</p>
-          <h1 className="text-[26px] sm:text-[30px] font-bold text-[var(--text-main)] leading-tight" style={{ letterSpacing: '-0.025em' }}>
-            Привет, {displayName}! Готов к питчу?
-          </h1>
+      <div className="flex flex-col gap-6 mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+          <div>
+            <p className="text-[13px] text-[var(--text-dim)] mb-1.5 font-medium">Добро пожаловать</p>
+            <h1 className="text-[26px] sm:text-[30px] font-bold text-[var(--text-main)] leading-tight" style={{ letterSpacing: '-0.025em' }}>
+              Привет, {displayName}!
+            </h1>
+          </div>
+          
+          {/* Gamification Badge */}
+          {!isLoading && simData && (
+            <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow">
+              <div className="text-2xl drop-shadow-sm">{getGamificationLevel(simSessions.length).badge}</div>
+              <div className="flex flex-col w-28">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700">{getGamificationLevel(simSessions.length).title}</span>
+                  <span className="text-[10px] font-medium text-gray-400">{getGamificationLevel(simSessions.length).xp}/{getGamificationLevel(simSessions.length).next}</span>
+                </div>
+                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${getGamificationLevel(simSessions.length).percent}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className={`h-full rounded-full transition-all duration-700 ${getGamificationLevel(simSessions.length).color}`} 
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+
         <Link
           href="/upload"
-          className="btn-primary flex-shrink-0 gap-2 self-start min-h-[48px] px-5 flex items-center justify-center cursor-pointer"
+          className="btn-primary flex-shrink-0 gap-2 self-start sm:self-auto min-h-[48px] px-5 flex items-center justify-center cursor-pointer"
         >
           <Plus size={15} />
           Новый разбор
