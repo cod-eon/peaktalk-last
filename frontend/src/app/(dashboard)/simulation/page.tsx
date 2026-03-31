@@ -1030,10 +1030,14 @@ function SimulationPageContent() {
             <div className="md:hidden fixed bottom-20 left-4 right-4 z-20">
                 <div className="bg-[var(--bg-surface-alt)]/95 backdrop-blur-md border border-[var(--border-light)] rounded-2xl p-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                     <div className="flex-1 min-w-0">
-                        <p className="font-inter text-xs text-[var(--text-dim)]">
-                            {selectedRoleName
-                                ? <span className="text-[var(--text-muted)]">{selectedRoleName}</span>
-                                : 'Выберите персонажа'}
+                        <p className="font-inter text-xs text-[var(--text-dim)] truncate">
+                            {!selectedRoleName 
+                                ? 'Шаг 1: Выберите собеседника' 
+                                : !selectedDomain 
+                                    ? 'Шаг 2: Укажите индустрию' 
+                                    : selectedDoc === null 
+                                        ? 'Шаг 3: Выберите контекст' 
+                                        : <span className="text-[var(--text-muted)] font-medium">Готово: {selectedRoleName}</span>}
                         </p>
                     </div>
                     <button

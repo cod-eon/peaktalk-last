@@ -98,7 +98,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
           osc.frequency.setValueAtTime(600, ctx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
           gain.gain.setValueAtTime(0, ctx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.02);
+          gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.15);
@@ -107,7 +107,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
           osc.frequency.setValueAtTime(800, ctx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
           gain.gain.setValueAtTime(0, ctx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.02);
+          gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.2);
