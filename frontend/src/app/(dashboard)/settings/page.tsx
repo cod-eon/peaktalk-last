@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Bell, Shield, Wallet, Loader2, CheckCircle2, Clock, Lock } from 'lucide-react';
+import { User, Bell, Shield, Wallet, Loader2, CheckCircle2, Clock, Lock, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api';
@@ -83,6 +84,8 @@ export default function SettingsPage() {
 
     const [displayName, setDisplayName] = useState('');
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const router = useRouter();
     const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
 
     const [newPassword, setNewPassword] = useState('');
@@ -109,6 +112,20 @@ export default function SettingsPage() {
             toast.error(err instanceof Error ? err.message : 'Ошибка');
         } finally {
             setIsSavingProfile(false);
+        }
+    };
+
+    const handleSignOut = async () => {
+        setIsLoggingOut(true);
+        try {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            router.push('/');
+            toast.success('Вы вышли из аккаунта');
+        } catch (err) {
+            toast.error('Ошибка при выходе');
+        } finally {
+            setIsLoggingOut(false);
         }
     };
 
@@ -165,6 +182,17 @@ export default function SettingsPage() {
                             </button>
                         );
                     })}
+
+                    <div className="hidden md:block h-px bg-[var(--border-main)] my-2 opacity-50" />
+
+                    <button
+                        onClick={handleSignOut}
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-all duration-150 text-[13px] font-medium font-inter text-left whitespace-nowrap border border-transparent text-[var(--color-destructive)] hover:bg-red-500/5 hover:border-red-500/20 disabled:opacity-50 mt-auto"
+                    >
+                        {isLoggingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                        Выйти
+                    </button>
                 </div>
 
                 {/* Content */}
@@ -243,11 +271,19 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end">
+                                <div className="flex justify-between items-center pt-2">
+                                    <button
+                                        onClick={handleSignOut}
+                                        disabled={isLoggingOut}
+                                        className="md:hidden flex items-center gap-2 text-[12px] font-medium text-[var(--color-destructive)] px-2 py-1 hover:bg-red-500/5 rounded transition-colors"
+                                    >
+                                        <LogOut size={14} />
+                                        Выйти из аккаунта
+                                    </button>
                                     <button
                                         onClick={handleSaveProfile}
                                         disabled={isSavingProfile}
-                                        className="btn-primary gap-2 disabled:opacity-60"
+                                        className="btn-primary gap-2 disabled:opacity-60 ml-auto"
                                     >
                                         {isSavingProfile
                                             ? <Loader2 size={14} className="animate-spin" />
