@@ -103,9 +103,22 @@ function formatDate(iso: string): string {
 
 // ─── History card ─────────────────────────────────────────────────────────────
 
-function SessionCard({ session, onClick }: { session: SessionItem; onClick: () => void }) {
+// ─── Insight tag derivation ───────────────────────────────────────────────────
+
+function getInsightTag(session: SessionItem): string | null {
+    if (session.avg_score == null) return null;
+    const score = Math.round(session.avg_score * 10);
+    if (score >= 9) return '🔥 Отличное выступление';
+    if (score >= 7) return '✅ Уверенная аргументация';
+    if (score >= 5) return '⚠️ Слабая структура';
+    if (score >= 3) return '📌 Нужна работа над логикой';
+    return '🚨 Критические пробелы';
+}
+
+function SessionCard({ session, onClick, variant = 'default' }: { session: SessionItem; onClick: () => void; variant?: 'active' | 'default' }) {
     const isActive = session.status === 'active';
     const isCancelled = session.status === 'cancelled';
+    const isCompleted = session.status === 'completed';
     const scoreLabel = session.avg_score != null
         ? `${Math.round(session.avg_score * 10)}/10`
         : null;
@@ -117,13 +130,21 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
     const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
     const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
     const RoleIcon = visual.icon;
+    const insightTag = isCompleted ? getInsightTag(session) : null;
+
+    // Progress estimate for active sessions (message_count out of ~10 typical)
+    const progressPercent = isActive ? Math.min(Math.round((session.message_count / 10) * 100), 95) : 0;
 
     return (
         <motion.button
             onClick={onClick}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-left w-full p-5 rounded-xl border bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)] transition-all group"
+            className={`text-left w-full p-4 sm:p-5 rounded-xl border transition-all group min-h-[44px] ${
+                variant === 'active'
+                    ? 'bg-white border-[var(--accent-primary)] border-2 shadow-[0_4px_16px_rgba(249,115,22,0.12)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.18)]'
+                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+            }`}
         >
             <div className="flex items-start justify-between gap-3 pb-3 mb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -151,27 +172,64 @@ function SessionCard({ session, onClick }: { session: SessionItem; onClick: () =
                 </span>
             </div>
 
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-gray-400">
+            {/* Progress bar for active sessions */}
+            {isActive && (
+                <div className="mb-3">
+                    <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[11px] text-[var(--text-dim)] font-inter">Прогресс сессии</span>
+                        <span className="text-[11px] font-mono text-[var(--text-muted)]">{session.message_count} сообщ.</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progressPercent}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            className="h-full bg-[var(--accent-primary)] rounded-full"
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                <div className="flex items-center gap-1.5 text-gray-400 min-h-[28px]">
                     <Clock size={11} />
                     <span className="font-mono text-[10px]">{formatDate(session.created_at)}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-gray-400">
-                    <MessageSquare size={11} />
-                    <span className="font-mono text-[10px]">{session.message_count} сообщ.</span>
-                </div>
+                {!isActive && (
+                    <div className="flex items-center gap-1.5 text-gray-400 min-h-[28px]">
+                        <MessageSquare size={11} />
+                        <span className="font-mono text-[10px]">{session.message_count} сообщ.</span>
+                    </div>
+                )}
                 {scoreLabel && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 min-h-[28px]">
                         <Trophy size={11} className="text-gray-400" />
                         <span className={`font-mono text-[10px] font-semibold ${scoreColor}`}>{scoreLabel}</span>
                     </div>
                 )}
-                <div className="ml-auto text-gray-400 group-hover:text-[var(--accent-primary)] transition-colors">
-                    <ChevronRight size={14} />
-                </div>
+                {isActive ? (
+                    <div className="ml-auto">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white text-[11px] font-semibold min-h-[32px] shadow-sm">
+                            Продолжить
+                            <ChevronRight size={12} />
+                        </span>
+                    </div>
+                ) : (
+                    <div className="ml-auto text-gray-400 group-hover:text-[var(--accent-primary)] transition-colors">
+                        <ChevronRight size={14} />
+                    </div>
+                )}
             </div>
+
+            {/* Insight tag for completed sessions */}
+            {insightTag && (
+                <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-2">
+                    <span className="text-[11px] font-medium text-[var(--text-muted)] font-inter">{insightTag}</span>
+                </div>
+            )}
+
             {session.document_title && (
-                <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-gray-100">
+                <div className={`flex items-center gap-1.5 ${insightTag ? 'mt-1.5' : 'mt-2.5 pt-2.5 border-t border-gray-100'}`}>
                     <FileText size={10} className="text-gray-400 shrink-0" />
                     <span className="font-mono text-[10px] text-gray-400 truncate">
                         {session.document_title}
@@ -503,27 +561,28 @@ function SimulationPageContent() {
                     const hardestVisual = hardestRole ? (ROLE_VISUALS[hardestRole.role] ?? DEFAULT_VISUAL) : DEFAULT_VISUAL;
                     const HardestIcon = hardestVisual.icon;
 
-                    const kpiCard = "relative overflow-hidden bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
+                    const kpiCard = "relative overflow-hidden bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-3 sm:p-4 lg:p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
 
                     return (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
 
                             {/* Индекс готовности */}
                             <div className={kpiCard}>
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300 rounded-t-xl" />
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
-                                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-                                        <Target size={18} className="text-emerald-500" />
+                                <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-50 flex items-center justify-center">
+                                        <Target size={14} className="text-emerald-500 sm:hidden" />
+                                        <Target size={16} className="text-emerald-500 hidden sm:block" />
                                     </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {avgScore10 != null ? (
-                                        <>{avgScore10}<span className="text-xl font-semibold text-gray-400">/10</span></>
+                                        <>{avgScore10}<span className="text-lg sm:text-xl font-semibold text-gray-400">/10</span></>
                                     ) : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1 mb-3">{readinessSub}</p>
-                                <div className="mt-auto h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">{readinessSub}</p>
+                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full rounded-full transition-all duration-700"
                                         style={{
@@ -537,18 +596,23 @@ function SimulationPageContent() {
                             {/* Тренд роста */}
                             <div className={kpiCard}>
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${trendIconBg}`}>
-                                        <TrendIcon size={18} className={trendIconColor} />
+                                <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${trendIconBg}`}>
+                                        <TrendIcon size={14} className={`${trendIconColor} sm:hidden`} />
+                                        <TrendIcon size={16} className={`${trendIconColor} hidden sm:block`} />
                                     </div>
                                 </div>
-                                <div className={`text-3xl font-bold ${progressDelta == null ? 'text-gray-300' : progressDelta > 0 ? 'text-emerald-600' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400'}`} style={{ letterSpacing: '-0.02em' }}>
+                                <div className={`text-2xl sm:text-3xl font-bold ${progressDelta == null ? 'text-gray-300' : progressDelta > 0 ? 'text-emerald-600' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400'}`} style={{ letterSpacing: '-0.02em' }}>
                                     {progressDelta == null ? '—'
                                         : progressDelta === 0 ? '= 0'
                                         : `${progressDelta > 0 ? '+' : ''}${progressDelta}б`}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1 mb-2">{trendSub}</p>
+                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
+                                    {progressDelta == null ? (
+                                        <span className="text-violet-600 font-medium">Пройди ещё один тест, чтобы увидеть динамику</span>
+                                    ) : trendSub}
+                                </p>
                                 {sparkPoints && (
                                     <div className="mt-auto">
                                         <svg viewBox="0 0 80 26" className="w-full h-8" preserveAspectRatio="none">
@@ -579,21 +643,22 @@ function SimulationPageContent() {
                             {/* Личный рекорд */}
                             <div className={kpiCard}>
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-orange-300 rounded-t-xl" />
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
-                                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-                                        <Trophy size={18} className="text-amber-500" />
+                                <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-amber-50 flex items-center justify-center">
+                                        <Trophy size={14} className="text-amber-500 sm:hidden" />
+                                        <Trophy size={16} className="text-amber-500 hidden sm:block" />
                                     </div>
                                 </div>
-                                <div className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+                                <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
                                     {bestScore10 != null ? (
-                                        <>{bestScore10}<span className="text-xl font-semibold text-gray-400">/10</span></>
+                                        <>{bestScore10}<span className="text-lg sm:text-xl font-semibold text-gray-400">/10</span></>
                                     ) : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1 mb-3">
+                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">
                                     {bestScore10 != null ? 'Личный рекорд' : 'Пройди симуляцию'}
                                 </p>
-                                <div className="mt-auto h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-amber-300 rounded-full transition-all duration-700"
                                         style={{ width: `${(bestScore10 ?? 0) * 10}%` }}
@@ -604,24 +669,25 @@ function SimulationPageContent() {
                             {/* Сложнее всего */}
                             <div className={kpiCard}>
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300 rounded-t-xl" />
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
-                                        <HardestIcon size={18} className={hardestRole ? hardestVisual.iconColor : 'text-gray-400'} />
+                                <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
+                                        <HardestIcon size={14} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} sm:hidden`} />
+                                        <HardestIcon size={16} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} hidden sm:block`} />
                                     </div>
                                 </div>
-                                <div className="text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
+                                <div className="text-sm sm:text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
                                     {hardestRole
-                                        ? (PERSONA_LABELS[hardestRole.role] ?? hardestRole.role)
+                                        ? (SHORT_PERSONA[hardestRole.role] ?? hardestRole.role)
                                         : '—'}
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                                     {hardestRole
                                         ? `Ср. балл ${hardestRole.avg}/10`
                                         : 'Пройди симуляцию'}
                                 </p>
                                 {hardestRole && (
-                                    <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-rose-300 rounded-full transition-all duration-700"
                                             style={{ width: `${hardestRole.avg * 10}%` }}
@@ -642,7 +708,7 @@ function SimulationPageContent() {
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {activeSessions.map(s => (
-                                <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} />
+                                <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} variant="active" />
                             ))}
                         </div>
                     </div>
