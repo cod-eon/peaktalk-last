@@ -15,7 +15,9 @@ import {
   Sparkles,
   Plus,
   Target,
-  Bot
+  Bot,
+  Flame,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -162,7 +164,7 @@ export default function DashboardPage() {
           
           {/* Gamification Badge */}
           {!isLoading && simData && (
-            <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-full py-2 px-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow group relative cursor-help">
               <div className="text-2xl drop-shadow-sm">{getGamificationLevel(simSessions.length).badge}</div>
               <div className="flex flex-col w-28">
                 <div className="flex justify-between items-end mb-1">
@@ -177,6 +179,12 @@ export default function DashboardPage() {
                     className={`h-full rounded-full transition-all duration-700 ${getGamificationLevel(simSessions.length).color}`} 
                   />
                 </div>
+              </div>
+              
+              {/* Tooltip */}
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 bg-gray-900 text-white text-xs rounded-lg py-2 px-3 w-56 text-center shadow-lg">
+                Следующий уровень достигается при <strong>{getGamificationLevel(simSessions.length).next}</strong> полных симуляциях.
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
               </div>
             </div>
           )}
@@ -405,81 +413,33 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* ─── Onboarding checklist (new users only) ─── */}
+      {/* ─── Zero State (new users only) ─── */}
       {!isLoading && !isError && totalDrafts === 0 && (
-        <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 mb-8" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-          <h2 className="text-[15px] font-semibold text-[var(--text-main)] mb-5" style={{ letterSpacing: '-0.01em' }}>
-            Твой путь к идеальному питчу
-          </h2>
-          <div className="flex flex-col gap-0">
-            {[
-              {
-                icon: UploadCloud,
-                title: 'Заложи фундамент',
-                desc: 'Текст выступления, питча или сценария',
-                href: '/upload',
-                active: true,
-                iconBg: 'bg-orange-50',
-                iconColor: 'text-[var(--accent-primary)]',
-              },
-              {
-                icon: FileText,
-                title: 'Найди слепые зоны',
-                desc: 'AI разберёт структуру и логику текста',
-                href: null,
-                active: false,
-                iconBg: 'bg-gray-50',
-                iconColor: 'text-[var(--text-dim)]',
-              },
-              {
-                icon: Sparkles,
-                title: 'Проверь себя на прочность',
-                desc: 'Стресс-тест с AI-собеседником по вашему материалу',
-                href: null,
-                active: false,
-                iconBg: 'bg-violet-50',
-                iconColor: 'text-violet-500',
-              },
-            ].map((step, i) => (
-              <React.Fragment key={i}>
-                <div className={`flex items-center gap-4 py-3 ${!step.active ? 'opacity-60' : ''}`}>
-                  <div className={`w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center shrink-0 border ${step.active ? 'border-orange-200 ' + step.iconBg : 'border-[var(--border-main)] bg-[var(--bg-surface-alt)]'}`}>
-                    <step.icon size={15} className={step.active ? step.iconColor : 'text-[var(--text-dim)]'} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {step.href ? (
-                      <Link
-                        href={step.href}
-                        className="text-[13px] font-semibold text-[var(--text-main)] hover:text-[var(--accent-primary)] transition-colors flex items-center gap-1.5 w-fit min-h-[44px] cursor-pointer"
-                      >
-                        {step.title}
-                        <ArrowRight size={12} className="opacity-60" />
-                      </Link>
-                    ) : (
-                      <span className="text-[13px] font-medium text-[var(--text-muted)]">
-                        {step.title}
-                      </span>
-                    )}
-                    <p className="text-[12px] text-[var(--text-dim)] mt-0.5">{step.desc}</p>
-                  </div>
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${step.active ? 'border-orange-300' : 'border-[var(--border-main)]'}`}>
-                    {step.active && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />
-                    )}
-                  </div>
-                </div>
-                {i < 2 && (
-                  <motion.div
-                    className="ml-10 w-px bg-[var(--border-main)]"
-                    initial={{ height: 0 }}
-                    animate={{ height: 12 }}
-                    transition={{ duration: 0.4, delay: i * 0.12 }}
-                  />
-                )}
-              </React.Fragment>
-            ))}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="bg-gradient-to-br from-orange-50/50 to-orange-100/30 rounded-[var(--radius-lg)] border border-orange-200/60 p-6 sm:p-8 mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6 shadow-sm overflow-hidden relative"
+        >
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-400/10 rounded-full blur-[40px] pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-orange-100 flex items-center justify-center shrink-0">
+            <Flame className="text-orange-500" size={32} />
           </div>
-        </div>
+          <div className="flex-1 relative z-10 w-full sm:w-auto">
+            <h2 className="text-[18px] sm:text-[20px] font-bold text-orange-950 mb-2" style={{ letterSpacing: '-0.01em' }}>
+              Твоя первая симуляция ждет
+            </h2>
+            <p className="text-[14px] text-orange-900/70 leading-relaxed mb-5 max-w-lg mx-auto sm:mx-0">
+              Узнай свои слабые места до того, как выйдешь к инвестору или на сцену. Попробуй короткий демо-тест прямо сейчас — это займет всего пару минут.
+            </p>
+            <Link
+              href="/upload"
+              className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-[0_4px_14px_rgba(249,115,22,0.3)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.4)] transition-all w-full sm:w-auto min-h-[48px]"
+            >
+              <Zap size={16} />
+              Пройти тест-драйв (Бесплатно)
+            </Link>
+          </div>
+        </motion.div>
       )}
 
       {/* ─── Recent drafts ─── */}

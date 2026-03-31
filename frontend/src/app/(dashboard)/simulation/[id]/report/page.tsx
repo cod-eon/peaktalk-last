@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, Zap, FileText, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Download, Zap, FileText, Sparkles, X, Share2, RefreshCw } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
@@ -366,6 +366,24 @@ export default function SimulationReportPage() {
         return skill_metrics[Math.min(i, skill_metrics.length - 1)] ?? null;
     }
 
+    const handleShare = async () => {
+        const text = `Я прошел стресс-тест в PeakTalk на ${avgScore10}/10! А ты сможешь?`;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Мой результат в PeakTalk',
+                    text: text,
+                    url: window.location.origin
+                });
+            } catch (err) {
+                // Ignore abort errors
+            }
+        } else {
+            navigator.clipboard.writeText(`${text} ${window.location.origin}`);
+            toast.success("Результат скопирован в буфер обмена!");
+        }
+    };
+
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
@@ -567,7 +585,27 @@ export default function SimulationReportPage() {
                             })()}
                         </div>
 
-                        <div className="h-[40vh]" />
+                        {/* Actions */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 mb-20 border-t border-gray-100 pt-10">
+                            <button
+                                onClick={() => router.push('/upload')}
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-xl border border-gray-200 transition-all shadow-sm h-12"
+                            >
+                                <RefreshCw size={18} />
+                                Пройти еще раз (Сложнее)
+                            </button>
+                            {avgScore10 >= 7 && (
+                                <button
+                                    onClick={handleShare}
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all h-12"
+                                >
+                                    <Share2 size={18} />
+                                    Поделиться результатом
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="h-[10vh]" />
                     </div>
                 </div>
             </div>

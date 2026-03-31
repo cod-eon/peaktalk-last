@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, FileText, Type, Terminal, Activity, Zap, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, FileText, Type, Terminal, Activity, Zap, CheckCircle2, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -16,6 +16,16 @@ export default function UploadPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const DEMO_PITCH = `Привет! Я — Илья, фаундер стартапа PeakTalk. Мы делаем AI-тренажер для спикеров, который решает проблему страха публичных выступлений. 
+По статистике, 75% людей боятся выступать. Из-за этого стартаперы проваливают питчи, а эксперты боятся просить повышение. 
+Наш продукт — это B2C SaaS. Пользователь загружает текст своей речи, а наш ИИ-судья, например "строгий инвестор", задает каверзные вопросы по логике и структуре.
+Мы уже запустили MVP и у нас более 500 активных пользователей. Сейчас мы ищем инвестиции в размере 10 миллионов рублей для масштабирования маркетинга и выхода на B2B рынок корпоративного обучения. Буду рад ответить на вопросы!`;
+
+    const setDemoText = () => {
+        setMode('text');
+        setText(DEMO_PITCH);
+    };
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -237,9 +247,19 @@ export default function UploadPage() {
                                                 className="w-full flex-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-xl p-4 text-sm text-[var(--text-main)] placeholder:text-[var(--text-dim)] resize-none outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary-glow)] transition-all font-inter leading-relaxed"
                                             />
                                             <div className="flex justify-between items-center mt-3 px-1">
-                                                <span className={`text-xs font-mono font-medium ${text.length > 0 ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}`}>
-                                                    {text.length} символов
-                                                </span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-xs font-mono font-medium ${text.length > 0 ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}`}>
+                                                        {text.length} символов
+                                                    </span>
+                                                    {text.length === 0 && (
+                                                        <button 
+                                                            onClick={setDemoText} 
+                                                            className="text-[11px] text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 px-2.5 py-1.5 rounded-md font-medium border border-orange-200/60"
+                                                        >
+                                                            Вставить демо-питч
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <button onClick={() => setText('')} className="text-xs text-[var(--text-dim)] hover:text-[var(--text-muted)] transition-colors font-medium">Очистить</button>
                                             </div>
                                         </motion.div>
@@ -252,18 +272,24 @@ export default function UploadPage() {
                                 <div className="text-xs text-[var(--text-dim)] hidden sm:block">
                                     Ваши данные надежно защищены
                                 </div>
-                                <button
-                                    onClick={startAnalysis}
-                                    disabled={
-                                        (mode === 'file' && !file) ||
-                                        (mode === 'text' && text.length < 50)
-                                    }
-                                    className="w-full sm:w-auto btn-primary relative px-6 py-2.5 min-h-[44px]"
-                                >
-                                    <span className="flex items-center gap-2 justify-center">
-                                        <Zap size={16} /> Сделать текст сильнее
+                                <div className="flex flex-col items-center sm:items-end gap-1.5 w-full sm:w-auto">
+                                    <button
+                                        onClick={startAnalysis}
+                                        disabled={
+                                            (mode === 'file' && !file) ||
+                                            (mode === 'text' && text.length < 50)
+                                        }
+                                        className="w-full sm:w-auto btn-primary relative px-6 py-2.5 min-h-[44px]"
+                                    >
+                                        <span className="flex items-center gap-2 justify-center">
+                                            <Zap size={16} /> Сделать текст сильнее
+                                        </span>
+                                    </button>
+                                    <span className="text-[10px] text-[var(--text-dim)] font-medium flex items-center gap-1">
+                                        <Sparkles size={10} className="text-orange-400" />
+                                        Потребует 1 анализ
                                     </span>
-                                </button>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
