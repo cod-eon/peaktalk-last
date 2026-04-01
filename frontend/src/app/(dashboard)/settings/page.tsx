@@ -224,7 +224,7 @@ export default function SettingsPage() {
 
                                 {/* Avatar row */}
                                 <div className="flex items-center gap-4 pb-5 border-b border-[var(--border-main)]">
-                                    <div className="w-20 h-20 rounded-full bg-[var(--accent-primary-bg)] border-2 border-orange-200 ring-4 ring-offset-2 ring-orange-100 flex items-center justify-center shrink-0">
+                                    <div className="w-20 h-20 rounded-full bg-[var(--accent-primary-bg)] border-2 border-accent-200 ring-4 ring-offset-2 ring-accent-100 flex items-center justify-center shrink-0">
                                         <span className="font-syne text-2xl font-bold text-[var(--accent-primary)]">
                                             {avatarInitials}
                                         </span>

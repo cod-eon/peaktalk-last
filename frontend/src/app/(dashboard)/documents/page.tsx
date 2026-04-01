@@ -112,7 +112,7 @@ export default function DocumentsPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по названию..."
-                        className="w-full bg-white border border-gray-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-200 rounded-md py-2.5 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors min-h-[44px]"
+                        className="w-full bg-white border border-gray-200 focus:border-accent-400 focus:ring-1 focus:ring-accent-200 rounded-md py-2.5 pl-9 pr-8 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors min-h-[44px]"
                     />
                     {!search && (
                         <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded font-mono pointer-events-none">
@@ -164,8 +164,8 @@ export default function DocumentsPage() {
                 </div>
             ) : (data?.items ?? []).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-[var(--border-main)] rounded-2xl">
-                    <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-5">
-                        <UploadCloud size={28} className="text-orange-400" />
+                    <div className="w-16 h-16 rounded-2xl bg-accent-50 border border-accent-100 flex items-center justify-center mb-5">
+                        <UploadCloud size={28} className="text-accent-400" />
                     </div>
                     <p className="text-sm font-medium text-[var(--text-main)] mb-1">Пока нет материалов</p>
                     <p className="text-xs text-[var(--text-dim)] mb-6">Загрузите файл или создайте текстовый документ</p>
@@ -176,7 +176,7 @@ export default function DocumentsPage() {
             ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                     <p className="text-sm text-[var(--text-dim)]">Ничего не найдено по «{search}»</p>
-                    <button onClick={() => setSearch('')} className="mt-2 text-xs text-orange-500 hover:underline">Сбросить</button>
+                    <button onClick={() => setSearch('')} className="mt-2 text-xs text-accent-500 hover:underline">Сбросить</button>
                 </div>
             ) : (
                 <>
@@ -221,7 +221,7 @@ export default function DocumentsPage() {
                                         <div className="flex items-center gap-2 shrink-0">
                                             <Link
                                                 href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
-                                                className="text-xs font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors min-h-[44px] px-2 flex items-center"
+                                                className="text-xs font-medium text-accent-500 hover:text-accent-600 flex items-center gap-1 transition-colors min-h-[44px] px-2 flex items-center"
                                             >
                                                 Разбор <ArrowRight size={12} />
                                             </Link>
@@ -260,7 +260,7 @@ export default function DocumentsPage() {
                                         <div className="flex items-center gap-3">
                                             <Link
                                                 href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
-                                                className="text-sm font-medium text-orange-500 hover:text-orange-600 flex items-center gap-1 transition-colors whitespace-nowrap"
+                                                className="text-sm font-medium text-accent-500 hover:text-accent-600 flex items-center gap-1 transition-colors whitespace-nowrap"
                                             >
                                                 Разбор <ArrowRight size={13} />
                                             </Link>

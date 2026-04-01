@@ -101,7 +101,7 @@ export default function OnboardingPage() {
                             transition={{ duration: 2, ease: "easeOut", delay: Math.random() * 0.3 }}
                             className="w-3 h-3 rounded-full absolute"
                             style={{ 
-                                backgroundColor: i % 3 === 0 ? '#10B981' : i % 2 === 0 ? '#F97316' : '#3B82F6' 
+                                backgroundColor: i % 3 === 0 ? '#10B981' : i % 2 === 0 ? '#E8600A' : '#3B82F6' 
                             }}
                         />
                     ))}
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
                                     step > s
                                         ? 'bg-emerald-500 text-white'
                                         : step === s
-                                            ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_12px_rgba(249,115,22,0.30)]'
+                                            ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_12px_rgba(232,96,10,0.30)]'
                                             : 'bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-dim)]'
                                 }`}>
                                     {step > s ? <CheckCircle2 size={14} /> : s}
@@ -169,7 +169,7 @@ export default function OnboardingPage() {
                                         onClick={() => setSegment(seg.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 relative group min-h-[140px] flex flex-col justify-start ${
                                             segment === seg.id
-                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(249,115,22,0.15)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(232,96,10,0.15)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!segment}
                                     onClick={() => setStep(2)}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(249,115,22,0.25)] min-h-[48px]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(232,96,10,0.25)] min-h-[48px]"
                                 >
                                     Далее <ChevronRight size={18} />
                                 </button>
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
                                         onClick={() => setGoal(g.id)}
                                         className={`text-left p-5 rounded-2xl border transition-all duration-200 flex items-center gap-4 relative group min-h-[88px] ${
                                             goal === g.id
-                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(249,115,22,0.15)]'
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_20px_rgba(232,96,10,0.15)]'
                                                 : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                         }`}
                                     >
@@ -249,7 +249,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!goal || isSubmitting}
                                     onClick={handleSubmit}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(249,115,22,0.25)] min-h-[48px]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-syne font-semibold text-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed btn-primary hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(232,96,10,0.25)] min-h-[48px]"
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 size={16} className="animate-spin" /> Сохранение...</>

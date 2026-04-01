@@ -19,7 +19,7 @@ const PLAN_CONFIG: Record<
   pro: {
     label: 'PRO',
     className:
-      'bg-gradient-to-r from-orange-500 to-amber-400 text-white border-0',
+      'bg-gradient-to-r from-accent-500 to-amber-400 text-white border-0',
   },
   team: {
     label: 'TEAM',

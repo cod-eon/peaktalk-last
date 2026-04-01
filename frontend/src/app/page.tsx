@@ -264,7 +264,7 @@ function Hero() {
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
               marginBottom: 32,
-              backgroundColor: 'rgba(249,115,22,0.07)',
+              backgroundColor: 'rgba(232,96,10,0.07)',
               backdropFilter: 'blur(10px)',
             }}
           >
@@ -480,8 +480,8 @@ function HowItWorks() {
       title: "ЗАГРУЗКА",
       desc: "Вставь текст или загрузи файл — диплом, питч-дек, план собеседования. Ничего не нужно форматировать заранее: AI сам разберётся со структурой.",
       num: "01",
-      iconBg: '#FFF7ED',
-      iconColor: '#F97316',
+      iconBg: '#FEF3E8',
+      iconColor: '#E8600A',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path d="M12 15V3M12 3L8 7M12 3L16 7M3 17V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -567,7 +567,7 @@ function HowItWorks() {
                 fontSize: 120,
                 fontFamily: 'var(--font-syne)',
                 fontWeight: 900,
-                color: 'rgba(249,115,22,0.07)',
+                color: 'rgba(232,96,10,0.07)',
                 lineHeight: 1,
                 pointerEvents: 'none',
                 zIndex: 0,
@@ -830,7 +830,7 @@ function WhyNotChatGPT() {
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Критерий
             </div>
-            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: '#FFF7ED', fontWeight: 700 }}>
+            <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #E8600A', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: '#FEF3E8', fontWeight: 700 }}>
               PeakTalk
             </div>
             <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -850,7 +850,7 @@ function WhyNotChatGPT() {
               <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
                 {row.feature}
               </div>
-              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #F97316', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: '#FFF7ED' }}>
+              <div style={{ padding: 'clamp(16px, 2.5vw, 24px) clamp(16px, 3vw, 24px)', borderLeft: '1px solid var(--border-main)', borderRight: '2px solid #E8600A', fontFamily: 'var(--font-inter)', fontSize: 13, color: 'var(--text-main)', backgroundColor: '#FEF3E8' }}>
                 <span style={{ color: '#22C55E', fontWeight: 700, marginRight: 8 }}>✓</span>
                 {row.peaktalk}
               </div>
@@ -897,9 +897,9 @@ function WhyNotChatGPT() {
                 fontFamily: 'var(--font-inter)',
                 fontSize: 13,
                 color: 'var(--text-main)',
-                backgroundColor: '#FFF7ED',
+                backgroundColor: '#FEF3E8',
                 borderBottom: '1px solid var(--border-main)',
-                borderLeft: '3px solid #F97316',
+                borderLeft: '3px solid #E8600A',
                 lineHeight: 1.5,
               }}>
                 <span style={{ color: '#22C55E', fontWeight: 700, marginRight: 8 }}>✓</span>
@@ -1007,7 +1007,7 @@ function Features() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '70%' }}>
                   <div style={{ height: 6, borderRadius: 4, background: '#E5E7EB', width: '100%' }} />
                   <div style={{ height: 6, borderRadius: 4, background: '#E5E7EB', width: '80%' }} />
-                  <div style={{ height: 6, borderRadius: 4, background: '#F97316', width: '60%', boxShadow: '0 0 8px rgba(249,115,22,0.3)' }} />
+                  <div style={{ height: 6, borderRadius: 4, background: '#E8600A', width: '60%', boxShadow: '0 0 8px rgba(232,96,10,0.3)' }} />
                   <div style={{ height: 6, borderRadius: 4, background: '#E5E7EB', width: '90%' }} />
                 </div>
               </div>
@@ -1020,8 +1020,8 @@ function Features() {
             delay={0.1}
             topVisual={
               <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 12, border: '1px solid #E5E7EB', background: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(249,115,22,0.08)', border: '2px dashed rgba(249,115,22,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#F97316', boxShadow: '0 0 12px rgba(249,115,22,0.4)' }} />
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(232,96,10,0.08)', border: '2px dashed rgba(232,96,10,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#E8600A', boxShadow: '0 0 12px rgba(232,96,10,0.4)' }} />
                 </div>
               </div>
             }
@@ -1039,7 +1039,7 @@ function Features() {
                     height: 56,
                     borderRadius: '50%',
                     border: '2px solid #FFFFFF',
-                    background: idx === 0 ? '#FFF7ED' : idx === 1 ? '#F3F4F6' : '#EDE9FE',
+                    background: idx === 0 ? '#FEF3E8' : idx === 1 ? '#F3F4F6' : '#EDE9FE',
                     marginLeft: idx === 0 ? 0 : -16,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                     zIndex: 3 - idx,
@@ -1049,7 +1049,7 @@ function Features() {
                     fontFamily: 'var(--font-syne)',
                     fontSize: 20,
                     fontWeight: 600,
-                    color: idx === 0 ? '#F97316' : idx === 1 ? '#6B7280' : '#8B5CF6',
+                    color: idx === 0 ? '#E8600A' : idx === 1 ? '#6B7280' : '#8B5CF6',
                   }}>
                     {initial}
                   </div>
@@ -1402,7 +1402,7 @@ function CTABanner() {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at 70% 30%, rgba(249,115,22,0.15) 0%, transparent 60%)',
+        background: 'radial-gradient(ellipse at 70% 30%, rgba(232,96,10,0.15) 0%, transparent 60%)',
         pointerEvents: 'none',
       }} />
       <div className="container-custom" style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
@@ -1415,7 +1415,7 @@ function CTABanner() {
           <div style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 11,
-            color: '#F97316',
+            color: '#E8600A',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             marginBottom: 20,

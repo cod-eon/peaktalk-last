@@ -10,8 +10,8 @@ import { useBillingStore } from '@/store/billingStore';
 function ConfettiDots() {
   const dots = Array.from({ length: 18 }, (_, i) => i);
   const colors = [
-    'bg-orange-400', 'bg-amber-300', 'bg-orange-500',
-    'bg-yellow-400', 'bg-amber-400', 'bg-orange-300',
+    'bg-accent-400', 'bg-amber-300', 'bg-accent-500',
+    'bg-yellow-400', 'bg-amber-400', 'bg-accent-300',
   ];
 
   return (
@@ -63,13 +63,13 @@ export default function BillingSuccessPage() {
           className="flex flex-col items-center gap-6 bg-white border border-[var(--border-main)] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
         >
           {/* Icon */}
-          <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-accent-100 flex items-center justify-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.15, duration: 0.35, type: 'spring', stiffness: 200 }}
             >
-              <CheckCircle2 size={32} className="text-orange-500" />
+              <CheckCircle2 size={32} className="text-accent-500" />
             </motion.div>
           </div>
 
@@ -87,7 +87,7 @@ export default function BillingSuccessPage() {
           </div>
 
           {/* PRO badge */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 text-white">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-accent-500 to-amber-400 text-white">
             <Zap size={15} />
             <span className="font-semibold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>
               PeakTalk PRO активен

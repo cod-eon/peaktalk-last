@@ -254,7 +254,7 @@ export default function UploadPage() {
                                                     {text.length === 0 && (
                                                         <button 
                                                             onClick={setDemoText} 
-                                                            className="text-[11px] text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 px-2.5 py-1.5 rounded-md font-medium border border-orange-200/60"
+                                                            className="text-[11px] text-accent-600 hover:text-accent-700 transition-colors bg-accent-50 hover:bg-accent-100 px-2.5 py-1.5 rounded-md font-medium border border-accent-200/60"
                                                         >
                                                             Вставить демо-питч
                                                         </button>
@@ -286,7 +286,7 @@ export default function UploadPage() {
                                         </span>
                                     </button>
                                     <span className="text-[10px] text-[var(--text-dim)] font-medium flex items-center gap-1">
-                                        <Sparkles size={10} className="text-orange-400" />
+                                        <Sparkles size={10} className="text-accent-400" />
                                         Потребует 1 анализ
                                     </span>
                                 </div>

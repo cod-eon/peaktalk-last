@@ -319,7 +319,7 @@ export default function SimulationPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className={`flex items-center gap-1.5 font-mono text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border transition-colors ${timeLeft === 0 ? 'bg-red-50 border-red-200 text-red-600' : isWarningTime ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-[var(--bg-surface)] border-[var(--border-main)] text-[var(--text-main)]'}`}>
+            <div className={`flex items-center gap-1.5 font-mono text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border transition-colors ${timeLeft === 0 ? 'bg-red-50 border-red-200 text-red-600' : isWarningTime ? 'bg-accent-50 border-accent-200 text-accent-600' : 'bg-[var(--bg-surface)] border-[var(--border-main)] text-[var(--text-main)]'}`}>
               <Timer size={14} className={(isWarningTime && timeLeft > 0) ? "animate-pulse" : ""} />
               {formatTime(timeLeft)}
             </div>
@@ -424,7 +424,7 @@ export default function SimulationPage() {
                 placeholder={timeLeft > 0 ? `Ваш ответ ${personaDative}...` : 'Время вышло! Давление растет...'}
                 autoFocus
                 disabled={isAnalyzing}
-                className={`w-full bg-[var(--bg-surface)] border ${isListening ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)] shadow-[0_0_15px_rgba(249,115,22,0.1)]' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-[var(--border-main)]'} rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm relative z-0`}
+                className={`w-full bg-[var(--bg-surface)] border ${isListening ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)] shadow-[0_0_15px_rgba(232,96,10,0.1)]' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-[var(--border-main)]'} rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all resize-none shadow-sm relative z-0`}
                 style={{ fontSize: '16px' }}
               />
 

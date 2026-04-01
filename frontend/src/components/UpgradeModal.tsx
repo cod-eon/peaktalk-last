@@ -112,8 +112,8 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                 </button>
 
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center">
-                    <Zap size={18} className="text-orange-500" />
+                  <div className="w-9 h-9 rounded-xl bg-accent-100 flex items-center justify-center">
+                    <Zap size={18} className="text-accent-500" />
                   </div>
                   <div>
                     <h2
@@ -156,14 +156,14 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                 </div>
 
                 {/* Pro card */}
-                <div className="rounded-xl border-2 border-orange-400 bg-gradient-to-b from-orange-50/60 to-amber-50/30 p-4 relative overflow-hidden">
+                <div className="rounded-xl border-2 border-accent-400 bg-gradient-to-b from-accent-50/60 to-amber-50/30 p-4 relative overflow-hidden">
                   <div className="absolute top-2 right-2">
-                    <span className="text-[9px] font-bold tracking-widest text-orange-500 bg-orange-100 px-1.5 py-0.5 rounded-full uppercase">
+                    <span className="text-[9px] font-bold tracking-widest text-accent-500 bg-accent-100 px-1.5 py-0.5 rounded-full uppercase">
                       Выбрать
                     </span>
                   </div>
                   <div className="mb-3">
-                    <span className="inline-block text-[10px] font-semibold tracking-widest text-orange-500 uppercase mb-1">
+                    <span className="inline-block text-[10px] font-semibold tracking-widest text-accent-500 uppercase mb-1">
                       Рекомендуем
                     </span>
                     <div
@@ -172,12 +172,12 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                     >
                       PRO
                     </div>
-                    <div className="text-orange-600 text-[11px] font-semibold mt-0.5">990 ₽/мес</div>
+                    <div className="text-accent-600 text-[11px] font-semibold mt-0.5">990 ₽/мес</div>
                   </div>
                   <ul className="space-y-1.5">
                     {PRO_FEATURES.map((f) => (
                       <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-main)]">
-                        <Check size={10} className="mt-0.5 shrink-0 text-orange-500" />
+                        <Check size={10} className="mt-0.5 shrink-0 text-accent-500" />
                         {f}
                       </li>
                     ))}
@@ -189,7 +189,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               <div className="px-6 pb-6">
                 <button
                   onClick={handleUpgrade}
-                  className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                   style={{ fontFamily: 'var(--font-syne)' }}
                 >
                   <Infinity size={16} />

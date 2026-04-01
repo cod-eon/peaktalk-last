@@ -204,9 +204,9 @@ function UserLine({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className="mb-6 sm:mb-10 pl-4 sm:pl-5 border-l-2 border-orange-200"
+            className="mb-6 sm:mb-10 pl-4 sm:pl-5 border-l-2 border-accent-200"
         >
-            <p className="text-sm font-semibold text-orange-500 mb-2 uppercase tracking-wide">Вы</p>
+            <p className="text-sm font-semibold text-accent-500 mb-2 uppercase tracking-wide">Вы</p>
             <p className="text-[15px] sm:text-[17px] text-gray-900 leading-relaxed">
                 {hasIssue ? (
                     <span
@@ -331,7 +331,7 @@ export default function SimulationReportPage() {
         return (
             <div className="flex flex-1 items-center justify-center bg-[#FAFAFA]">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-6 h-6 border-2 border-gray-200 border-t-orange-400 rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-2 border-gray-200 border-t-accent-400 rounded-full animate-spin" />
                     <span className="text-[13px] text-gray-400">Загрузка отчёта...</span>
                 </div>
             </div>
@@ -455,7 +455,7 @@ export default function SimulationReportPage() {
                         </button>
                         <div className="h-4 w-px bg-gray-200 hidden sm:block" />
                         <div className="flex items-center gap-1.5 min-w-0">
-                            <Zap size={13} className="text-orange-400 shrink-0" />
+                            <Zap size={13} className="text-accent-400 shrink-0" />
                             <span className="text-[12px] sm:text-[13px] font-syne font-bold text-gray-800 tracking-tight uppercase">
                                 Отчёт
                             </span>
@@ -498,10 +498,10 @@ export default function SimulationReportPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
-                            className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12"
+                            className="bg-accent-50/60 border border-accent-100 rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12"
                         >
                             <div className="flex items-center gap-2 mb-4">
-                                <Sparkles size={15} className="text-orange-400 shrink-0" />
+                                <Sparkles size={15} className="text-accent-400 shrink-0" />
                                 <h2 className="text-[16px] font-syne font-bold text-gray-900 uppercase tracking-tight">Разбор завершён</h2>
                             </div>
                             <div className="flex flex-col gap-2 text-[14px]">
@@ -521,7 +521,7 @@ export default function SimulationReportPage() {
 
                             {/* Metric pills row */}
                             {skill_metrics?.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-orange-100">
+                                <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-accent-100">
                                     {skill_metrics.map((m) => {
                                         const color = getScoreColor(m.score);
                                         const s10 = Math.round(m.score * 10);
@@ -597,7 +597,7 @@ export default function SimulationReportPage() {
                             {avgScore10 >= 7 && (
                                 <button
                                     onClick={handleShare}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all h-12"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all h-12"
                                 >
                                     <Share2 size={18} />
                                     Поделиться результатом

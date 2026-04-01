@@ -80,7 +80,7 @@ const ROLE_VISUALS: Record<string, RoleVisual> = {
     peer:       { icon: Users,         iconColor: 'text-teal-600',   iconBg: 'bg-teal-50' },
     board:      { icon: Briefcase,     iconColor: 'text-slate-600',  iconBg: 'bg-slate-100' },
     subordinate:{ icon: Users,         iconColor: 'text-amber-500',  iconBg: 'bg-amber-50' },
-    journalist: { icon: Mic,           iconColor: 'text-orange-500', iconBg: 'bg-orange-50' },
+    journalist: { icon: Mic,           iconColor: 'text-accent-500', iconBg: 'bg-accent-50' },
     audience:   { icon: Mic,           iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     moderator:  { icon: MessageSquare, iconColor: 'text-stone-600',  iconBg: 'bg-stone-100' },
     listener:   { icon: MessageSquare, iconColor: 'text-rose-500',   iconBg: 'bg-rose-50' },
@@ -142,7 +142,7 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
             animate={{ opacity: 1, y: 0 }}
             className={`text-left w-full p-4 sm:p-5 rounded-xl border transition-all group min-h-[44px] ${
                 variant === 'active'
-                    ? 'bg-white border-[var(--accent-primary)] border-2 shadow-[0_4px_16px_rgba(249,115,22,0.12)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.18)]'
+                    ? 'bg-white border-[var(--accent-primary)] border-2 shadow-[0_4px_16px_rgba(232,96,10,0.12)] hover:shadow-[0_6px_20px_rgba(232,96,10,0.18)]'
                     : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
             }`}
         >
@@ -655,7 +655,7 @@ function SimulationPageContent() {
 
                             {/* Личный рекорд */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-orange-300 rounded-t-xl" />
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-accent-300 rounded-t-xl" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
                                     <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-amber-50 flex items-center justify-center">
@@ -839,12 +839,12 @@ function SimulationPageContent() {
                                             onClick={() => { setSelectedRole(key); scrollToStep(step2Ref); }}
                                             className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
+                                                    ? 'bg-accent-50 border-2 border-accent-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
                                                     : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-orange-500">
+                                                <div className="absolute top-4 right-4 text-accent-500">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
@@ -878,12 +878,12 @@ function SimulationPageContent() {
                                             onClick={() => { setSelectedRole(role.id); scrollToStep(step2Ref); }}
                                             className={`text-left p-5 rounded-xl transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-orange-50 border-2 border-orange-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
+                                                    ? 'bg-accent-50 border-2 border-accent-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
                                                     : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-orange-500">
+                                                <div className="absolute top-4 right-4 text-accent-500">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
@@ -956,7 +956,7 @@ function SimulationPageContent() {
                                 docDropdownOpen
                                     ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary-glow)] bg-[var(--bg-surface)]'
                                     : selectedDoc !== null
-                                        ? 'border-orange-300 bg-orange-50'
+                                        ? 'border-accent-300 bg-accent-50'
                                         : 'border-[var(--border-main)] bg-[var(--bg-surface)] hover:border-[var(--border-light)]'
                             }`}
                         >
@@ -964,7 +964,7 @@ function SimulationPageContent() {
                                 {selectedDoc === 'none'
                                     ? <Ban size={16} className="text-[var(--text-dim)]" />
                                     : selectedDoc
-                                        ? <FileText size={16} className="text-orange-500" />
+                                        ? <FileText size={16} className="text-accent-500" />
                                         : <FileText size={16} className="text-[var(--text-dim)]" />
                                 }
                             </div>
@@ -1014,7 +1014,7 @@ function SimulationPageContent() {
                                         type="button"
                                         onClick={() => { setSelectedDoc('none'); setDocDropdownOpen(false); setDocSearch(''); }}
                                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-[var(--border-main)] ${
-                                            selectedDoc === 'none' ? 'bg-orange-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                            selectedDoc === 'none' ? 'bg-accent-50' : 'hover:bg-[var(--bg-surface-alt)]'
                                         }`}
                                     >
                                         <div className="w-7 h-7 rounded-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
@@ -1024,7 +1024,7 @@ function SimulationPageContent() {
                                             <div className="text-sm font-medium font-inter text-[var(--text-main)]">Без документа</div>
                                             <div className="text-xs text-[var(--text-dim)] font-inter">Общее интервью по выбранной роли и сфере</div>
                                         </div>
-                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-orange-500 shrink-0" />}
+                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-accent-500 shrink-0" />}
                                     </button>
 
                                     {/* Document list */}
@@ -1051,11 +1051,11 @@ function SimulationPageContent() {
                                                         type="button"
                                                         onClick={() => { setSelectedDoc(doc.id); setDocDropdownOpen(false); setDocSearch(''); }}
                                                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                                                            isSelected ? 'bg-orange-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                                            isSelected ? 'bg-accent-50' : 'hover:bg-[var(--bg-surface-alt)]'
                                                         }`}
                                                     >
-                                                        <div className="w-7 h-7 rounded-md bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
-                                                            <FileText size={14} className="text-orange-400" />
+                                                        <div className="w-7 h-7 rounded-md bg-accent-50 border border-accent-100 flex items-center justify-center shrink-0">
+                                                            <FileText size={14} className="text-accent-400" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="text-sm font-medium font-inter text-[var(--text-main)] truncate">{doc.name}</div>
@@ -1064,7 +1064,7 @@ function SimulationPageContent() {
                                                             {dateStr && (
                                                                 <span className="text-[11px] font-mono text-[var(--text-dim)]">{dateStr}</span>
                                                             )}
-                                                            {isSelected && <CheckCircle2 size={15} className="text-orange-500" />}
+                                                            {isSelected && <CheckCircle2 size={15} className="text-accent-500" />}
                                                         </div>
                                                     </button>
                                                 );
@@ -1096,7 +1096,7 @@ function SimulationPageContent() {
                         onClick={handleStart}
                         className={`inline-flex items-center gap-2 px-6 py-3 rounded-[var(--radius-sm)] text-sm font-semibold font-inter transition-all duration-200 ${
                             isReady && !isStarting
-                                ? 'bg-[var(--accent-primary)] text-white cursor-pointer shadow-[0_4px_16px_rgba(249,115,22,0.35)] hover:bg-[var(--accent-primary-hover)] hover:shadow-[0_6px_24px_rgba(249,115,22,0.45)]'
+                                ? 'bg-[var(--accent-primary)] text-white cursor-pointer shadow-[0_4px_16px_rgba(232,96,10,0.35)] hover:bg-[var(--accent-primary-hover)] hover:shadow-[0_6px_24px_rgba(232,96,10,0.45)]'
                                 : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                         }`}
                     >
@@ -1125,7 +1125,7 @@ function SimulationPageContent() {
                         onClick={handleStart}
                         className={`inline-flex items-center gap-2 text-sm px-4 py-2.5 shrink-0 rounded-[var(--radius-sm)] font-semibold font-inter transition-all ${
                             isReady && !isStarting
-                                ? 'bg-[var(--accent-primary)] text-white shadow-[0_4px_14px_rgba(249,115,22,0.35)] hover:bg-[var(--accent-primary-hover)]'
+                                ? 'bg-[var(--accent-primary)] text-white shadow-[0_4px_14px_rgba(232,96,10,0.35)] hover:bg-[var(--accent-primary-hover)]'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         }`}
                     >

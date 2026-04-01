@@ -44,9 +44,9 @@ function ContactCard({
         transition: "border-color 0.15s ease, box-shadow 0.15s ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(249,115,22,0.35)";
+        e.currentTarget.style.borderColor = "rgba(232,96,10,0.35)";
         e.currentTarget.style.boxShadow =
-          "0 4px 16px rgba(249,115,22,0.08), 0 0 0 1px rgba(249,115,22,0.12)";
+          "0 4px 16px rgba(232,96,10,0.08), 0 0 0 1px rgba(232,96,10,0.12)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "var(--border-main)";

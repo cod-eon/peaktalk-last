@@ -29,7 +29,7 @@ import type { PlanId } from '@/types/billing';
 function PlanBadge({ plan }: { plan: PlanId }) {
   if (plan === 'pro') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-accent-100 text-accent-700 border border-accent-200">
         <Zap size={9} />
         PRO
       </span>

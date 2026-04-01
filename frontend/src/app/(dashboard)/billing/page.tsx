@@ -49,8 +49,8 @@ const PLAN_DISPLAY: Array<{
     id: 'pro',
     name: 'PRO',
     price: '990 ₽/мес',
-    accent: 'text-orange-500',
-    border: 'border-orange-400',
+    accent: 'text-accent-500',
+    border: 'border-accent-400',
     features: [
       'Безлимитные симуляции',
       'Безлимитные документы',
@@ -110,7 +110,7 @@ function UsageBar({ used, limit, label, icon }: { used: number; limit: number | 
         </div>
         <span className="text-[var(--text-dim)] text-xs font-mono">
           {isUnlimited ? (
-            <span className="text-orange-500 font-semibold flex items-center gap-1"><Infinity size={11} /> Безлимит</span>
+            <span className="text-accent-500 font-semibold flex items-center gap-1"><Infinity size={11} /> Безлимит</span>
           ) : (
             <span className={full ? 'text-red-500 font-semibold' : almostFull ? 'text-amber-600 font-medium' : ''}>
               {used} / {limit}
@@ -125,7 +125,7 @@ function UsageBar({ used, limit, label, icon }: { used: number; limit: number | 
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className={`h-full rounded-full ${
             isUnlimited
-              ? 'bg-gradient-to-r from-orange-400 to-amber-300'
+              ? 'bg-gradient-to-r from-accent-400 to-amber-300'
               : full
                 ? 'bg-red-500'
                 : almostFull
@@ -316,14 +316,14 @@ export default function BillingPage() {
                     plan === 'team'
                       ? 'bg-violet-100'
                       : plan === 'pro'
-                        ? 'bg-orange-100'
+                        ? 'bg-accent-100'
                         : 'bg-gray-100'
                   }`}
                 >
                   {plan === 'team' ? (
                     <Users size={22} className="text-violet-500" />
                   ) : plan === 'pro' ? (
-                    <Zap size={22} className="text-orange-500" />
+                    <Zap size={22} className="text-accent-500" />
                   ) : (
                     <CreditCard size={22} className="text-gray-400" />
                   )}
@@ -482,7 +482,7 @@ export default function BillingPage() {
                         onClick={() => handleUpgrade(p.id as 'pro' | 'team')}
                         className={`w-full py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
                           p.id === 'pro'
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                            ? 'bg-accent-500 hover:bg-accent-600 text-white'
                             : 'bg-violet-500 hover:bg-violet-600 text-white'
                         }`}
                       >

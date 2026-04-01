@@ -205,9 +205,9 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gradient-to-r from-violet-50/80 to-orange-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
+          className="relative bg-gradient-to-r from-violet-50/80 to-accent-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
         >
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-200/30 rounded-full blur-[40px] pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent-200/30 rounded-full blur-[40px] pointer-events-none" />
           
           <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-violet-100 relative z-10">
             <Bot size={24} className="text-violet-600" />
@@ -235,7 +235,7 @@ export default function DashboardPage() {
             className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4 overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer"
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-50/30 via-white to-orange-50/20 rounded-[var(--radius-lg)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-50/30 via-white to-accent-50/20 rounded-[var(--radius-lg)] pointer-events-none" />
             <div className="relative z-10 w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
               <Sparkles size={20} className="text-violet-600" />
             </div>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
           >
             {/* Background gradient accent */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-orange-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-accent-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
             {/* Decorative AI-pulse geometry — hidden on mobile for clean look */}
             <motion.svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.25] pointer-events-none hidden md:block" viewBox="0 0 208 160" fill="none" aria-hidden="true">
               <motion.circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                 animate={{ r: [58, 62, 58], opacity: [0.7, 0.3, 0.7] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
               />
-              <motion.circle cx="160" cy="108" r="38" stroke="#F97316" strokeWidth="1.5"
+              <motion.circle cx="160" cy="108" r="38" stroke="#E8600A" strokeWidth="1.5"
                 animate={{ r: [38, 40, 38], opacity: [0.8, 0.4, 0.8] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                 animate={{ opacity: [0.2, 0.5, 0.2] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
-              <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#F97316" strokeWidth="1" fill="none" strokeOpacity="0.5" />
+              <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#E8600A" strokeWidth="1" fill="none" strokeOpacity="0.5" />
             </motion.svg>
 
             <div className="relative z-10">
@@ -449,22 +449,22 @@ export default function DashboardPage() {
         <motion.div 
           initial={{ opacity: 0, y: 15 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="bg-gradient-to-br from-orange-50/50 to-orange-100/30 rounded-[var(--radius-lg)] border border-orange-200/60 p-6 sm:p-8 mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6 shadow-sm overflow-hidden relative"
+          className="bg-gradient-to-br from-accent-50/50 to-accent-100/30 rounded-[var(--radius-lg)] border border-accent-200/60 p-6 sm:p-8 mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6 shadow-sm overflow-hidden relative"
         >
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-400/10 rounded-full blur-[40px] pointer-events-none" />
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-orange-100 flex items-center justify-center shrink-0">
-            <Flame className="text-orange-500" size={32} />
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-accent-400/10 rounded-full blur-[40px] pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-accent-100 flex items-center justify-center shrink-0">
+            <Flame className="text-accent-500" size={32} />
           </div>
           <div className="flex-1 relative z-10 w-full sm:w-auto">
-            <h2 className="text-[18px] sm:text-[20px] font-bold text-orange-950 mb-2" style={{ letterSpacing: '-0.01em' }}>
+            <h2 className="text-[18px] sm:text-[20px] font-bold text-accent-950 mb-2" style={{ letterSpacing: '-0.01em' }}>
               Твоя первая симуляция ждет
             </h2>
-            <p className="text-[14px] text-orange-900/70 leading-relaxed mb-5 max-w-lg mx-auto sm:mx-0">
+            <p className="text-[14px] text-accent-900/70 leading-relaxed mb-5 max-w-lg mx-auto sm:mx-0">
               Узнай свои слабые места до того, как выйдешь к инвестору или на сцену. Попробуй короткий демо-тест прямо сейчас — это займет всего пару минут.
             </p>
             <Link
               href="/upload"
-              className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-[0_4px_14px_rgba(249,115,22,0.3)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.4)] transition-all w-full sm:w-auto min-h-[48px]"
+              className="inline-flex items-center justify-center gap-2 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-[0_4px_14px_rgba(232,96,10,0.3)] hover:shadow-[0_6px_20px_rgba(232,96,10,0.4)] transition-all w-full sm:w-auto min-h-[48px]"
             >
               <Zap size={16} />
               Пройти тест-драйв (Бесплатно)
@@ -523,8 +523,8 @@ export default function DashboardPage() {
                     <rect x="16" y="13" width="22" height="2" rx="1" fill="#E5E7EB" />
                     <rect x="16" y="19" width="16" height="2" rx="1" fill="#E5E7EB" />
                     <rect x="16" y="25" width="19" height="2" rx="1" fill="#E5E7EB" />
-                    <circle cx="50" cy="36" r="9" stroke="#F97316" strokeWidth="1.5" fill="rgba(249,115,22,0.07)" />
-                    <path d="M46.5 36 L53.5 36 M50 32.5 L50 39.5" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="50" cy="36" r="9" stroke="#E8600A" strokeWidth="1.5" fill="rgba(232,96,10,0.07)" />
+                    <path d="M46.5 36 L53.5 36 M50 32.5 L50 39.5" stroke="#E8600A" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </div>
                 <p className="text-[14px] text-[var(--text-dim)] mb-4">
@@ -556,7 +556,7 @@ export default function DashboardPage() {
 
                   {/* Name */}
                   <div className="flex items-center gap-3 min-w-0 mb-2.5 lg:mb-0">
-                    <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-gray-50 border border-[var(--border-main)] flex items-center justify-center shrink-0 group-hover:border-orange-200 group-hover:bg-orange-50 transition-colors">
+                    <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-gray-50 border border-[var(--border-main)] flex items-center justify-center shrink-0 group-hover:border-accent-200 group-hover:bg-accent-50 transition-colors">
                       <FileText size={14} className="text-[var(--text-dim)] group-hover:text-[var(--accent-primary)] transition-colors" />
                     </div>
                     <div className="min-w-0 flex items-center gap-2">

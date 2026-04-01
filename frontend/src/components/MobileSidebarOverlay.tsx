@@ -94,7 +94,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                                         onClick={onClose}
                                         className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] border transition-all text-[13px] font-medium font-inter ${
                                             isActive
-                                                ? 'sidebar-item-active text-[var(--accent-primary)] border-orange-100'
+                                                ? 'sidebar-item-active text-[var(--accent-primary)] border-accent-100'
                                                 : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'
                                         }`}
                                     >
@@ -114,7 +114,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                             {/* User chip */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center font-bold text-sm text-orange-500 shrink-0 uppercase">
+                                    <div className="w-8 h-8 rounded-full bg-accent-100 border border-accent-200 flex items-center justify-center font-bold text-sm text-accent-500 shrink-0 uppercase">
                                         {firstLetter}
                                     </div>
                                     <div className="text-[13px] font-medium text-[var(--text-main)] truncate">{displayName}</div>
@@ -129,8 +129,8 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                             </div>
 
                             {/* Upsell card */}
-                            <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                                <div className="text-[11px] font-medium text-orange-400 uppercase tracking-wide mb-1">Basic Plan</div>
+                            <div className="bg-accent-50 rounded-xl p-4 border border-accent-100">
+                                <div className="text-[11px] font-medium text-accent-400 uppercase tracking-wide mb-1">Basic Plan</div>
                                 <div className="text-[13px] text-[var(--text-main)] font-medium mb-3">Улучшите навыки с ИИ</div>
                                 <button className="w-full py-2 bg-[var(--accent-primary)] text-white text-[12px] font-semibold rounded-[var(--radius-sm)] hover:bg-[var(--accent-primary-hover)] transition-colors">
                                     Upgrade to Pro

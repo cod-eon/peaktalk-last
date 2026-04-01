@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --color-accent-50: #FEF3E8;
+  --color-accent-100: #FDDEC4;
+  --color-accent-200: #F9BD8E;
+  --color-accent-300: #F29555;
+  --color-accent-400: #F0782A;
+  --color-accent-500: #E8600A;
+  --color-accent-600: #D4570A;
+  --color-accent-700: #B04A08;
+  --color-accent-900: #6B2D05;
+  --color-accent-950: #3D1A03;
+}
+
 @layer base {
   :root {
     /* ─── Backgrounds — light, breathing ─── */
@@ -17,20 +30,27 @@
     --text-dim: #6B7280;
     --text-placeholder: #9CA3AF;
 
-    /* ─── Primary Accent — Saffron Orange (CTA, progress, highlights) ─── */
-    --accent-primary: #F97316;
-    --accent-primary-hover: #EA6C0A;
-    --accent-primary-glow: rgba(249, 115, 22, 0.20);
-    --accent-primary-bg: rgba(249, 115, 22, 0.08);
+    /* ─── Primary Accent — Ember Orange (CTA, progress, highlights) ─── */
+    --accent-primary: #E8600A;
+    --accent-primary-hover: #D4570A;
+    --accent-primary-glow: rgba(232, 96, 10, 0.20);
+    --accent-primary-bg: rgba(232, 96, 10, 0.08);
+
+    /* ─── Convenience aliases ─── */
+    --color-accent: #E8600A;
+    --color-accent-hover: #D4570A;
+    --color-accent-glow: rgba(232, 96, 10, 0.20);
+    --color-accent-bg: rgba(232, 96, 10, 0.08);
 
     /* ─── Secondary alias — kept for legacy code ─── */
-    --accent-blue: #F97316;
-    --accent-blue-hover: #EA6C0A;
-    --accent-blue-glow: rgba(249, 115, 22, 0.20);
-    --accent-blue-bg: rgba(249, 115, 22, 0.08);
+    --accent-blue: #E8600A;
+    --accent-blue-hover: #D4570A;
+    --accent-blue-glow: rgba(232, 96, 10, 0.20);
+    --accent-blue-bg: rgba(232, 96, 10, 0.08);
 
     /* ─── AI — soft violet (neural / magic features) ─── */
     --color-ai: #8B5CF6;
+    --color-ai-hover: #7C3AED;
     --color-ai-bg: rgba(139, 92, 246, 0.08);
     --color-ai-glow: rgba(139, 92, 246, 0.18);
 
@@ -76,7 +96,7 @@
   }
 
   ::selection {
-    background-color: rgba(249, 115, 22, 0.15);
+    background-color: rgba(232, 96, 10, 0.15);
     color: var(--text-main);
   }
 
@@ -128,7 +148,7 @@
     inset: 0;
     z-index: 0;
     background-image:
-      radial-gradient(circle at 75% 15%, rgba(249, 115, 22, 0.05) 0%, transparent 45%),
+      radial-gradient(circle at 75% 15%, rgba(232, 96, 10, 0.05) 0%, transparent 45%),
       radial-gradient(circle at 20% 75%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
       linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
@@ -161,7 +181,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.25), transparent);
+    background: linear-gradient(90deg, transparent, rgba(232, 96, 10, 0.25), transparent);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
@@ -273,8 +293,8 @@
   }
 
   .sidebar-item-active {
-    background-color: #FFF7ED;
-    border-color: #FED7AA !important;
+    background-color: #FEF3E8;
+    border-color: #F9BD8E !important;
   }
 
   /* ─── Icon buttons ─── */
@@ -299,8 +319,8 @@
   .icon-button:focus-visible {
     outline: none;
     color: var(--text-main);
-    border-color: rgba(249, 115, 22, 0.4);
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+    border-color: rgba(232, 96, 10, 0.4);
+    box-shadow: 0 0 0 3px rgba(232, 96, 10, 0.12);
   }
 
   /* ─── Status indicators ─── */

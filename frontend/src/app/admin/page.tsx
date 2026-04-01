@@ -161,7 +161,7 @@ function ChartCard({
 
 // ─── Plan distribution donut ──────────────────────────────────────────────────
 
-const PLAN_COLORS = ['#f97316', '#7c3aed', '#64748b'];
+const PLAN_COLORS = ['#E8600A', '#7c3aed', '#64748b'];
 
 function PlanDonut({ pro, starter }: { pro: number; starter: number }) {
   const total = pro + starter || 1;
@@ -326,9 +326,9 @@ export default function AdminStatsPage() {
               label="Выручка / месяц"
               value={`${totalRevenueMonth.toLocaleString('ru-RU')} ₽`}
               sub={`Всего: ${Number(stats.payments_total_rub).toLocaleString('ru-RU')} ₽`}
-              icon={<RussianRuble size={18} className="text-orange-600" />}
-              accent="text-orange-600"
-              iconBg="bg-orange-50"
+              icon={<RussianRuble size={18} className="text-accent-600" />}
+              accent="text-accent-600"
+              iconBg="bg-accent-50"
               delay={0.07}
               trend="up"
             />
@@ -402,8 +402,8 @@ export default function AdminStatsPage() {
                   <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#E8600A" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#E8600A" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
@@ -425,11 +425,11 @@ export default function AdminStatsPage() {
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="#f97316"
+                      stroke="#E8600A"
                       strokeWidth={2}
                       fill="url(#revGrad)"
                       dot={false}
-                      activeDot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
+                      activeDot={{ r: 4, fill: '#E8600A', strokeWidth: 0 }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>

@@ -39,7 +39,7 @@ export default function BillingCancelPage() {
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={() => openUpgradeModal('simulations')}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
             style={{ fontFamily: 'var(--font-syne)' }}
           >
             <Zap size={15} />
