@@ -11,6 +11,9 @@
   --color-accent-700: #B04A08;
   --color-accent-900: #6B2D05;
   --color-accent-950: #3D1A03;
+
+  --color-ai: #8B5CF6;
+  --color-ai-hover: #7C3AED;
 }
 
 @layer base {
