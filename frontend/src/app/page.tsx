@@ -326,7 +326,7 @@ function Hero() {
           >
             {/* Soft backdrop glow so the 3D element pops */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[var(--color-ai)] rounded-full blur-[120px] opacity-10 pointer-events-none" />
-            <ThreeDElement scene="https://prod.spline.design/kZIGLNwjBEnx0hA3/scene.splinecode" />
+            <ThreeDElement scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode" />
           </motion.div>
 
         </div>
