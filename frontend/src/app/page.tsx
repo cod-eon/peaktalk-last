@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useMotionTemplate } from 'framer-motion';
 import Image from 'next/image';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Mic, Download, Share2 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
 const smoothScroll = (id: string) => {
@@ -24,33 +24,6 @@ function useScrolled() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return scrolled;
-}
-
-function CountUpStat({ end, delay = 0, suffix = "" }: { end: number, delay?: number, suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const ref = React.useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-
-  useEffect(() => {
-    if (!inView) return;
-    let startTimestamp: number;
-    const duration = 2000;
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      setCount(Math.floor(easeProgress * end));
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      }
-    };
-    const timer = setTimeout(() => {
-      window.requestAnimationFrame(step);
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [inView, end, delay]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
 }
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
@@ -101,31 +74,31 @@ function Nav() {
           </div>
 
           <div className="hidden lg:flex" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', gap: 32, alignItems: 'center' }}>
-            {['Суть', 'Ценность', 'Отзывы'].map((item, i) => {
-              const mapIds = ['#how', '#value', '#testimonials'];
-              return (
-                <button
-                  key={item}
-                  onClick={() => smoothScroll(mapIds[i])}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 12,
-                    color: 'var(--text-main)',
-                    opacity: 0.6,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'opacity 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
-                >
-                  {item}
-                </button>
-              );
-            })}
+            {[
+              { label: 'Как работает', id: '#how' },
+              { label: 'Зачем не ChatGPT', id: '#value' },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => smoothScroll(item.id)}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  color: 'var(--text-main)',
+                  opacity: 0.6,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -140,7 +113,7 @@ function Nav() {
                 opacity: 0.8
               }}>Вход</a>
               <a href="/register" className="btn-primary" style={{ padding: '10px 24px', fontSize: 13, borderRadius: '4px' }}>
-                Войти в симуляцию
+                Попробовать бесплатно
               </a>
             </div>
 
@@ -208,32 +181,32 @@ function Nav() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'flex-start' }}>
-              {['Суть', 'Ценность', 'Отзывы'].map((item, i) => {
-                const mapIds = ['#how', '#value', '#testimonials'];
-                return (
-                  <button
-                    key={item}
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setTimeout(() => smoothScroll(mapIds[i]), 300);
-                    }}
-                    style={{
-                      fontFamily: 'var(--font-syne)',
-                      fontSize: 24,
-                      fontWeight: 700,
-                      color: 'var(--text-main)',
-                      letterSpacing: '-0.02em',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      padding: '8px 0',
-                    }}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
+              {[
+                { label: 'Как работает', id: '#how' },
+                { label: 'Зачем не ChatGPT', id: '#value' },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setTimeout(() => smoothScroll(item.id), 300);
+                  }}
+                  style={{
+                    fontFamily: 'var(--font-syne)',
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: 'var(--text-main)',
+                    letterSpacing: '-0.02em',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    padding: '8px 0',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
               <div style={{ width: '100%', height: 1, backgroundColor: 'var(--border-main)', margin: '16px 0' }} />
               <a href="/login" style={{
                 fontFamily: 'var(--font-syne)',
@@ -244,7 +217,7 @@ function Nav() {
                 padding: '8px 0',
               }}>Личный кабинет</a>
               <a href="/register" className="btn-primary flex items-center justify-center w-full" style={{ padding: '20px 0', marginTop: 16, fontSize: 15 }}>
-                Войти в симуляцию
+                Попробовать бесплатно
               </a>
             </div>
           </motion.div>
@@ -285,7 +258,7 @@ function Hero() {
                 className="inline-flex items-center border border-[var(--border-light)] rounded-none px-4 py-2 font-mono text-[10px] text-[var(--text-muted)] tracking-widest uppercase mb-6 lg:mb-8 bg-[var(--color-accent-bg)] backdrop-blur-md"
               >
                 <span className="w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full mr-3 animate-pulse" />
-                Приватно. Без записи камер.
+                Без видео. Без биометрии. Только текст.
               </motion.div>
 
               <motion.h1
@@ -303,8 +276,8 @@ function Hero() {
                   textWrap: 'balance',
                 }}
               >
-                Комиссия не будет <br/> 
-                <span className="text-[var(--color-accent)] italic opacity-90">закрывать глаза.</span>
+                Говоришь хорошо. <br/>
+                <span className="text-[var(--color-accent)] italic opacity-90">Под давлением — другое дело.</span>
               </motion.h1>
 
               <motion.p
@@ -321,7 +294,7 @@ function Hero() {
                   textWrap: 'balance',
                 }}
               >
-                Готовься к жестким вопросам — не к гладкому тексту. Загрузи диплом или питч. AI-коуч в роли инвестора или критика разорвет слабые аргументы, прежде чем это сделает реальность.
+                Загрузи материалы выступления. PeakTalk создаёт персонализированные вопросы от твоей реальной аудитории — и разбирает каждый ответ. Не теория. Практика до результата.
               </motion.p>
 
               <motion.div
@@ -331,14 +304,14 @@ function Hero() {
                 className="flex gap-3 flex-wrap justify-center lg:justify-start"
               >
                 <a href="/register" className="btn-primary" style={{ padding: '14px 28px', fontSize: 13, borderRadius: '4px' }}>
-                  Войти в симуляцию
+                  Попробовать бесплатно
                 </a>
                 <button
                   className="btn-secondary transition-all hover:bg-[var(--bg-surface-alt)]"
                   onClick={() => smoothScroll('#how')}
                   style={{ padding: '14px 28px', fontSize: 13, borderRadius: '4px', border: '1px solid var(--border-main)' }}
                 >
-                  Читать манифест
+                  Как это работает
                 </button>
               </motion.div>
             </div>
@@ -359,12 +332,181 @@ function Hero() {
   );
 }
 
+// ─── ACTION FLOW MOCKUPS ───────────────────────────────────────────────────────
+
+function MockupUpload() {
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-[var(--border-main)] bg-[var(--bg-surface)]" style={{ fontFamily: 'var(--font-inter)' }}>
+      {/* Drop zone */}
+      <div className="border-2 border-dashed border-[var(--border-main)] rounded-xl m-4 py-8 flex flex-col items-center gap-3 bg-[var(--bg-surface-alt)]">
+        <FileText size={28} color="var(--color-accent)" strokeWidth={1.5} />
+        <div className="text-center">
+          <p className="text-[var(--text-main)] font-medium text-sm">Перетащи файл или выбери</p>
+          <p className="text-[var(--text-muted)] text-xs mt-1" style={{ fontFamily: 'var(--font-mono)' }}>PDF, PPTX, DOCX — любой формат</p>
+        </div>
+      </div>
+      {/* Uploaded files list */}
+      <div className="px-4 pb-4 flex flex-col gap-2">
+        {[
+          'product_roadmap_q2.pdf',
+          'pitch_deck_series_a.pdf',
+        ].map((name) => (
+          <div key={name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--bg-surface-alt)] border border-[var(--border-light)]">
+            <div className="flex items-center gap-2">
+              <FileText size={14} color="var(--text-muted)" />
+              <span className="text-[var(--text-dim)] text-xs" style={{ fontFamily: 'var(--font-mono)' }}>{name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <CheckCircle2 size={13} color="#10b981" />
+              <span className="text-[10px] text-[#10b981]" style={{ fontFamily: 'var(--font-mono)' }}>Загружен</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockupSession() {
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-[var(--border-main)] bg-[var(--bg-surface)]" style={{ fontFamily: 'var(--font-inter)' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-light)] bg-[var(--bg-surface-alt)]">
+        <span className="text-[var(--text-muted)] text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>
+          Тимлид / Principal Engineer
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Timer size={11} color="var(--color-accent)" />
+            <span className="text-[var(--color-accent)] text-[10px] font-bold" style={{ fontFamily: 'var(--font-mono)' }}>1:23</span>
+          </div>
+          <span className="text-[var(--text-muted)] text-[10px]" style={{ fontFamily: 'var(--font-mono)' }}>Вопрос 3 из 10</span>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="h-1.5 bg-[var(--border-light)]">
+        <motion.div
+          className="h-full bg-[var(--color-accent)] rounded-full"
+          initial={{ width: 0 }}
+          whileInView={{ width: '30%' }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+        />
+      </div>
+      {/* Question card */}
+      <div className="m-4 p-4 rounded-xl bg-[var(--bg-surface-alt)] border border-[var(--border-light)]">
+        <p className="text-[var(--text-main)] text-sm leading-relaxed font-medium">
+          Как вы обоснуете технический долг команде, которая хочет только новые фичи?
+        </p>
+      </div>
+      {/* Answer area */}
+      <div className="mx-4 mb-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface-alt)] overflow-hidden">
+        <div className="px-4 py-3 min-h-[52px] flex items-start">
+          <p className="text-[var(--text-muted)] text-sm">Ваш ответ тимлиду...</p>
+        </div>
+        <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--border-light)]">
+          <Mic size={16} color="var(--text-muted)" />
+          <button className="btn-primary flex items-center gap-1.5" style={{ padding: '6px 16px', fontSize: 12, borderRadius: '6px' }}>
+            Ответить <ArrowRight size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupReport() {
+  const metrics = [
+    { label: 'Структура', score: 8 },
+    { label: 'Чёткость', score: 6 },
+    { label: 'Темп', score: 7 },
+  ];
+
+  function getScoreColor(score: number): string {
+    if (score >= 7) return '#10b981';
+    if (score >= 5) return '#f59e0b';
+    return '#e11d48';
+  }
+
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-[var(--border-main)] bg-[var(--bg-surface)]" style={{ fontFamily: 'var(--font-inter)' }}>
+      {/* Summary block */}
+      <div className="m-4 p-4 rounded-2xl" style={{ background: 'rgba(232,96,10,0.06)', border: '1px solid rgba(232,96,10,0.15)' }}>
+        <p className="text-[var(--text-main)] text-xs font-medium mb-1">Хорошая попытка. Тимлид увидел потенциал,</p>
+        <p className="text-[var(--text-dim)] text-xs mb-3">но местами аргументы теряли опору.</p>
+        <div className="flex flex-wrap gap-2">
+          {metrics.map((m) => (
+            <span
+              key={m.label}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-white"
+              style={{ fontFamily: 'var(--font-mono)', backgroundColor: getScoreColor(m.score) }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+              {m.label} {m.score}/10
+            </span>
+          ))}
+        </div>
+      </div>
+      {/* Transcript */}
+      <div className="px-4 pb-2">
+        <p className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest mb-3">Транскрипт</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[var(--text-muted)] text-[11px] mb-1" style={{ fontFamily: 'var(--font-mono)' }}>Тимлид</p>
+            <p className="text-[var(--text-dim)] text-xs">Как вы обоснуете технический долг?</p>
+          </div>
+          <div>
+            <p className="text-[var(--text-muted)] text-[11px] mb-1" style={{ fontFamily: 'var(--font-mono)' }}>Вы</p>
+            <p className="text-[var(--text-dim)] text-xs leading-relaxed">
+              Это важно для стабильности системы, потому что{' '}
+              <span className="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-900 dark:text-yellow-200 rounded px-1 cursor-pointer">
+                иначе мы накопим проблемы...
+              </span>
+            </p>
+            <p className="text-[10px] text-[var(--text-muted)] mt-1" style={{ fontFamily: 'var(--font-mono)' }}>
+              ↑ нажми — "Аргумент без конкретного примера"
+            </p>
+          </div>
+        </div>
+      </div>
+      {/* Buttons */}
+      <div className="flex gap-2 px-4 pb-4 mt-3">
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] text-[11px]" style={{ fontFamily: 'var(--font-mono)' }}>
+          <Download size={12} /> Скачать PDF
+        </button>
+        <button className="btn-primary flex items-center gap-1.5" style={{ padding: '8px 14px', fontSize: 11, borderRadius: '8px', fontFamily: 'var(--font-mono)' }}>
+          <Share2 size={12} /> Поделиться
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── CORE VALUE (Consolidated Flow) ──────────────────────────────────────────
 function ActionFlow() {
   const steps = [
-    { num: '01', title: 'Грязный черновик', desc: 'Скармливаешь PDF, дек или просто кривой текст. Плевать на форматирование. Система сама найдет смысловые узлы.', direction: -30, img: '/dirty_draft.png' },
-    { num: '02', title: 'Жесткий краш-тест', desc: 'Выбираешь роль экзекутора: Инвестор, Скептик из комиссии, HR. Получаешь допрос по самым неочевидным местам.', direction: 0, scale: 0.9, img: '/mic.png' },
-    { num: '03', title: 'Холодная оценка', desc: 'Отчет: 10% блефа, 40% воды, 2 проваленных аргумента. Забираешь правки и идешь выступать без мандража.', direction: 30, img: '/cold_grade.png' },
+    {
+      num: '01',
+      title: 'Загрузи материалы',
+      desc: 'Загружаешь PDF, дек или документ. PeakTalk анализирует содержимое и строит сессию вопросов именно по твоему контенту — не по теме вообще, а по тому, что ты реально будешь защищать.',
+      direction: -30,
+      mockup: <MockupUpload />,
+    },
+    {
+      num: '02',
+      title: 'Выбери собеседника и отвечай',
+      desc: '15 персон: от Тимлида и Совета директоров до Венчурного инвестора и Скептика из зала. 10 вопросов, 90 секунд на каждый ответ. Можно отвечать голосом. Списать у ChatGPT не получится — AI-детектор видит чужой текст и отклоняет.',
+      direction: 0,
+      scale: 0.9,
+      mockup: <MockupSession />,
+    },
+    {
+      num: '03',
+      title: 'Читай разбор',
+      desc: 'Отчёт с оценками по каждому навыку. Слабые ответы подсвечены прямо в транскрипте — нажимаешь и читаешь, что именно пошло не так. Скачиваешь PDF. Идёшь на следующую встречу с пониманием, что отточить.',
+      direction: 30,
+      mockup: <MockupReport />,
+    },
   ];
 
   const sectionRef = React.useRef(null);
@@ -396,11 +538,10 @@ function ActionFlow() {
               fontWeight: 800,
               lineHeight: 1.1,
               letterSpacing: '-0.03em',
-              textTransform: 'uppercase',
             }}>
-              Цикл подготовки.
+              Как это работает.
             </h2>
-            <p className="mt-4 text-[var(--text-dim)] font-mono text-xs tracking-widest uppercase">Без жалости. Без камеры.</p>
+            <p className="mt-4 text-[var(--text-dim)] font-mono text-xs tracking-widest uppercase">Три шага до уверенного выступления.</p>
           </div>
 
           <div 
@@ -429,7 +570,7 @@ function ActionFlow() {
             />
 
             {steps.map((s, i) => (
-              <motion.div 
+              <motion.div
                 key={s.num}
                 initial={{ opacity: 0, x: s.direction, scale: s.scale || 1 }}
                 whileInView={{ opacity: 1, x: 0, scale: 1 }}
@@ -439,19 +580,12 @@ function ActionFlow() {
               >
                 {/* Visual marker for mobile */}
                 <div className="absolute -left-[3px] top-0 w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full md:hidden" />
-                
-                <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest mb-4 opacity-50 block transition-all group-hover:opacity-100 group-hover:text-shadow-[0_0_12px_var(--color-accent)]">[{s.num}]</div>
-                
-                {/* AI Image Showcase with Spotlight */}
-                <div className="relative h-40 md:h-48 mb-8 pointer-events-none transition-transform duration-500 lg:group-hover:-translate-y-2 lg:group-hover:scale-105 origin-left w-full flex items-center justify-start">
-                  {/* Subtle Grid Backdrop (static) */}
-                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_transparent_0%,_var(--bg-main)_100%),url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNlNWEyNyIvPjwvc3ZnPg==')] transition-opacity duration-700" />
-                  
-                  {/* Floating effect specifically for mobile or fallback */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-accent)] to-[#FF3366] opacity-10 blur-2xl lg:hidden rounded-full scale-150 animate-pulse" />
 
-                  {/* Image itself */}
-                  <img src={s.img} alt="" className="relative z-10 h-full w-auto max-w-full object-contain drop-shadow-2xl mix-blend-darken" />
+                <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest mb-4 opacity-50 block transition-all group-hover:opacity-100">[{s.num}]</div>
+
+                {/* UI Mockup */}
+                <div className="mb-6 pointer-events-none transition-transform duration-500 lg:group-hover:-translate-y-1 lg:group-hover:scale-[1.02] origin-bottom">
+                  {s.mockup}
                 </div>
 
                 <h3 className="font-syne font-bold text-xl md:text-2xl text-[var(--text-main)] mb-3 leading-tight transition-colors group-hover:text-[var(--color-accent)]">{s.title}</h3>
@@ -493,35 +627,42 @@ function ImpactEvidence() {
             color: '#FFFFFF',
             maxWidth: 600,
           }}>
-            Для тех, кто не полагается на удачу.
+            Почему не просто ChatGPT?
           </h2>
           <div className="font-mono text-[10px] tracking-widest uppercase text-[var(--text-dim)]">
-            Аудитория PeakTalk // 2026
+            PeakTalk // 2026
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-white/10 p-[1px]">
           {[
-            { tag: 'СТУДЕНТЫ', title: 'Научный руководитель', detail: 'Защита диплома или курсовой', stat: 47, suffix: '% успешных защит' },
-            { tag: 'ФАУНДЕРЫ', title: 'Холодный Инвестор', detail: 'Питчи, деки и unit-экономика', stat: 3, suffix: '× уверенность на питче' },
-            { tag: 'КАРЬЕРА', title: 'Токсичный HR', detail: 'Собеседования на Senior грейды', stat: 60, suffix: '% офферов' }
+            {
+              tag: '01',
+              title: 'ChatGPT не знает твой контент',
+              detail: 'Универсальная модель задаёт универсальные вопросы. PeakTalk читает твои материалы и атакует именно там, где у тебя слабо — не там, где слабо у всех.',
+            },
+            {
+              tag: '02',
+              title: 'Репетитор недоступен в 23:00',
+              detail: 'Прогнать презентацию накануне важной встречи — теперь реально. Без записи. Без ожидания. В 10 раз дешевле часа с коучем.',
+            },
+            {
+              tag: '03',
+              title: 'Навык нарабатывается только практикой',
+              detail: 'Смотреть видео о плавании — не то же самое, что плыть. PeakTalk даёт повторение с качественным фидбэком — единственный способ реально стать лучше.',
+            },
           ].map((item, i) => (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              key={i} 
-              className="group relative bg-[var(--text-main)] p-8 lg:p-12 transition-all hover:bg-neutral-900 pb-20 lg:pb-24 overflow-hidden"
+              key={i}
+              className="group relative bg-[var(--text-main)] p-8 lg:p-12 transition-all hover:bg-neutral-900 overflow-hidden"
             >
-              <div className="font-mono text-[9px] text-[var(--color-accent)] tracking-widest uppercase mb-16">{item.tag}</div>
-              <h3 className="font-syne font-bold text-2xl text-white mb-2">{item.title}</h3>
-              <p className="font-inter text-sm text-neutral-400">{item.detail}</p>
-
-              {/* Stat Counter */}
-              <div className="absolute bottom-6 left-8 lg:left-12 font-mono text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                +<CountUpStat end={item.stat} delay={300 + i * 150} />{item.suffix}
-              </div>
+              <div className="font-mono text-[9px] text-[var(--color-accent)] tracking-widest uppercase mb-8">{item.tag}</div>
+              <h3 className="font-syne font-bold text-2xl text-white mb-4 leading-tight">{item.title}</h3>
+              <p className="font-inter text-sm text-neutral-400 leading-relaxed">{item.detail}</p>
 
               {/* Hover reveal line */}
               <div className="absolute bottom-0 left-0 h-[2px] bg-[var(--color-accent)] w-0 group-hover:w-full transition-all duration-500 ease-out" />
@@ -557,7 +698,7 @@ function FooterCTA() {
           color: '#FFFFFF',
           marginBottom: 32,
         }}>
-          Готов к допросу?
+          Следующее выступление — лучшее.
         </h2>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
@@ -566,7 +707,7 @@ function FooterCTA() {
             className="btn-primary flex items-center gap-3 group relative overflow-hidden" 
             style={{ padding: '16px 32px', fontSize: 13, borderRadius: '4px', boxShadow: '0 4px 20px rgba(232,96,10, 0.1)' }}
           >
-            <span className="relative z-10 font-bold transition-all duration-300">Начать тренировку</span>
+            <span className="relative z-10 font-bold transition-all duration-300">Попробовать бесплатно</span>
             <ArrowRight size={14} className="relative z-10 group-hover:translate-x-1 transition-transform" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </a>

@@ -95,35 +95,35 @@ export default function HeroVisual({ scrollYProgress }: { scrollYProgress: Motio
 
         {/* Floating Annotation Tags */}
         <div className="absolute inset-0 z-20 pointer-events-none lg:block">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="absolute top-[8%] left-[-5%] hidden md:block" 
+            className="absolute top-[8%] left-[-5%] hidden md:block"
           >
             <div className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-lg shadow-xl shadow-orange-500/10 border border-orange-500/20">
               <span className="text-[var(--color-accent)] font-bold">⚡</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Критическая дыра в логике</span>
+              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Аргумент не подкреплён данными</span>
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
              style={{ opacity: useTransform(scrollYProgress, [0.3, 0.5], [0, 1]), y: useTransform(scrollYProgress, [0.3, 0.5], [20, 0]) }}
             className="absolute bottom-[12%] right-[-5%]"
           >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-lg shadow-xl shadow-red-500/10 border border-red-500/20">
-              <span className="text-red-500 font-bold">✗</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Слабый аргумент</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-lg shadow-xl shadow-green-500/10 border border-green-500/20">
+              <span className="text-green-500 font-bold">✓</span>
+              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Сильная позиция</span>
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             style={{ opacity: useTransform(scrollYProgress, [0.6, 0.8], [0, 1]), y: useTransform(scrollYProgress, [0.6, 0.8], [20, 0]) }}
             className="absolute top-[40%] md:top-[50%] right-[60%] lg:right-[80%]"
           >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-md rounded-lg shadow-xl shadow-green-500/10 border border-green-500/20">
-              <span className="text-green-500 font-bold">✓</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Аргумент принят</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-md rounded-lg shadow-xl shadow-blue-500/10 border border-blue-500/20">
+              <span className="text-blue-500 font-bold">→</span>
+              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Уточни пример</span>
             </div>
           </motion.div>
         </div>
