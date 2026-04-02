@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useMotionTemplate } from 'framer-motion';
 import Image from 'next/image';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
@@ -273,11 +273,11 @@ function Hero() {
           WebkitMaskImage: 'radial-gradient(ellipse at top, black 20%, transparent 70%)'
         }} />
 
-        <div className="container-custom relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div className="container-custom relative z-10 w-full flex flex-col justify-center h-full">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-2 lg:gap-8 items-center h-full max-h-[100svh]">
             
             {/* Text Content */}
-            <div className="max-w-2xl pt-12 lg:pt-0">
+            <div className="w-full max-w-2xl shrink-0 relative z-20 pb-8 lg:pb-0">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -294,12 +294,12 @@ function Hero() {
                 transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                   fontFamily: 'var(--font-syne)',
-                  fontSize: 'clamp(44px, 7vw, 92px)',
+                  fontSize: 'clamp(32px, 7vw, 92px)',
                   fontWeight: 800,
                   lineHeight: 0.95,
                   letterSpacing: '-0.04em',
                   color: 'var(--text-main)',
-                  marginBottom: 32,
+                  marginBottom: 24,
                   textWrap: 'balance',
                 }}
               >
@@ -313,10 +313,10 @@ function Hero() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 style={{
                   fontFamily: 'var(--font-inter)',
-                  fontSize: 'clamp(16px, 1.5vw, 18px)',
-                  lineHeight: 1.6,
+                  fontSize: 'clamp(14px, 1.5vw, 18px)',
+                  lineHeight: 1.5,
                   color: 'var(--text-muted)',
-                  marginBottom: 48,
+                  marginBottom: 32,
                   maxWidth: 480,
                   textWrap: 'balance',
                 }}
@@ -348,7 +348,7 @@ function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5, delay: 0.2 }}
-              className="w-full relative"
+              className="w-full relative h-[35svh] min-h-[250px] lg:h-auto lg:min-h-0 flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-8 lg:mt-0"
             >
               <HeroVisual scrollYProgress={scrollYProgress} />
             </motion.div>
@@ -363,9 +363,9 @@ function Hero() {
 // ─── CORE VALUE (Consolidated Flow) ──────────────────────────────────────────
 function ActionFlow() {
   const steps = [
-    { num: '01', title: 'Грязный черновик', desc: 'Скармливаешь PDF, дек или просто кривой текст. Плевать на форматирование. Система сама найдет смысловые узлы.', direction: -30 },
-    { num: '02', title: 'Жесткий краш-тест', desc: 'Выбираешь роль экзекутора: Инвестор, Скептик из комиссии, HR. Получаешь допрос по самым неочевидным местам.', direction: 0, scale: 0.9 },
-    { num: '03', title: 'Холодная оценка', desc: 'Отчет: 10% блефа, 40% воды, 2 проваленных аргумента. Забираешь правки и идешь выступать без мандража.', direction: 30 },
+    { num: '01', title: 'Грязный черновик', desc: 'Скармливаешь PDF, дек или просто кривой текст. Плевать на форматирование. Система сама найдет смысловые узлы.', direction: -30, img: '/dirty_draft.png' },
+    { num: '02', title: 'Жесткий краш-тест', desc: 'Выбираешь роль экзекутора: Инвестор, Скептик из комиссии, HR. Получаешь допрос по самым неочевидным местам.', direction: 0, scale: 0.9, img: '/mic.png' },
+    { num: '03', title: 'Холодная оценка', desc: 'Отчет: 10% блефа, 40% воды, 2 проваленных аргумента. Забираешь правки и идешь выступать без мандража.', direction: 30, img: '/cold_grade.png' },
   ];
 
   const sectionRef = React.useRef(null);
@@ -376,8 +376,17 @@ function ActionFlow() {
   
   const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
   return (
-    <section ref={sectionRef} id="how" className="relative" style={{ padding: 'clamp(100px, 15vw, 180px) 0', backgroundColor: 'var(--bg-main)' }}>
+    <section ref={sectionRef} id="how" className="relative group/section" style={{ padding: 'clamp(80px, 15vw, 180px) 0', backgroundColor: 'var(--bg-main)' }}>
       <div className="container-custom relative">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8">
           
@@ -395,11 +404,28 @@ function ActionFlow() {
             <p className="mt-4 text-[var(--text-dim)] font-mono text-xs tracking-widest uppercase">Без жалости. Без камеры.</p>
           </div>
 
-          <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          <div 
+            className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative group/grid"
+            onMouseMove={handleMouseMove}
+          >
+            {/* Interactive Spotlight following cursor */}
+            <motion.div
+              className="pointer-events-none absolute -inset-10 z-0 hidden lg:block opacity-0 transition duration-500 group-hover/grid:opacity-100"
+              style={{
+                background: useMotionTemplate`
+                  radial-gradient(
+                    450px circle at ${mouseX}px ${mouseY}px,
+                    rgba(232, 96, 10, 0.12),
+                    transparent 80%
+                  )
+                `,
+              }}
+            />
+
             {/* Scroll Progress Line (Desktop) */}
-            <div className="absolute left-[11px] top-0 bottom-0 w-[1px] bg-[var(--border-main)] hidden md:block" />
+            <div className="absolute left-[11px] top-0 bottom-0 w-[1px] bg-[var(--border-main)] hidden md:block z-20" />
             <motion.div 
-              className="absolute left-[11px] top-0 bottom-0 w-[2px] bg-[var(--color-accent)] hidden md:block z-10" 
+              className="absolute left-[11px] top-0 bottom-0 w-[2px] bg-[var(--color-accent)] hidden md:block z-30" 
               style={{ originY: 0, scaleY }}
             />
 
@@ -416,6 +442,19 @@ function ActionFlow() {
                 <div className="absolute -left-[3px] top-0 w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full md:hidden" />
                 
                 <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest mb-4 opacity-50 block transition-all group-hover:opacity-100 group-hover:text-shadow-[0_0_12px_var(--color-accent)]">[{s.num}]</div>
+                
+                {/* AI Image Showcase with Spotlight */}
+                <div className="relative h-40 md:h-48 mb-8 pointer-events-none transition-transform duration-500 lg:group-hover:-translate-y-2 lg:group-hover:scale-105 origin-left w-full flex items-center justify-start">
+                  {/* Subtle Grid Backdrop (static) */}
+                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_transparent_0%,_var(--bg-main)_100%),url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNlNWEyNyIvPjwvc3ZnPg==')] transition-opacity duration-700" />
+                  
+                  {/* Floating effect specifically for mobile or fallback */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-accent)] to-[#FF3366] opacity-10 blur-2xl lg:hidden rounded-full scale-150 animate-pulse" />
+
+                  {/* Image itself */}
+                  <img src={s.img} alt="" className="relative z-10 h-full max-w-[80%] object-contain drop-shadow-2xl mix-blend-darken" />
+                </div>
+
                 <h3 className="font-syne font-bold text-xl md:text-2xl text-[var(--text-main)] mb-3 leading-tight transition-colors group-hover:text-[var(--color-accent)]">{s.title}</h3>
                 <p className="font-inter text-sm text-[var(--text-muted)] leading-relaxed">{s.desc}</p>
               </motion.div>
@@ -431,8 +470,20 @@ function ActionFlow() {
 // ─── IMPACT EVIDENCE ─────────────────────────────────────────────────────────
 function ImpactEvidence() {
   return (
-    <section id="value" style={{ padding: 'clamp(80px, 10vw, 140px) 0', backgroundColor: 'var(--text-main)' }}>
-      <div className="container-custom">
+    <section id="value" className="relative overflow-hidden" style={{ padding: 'clamp(80px, 10vw, 140px) 0', backgroundColor: 'var(--text-main)' }}>
+      {/* Massive Glass Background - Slow Rotation and Scaling */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center mix-blend-screen opacity-30">
+        <motion.img 
+          src="/glass.png" 
+          alt="" 
+          className="w-[150%] max-w-none h-auto"
+          animate={{ rotate: 360, scale: [1, 1.05, 1] }} 
+          transition={{ rotate: { duration: 120, repeat: Infinity, ease: "linear" }, scale: { duration: 15, repeat: Infinity, ease: "easeInOut" } }} 
+        />
+        <div className="absolute inset-0 bg-black/40" /> {/* Slight dark wash to keep text readable */}
+      </div>
+
+      <div className="container-custom relative z-10">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <h2 style={{
             fontFamily: 'var(--font-syne)',
@@ -486,22 +537,16 @@ function ImpactEvidence() {
 // ─── CTA FOOTER ──────────────────────────────────────────────────────────────
 function FooterCTA() {
   return (
-    <section style={{ backgroundColor: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
-      {/* Noise Texture */}
-      <div className="absolute inset-0 z-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+    <section className="relative overflow-hidden bg-black">
+      {/* Background Image with Dark Overlay */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img src="/footercta_bg.png" alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-black/60 md:bg-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
+      </div>
       
-      {/* Pulse Orb */}
-      <style>{`
-        @keyframes pulse-orb {
-          0%, 100% { transform: scale(1) translate(-50%, -50%); opacity: 0.08; }
-          50% { transform: scale(1.15) translate(-50%, -50%); opacity: 0.14; }
-        }
-        .animate-pulse-orb {
-          animation: pulse-orb 6s ease-in-out infinite;
-          transform-origin: top left;
-        }
-      `}</style>
-      <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-[var(--color-accent)] rounded-full blur-[160px] animate-pulse-orb z-0 pointer-events-none" />
+      {/* Static Noise Texture */}
+      <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
 
       <div className="py-32 lg:py-48 text-center container-custom relative z-10 transition-colors">
         <h2 style={{
@@ -510,7 +555,7 @@ function FooterCTA() {
           fontWeight: 800,
           lineHeight: 0.95,
           letterSpacing: '-0.04em',
-          color: 'var(--text-main)',
+          color: '#FFFFFF',
           marginBottom: 32,
         }}>
           Готов к допросу?
@@ -527,7 +572,7 @@ function FooterCTA() {
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </a>
         </div>
-        <p className="mt-8 font-mono text-[10px] tracking-widest uppercase text-[var(--text-dim)]">3 сессии бесплатно // Карта не нужна</p>
+        <p className="mt-8 font-mono text-[10px] tracking-widest uppercase text-white/50">3 сессии бесплатно // Карта не нужна</p>
       </div>
 
       <Footer />
@@ -537,9 +582,9 @@ function FooterCTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-[var(--border-main)] py-12 relative z-10 bg-white">
-      <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-8">
-        <Logo size={20} />
+    <footer className="border-t border-white/10 py-12 relative z-10 bg-black">
+      <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-8 text-white/80">
+        <div className="brightness-0 invert"><Logo size={20} /></div>
         
         <div className="flex flex-wrap justify-center gap-8 font-mono text-[10px] tracking-widest uppercase text-[var(--text-dim)]">
           <a href="/contacts" className="hover:text-[var(--text-main)] transition-colors">Контакты</a>
