@@ -263,8 +263,8 @@ function Hero() {
   });
 
   return (
-    <section ref={containerRef} className="h-[250vh] relative bg-[#FFFFFF]">
-      <div className="sticky top-0 h-screen w-full flex items-center overflow-hidden pt-12 lg:pt-24">
+    <section ref={containerRef} className="h-auto lg:h-[250vh] relative bg-[var(--bg-main)]" style={{ position: 'relative' }}>
+      <div className="lg:sticky lg:top-0 min-h-screen w-full flex items-center overflow-hidden pt-16 lg:pt-24 pb-12 lg:pb-0">
         {/* Editorial grid background */}
         <div className="absolute inset-0 z-0 opacity-[0.25] mix-blend-multiply" style={{
           backgroundImage: 'linear-gradient(var(--border-main) 1px, transparent 1px), linear-gradient(90deg, var(--border-main) 1px, transparent 1px)',
@@ -274,15 +274,15 @@ function Hero() {
         }} />
 
         <div className="container-custom relative z-10 w-full flex flex-col justify-center h-full">
-          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-2 lg:gap-8 items-center h-full max-h-[100svh]">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 items-center h-full">
             
-            {/* Text Content */}
-            <div className="w-full max-w-2xl shrink-0 relative z-20 pb-8 lg:pb-0">
+            {/* Text Content - Center on mobile, left on desktop */}
+            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-center text-center lg:items-start lg:text-left">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="inline-flex items-center border border-[var(--border-light)] rounded-none px-4 py-2 font-mono text-[10px] text-[var(--text-muted)] tracking-widest uppercase mb-8 bg-[var(--color-accent-bg)] backdrop-blur-md"
+                className="inline-flex items-center border border-[var(--border-light)] rounded-none px-4 py-2 font-mono text-[10px] text-[var(--text-muted)] tracking-widest uppercase mb-6 lg:mb-8 bg-[var(--color-accent-bg)] backdrop-blur-md"
               >
                 <span className="w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full mr-3 animate-pulse" />
                 Приватно. Без записи камер.
@@ -294,12 +294,12 @@ function Hero() {
                 transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                   fontFamily: 'var(--font-syne)',
-                  fontSize: 'clamp(32px, 7vw, 92px)',
+                  fontSize: 'clamp(28px, 7vw, 92px)',
                   fontWeight: 800,
                   lineHeight: 0.95,
                   letterSpacing: '-0.04em',
                   color: 'var(--text-main)',
-                  marginBottom: 24,
+                  marginBottom: 20,
                   textWrap: 'balance',
                 }}
               >
@@ -313,10 +313,10 @@ function Hero() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 style={{
                   fontFamily: 'var(--font-inter)',
-                  fontSize: 'clamp(14px, 1.5vw, 18px)',
+                  fontSize: 'clamp(13px, 1.5vw, 18px)',
                   lineHeight: 1.5,
                   color: 'var(--text-muted)',
-                  marginBottom: 32,
+                  marginBottom: 24,
                   maxWidth: 480,
                   textWrap: 'balance',
                 }}
@@ -328,31 +328,30 @@ function Hero() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex gap-4 flex-wrap"
+                className="flex gap-3 flex-wrap justify-center lg:justify-start"
               >
-                <a href="/register" className="btn-primary" style={{ padding: '16px 32px', fontSize: 13, borderRadius: '4px' }}>
+                <a href="/register" className="btn-primary" style={{ padding: '14px 28px', fontSize: 13, borderRadius: '4px' }}>
                   Войти в симуляцию
                 </a>
                 <button
                   className="btn-secondary transition-all hover:bg-[var(--bg-surface-alt)]"
                   onClick={() => smoothScroll('#how')}
-                  style={{ padding: '16px 32px', fontSize: 13, borderRadius: '4px', border: '1px solid var(--border-main)' }}
+                  style={{ padding: '14px 28px', fontSize: 13, borderRadius: '4px', border: '1px solid var(--border-main)' }}
                 >
                   Читать манифест
                 </button>
               </motion.div>
             </div>
 
-            {/* AI Visual Content */}
+            {/* AI Visual Content - Centered on mobile */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5, delay: 0.2 }}
-              className="w-full relative h-[35svh] min-h-[250px] lg:h-auto lg:min-h-0 flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-8 lg:mt-0"
+              className="w-full relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-8 lg:mt-0"
             >
               <HeroVisual scrollYProgress={scrollYProgress} />
             </motion.div>
-
           </div>
         </div>
       </div>
@@ -386,7 +385,7 @@ function ActionFlow() {
   }
 
   return (
-    <section ref={sectionRef} id="how" className="relative group/section" style={{ padding: 'clamp(80px, 15vw, 180px) 0', backgroundColor: 'var(--bg-main)' }}>
+    <section ref={sectionRef} id="how" className="relative group/section" style={{ position: 'relative', padding: 'clamp(80px, 15vw, 180px) 0', backgroundColor: 'var(--bg-main)' }}>
       <div className="container-custom relative">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8">
           
@@ -452,7 +451,7 @@ function ActionFlow() {
                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-accent)] to-[#FF3366] opacity-10 blur-2xl lg:hidden rounded-full scale-150 animate-pulse" />
 
                   {/* Image itself */}
-                  <img src={s.img} alt="" className="relative z-10 h-full max-w-[80%] object-contain drop-shadow-2xl mix-blend-darken" />
+                  <img src={s.img} alt="" className="relative z-10 h-full w-auto max-w-full object-contain drop-shadow-2xl mix-blend-darken" />
                 </div>
 
                 <h3 className="font-syne font-bold text-xl md:text-2xl text-[var(--text-main)] mb-3 leading-tight transition-colors group-hover:text-[var(--color-accent)]">{s.title}</h3>
