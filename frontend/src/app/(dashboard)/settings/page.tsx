@@ -199,7 +199,7 @@ export default function SettingsPage() {
                     <button
                         onClick={handleSignOut}
                         disabled={isLoggingOut}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-all duration-150 text-[13px] font-medium font-inter text-left whitespace-nowrap border border-transparent text-[var(--color-destructive)] hover:bg-red-500/5 hover:border-red-500/20 disabled:opacity-50 mt-auto"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-colors duration-200 text-[13px] font-medium font-inter text-left whitespace-nowrap border border-transparent text-neutral-400 hover:text-neutral-900 hover:bg-[var(--bg-surface-alt)] disabled:opacity-50 mt-auto"
                     >
                         {isLoggingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
                         Выйти

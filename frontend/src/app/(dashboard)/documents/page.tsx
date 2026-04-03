@@ -82,6 +82,8 @@ export default function DocumentsPage() {
         });
     }, [data, search, activeFilter]);
 
+    const hasDocuments = (data?.items?.length ?? 0) > 0;
+
     return (
         <div className="pt-6 sm:pt-8 pb-20 w-full max-w-4xl mx-auto px-4 sm:px-6">
 
@@ -162,7 +164,7 @@ export default function DocumentsPage() {
                         <RefreshCcw size={14} /> Попробовать снова
                     </button>
                 </div>
-            ) : (data?.items ?? []).length === 0 ? (
+            ) : !hasDocuments ? (
                 <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-[var(--border-main)] rounded-2xl">
                     <div className="w-16 h-16 rounded-2xl bg-accent-50 border border-accent-100 flex items-center justify-center mb-5">
                         <UploadCloud size={28} className="text-accent-400" />
