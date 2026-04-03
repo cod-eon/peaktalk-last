@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
@@ -50,6 +51,8 @@ function SectionHeading({ title }: { title: string }) {
 }
 
 export default function PrivacyPage() {
+  const router = useRouter();
+
   return (
     <main
       style={{
@@ -72,8 +75,8 @@ export default function PrivacyPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
         >
-          <Link
-            href="/"
+          <button
+            onClick={() => router.back()}
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 11,
@@ -87,6 +90,10 @@ export default function PrivacyPage() {
               gap: 6,
               marginBottom: 48,
               transition: "color 0.15s ease",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
             }}
             onMouseEnter={(e) =>
               (e.currentTarget.style.color = "var(--text-main)")
@@ -96,7 +103,7 @@ export default function PrivacyPage() {
             }
           >
             &larr; Назад
-          </Link>
+          </button>
         </motion.div>
 
         {/* Header */}

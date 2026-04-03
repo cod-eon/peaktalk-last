@@ -24,6 +24,8 @@
     --bg-surface-alt: #F3F4F6;
     --bg-surface-hover: #F9FAFB;
     --bg-card: #FFFFFF;
+    --color-ink: #000000;
+    --color-surface-dark: #0A0A0A;
     --border-main: #E5E7EB;
     --border-light: #D1D5DB;
 
@@ -76,6 +78,10 @@
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
     --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
 
+    /* ─── Dark surface tokens ─── */
+    --color-ink: #0D0D0D;
+    --color-surface-dark: #141414;
+
     /* ─── Z-index ─── */
     --z-topbar: 30;
     --z-sidebar: 35;
@@ -92,6 +98,7 @@
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+    position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: clip;
@@ -108,12 +115,14 @@
     font-family: var(--font-inter), sans-serif;
     letter-spacing: -0.025em;
     font-weight: 700;
+    line-height: 1.05;
   }
 
   /* Decorative/Brand Heading Styling */
   .font-syne {
     font-family: var(--font-syne), sans-serif;
     letter-spacing: -0.04em;
+    line-height: 1.05;
   }
 
   .font-mono {
@@ -191,7 +200,7 @@
   /* Label / kicker — small uppercase utility */
   .label-kicker {
     font-family: var(--font-inter), sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 500;
@@ -209,20 +218,26 @@
     background-color: var(--accent-primary);
     color: #FFFFFF;
     font-family: var(--font-inter), sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    padding: 10px 18px;
+    padding: 12px 24px;
     border-radius: var(--radius-sm);
-    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
     text-decoration: none;
     cursor: pointer;
-    border: 1px solid transparent;
+    border: 1px solid var(--accent-primary);
   }
 
   .btn-primary:hover {
     background-color: var(--accent-primary-hover);
-    box-shadow: 0 4px 14px var(--accent-primary-glow);
+    border-color: var(--accent-primary-hover);
+  }
+
+  .btn-primary:focus-visible {
+    outline: none;
+    border-color: var(--color-surface-dark);
+    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent-primary);
   }
 
   .btn-primary:active {
@@ -236,10 +251,10 @@
     background-color: var(--bg-surface);
     color: var(--text-main);
     font-family: var(--font-inter), sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     letter-spacing: -0.01em;
-    padding: 10px 18px;
+    padding: 12px 24px;
     border-radius: var(--radius-sm);
     transition: background-color 0.15s ease, border-color 0.15s ease;
     text-decoration: none;
@@ -252,6 +267,12 @@
     border-color: var(--border-light);
   }
 
+  .btn-secondary:focus-visible {
+    outline: none;
+    border-color: var(--border-main);
+    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--border-light);
+  }
+
   .btn-danger {
     display: inline-flex;
     align-items: center;
@@ -259,10 +280,10 @@
     background-color: transparent;
     color: var(--color-error);
     font-family: var(--font-inter), sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     letter-spacing: -0.01em;
-    padding: 10px 18px;
+    padding: 12px 24px;
     border-radius: var(--radius-sm);
     transition: background-color 0.15s ease, border-color 0.15s ease;
     text-decoration: none;
@@ -273,6 +294,12 @@
   .btn-danger:hover {
     background-color: var(--color-error-bg);
     border-color: var(--color-error);
+  }
+  
+  .btn-danger:focus-visible {
+    outline: none;
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--color-error);
   }
 
   /* ─── Surface layers ─── */
@@ -336,7 +363,7 @@
   /* ─── Legacy alias ─── */
   .editorial-kicker {
     font-family: var(--font-inter), sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 500;
@@ -385,14 +412,25 @@
   background: rgba(0, 0, 0, 0.18);
 }
 
-/* ─── Responsive buttons ─── */
-@media (max-width: 640px) {
-  .btn-primary,
-  .btn-secondary,
-  .btn-danger {
-    font-size: 13px;
-    padding: 10px 14px;
-  }
+/* ─── Keyboard Accessibility Focus States ─── */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-accent) !important;
+  outline-offset: 2px !important;
 }
 
 /* ─── Reduced motion ─── */

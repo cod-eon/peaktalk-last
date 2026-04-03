@@ -1,132 +1,114 @@
-"use client";
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, MotionValue, useTransform, useMotionValueEvent } from 'framer-motion';
+export default function HeroVisual() {
+  const [step, setStep] = useState(0); // 0: typing, 1: generating AI, 2: completed
 
-export default function HeroVisual({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [images, setImages] = useState<HTMLImageElement[]>([]);
-  const FRAME_COUNT = 240;
-  const currentFrameRef = useRef(0);
-  
-  // Preload images
   useEffect(() => {
-    const loadedImages: HTMLImageElement[] = [];
-    let loadedCount = 0;
+    // Simulate progression
+    const t1 = setTimeout(() => setStep(1), 1500);
+    const t2 = setTimeout(() => setStep(2), 3500);
     
-    for (let i = 1; i <= FRAME_COUNT; i++) {
-        const img = new Image();
-        const frameNum = i.toString().padStart(4, '0');
-        img.src = `/hero-frames/frame_${frameNum}.jpg`;
-        img.onload = () => {
-            loadedCount++;
-            if (i === 1) { // Draw first frame immediately
-                requestAnimationFrame(() => renderFrame(img));
-            }
-        };
-        loadedImages.push(img);
-    }
-    setImages(loadedImages);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
 
-  const renderFrame = (img: HTMLImageElement) => {
-    if (!canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const imgRatio = img.width / img.height;
-    const canvasRatio = canvas.width / canvas.height;
-    
-    let drawWidth = canvas.width;
-    let drawHeight = canvas.height;
-    let offsetX = 0;
-    let offsetY = 0;
-    
-    if (imgRatio > canvasRatio) {
-        drawWidth = canvas.height * imgRatio;
-        offsetX = -(drawWidth - canvas.width) / 2;
-    } else {
-        drawHeight = canvas.width / imgRatio;
-        offsetY = -(drawHeight - canvas.height) / 2;
-    }
-    
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-  };
-
-  const frameIndex = useTransform(scrollYProgress, [0, 1], [1, FRAME_COUNT]);
-
-  useMotionValueEvent(frameIndex, "change", (latest) => {
-    const index = Math.floor(latest) - 1;
-    if (index >= 0 && index < images.length && images[index]) {
-        if (currentFrameRef.current !== index) {
-            currentFrameRef.current = index;
-            requestAnimationFrame(() => renderFrame(images[index]));
-        }
-    }
-  });
-
   return (
-    <div className="relative w-full h-[400px] lg:h-[600px] flex items-center justify-center -mr-8 lg:-mr-24 lg:-mt-6 cursor-default">
-      
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[var(--color-accent)] rounded-full blur-[100px] opacity-[0.15] pointer-events-none" />
-        
-        <motion.div 
-          className="absolute inset-4 lg:inset-8 z-10 rounded-[28px] overflow-hidden shadow-2xl bg-neutral-100/50 border border-white/20"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <canvas ref={canvasRef} className="w-full h-full object-cover rounded-[28px]" />
-          <div className="absolute inset-0 bg-orange-500/5 mix-blend-overlay pointer-events-none rounded-[28px]" />
-        </motion.div>
-
-        {/* Floating Annotation Tags */}
-        <div className="absolute inset-0 z-20 pointer-events-none lg:block">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="absolute top-[8%] left-[-5%] hidden md:block"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-lg shadow-xl shadow-orange-500/10 border border-orange-500/20">
-              <span className="text-[var(--color-accent)] font-bold">⚡</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Аргумент не подкреплён данными</span>
+    <div className="relative w-[343px] sm:w-auto max-w-[calc(100vw-32px)] sm:max-w-xl mx-auto overflow-visible my-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full"
+      >
+        <div className="rounded-lg overflow-hidden bg-white border border-black/5 shadow-[0px_1px_3px_rgba(0,0,0,0.05),_0px_10px_20px_rgba(0,0,0,0.04),_0px_20px_40px_rgba(0,0,0,0.04),_0px_30px_60px_rgba(0,0,0,0.06)] flex flex-col relative w-full">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-black/5 bg-[#F9FAFB]">
+            <div className="font-mono text-[10px] sm:text-xs text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="break-words whitespace-normal text-center sm:text-left">[ СЕССИЯ // ПИТЧ СЕРИИ А ]</span>
             </div>
-          </motion.div>
-
-          <motion.div
-             style={{ opacity: useTransform(scrollYProgress, [0.3, 0.5], [0, 1]), y: useTransform(scrollYProgress, [0.3, 0.5], [20, 0]) }}
-            className="absolute bottom-[12%] right-[-5%]"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-lg shadow-xl shadow-green-500/10 border border-green-500/20">
-              <span className="text-green-500 font-bold">✓</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Сильная позиция</span>
+            <div className="font-mono text-[10px] sm:text-xs text-[#10B981] uppercase tracking-widest flex items-center gap-1.5 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+              <span className="break-words whitespace-normal">ЗАПИСЬ</span>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            style={{ opacity: useTransform(scrollYProgress, [0.6, 0.8], [0, 1]), y: useTransform(scrollYProgress, [0.6, 0.8], [20, 0]) }}
-            className="absolute top-[40%] md:top-[50%] right-[60%] lg:right-[80%]"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-md rounded-lg shadow-xl shadow-blue-500/10 border border-blue-500/20">
-              <span className="text-blue-500 font-bold">→</span>
-              <span className="font-syne font-bold text-sm text-[var(--text-main)]">Уточни пример</span>
+          <div className="p-4 sm:p-8 pb-32 sm:pb-36 relative bg-white">
+            
+            {/* Block 1: Investor */}
+            <div className="mb-8">
+              <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-5">
+                <div className="font-mono text-[10px] text-[var(--color-accent)] uppercase tracking-widest mb-3 opacity-90 break-words whitespace-normal">
+                  [ ИНВЕСТОР ]
+                </div>
+                <p className="font-inter text-base leading-relaxed text-black break-words whitespace-normal font-medium">
+                  "Вы закладываете 300% роста в первый год. Но стоимость привлечения клиента (CAC) в этой нише обычно растет нелинейно. За счет чего вы планируете ее удерживать?"
+                </p>
+              </div>
             </div>
-          </motion.div>
+
+            {/* Block 2: User Response */}
+            <div className="pl-2 relative">
+              <div className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest mb-3 break-words whitespace-normal">
+                [ ВАШ ОТВЕТ ]
+              </div>
+              <p className="font-inter text-base leading-relaxed text-[#171717] break-words whitespace-normal relative">
+                Мы планируем расширять партнерский канал и{' '}
+                <span className="relative inline-block cursor-text">
+                  <span className={`relative z-10 font-medium ${step >= 1 ? 'text-black' : 'text-neutral-500'}`}>
+                    постепенно снижать
+                  </span>
+                  {/* Highlight */}
+                  <motion.span 
+                    className="absolute bottom-0 left-0 h-[2px] bg-[var(--color-accent)]"
+                    initial={{ width: 0 }}
+                    animate={{ width: step >= 1 ? '100%' : '0%' }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                  />
+                </span>
+                {' '}затраты на...
+                
+                {/* Text Cursor */}
+                <motion.span
+                   animate={{ opacity: [1, 0, 1] }}
+                   transition={{ duration: 0.8, repeat: Infinity }}
+                   className="inline-block w-[2px] h-[1em] bg-[var(--color-accent)] translate-y-[2px] ml-1"
+                />
+              </p>
+            </div>
+
+            {/* Floating AI Analysis Panel */}
+            <AnimatePresence>
+              {step >= 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute bottom-4 sm:bottom-8 right-4 left-4 sm:left-auto sm:w-[360px] rounded-lg border border-neutral-100 bg-white shadow-[0px_20px_40px_rgba(0,0,0,0.12)] p-5"
+                  style={{ zIndex: 30 }}
+                >
+                  <div className="flex items-center justify-between mb-3 border-b border-[rgba(0,0,0,0.06)] pb-2">
+                    <span className="font-mono text-[10px] text-[var(--color-accent)] uppercase tracking-widest font-bold break-words whitespace-normal">
+                      [ PEAKTALK AI ]
+                    </span>
+                  </div>
+                  
+                  <div className="font-inter text-[13px] leading-relaxed text-black font-medium flex gap-2 items-start mt-3">
+                    <span className="text-[var(--color-accent)] shrink-0 font-mono mt-0.5">✦</span>
+                    <span className="break-words">
+                      Уход от конкретики. Инвестор ждет точных метрик по удержанию CAC, а не абстрактных планов.
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
         </div>
+      </motion.div>
     </div>
   );
 }
