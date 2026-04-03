@@ -27,9 +27,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   LineChart,
   Line,
 } from 'recharts';
@@ -70,9 +67,9 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl px-3 py-2 shadow-lg text-[12px]">
-      <p className="text-[var(--text-dim)] mb-0.5">{label}</p>
-      <p className="font-semibold text-[var(--text-main)]">
+    <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 shadow-lg text-sm font-inter text-white">
+      <p className="text-neutral-400 mb-0.5 text-xs">{label}</p>
+      <p className="font-semibold">
         {prefix}{typeof payload[0].value === 'number' ? payload[0].value.toLocaleString('ru-RU') : payload[0].value}{suffix}
       </p>
     </div>
@@ -92,37 +89,33 @@ interface StatCardProps {
   trend?: 'up' | 'down' | null;
 }
 
-function StatCard({ label, value, sub, icon, accent, iconBg, delay = 0, trend }: StatCardProps) {
+function StatCard({ label, value, sub, icon, delay = 0, trend }: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-      className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 shadow-[var(--shadow-card)] relative overflow-hidden group hover:border-[var(--accent-primary)]/30 transition-colors"
+      className="bg-white border border-black/5 rounded-xl p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col hover:border-black/10 transition-colors"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[var(--bg-surface-alt)]/40 pointer-events-none" />
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-dim)] mb-3">
-            {label}
-          </p>
-          <div
-            className={`text-[32px] font-black leading-none ${accent}`}
-            style={{ fontFamily: 'var(--font-syne)', letterSpacing: '-0.03em' }}
-          >
-            {typeof value === 'number' ? value.toLocaleString('ru-RU') : value}
-          </div>
-          {sub && (
-            <div className="mt-2 flex items-center gap-1">
-              {trend === 'up' && <TrendingUp size={11} className="text-emerald-500 shrink-0" />}
-              {trend === 'down' && <TrendingDown size={11} className="text-red-400 shrink-0" />}
-              <p className="text-[11px] text-[var(--text-dim)]">{sub}</p>
-            </div>
-          )}
-        </div>
-        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${iconBg}`}>
+      <div className="flex items-start justify-between mb-4">
+        <p className="font-inter text-base font-semibold text-neutral-800">
+          {label}
+        </p>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700">
           {icon}
         </div>
+      </div>
+      <div>
+        <div className="text-3xl md:text-4xl font-semibold text-black font-inter tracking-tight">
+          {typeof value === 'number' ? value.toLocaleString('ru-RU') : value}
+        </div>
+        {sub && (
+          <div className="mt-2 flex items-center gap-1.5">
+            {trend === 'up' && <TrendingUp size={14} className="text-neutral-500 shrink-0" />}
+            {trend === 'down' && <TrendingDown size={14} className="text-neutral-500 shrink-0" />}
+            <p className="font-inter text-sm text-neutral-600">{sub}</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -148,11 +141,11 @@ function ChartCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay, ease: 'easeOut' }}
-      className={`bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 shadow-[var(--shadow-card)] ${className}`}
+      className={`bg-white border border-black/5 rounded-xl p-6 md:p-8 shadow-sm ${className}`}
     >
-      <div className="mb-4">
-        <p className="text-[13px] font-semibold text-[var(--text-main)]">{title}</p>
-        {sub && <p className="text-[11px] text-[var(--text-dim)] mt-0.5">{sub}</p>}
+      <div className="mb-6">
+        <p className="font-inter text-base font-semibold text-neutral-800">{title}</p>
+        {sub && <p className="font-inter text-sm text-neutral-600 mt-1">{sub}</p>}
       </div>
       {children}
     </motion.div>
@@ -161,65 +154,41 @@ function ChartCard({
 
 // ─── Plan distribution donut ──────────────────────────────────────────────────
 
-const PLAN_COLORS = ['#E8600A', '#7c3aed', '#64748b'];
-
 function PlanDonut({ pro, starter }: { pro: number; starter: number }) {
   const total = pro + starter || 1;
-  const data = [
-    { name: 'PRO / Team', value: pro, color: PLAN_COLORS[0] },
-    { name: 'Starter', value: starter, color: PLAN_COLORS[1] },
-  ].filter((d) => d.value > 0);
-
-  if (data.length === 0) {
-    data.push({ name: 'Нет данных', value: 1, color: PLAN_COLORS[2] });
-  }
+  const proPct = Math.round((pro / total) * 100);
+  const startPct = 100 - proPct;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="h-[180px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={52}
-              outerRadius={80}
-              paddingAngle={3}
-              dataKey="value"
-              strokeWidth={0}
-            >
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(v) => { const n = typeof v === 'number' ? v : 0; return [`${n} (${Math.round((n / total) * 100)}%)`, '']; }}
-              contentStyle={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-main)',
-                borderRadius: 12,
-                fontSize: 12,
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="flex flex-col gap-5 mt-2">
       <div className="flex flex-col gap-2">
-        {[
-          { label: 'PRO / Team', value: pro, color: PLAN_COLORS[0] },
-          { label: 'Starter', value: starter, color: PLAN_COLORS[1] },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center justify-between text-[12px]">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: item.color }} />
-              <span className="text-[var(--text-dim)]">{item.label}</span>
-            </div>
-            <span className="font-semibold text-[var(--text-main)]">
-              {item.value} <span className="text-[var(--text-dim)] font-normal">({Math.round((item.value / total) * 100)}%)</span>
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-4 rounded-sm bg-neutral-800 shrink-0" />
+            <span className="font-inter text-sm font-medium text-neutral-700">PRO / Team</span>
           </div>
-        ))}
+          <span className="font-inter text-sm font-semibold text-neutral-900">
+            {pro} <span className="text-neutral-400 font-normal ml-1.5">{proPct}%</span>
+          </span>
+        </div>
+        <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+          <div className="h-full bg-neutral-800 rounded-full" style={{ width: `${proPct}%` }} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 mt-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-4 rounded-sm bg-neutral-300 shrink-0" />
+            <span className="font-inter text-sm font-medium text-neutral-700">Starter</span>
+          </div>
+          <span className="font-inter text-sm font-semibold text-neutral-900">
+            {starter} <span className="text-neutral-400 font-normal ml-1.5">{startPct}%</span>
+          </span>
+        </div>
+        <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+          <div className="h-full bg-neutral-300 rounded-full" style={{ width: `${startPct}%` }} />
+        </div>
       </div>
     </div>
   );
@@ -271,12 +240,11 @@ export default function AdminStatsPage() {
       {/* ── Header ── */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[11px] text-[var(--text-dim)] font-semibold uppercase tracking-widest mb-1.5">
+          <p className="font-inter text-sm text-neutral-500 font-semibold uppercase tracking-widest mb-1.5">
             Панель администратора
           </p>
           <h1
-            className="text-[28px] sm:text-[32px] font-black text-[var(--text-main)] leading-tight"
-            style={{ letterSpacing: '-0.03em', fontFamily: 'var(--font-syne)' }}
+            className="font-inter text-[28px] sm:text-[32px] font-bold text-neutral-900 leading-tight tracking-tight"
           >
             Статистика
           </h1>
@@ -311,14 +279,13 @@ export default function AdminStatsPage() {
       {stats && (
         <>
           {/* ── Hero metric cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label="Пользователи"
               value={stats.users_total}
               sub={`${proRatio}% с платным планом`}
-              icon={<Users size={18} className="text-blue-600" />}
-              accent="text-blue-600"
-              iconBg="bg-blue-50"
+              icon={<Users size={18} />}
+              accent="" iconBg=""
               delay={0}
               trend={null}
             />
@@ -326,9 +293,8 @@ export default function AdminStatsPage() {
               label="Выручка / месяц"
               value={`${totalRevenueMonth.toLocaleString('ru-RU')} ₽`}
               sub={`Всего: ${Number(stats.payments_total_rub).toLocaleString('ru-RU')} ₽`}
-              icon={<RussianRuble size={18} className="text-accent-600" />}
-              accent="text-accent-600"
-              iconBg="bg-accent-50"
+              icon={<RussianRuble size={18} />}
+              accent="" iconBg=""
               delay={0.07}
               trend="up"
             />
@@ -336,9 +302,8 @@ export default function AdminStatsPage() {
               label="Активных подписок"
               value={stats.active_subs_count}
               sub={`PRO/Team: ${stats.users_pro}`}
-              icon={<Zap size={18} className="text-violet-600" />}
-              accent="text-violet-600"
-              iconBg="bg-violet-50"
+              icon={<Zap size={18} />}
+              accent="" iconBg=""
               delay={0.14}
               trend={null}
             />
@@ -346,41 +311,39 @@ export default function AdminStatsPage() {
               label="Симуляции сегодня"
               value={stats.simulations_today}
               sub={`Всего: ${stats.simulations_total.toLocaleString('ru-RU')}`}
-              icon={<Activity size={18} className="text-emerald-600" />}
-              accent="text-emerald-600"
-              iconBg="bg-emerald-50"
+              icon={<Activity size={18} />}
+              accent="" iconBg=""
               delay={0.21}
               trend={null}
             />
           </div>
 
           {/* ── Secondary metrics row ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Starter пользователи', value: stats.users_starter, icon: <CreditCard size={15} /> },
-              { label: 'PRO / Team пользователи', value: stats.users_pro, icon: <Zap size={15} /> },
-              { label: 'Всего платежей', value: stats.payments_count_total, icon: <BarChart2 size={15} /> },
-              { label: 'Симуляций всего', value: stats.simulations_total, icon: <CalendarDays size={15} /> },
+              { label: 'Starter пользователи', value: stats.users_starter, icon: <CreditCard size={16} /> },
+              { label: 'PRO / Team пользователи', value: stats.users_pro, icon: <Zap size={16} /> },
+              { label: 'Всего платежей', value: stats.payments_count_total, icon: <BarChart2 size={16} /> },
+              { label: 'Симуляций всего', value: stats.simulations_total, icon: <CalendarDays size={16} /> },
             ].map((item, i) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.3 + i * 0.06, ease: 'easeOut' }}
-                className="bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+                className="bg-neutral-50/50 border border-black/5 rounded-xl px-4 py-4 flex items-center justify-between gap-3 shadow-sm hover:border-black/10 transition-colors"
               >
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-dim)] mb-1">
+                  <p className="font-inter text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                     {item.label}
                   </p>
                   <p
-                    className="text-[20px] font-bold text-[var(--text-main)]"
-                    style={{ fontFamily: 'var(--font-syne)' }}
+                    className="font-inter text-xl font-bold text-neutral-900 tracking-tight"
                   >
                     {item.value.toLocaleString('ru-RU')}
                   </p>
                 </div>
-                <div className="text-[var(--text-dim)] opacity-50">{item.icon}</div>
+                <div className="text-neutral-400">{item.icon}</div>
               </motion.div>
             ))}
           </div>
@@ -395,43 +358,36 @@ export default function AdminStatsPage() {
             >
               {chartsLoading ? (
                 <div className="h-[220px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-[var(--text-dim)]" />
+                  <Loader2 size={20} className="animate-spin text-neutral-400" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#E8600A" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#E8600A" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
+                  <LineChart data={revenueData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       interval={5}
                     />
                     <YAxis
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
                     />
                     <Tooltip content={<ChartTooltip suffix=" ₽" />} />
-                    <Area
-                      type="monotone"
+                    <Line
+                      type="linear"
                       dataKey="value"
-                      stroke="#E8600A"
-                      strokeWidth={2}
-                      fill="url(#revGrad)"
+                      stroke="#171717"
+                      strokeWidth={1.5}
                       dot={false}
-                      activeDot={{ r: 4, fill: '#E8600A', strokeWidth: 0 }}
+                      activeDot={{ r: 4, fill: '#171717', strokeWidth: 0 }}
                     />
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               )}
             </ChartCard>
@@ -446,28 +402,28 @@ export default function AdminStatsPage() {
             <ChartCard title="Симуляции за 14 дней" sub="Количество запущенных сессий" delay={0.45}>
               {chartsLoading ? (
                 <div className="h-[180px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-[var(--text-dim)]" />
+                  <Loader2 size={20} className="animate-spin text-neutral-400" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={simData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={14}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
+                  <BarChart data={simData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={8}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       interval={2}
                     />
                     <YAxis
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       allowDecimals={false}
                     />
                     <Tooltip content={<ChartTooltip suffix=" сессий" />} />
-                    <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="#171717" radius={[0, 0, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -476,40 +432,34 @@ export default function AdminStatsPage() {
             <ChartCard title="Новые пользователи за 14 дней" sub="Регистрации по дням" delay={0.5}>
               {chartsLoading ? (
                 <div className="h-[180px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-[var(--text-dim)]" />
+                  <Loader2 size={20} className="animate-spin text-neutral-400" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={usersData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="usrGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       interval={2}
                     />
                     <YAxis
-                      tick={{ fontSize: 10, fill: 'var(--text-dim)' }}
+                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
                       allowDecimals={false}
                     />
                     <Tooltip content={<ChartTooltip suffix=" чел." />} />
                     <Line
-                      type="monotone"
+                      type="linear"
                       dataKey="value"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
+                      stroke="#737373"
+                      strokeWidth={1.5}
                       dot={false}
-                      activeDot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                      activeDot={{ r: 4, fill: '#737373', strokeWidth: 0 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>

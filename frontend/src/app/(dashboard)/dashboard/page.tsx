@@ -205,19 +205,17 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative bg-gradient-to-r from-violet-50/80 to-accent-50/50 backdrop-blur-sm rounded-[var(--radius-lg)] border border-violet-100/60 p-5 sm:p-6 mb-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center overflow-hidden shadow-[0_2px_12px_rgba(139,92,246,0.04)]"
+          className="bg-white rounded-xl border border-black/5 p-6 sm:p-8 mb-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center shadow-sm"
         >
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent-200/30 rounded-full blur-[40px] pointer-events-none" />
-          
-          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0 border border-violet-100 relative z-10">
-            <Bot size={24} className="text-violet-600" />
+          <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center shrink-0 border border-neutral-200">
+            <Bot size={24} className="text-neutral-700" />
           </div>
           
-          <div className="flex-1 relative z-10">
-            <h3 className="text-[15px] font-bold text-violet-900 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
+          <div className="flex-1">
+            <h3 className="font-inter text-base font-semibold text-neutral-800 mb-1">
               {getCoachTip(simAvgScore10, progressDelta).title}
             </h3>
-            <p className="text-[14px] text-violet-800/80 leading-relaxed max-w-2xl">
+            <p className="font-inter text-sm text-neutral-600 leading-relaxed max-w-2xl">
               {getCoachTip(simAvgScore10, progressDelta).text}
             </p>
           </div>
@@ -232,85 +230,51 @@ export default function DashboardPage() {
           /* Compact horizontal CTA for returning users */
           <Link
             href="/simulation"
-            className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4 overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+            className="lg:col-span-2 group bg-white rounded-xl border border-black/5 p-6 flex flex-col md:flex-row items-start md:items-center gap-5 hover:border-black/10 transition-all duration-200 cursor-pointer shadow-sm"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-50/30 via-white to-accent-50/20 rounded-[var(--radius-lg)] pointer-events-none" />
-            <div className="relative z-10 w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-              <Sparkles size={20} className="text-violet-600" />
+            <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center shrink-0 border border-neutral-200">
+              <Sparkles size={20} className="text-neutral-700" />
             </div>
-            <div className="relative z-10 flex-1 min-w-0">
-              <h2 className="text-[15px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.01em' }}>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-inter text-base font-semibold text-neutral-800">
                 AI Симуляция
               </h2>
-              <p className="text-[12px] text-[var(--text-dim)] truncate">Продолжи тренировки с AI-собеседником</p>
+              <p className="font-inter text-sm text-neutral-600 truncate mt-0.5">Продолжи тренировки с AI-собеседником</p>
             </div>
-            <span className="relative z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)] min-h-[44px] shrink-0">
+            <span className="mt-4 md:mt-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--color-accent)] text-white text-[13px] font-inter font-semibold transition-all hover:bg-neutral-800 min-h-[44px] shrink-0 w-full md:w-auto">
               <Sparkles size={13} />
               Продолжить
             </span>
-            <ChevronRight
-              size={18}
-              className="relative z-10 text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 hidden sm:block"
-            />
           </Link>
         ) : (
           /* Full hero card for new users */
           <Link
             href="/simulation"
-            className="lg:col-span-2 group relative bg-white rounded-[var(--radius-lg)] border border-[var(--border-main)] p-6 sm:p-7 flex flex-col justify-between overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-[var(--border-light)] transition-all duration-200 cursor-pointer min-h-[200px]"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+            className="lg:col-span-2 group bg-white rounded-xl border border-black/5 p-6 sm:p-8 flex flex-col justify-between hover:border-black/10 transition-all duration-200 cursor-pointer shadow-sm min-h-[200px]"
           >
-            {/* Background gradient accent */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-accent-50/30 rounded-[var(--radius-lg)] pointer-events-none" />
-            {/* Decorative AI-pulse geometry — hidden on mobile for clean look */}
-            <motion.svg className="absolute bottom-0 right-0 w-52 h-40 opacity-[0.25] pointer-events-none hidden md:block" viewBox="0 0 208 160" fill="none" aria-hidden="true">
-              <motion.circle cx="160" cy="108" r="80" stroke="#8B5CF6" strokeWidth="1.5"
-                animate={{ r: [80, 84, 80], opacity: [0.6, 0.2, 0.6] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle cx="160" cy="108" r="58" stroke="#8B5CF6" strokeWidth="1"
-                animate={{ r: [58, 62, 58], opacity: [0.7, 0.3, 0.7] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              />
-              <motion.circle cx="160" cy="108" r="38" stroke="#E8600A" strokeWidth="1.5"
-                animate={{ r: [38, 40, 38], opacity: [0.8, 0.4, 0.8] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle cx="160" cy="108" r="20" fill="#8B5CF6" fillOpacity="0.2"
-                animate={{ opacity: [0.2, 0.5, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <path d="M80 108 Q120 68 160 108 Q120 148 80 108Z" stroke="#E8600A" strokeWidth="1" fill="none" strokeOpacity="0.5" />
-            </motion.svg>
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
-                  <Sparkles size={18} className="text-violet-600" />
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-neutral-50 flex items-center justify-center border border-neutral-200">
+                  <Sparkles size={18} className="text-neutral-700" />
                 </div>
                 <div>
-                  <h2 className="text-[17px] font-semibold text-[var(--text-main)]" style={{ letterSpacing: '-0.015em' }}>
+                  <h2 className="font-inter text-base font-semibold text-neutral-800">
                     AI Симуляция
                   </h2>
-                  <p className="text-[11px] text-[var(--text-dim)] font-medium">Нейронный собеседник</p>
+                  <p className="font-inter text-sm text-neutral-600">Нейронный собеседник</p>
                 </div>
               </div>
 
-              <p className="text-[14px] text-[var(--text-muted)] leading-relaxed">
+              <p className="font-inter text-sm text-neutral-600 leading-relaxed max-w-sm">
                 Пройди стресс-тест по своему тексту с AI-собеседником — HR, Инвестор или Клиент. Живые вопросы, честная обратная связь.
               </p>
             </div>
 
-            <div className="relative z-10 mt-6 flex items-center justify-between">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-sm)] bg-[var(--color-ai)] text-white text-[13px] font-semibold shadow-sm transition-all group-hover:bg-violet-700 group-hover:shadow-[0_4px_14px_rgba(139,92,246,0.30)] min-h-[44px]">
+            <div className="mt-8 flex items-center justify-between">
+              <span className="inline-flex items-center justify-center w-full sm:w-auto gap-2 px-5 py-2.5 rounded-lg bg-[var(--color-accent)] text-white text-[13px] font-inter font-semibold transition-all hover:bg-neutral-800 min-h-[44px]">
                 <Sparkles size={13} />
                 Начать тренировку
               </span>
-              <ChevronRight
-                size={18}
-                className="text-[var(--text-dim)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-              />
             </div>
           </Link>
         )}
@@ -319,26 +283,21 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
 
           {/* Card: Индекс готовности */}
-          <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-4 md:p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300 rounded-t-xl" />
-            <div className="flex justify-between items-center mb-3 md:mb-4">
-              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-                <Target size={16} className="text-emerald-500 md:hidden" />
-                <Target size={18} className="text-emerald-500 hidden md:block" />
-              </div>
+          <div className="flex-1 bg-white rounded-xl border border-black/5 shadow-sm p-6 md:p-8 flex flex-col hover:border-black/10 transition-colors">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-inter text-base font-semibold text-neutral-800">Готовность</span>
             </div>
             <div className="flex-1">
-              <div className="text-3xl md:text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+              <div className="text-3xl md:text-4xl font-semibold text-black font-inter tracking-tight">
                 {simData == null ? (
                   <span className="opacity-25">—</span>
                 ) : simAvgScore10 != null ? (
-                  <>{simAvgScore10}<span className="text-xl md:text-2xl font-bold text-gray-400 ml-0.5">/10</span></>
+                  <>{simAvgScore10}<span className="text-xl md:text-2xl font-medium text-neutral-400 ml-1">/10</span></>
                 ) : (
-                  <span className="text-gray-300">—</span>
+                  <span className="text-neutral-300">—</span>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-gray-500 mt-1 mb-2 md:mb-3">
+              <p className="font-inter text-sm text-neutral-600 mt-0 mb-4 md:mb-6">
                 {simAvgScore10 == null
                   ? 'Пройди симуляцию'
                   : simAvgScore10 >= 8 ? 'Готов к питчу'
@@ -347,12 +306,11 @@ export default function DashboardPage() {
                         : 'Серьёзная работа'}
               </p>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1 bg-neutral-100 rounded-full overflow-hidden mt-auto">
               <div
-                className="h-full rounded-full transition-all duration-700"
+                className="h-full bg-neutral-800 rounded-full transition-all duration-700"
                 style={{
                   width: `${(simAvgScore10 ?? 0) * 10}%`,
-                  background: (simAvgScore10 ?? 0) >= 7 ? '#10b981' : (simAvgScore10 ?? 0) >= 4 ? '#f59e0b' : '#f43f5e',
                 }}
               />
             </div>
@@ -360,54 +318,39 @@ export default function DashboardPage() {
 
           {/* Card: Тренд роста */}
           {(() => {
-            const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
-            const trendBg = progressDelta == null ? 'bg-gray-50'
-              : progressDelta > 0 ? 'bg-emerald-50' : progressDelta < 0 ? 'bg-rose-50' : 'bg-gray-50';
-            const trendColor = progressDelta == null ? 'text-gray-400'
-              : progressDelta > 0 ? 'text-emerald-500' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
             const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
               : progressDelta > 0 ? 'Ты растёшь!'
                 : progressDelta < 0 ? 'Бывает — встряхнись' : 'Нет изменений';
-            const trendValColor = progressDelta == null ? 'text-gray-300'
-              : progressDelta > 0 ? 'text-emerald-600'
-                : progressDelta < 0 ? 'text-rose-500' : 'text-gray-900';
             return (
-              <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-4 md:p-5 flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
-                <div className="flex justify-between items-center mb-3 md:mb-4">
-                  <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
-                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${trendBg} flex items-center justify-center`}>
-                    <TrendIcon size={16} className={`${trendColor} md:hidden`} />
-                    <TrendIcon size={18} className={`${trendColor} hidden md:block`} />
-                  </div>
+              <div className="flex-1 bg-white rounded-xl border border-black/5 shadow-sm p-6 md:p-8 flex flex-col hover:border-black/10 transition-colors">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-inter text-base font-semibold text-neutral-800">Тренд роста</span>
                 </div>
                 <div className="flex-1">
-                  <div className={`text-3xl md:text-4xl font-extrabold ${trendValColor}`} style={{ letterSpacing: '-0.03em' }}>
+                  <div className="text-3xl md:text-4xl font-semibold text-black font-inter tracking-tight">
                     {progressDelta == null ? '—'
                       : progressDelta === 0 ? '= 0'
-                        : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-xl md:text-2xl font-bold text-gray-400 ml-0.5">б</span></>}
+                        : <>{progressDelta > 0 ? `+${progressDelta}` : progressDelta}<span className="text-xl md:text-2xl font-medium text-neutral-400 ml-1">б</span></>}
                   </div>
-                  <p className="text-xs md:text-sm text-gray-500 mt-1 mb-2">{trendSub}</p>
+                  <p className="font-inter text-sm text-neutral-600 mt-0 mb-4 md:mb-6">{trendSub}</p>
                 </div>
                 {sparkPoints && (
                   <svg viewBox="0 0 80 26" className="w-full h-8 mt-auto" preserveAspectRatio="none">
                     <polyline
                       points={sparkPoints}
                       fill="none"
-                      stroke={sparkColor}
-                      strokeWidth="2"
+                      stroke="#404040"
+                      strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      opacity="0.7"
                     />
                     {sparkScores.map((s, i) => (
                       <circle
                         key={i}
                         cx={(i / (sparkScores.length - 1)) * 80}
                         cy={sparkY(s)}
-                        r={i === sparkScores.length - 1 ? 2.5 : 1.5}
-                        fill={sparkColor}
-                        opacity={i === sparkScores.length - 1 ? 1 : 0.5}
+                        r={1.5}
+                        fill="#404040"
                       />
                     ))}
                   </svg>
@@ -417,26 +360,21 @@ export default function DashboardPage() {
           })()}
 
           {/* Card: Время практики */}
-          <div className="relative overflow-hidden flex-1 bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-4 md:p-5 flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-violet-400 to-violet-300 rounded-t-xl" />
-            <div className="flex justify-between items-center mb-3 md:mb-4">
-              <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Практика</span>
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-violet-50 flex items-center justify-center">
-                <Clock size={16} className="text-violet-500 md:hidden" />
-                <Clock size={18} className="text-violet-500 hidden md:block" />
-              </div>
+          <div className="flex-1 bg-white rounded-xl border border-black/5 shadow-sm p-6 md:p-8 flex flex-col hover:border-black/10 transition-colors">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-inter text-base font-semibold text-neutral-800">Практика</span>
             </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+            <div className="flex-1 flex flex-col justify-end">
+              <div className="text-3xl md:text-4xl font-semibold text-black font-inter tracking-tight">
                 {simData == null ? (
                   <span className="opacity-25">—</span>
                 ) : practiceDisplay != null ? (
                   practiceDisplay
                 ) : (
-                  <span className="text-gray-300">—</span>
+                  <span className="text-neutral-300">—</span>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-gray-500 mt-1">
+              <p className="font-inter text-sm text-neutral-600 mt-0">
                 {totalMessages > 0 ? `${totalMessages} сообщений` : 'Начни тренировку'}
               </p>
             </div>
@@ -449,25 +387,24 @@ export default function DashboardPage() {
         <motion.div 
           initial={{ opacity: 0, y: 15 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="bg-gradient-to-br from-accent-50/50 to-accent-100/30 rounded-[var(--radius-lg)] border border-accent-200/60 p-6 sm:p-8 mb-8 text-center sm:text-left flex flex-col sm:flex-row items-center gap-6 shadow-sm overflow-hidden relative"
+          className="bg-white rounded-xl border border-black/5 p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-center gap-6 shadow-sm"
         >
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-accent-400/10 rounded-full blur-[40px] pointer-events-none" />
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-accent-100 flex items-center justify-center shrink-0">
-            <Flame className="text-accent-500" size={32} />
+          <div className="w-16 h-16 rounded-full bg-neutral-50 flex items-center justify-center shrink-0 border border-neutral-200">
+            <Flame className="text-neutral-700" size={32} />
           </div>
-          <div className="flex-1 relative z-10 w-full sm:w-auto">
-            <h2 className="text-[18px] sm:text-[20px] font-bold text-accent-950 mb-2" style={{ letterSpacing: '-0.01em' }}>
+          <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
+            <h2 className="font-inter text-lg sm:text-xl font-bold text-neutral-900 mb-2 tracking-tight">
               Твоя первая симуляция ждет
             </h2>
-            <p className="text-[14px] text-accent-900/70 leading-relaxed mb-5 max-w-lg mx-auto sm:mx-0">
+            <p className="font-inter text-sm text-neutral-600 leading-relaxed mb-5 max-w-lg mx-auto sm:mx-0">
               Узнай свои слабые места до того, как выйдешь к инвестору или на сцену. Попробуй короткий демо-тест прямо сейчас — это займет всего пару минут.
             </p>
             <Link
               href="/upload"
-              className="inline-flex items-center justify-center gap-2 bg-accent-500 hover:bg-accent-600 text-white font-semibold text-[14px] px-6 py-3 rounded-xl shadow-[0_4px_14px_rgba(232,96,10,0.3)] hover:shadow-[0_6px_20px_rgba(232,96,10,0.4)] transition-all w-full sm:w-auto min-h-[48px]"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--color-accent)] hover:bg-neutral-800 text-white font-inter font-semibold text-[13px] px-6 py-3 rounded-lg transition-colors w-full sm:w-auto min-h-[48px]"
             >
               <Zap size={16} />
-              Пройти тест-драйв (Бесплатно)
+              Пройти тест-драйв
             </Link>
           </div>
         </motion.div>
