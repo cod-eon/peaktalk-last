@@ -6,7 +6,7 @@ export const api = {
   async get(endpoint: string, options: RequestInit = {}) {
     return this.request(endpoint, { ...options, method: 'GET' })
   },
-  
+
   async post(endpoint: string, data?: unknown, options: RequestInit = {}) {
     return this.request(endpoint, {
       ...options,
@@ -40,10 +40,10 @@ export const api = {
     const { data: { session } } = await supabase.auth.getSession()
 
     const headers = new Headers(options.headers)
-    
+
     // Only set Content-Type to JSON if it's not FormData
     if (!(options.body instanceof FormData)) {
-        headers.set('Content-Type', 'application/json')
+      headers.set('Content-Type', 'application/json')
     }
 
     if (session?.access_token) {
@@ -56,61 +56,61 @@ export const api = {
     })
 
     if (!response.ok) {
-        if (response.status === 401) {
-            // Try refreshing the session once before giving up
-            const supabase = createClient()
-            const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
-            if (refreshedSession?.access_token) {
-                // Retry the request with the new token
-                const retryHeaders = new Headers(options.headers)
-                if (!(options.body instanceof FormData)) {
-                    retryHeaders.set('Content-Type', 'application/json')
-                }
-                retryHeaders.set('Authorization', `Bearer ${refreshedSession.access_token}`)
-                const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...options, headers: retryHeaders })
-                if (retryResponse.ok) {
-                    if (retryResponse.status === 204) return null
-                    const ct = retryResponse.headers.get('content-type')
-                    return ct?.includes('application/json') ? retryResponse.json() : retryResponse.text()
-                }
-            }
-            // Session truly invalid — sign out and redirect
-            await supabase.auth.signOut()
-            if (typeof window !== 'undefined') {
-                window.location.href = '/login'
-            }
-            throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
+      if (response.status === 401) {
+        // Try refreshing the session once before giving up
+        const supabase = createClient()
+        const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
+        if (refreshedSession?.access_token) {
+          // Retry the request with the new token
+          const retryHeaders = new Headers(options.headers)
+          if (!(options.body instanceof FormData)) {
+            retryHeaders.set('Content-Type', 'application/json')
+          }
+          retryHeaders.set('Authorization', `Bearer ${refreshedSession.access_token}`)
+          const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...options, headers: retryHeaders })
+          if (retryResponse.ok) {
+            if (retryResponse.status === 204) return null
+            const ct = retryResponse.headers.get('content-type')
+            return ct?.includes('application/json') ? retryResponse.json() : retryResponse.text()
+          }
         }
+        // Session truly invalid — sign out and redirect
+        await supabase.auth.signOut()
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
+      }
 
-        let errorMessage = 'Произошла ошибка'
-        try {
-            const errorData = await response.json()
-            if (typeof errorData.detail === 'string') {
-                errorMessage = errorData.detail
-            } else if (Array.isArray(errorData.detail)) {
-                // FastAPI validation errors: [{loc, msg, type}]
-                errorMessage = errorData.detail
-                    .map((e: { msg?: string }) => e.msg ?? JSON.stringify(e))
-                    .join('; ')
-            } else if (typeof errorData.message === 'string') {
-                errorMessage = errorData.message
-            } else if (response.status === 403) {
-                errorMessage = 'Нет доступа к ресурсу.'
-            }
-        } catch {
-            errorMessage = response.statusText || errorMessage
+      let errorMessage = 'Произошла ошибка'
+      try {
+        const errorData = await response.json()
+        if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail
+        } else if (Array.isArray(errorData.detail)) {
+          // FastAPI validation errors: [{loc, msg, type}]
+          errorMessage = errorData.detail
+            .map((e: { msg?: string }) => e.msg ?? JSON.stringify(e))
+            .join('; ')
+        } else if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message
+        } else if (response.status === 403) {
+          errorMessage = 'Нет доступа к ресурсу.'
         }
-        throw new Error(errorMessage)
+      } catch {
+        errorMessage = response.statusText || errorMessage
+      }
+      throw new Error(errorMessage)
     }
 
     // 204 No Content — no body to parse
     if (response.status === 204) {
-        return null;
+      return null;
     }
 
     const contentType = response.headers.get("content-type")
     if (contentType && contentType.includes("application/json")) {
-        return response.json()
+      return response.json()
     }
 
     return response.text()
