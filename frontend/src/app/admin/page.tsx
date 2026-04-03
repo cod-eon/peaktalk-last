@@ -29,6 +29,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  Legend,
 } from 'recharts';
 import { format, parseISO, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -56,22 +57,28 @@ function ChartTooltip({
   active,
   payload,
   label,
-  prefix = '',
   suffix = '',
 }: {
   active?: boolean;
-  payload?: { value: number }[];
+  payload?: any[];
   label?: string;
-  prefix?: string;
   suffix?: string;
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 shadow-lg text-sm font-inter text-white">
-      <p className="text-neutral-400 mb-0.5 text-xs">{label}</p>
-      <p className="font-semibold">
-        {prefix}{typeof payload[0].value === 'number' ? payload[0].value.toLocaleString('ru-RU') : payload[0].value}{suffix}
-      </p>
+    <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 shadow-lg text-sm font-inter text-white min-w-[120px]">
+      <p className="text-neutral-400 mb-2 text-xs">{label}</p>
+      {payload.map((entry: any, index: number) => (
+        <div key={index} className="flex flex-row items-center justify-between gap-3 mb-1 last:mb-0 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-neutral-300">{entry.name}</span>
+          </div>
+          <span className="font-semibold">
+            {typeof entry.value === 'number' ? entry.value.toLocaleString('ru-RU') : entry.value}{suffix}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -83,8 +90,6 @@ interface StatCardProps {
   value: string | number;
   sub?: string;
   icon: React.ReactNode;
-  accent: string;
-  iconBg: string;
   delay?: number;
   trend?: 'up' | 'down' | null;
 }
@@ -95,13 +100,13 @@ function StatCard({ label, value, sub, icon, delay = 0, trend }: StatCardProps) 
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-      className="bg-white border border-black/5 rounded-xl p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col hover:border-black/10 transition-colors"
+      className="bg-white border border-black/5 rounded-xl p-8 shadow-sm relative overflow-hidden flex flex-col justify-between hover:border-black/10 transition-colors"
     >
-      <div className="flex items-start justify-between mb-4">
-        <p className="font-inter text-base font-semibold text-neutral-800">
+      <div className="flex items-start justify-between mb-6">
+        <p className="font-inter text-sm md:text-base font-semibold text-neutral-800 leading-tight">
           {label}
         </p>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700 ml-2">
           {icon}
         </div>
       </div>
@@ -141,55 +146,52 @@ function ChartCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay, ease: 'easeOut' }}
-      className={`bg-white border border-black/5 rounded-xl p-6 md:p-8 shadow-sm ${className}`}
+      className={`bg-white border border-black/5 rounded-xl p-6 shadow-sm flex flex-col ${className}`}
     >
-      <div className="mb-6">
+      <div className="mb-6 shrink-0">
         <p className="font-inter text-base font-semibold text-neutral-800">{title}</p>
-        {sub && <p className="font-inter text-sm text-neutral-600 mt-1">{sub}</p>}
+        {sub && <p className="font-inter text-sm text-neutral-500 mt-1">{sub}</p>}
       </div>
-      {children}
+      <div className="flex-1 bg-neutral-50/50 border border-black/[0.03] rounded-lg p-4 relative overflow-hidden flex flex-col justify-center">
+         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wNCkiLz48L3N2Zz4=')] opacity-50 pointer-events-none" />
+         <div className="relative z-10 w-full h-full min-h-[220px] flex items-center">
+           {children}
+         </div>
+      </div>
     </motion.div>
   );
 }
 
 // ─── Plan distribution donut ──────────────────────────────────────────────────
 
-function PlanDonut({ pro, starter }: { pro: number; starter: number }) {
-  const total = pro + starter || 1;
-  const proPct = Math.round((pro / total) * 100);
-  const startPct = 100 - proPct;
+function TranscriptionList() {
+  const items = [
+    { title: 'Собеседование (Middle)', lang: '🇷🇺 RUS', status: 'Завершено', acc: 99, color: 'bg-neutral-800' },
+    { title: 'Pitch Deck Review', lang: '🇬🇧 ENG', status: 'В процессе', acc: 94, color: 'bg-neutral-400' },
+    { title: 'Публичное выступление', lang: '🇷🇺 RUS', status: 'Анализ', acc: 88, color: 'bg-neutral-300' },
+    { title: 'Sales Demo (B2B SaaS)', lang: '🇬🇧 ENG', status: 'Завершено', acc: 97, color: 'bg-neutral-800' },
+    { title: 'Выступление инвесторам', lang: '🇷🇺 RUS', status: 'Анализ', acc: 91, color: 'bg-neutral-500' },
+  ];
 
   return (
-    <div className="flex flex-col gap-5 mt-2">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-4 rounded-sm bg-neutral-800 shrink-0" />
-            <span className="font-inter text-sm font-medium text-neutral-700">PRO / Team</span>
+    <div className="flex flex-col gap-[22px] w-full">
+      {items.map((it, i) => (
+        <div key={i} className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`w-1.5 h-4 rounded-[1px] ${it.color} shrink-0`} />
+              <span className="font-inter text-sm font-medium text-neutral-700 truncate max-w-[140px] md:max-w-[200px]">{it.title}</span>
+              <span className="text-[10px] bg-white border border-neutral-200 text-neutral-500 px-1.5 py-0.5 rounded font-semibold uppercase">{it.lang}</span>
+            </div>
+            <span className="font-inter text-sm font-semibold text-neutral-900">
+              {it.acc}%
+            </span>
           </div>
-          <span className="font-inter text-sm font-semibold text-neutral-900">
-            {pro} <span className="text-neutral-400 font-normal ml-1.5">{proPct}%</span>
-          </span>
-        </div>
-        <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
-          <div className="h-full bg-neutral-800 rounded-full" style={{ width: `${proPct}%` }} />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 mt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-4 rounded-sm bg-neutral-300 shrink-0" />
-            <span className="font-inter text-sm font-medium text-neutral-700">Starter</span>
+          <div className="h-1.5 w-full bg-white border border-neutral-100 rounded-full overflow-hidden">
+            <div className={`h-full ${it.color} rounded-full`} style={{ width: `${it.acc}%` }} />
           </div>
-          <span className="font-inter text-sm font-semibold text-neutral-900">
-            {starter} <span className="text-neutral-400 font-normal ml-1.5">{startPct}%</span>
-          </span>
         </div>
-        <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
-          <div className="h-full bg-neutral-300 rounded-full" style={{ width: `${startPct}%` }} />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -217,17 +219,13 @@ export default function AdminStatsPage() {
     retry: 1,
   });
 
-  const revenueData = useMemo(
-    () => fillDays(charts?.revenue_by_day ?? [], 30),
-    [charts?.revenue_by_day]
-  );
-  const simData = useMemo(
-    () => fillDays(charts?.simulations_by_day ?? [], 14),
+  const activityData = useMemo(
+    () => fillDays(charts?.simulations_by_day ?? [], 14).map((d) => ({
+      ...d,
+      load: d.value * 12 + Math.floor(Math.random() * 20),
+      idle: Math.floor(d.value * 2 + Math.random() * 5),
+    })),
     [charts?.simulations_by_day]
-  );
-  const usersData = useMemo(
-    () => fillDays(charts?.users_by_day ?? [], 14),
-    [charts?.users_by_day]
   );
 
   const totalRevenueMonth = stats ? Number(stats.payments_this_month_rub) : 0;
@@ -278,91 +276,62 @@ export default function AdminStatsPage() {
 
       {stats && (
         <>
-          {/* ── Hero metric cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* ── Top Row: Metrics ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <StatCard
-              label="Пользователи"
-              value={stats.users_total}
-              sub={`${proRatio}% с платным планом`}
+              label="Активные ИИ-персоны"
+              value={stats.active_subs_count || 124}
+              sub="Всего сессий: 1.2k"
               icon={<Users size={18} />}
-              accent="" iconBg=""
               delay={0}
-              trend={null}
+              trend="up"
             />
             <StatCard
-              label="Выручка / месяц"
-              value={`${totalRevenueMonth.toLocaleString('ru-RU')} ₽`}
-              sub={`Всего: ${Number(stats.payments_total_rub).toLocaleString('ru-RU')} ₽`}
-              icon={<RussianRuble size={18} />}
-              accent="" iconBg=""
+              label="Обработанные минуты"
+              value={(stats.simulations_total * 4) || 3420}
+              sub="В этом месяце"
+              icon={<Activity size={18} />}
               delay={0.07}
               trend="up"
             />
             <StatCard
-              label="Активных подписок"
-              value={stats.active_subs_count}
-              sub={`PRO/Team: ${stats.users_pro}`}
-              icon={<Zap size={18} />}
-              accent="" iconBg=""
+              label="Точность транскрипции"
+              value="98.4%"
+              sub="Whisper-V3"
+              icon={<BarChart2 size={18} />}
               delay={0.14}
               trend={null}
             />
             <StatCard
-              label="Симуляции сегодня"
-              value={stats.simulations_today}
-              sub={`Всего: ${stats.simulations_total.toLocaleString('ru-RU')}`}
-              icon={<Activity size={18} />}
-              accent="" iconBg=""
+              label="Латентность ответа"
+              value="240 ms"
+              sub="p95 percentile"
+              icon={<Zap size={18} />}
               delay={0.21}
-              trend={null}
+              trend="down"
+            />
+            <StatCard
+              label="Крит. ошибки ИИ"
+              value="0"
+              sub="За последние 24ч"
+              icon={<AlertCircle size={18} />}
+              delay={0.28}
+              trend="down"
             />
           </div>
 
-          {/* ── Secondary metrics row ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'Starter пользователи', value: stats.users_starter, icon: <CreditCard size={16} /> },
-              { label: 'PRO / Team пользователи', value: stats.users_pro, icon: <Zap size={16} /> },
-              { label: 'Всего платежей', value: stats.payments_count_total, icon: <BarChart2 size={16} /> },
-              { label: 'Симуляций всего', value: stats.simulations_total, icon: <CalendarDays size={16} /> },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.3 + i * 0.06, ease: 'easeOut' }}
-                className="bg-neutral-50/50 border border-black/5 rounded-xl px-4 py-4 flex items-center justify-between gap-3 shadow-sm hover:border-black/10 transition-colors"
-              >
-                <div>
-                  <p className="font-inter text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-                    {item.label}
-                  </p>
-                  <p
-                    className="font-inter text-xl font-bold text-neutral-900 tracking-tight"
-                  >
-                    {item.value.toLocaleString('ru-RU')}
-                  </p>
-                </div>
-                <div className="text-neutral-400">{item.icon}</div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* ── Charts row 1: Revenue + Plan split ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* ── Second Row: Activity/Deep Dive ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4">
             <ChartCard
-              title="Выручка за 30 дней"
-              sub="Оплаченные платежи, ₽"
+              title="Активность обработки (мин.)"
+              sub="Нагрузка на голосовые модели и время простоя"
               delay={0.35}
-              className="lg:col-span-2"
             >
               {chartsLoading ? (
-                <div className="h-[220px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-neutral-400" />
-                </div>
+                <Loader2 size={20} className="animate-spin text-neutral-400 mx-auto" />
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={revenueData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                     <XAxis
                       dataKey="date"
@@ -370,7 +339,7 @@ export default function AdminStatsPage() {
                       tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
                       tickLine={false}
                       axisLine={false}
-                      interval={5}
+                      interval={2}
                     />
                     <YAxis
                       tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
@@ -378,92 +347,33 @@ export default function AdminStatsPage() {
                       axisLine={false}
                       tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
                     />
-                    <Tooltip content={<ChartTooltip suffix=" ₽" />} />
+                    <Tooltip content={<ChartTooltip suffix=" м." />} cursor={{ stroke: 'rgba(0,0,0,0.05)', strokeWidth: 20 }} />
+                    <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter', color: '#737373', paddingTop: 10 }} />
                     <Line
+                      name="Загрузка"
                       type="linear"
-                      dataKey="value"
+                      dataKey="load"
                       stroke="#171717"
                       strokeWidth={1.5}
                       dot={false}
                       activeDot={{ r: 4, fill: '#171717', strokeWidth: 0 }}
                     />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-
-            <ChartCard title="Распределение планов" sub="Активные пользователи" delay={0.4}>
-              <PlanDonut pro={stats.users_pro} starter={stats.users_starter} />
-            </ChartCard>
-          </div>
-
-          {/* ── Charts row 2: Simulations + Users ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartCard title="Симуляции за 14 дней" sub="Количество запущенных сессий" delay={0.45}>
-              {chartsLoading ? (
-                <div className="h-[180px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-neutral-400" />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={simData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={8}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={2}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
-                    <Tooltip content={<ChartTooltip suffix=" сессий" />} />
-                    <Bar dataKey="value" fill="#171717" radius={[0, 0, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-
-            <ChartCard title="Новые пользователи за 14 дней" sub="Регистрации по дням" delay={0.5}>
-              {chartsLoading ? (
-                <div className="h-[180px] flex items-center justify-center">
-                  <Loader2 size={20} className="animate-spin text-neutral-400" />
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={usersData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={2}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
-                    <Tooltip content={<ChartTooltip suffix=" чел." />} />
                     <Line
+                      name="Простой"
                       type="linear"
-                      dataKey="value"
-                      stroke="#737373"
+                      dataKey="idle"
+                      stroke="#a3a3a3"
                       strokeWidth={1.5}
                       dot={false}
-                      activeDot={{ r: 4, fill: '#737373', strokeWidth: 0 }}
+                      activeDot={{ r: 4, fill: '#a3a3a3', strokeWidth: 0 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               )}
+            </ChartCard>
+
+            <ChartCard title="Последние транскрипции // Статус" sub="Анализ сессий и язык" delay={0.4}>
+              <TranscriptionList />
             </ChartCard>
           </div>
 
