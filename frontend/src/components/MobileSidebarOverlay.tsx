@@ -63,21 +63,21 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--bg-surface)] border-r border-[var(--border-main)] z-[9999] flex flex-col pt-safe"
+                        className="fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-neutral-200 z-[9999] flex flex-col pt-safe"
                     >
                         {/* Header */}
-                        <div className="px-5 h-16 flex items-center justify-between border-b border-[var(--border-main)]">
+                        <div className="px-5 h-16 flex items-center justify-between border-b border-neutral-200">
                             <Link href="/" onClick={onClose} className="flex items-center gap-3 hover:opacity-75 transition-opacity">
                                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
                                     <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={32} height={32} />
                                 </div>
-                                <span className="text-[var(--text-main)]" style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
+                                <span className="text-neutral-900 font-inter font-extrabold text-[15px] tracking-tight">
                                     PeakTalk
                                 </span>
                             </Link>
                             <button
                                 onClick={onClose}
-                                className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] transition-colors"
+                                className="w-8 h-8 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
                             >
                                 <X size={18} />
                             </button>
@@ -92,16 +92,16 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                                         key={item.path}
                                         href={item.path}
                                         onClick={onClose}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] border transition-all text-[13px] font-medium font-inter ${
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md border transition-all text-[13px] font-medium font-inter ${
                                             isActive
-                                                ? 'sidebar-item-active text-[var(--accent-primary)] border-accent-100'
-                                                : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'
+                                                ? 'bg-neutral-100 text-neutral-900 border-neutral-200'
+                                                : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 border-transparent'
                                         }`}
                                     >
                                         <item.icon
                                             size={17}
                                             strokeWidth={isActive ? 2.5 : 2}
-                                            className={isActive ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'}
+                                            className={isActive ? 'text-neutral-900' : 'text-neutral-400'}
                                         />
                                         <span>{item.name}</span>
                                     </Link>
@@ -110,18 +110,18 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                         </div>
 
                         {/* Footer */}
-                        <div className="p-4 border-t border-[var(--border-main)] mt-auto flex flex-col gap-3">
+                        <div className="p-4 border-t border-neutral-200 mt-auto flex flex-col gap-3">
                             {/* User chip */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-accent-100 border border-accent-200 flex items-center justify-center font-bold text-sm text-accent-500 shrink-0 uppercase">
+                                    <div className="w-8 h-8 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-bold text-sm text-neutral-900 shrink-0 uppercase">
                                         {firstLetter}
                                     </div>
-                                    <div className="text-[13px] font-medium text-[var(--text-main)] truncate">{displayName}</div>
+                                    <div className="text-[13px] font-medium text-neutral-900 truncate">{displayName}</div>
                                 </div>
                                 <button
                                     onClick={handleLogout}
-                                    className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-dim)] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                                    className="w-8 h-8 flex items-center justify-center rounded-md text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
                                     title="Выйти"
                                 >
                                     <LogOut size={16} />
@@ -129,10 +129,10 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                             </div>
 
                             {/* Upsell card */}
-                            <div className="bg-accent-50 rounded-xl p-4 border border-accent-100">
-                                <div className="text-[11px] font-medium text-accent-400 uppercase tracking-wide mb-1">Basic Plan</div>
-                                <div className="text-[13px] text-[var(--text-main)] font-medium mb-3">Улучшите навыки с ИИ</div>
-                                <button className="w-full py-2 bg-[var(--accent-primary)] text-white text-[12px] font-semibold rounded-[var(--radius-sm)] hover:bg-[var(--accent-primary-hover)] transition-colors">
+                            <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
+                                <div className="text-[11px] font-medium text-neutral-400 uppercase tracking-wide mb-1">Basic Plan</div>
+                                <div className="text-[13px] text-neutral-900 font-medium mb-3">Улучшите навыки с ИИ</div>
+                                <button className="w-full py-2 bg-[#171717] text-white text-[12px] font-semibold rounded-md hover:bg-black transition-colors">
                                     Upgrade to Pro
                                 </button>
                             </div>

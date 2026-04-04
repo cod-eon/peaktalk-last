@@ -197,124 +197,10 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
-  /* Label / kicker — small uppercase utility */
-  .label-kicker {
-    font-family: var(--font-inter), sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 500;
-    color: var(--text-dim);
-    line-height: 1;
-  }
 }
 
 @layer components {
-  /* ─── Buttons ─── */
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--accent-primary);
-    color: #FFFFFF;
-    font-family: var(--font-inter), sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid var(--accent-primary);
-  }
 
-  .btn-primary:hover {
-    background-color: var(--accent-primary-hover);
-    border-color: var(--accent-primary-hover);
-  }
-
-  .btn-primary:focus-visible {
-    outline: none;
-    border-color: var(--color-surface-dark);
-    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent-primary);
-  }
-
-  .btn-primary:active {
-    transform: translateY(1px);
-  }
-
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-surface);
-    color: var(--text-main);
-    font-family: var(--font-inter), sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid var(--border-main);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--bg-surface-alt);
-    border-color: var(--border-light);
-  }
-
-  .btn-secondary:focus-visible {
-    outline: none;
-    border-color: var(--border-main);
-    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--border-light);
-  }
-
-  .btn-danger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    color: var(--color-error);
-    font-family: var(--font-inter), sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid rgba(220, 38, 38, 0.25);
-  }
-
-  .btn-danger:hover {
-    background-color: var(--color-error-bg);
-    border-color: var(--color-error);
-  }
-  
-  .btn-danger:focus-visible {
-    outline: none;
-    border-color: var(--color-error);
-    box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--color-error);
-  }
-
-  /* ─── Surface layers ─── */
-  .panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
-  }
-
-  .panel-muted {
-    background: var(--bg-surface-alt);
-    border: 1px solid var(--border-main);
-    border-radius: var(--radius-md);
-  }
 
   /* ─── Sidebar ─── */
   .sidebar-glass {
@@ -322,10 +208,6 @@
     border-right: 1px solid var(--border-main);
   }
 
-  .sidebar-item-active {
-    background-color: #FEF3E8;
-    border-color: #F9BD8E !important;
-  }
 
   /* ─── Icon buttons ─── */
   .icon-button {
@@ -360,15 +242,6 @@
     border-radius: 999px;
   }
 
-  /* ─── Legacy alias ─── */
-  .editorial-kicker {
-    font-family: var(--font-inter), sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 500;
-    color: var(--text-dim);
-  }
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
@@ -422,9 +295,6 @@ textarea:focus {
 
 button:focus-visible,
 a:focus-visible,
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible,
-.btn-danger:focus-visible,
 [role="button"]:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid #171717 !important;

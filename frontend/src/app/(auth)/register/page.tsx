@@ -49,11 +49,11 @@ export default function RegisterPage() {
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white border border-[var(--border-main)] p-6 sm:p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
+      className="bg-white border border-neutral-200 p-6 sm:p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
     >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-syne font-semibold text-[var(--text-main)] mb-2">Начать бесплатно</h1>
-        <p className="text-[var(--text-muted)] text-sm">
+        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Начать бесплатно</h1>
+        <p className="text-neutral-500 text-sm">
           Умная подготовка к выступлениям за 3 шага
         </p>
       </div>
@@ -65,7 +65,7 @@ export default function RegisterPage() {
           </div>
         )}
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider block ml-1">
             Как к вам обращаться
           </label>
           <input
@@ -73,13 +73,13 @@ export default function RegisterPage() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
             placeholder="Илон Маск"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider block ml-1">
             Рабочий Email
           </label>
           <input
@@ -87,13 +87,13 @@ export default function RegisterPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
             placeholder="elon@spacex.com"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider block ml-1">
+          <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider block ml-1">
             Надежный пароль
           </label>
           <input
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder-slate-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-inter"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
             placeholder="Минимум 8 символов"
           />
         </div>
@@ -118,7 +118,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading || !captchaToken}
-          className="w-full btn-primary py-3.5 text-xs font-semibold mt-6 h-11"
+          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-lg py-3.5 text-xs font-semibold mt-6 h-11 transition-colors"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
@@ -130,10 +130,10 @@ export default function RegisterPage() {
 
       <div className="mt-8 relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[var(--border-main)]"></div>
+          <div className="w-full border-t border-neutral-200"></div>
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-3 text-[var(--text-dim)]">Или продолжить через</span>
+          <span className="bg-white px-3 text-neutral-400">Или продолжить через</span>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export default function RegisterPage() {
               options: { redirectTo: `${window.location.origin}/auth/callback` },
             });
           }}
-          className="flex-1 bg-white hover:bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-lg py-2.5 flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-lg py-2.5 flex items-center justify-center gap-2 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -155,19 +155,19 @@ export default function RegisterPage() {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          <span className="text-sm font-medium text-[var(--text-muted)]">Зарегистрироваться через Google</span>
+          <span className="text-sm font-medium text-neutral-500">Зарегистрироваться через Google</span>
         </button>
       </div>
 
-      <p className="mt-6 text-xs text-center text-[var(--text-dim)]">
+      <p className="mt-6 text-xs text-center text-neutral-400">
         Нажимая кнопку, вы соглашаетесь с{" "}
-        <a href="/personal-data" className="underline hover:text-[var(--text-main)]">Офертой</a> и{" "}
-        <a href="/privacy" className="underline hover:text-[var(--text-main)]">Политикой конфиденциальности</a>.
+        <a href="/personal-data" className="underline hover:text-neutral-900">Офертой</a> и{" "}
+        <a href="/privacy" className="underline hover:text-neutral-900">Политикой конфиденциальности</a>.
       </p>
 
-      <div className="mt-8 text-center text-sm text-[var(--text-muted)] border-t border-[var(--border-main)] pt-8">
+      <div className="mt-8 text-center text-sm text-neutral-500 border-t border-neutral-200 pt-8">
         Уже есть аккаунт?{" "}
-        <Link href="/login" className="text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)] transition-colors font-medium">
+        <Link href="/login" className="text-neutral-900 hover:text-black transition-colors font-medium">
           Войти
         </Link>
       </div>

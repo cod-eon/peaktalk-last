@@ -40,7 +40,7 @@ function AdminNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-[var(--z-topbar)] bg-[var(--bg-surface)] border-b border-[var(--border-main)] shadow-[var(--shadow-card)]">
+    <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
@@ -48,11 +48,8 @@ function AdminNavbar() {
             <div className="w-7 h-7 flex items-center justify-center">
               <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
             </div>
-            <span
-              className="text-[var(--text-main)]"
-              style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}
-            >
-              PeakTalk <span className="text-[var(--accent-primary)]">Admin</span>
+            <span className="font-inter font-extrabold text-[15px] tracking-[-0.02em] text-neutral-900">
+              PeakTalk <span className="text-neutral-900">Admin</span>
             </span>
           </div>
 
@@ -70,8 +67,8 @@ function AdminNavbar() {
                   href={link.href}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
                     isActive
-                      ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]'
-                      : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]'
+                      ? 'bg-neutral-100 text-neutral-900'
+                      : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'
                   }`}
                 >
                   <Icon size={15} />
@@ -86,14 +83,14 @@ function AdminNavbar() {
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] text-[13px] font-medium hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-400 text-[13px] font-medium hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
             >
               <LogOut size={13} />
               Выйти
             </button>
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden p-1.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-dim)] transition-colors cursor-pointer"
+              className="md:hidden p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Меню"
             >
@@ -110,7 +107,7 @@ function AdminNavbar() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.15 }}
-          className="md:hidden border-t border-[var(--border-main)] bg-[var(--bg-surface)] px-4 py-3 flex flex-col gap-1"
+          className="md:hidden border-t border-neutral-200 bg-white px-4 py-3 flex flex-col gap-1"
         >
           {NAV_LINKS.map((link) => {
             const Icon = link.icon;
@@ -125,8 +122,8 @@ function AdminNavbar() {
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-colors ${
                   isActive
-                    ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)]'
-                    : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)]'
+                    ? 'bg-neutral-100 text-neutral-900'
+                    : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'
                 }`}
               >
                 <Icon size={16} />
@@ -137,7 +134,7 @@ function AdminNavbar() {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer mt-1 border-t border-[var(--border-main)] pt-3"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer mt-1 border-t border-neutral-200 pt-3"
           >
             <LogOut size={16} />
             Выйти
@@ -181,9 +178,9 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-[var(--text-dim)]">
-          <div className="w-8 h-8 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-neutral-400">
+          <div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm">Проверка доступа...</span>
         </div>
       </div>
@@ -198,7 +195,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminAuthGuard>
-      <div className="min-h-screen bg-[var(--bg-main)] bg-page-geo-subtle">
+      <div className="min-h-screen bg-white bg-page-geo-subtle">
         <AdminNavbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}

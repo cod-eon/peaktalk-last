@@ -456,7 +456,7 @@ export default function SimulationReportPage() {
                         <div className="h-4 w-px bg-gray-200 hidden sm:block" />
                         <div className="flex items-center gap-1.5 min-w-0">
                             <Zap size={13} className="text-accent-400 shrink-0" />
-                            <span className="text-[12px] sm:text-[13px] font-syne font-bold text-gray-800 tracking-tight uppercase">
+                            <span className="text-[12px] sm:text-[13px] font-inter font-bold text-gray-800 tracking-tight uppercase">
                                 Отчёт
                             </span>
                             <span className="text-[11px] text-gray-400 truncate hidden xs:inline sm:inline font-mono uppercase tracking-widest">
@@ -502,7 +502,7 @@ export default function SimulationReportPage() {
                         >
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles size={15} className="text-accent-400 shrink-0" />
-                                <h2 className="text-[16px] font-syne font-bold text-gray-900 uppercase tracking-tight">Разбор завершён</h2>
+                                <h2 className="text-[16px] font-inter font-bold text-gray-900 uppercase tracking-tight">Разбор завершён</h2>
                             </div>
                             <div className="flex flex-col gap-2 text-[14px]">
                                 {summaryLines.map((line, i) => (

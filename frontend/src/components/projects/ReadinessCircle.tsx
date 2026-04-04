@@ -46,13 +46,13 @@ export const ReadinessCircle: React.FC<ReadinessCircleProps> = ({
           strokeLinecap="round"
           className={
             safeScore >= 0.8 ? 'text-emerald-400' : 
-            safeScore >= 0.5 ? 'text-[var(--accent-primary)]' : 
+            safeScore >= 0.5 ? 'text-neutral-900' : 
             'text-amber-400'
           }
         />
       </svg>
       {score === null ? (
-        <span className="absolute text-[10px] font-mono text-[var(--text-dim)]">N/A</span>
+        <span className="absolute text-[10px] font-mono text-neutral-400">N/A</span>
       ) : (
         <span className="absolute text-xs font-bold font-mono">
           {Math.round(safeScore * 100)}%

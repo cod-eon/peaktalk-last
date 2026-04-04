@@ -7,11 +7,11 @@ import { motion } from 'framer-motion';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[var(--bg-main)]">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-white">
       {/* Background elements */}
       <div className="bg-grid absolute inset-0 z-0 pointer-events-none opacity-50" />
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[var(--accent-primary)]/8 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[var(--accent-primary)]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-neutral-200/40 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-neutral-200/30 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Nav — same style & animation as landing page */}
       <motion.nav
@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           right: 0,
           zIndex: 50,
           padding: '16px 0',
-          borderBottom: '1px solid var(--border-main)',
+          borderBottom: '1px solid #e5e5e5',
           background: 'rgba(255, 255, 255, 0.9)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
@@ -40,13 +40,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               height={52}
               style={{ display: 'block' }}
             />
-            <span style={{
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 800,
-              fontSize: 21.6,
-              letterSpacing: '-0.02em',
-              color: 'var(--text-main)',
-            }}>
+            <span className="font-inter font-extrabold text-[21.6px] tracking-tight text-neutral-900">
               PeakTalk
             </span>
           </Link>

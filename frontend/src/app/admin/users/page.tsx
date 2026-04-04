@@ -44,7 +44,7 @@ function PlanBadge({ plan }: { plan: PlanId }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border border-[var(--border-main)]">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
       <CreditCard size={9} />
       Starter
     </span>
@@ -77,7 +77,7 @@ function StatusBadge({ status }: { status: string }) {
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border border-[var(--border-main)]">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
       {status}
     </span>
   );
@@ -125,7 +125,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[var(--z-overlay-backdrop)] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Backdrop */}
@@ -143,23 +143,22 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 12 }}
         transition={{ duration: 0.2 }}
-        className="relative bg-[var(--bg-surface)] rounded-[var(--radius-xl)] border border-[var(--border-main)] shadow-[var(--shadow-elevated)] w-full max-w-md z-[var(--z-overlay-panel)]"
+        className="relative bg-white rounded-2xl border border-neutral-200 w-full max-w-md z-[70]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[var(--border-main)]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-neutral-200">
           <div>
             <h2
-              className="text-[17px] font-bold text-[var(--text-main)]"
-              style={{ fontFamily: 'var(--font-syne)' }}
+              className="text-[17px] font-bold font-inter text-neutral-900"
             >
               Изменить план
             </h2>
-            <p className="text-[12px] text-[var(--text-dim)] mt-0.5">{user.email}</p>
+            <p className="text-[12px] text-neutral-400 mt-0.5">{user.email}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-dim)] transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -169,7 +168,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
         <div className="px-6 py-5 flex flex-col gap-5">
           {/* Plan selector */}
           <div>
-            <label className="block text-[12px] font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-3">
+            <label className="block text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-3">
               Выберите план
             </label>
             <div className="flex flex-col gap-2">
@@ -181,19 +180,19 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
                     onClick={() => setSelectedPlan(option.id)}
                     className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-bg)]'
-                        : 'border-[var(--border-main)] bg-[var(--bg-surface)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-alt)]'
+                        ? 'border-neutral-900 bg-neutral-100'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
                     }`}
                   >
                     <span
                       className={`text-[14px] font-medium ${
-                        isSelected ? 'text-[var(--accent-primary)]' : 'text-[var(--text-main)]'
+                        isSelected ? 'text-neutral-900' : 'text-neutral-900'
                       }`}
                     >
                       {option.label}
                     </span>
                     {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-[var(--accent-primary)] flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full bg-[#171717] flex items-center justify-center">
                         <Check size={11} className="text-white" />
                       </div>
                     )}
@@ -213,7 +212,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
             >
               <label
                 htmlFor="period-days"
-                className="block text-[12px] font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-2"
+                className="block text-[12px] font-semibold text-neutral-400 uppercase tracking-wider mb-2"
               >
                 Период (дней)
               </label>
@@ -224,9 +223,9 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
                 max={3650}
                 value={periodDays}
                 onChange={(e) => setPeriodDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-main)] text-[14px] focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-glow)] transition-colors"
+                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-900 text-[14px] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
               />
-              <p className="mt-1.5 text-[11px] text-[var(--text-dim)]">
+              <p className="mt-1.5 text-[11px] text-neutral-400">
                 Доступ будет активен {periodDays} {periodDays === 1 ? 'день' : periodDays <= 4 ? 'дня' : 'дней'}
               </p>
             </motion.div>
@@ -237,14 +236,14 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
         <div className="px-6 pb-6 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="btn-secondary text-sm"
+            className="px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             onClick={handleApply}
             disabled={loading}
-            className="btn-primary text-sm gap-2"
+            className="flex items-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-6 py-2 text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 size={13} className="animate-spin" /> : null}
             Применить
@@ -285,7 +284,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[var(--z-overlay-backdrop)] bg-black/20 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -295,19 +294,18 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        className="fixed right-0 top-0 h-full w-full max-w-sm bg-[var(--bg-surface)] border-l border-[var(--border-main)] shadow-[var(--shadow-elevated)] z-[var(--z-overlay-panel)] flex flex-col"
+        className="fixed right-0 top-0 h-full w-full max-w-sm bg-white border-l border-neutral-200 z-[70] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[var(--border-main)]">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-neutral-200">
           <h3
-            className="text-[16px] font-bold text-[var(--text-main)]"
-            style={{ fontFamily: 'var(--font-syne)' }}
+            className="text-[16px] font-bold font-inter text-neutral-900"
           >
             Профиль пользователя
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-dim)] transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -317,7 +315,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
         <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
           {/* Email & Plan */}
           <div className="flex flex-col gap-2">
-            <p className="text-[13px] font-semibold text-[var(--text-main)] break-all">{user.email}</p>
+            <p className="text-[13px] font-semibold text-neutral-900 break-all">{user.email}</p>
             <div className="flex items-center gap-2 flex-wrap">
               <PlanBadge plan={user.plan} />
               <StatusBadge status={user.subscription_status} />
@@ -326,21 +324,21 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[var(--bg-surface-alt)] rounded-xl p-3.5">
-              <div className="flex items-center gap-1.5 text-[var(--text-dim)] mb-1.5">
+            <div className="bg-neutral-50 rounded-xl p-3.5">
+              <div className="flex items-center gap-1.5 text-neutral-400 mb-1.5">
                 <Activity size={13} />
                 <span className="text-[11px] font-medium">Симуляции</span>
               </div>
-              <p className="text-[22px] font-bold text-[var(--text-main)]" style={{ fontFamily: 'var(--font-syne)' }}>
+              <p className="text-[22px] font-bold font-inter text-neutral-900">
                 {user.simulations_used}
               </p>
             </div>
-            <div className="bg-[var(--bg-surface-alt)] rounded-xl p-3.5">
-              <div className="flex items-center gap-1.5 text-[var(--text-dim)] mb-1.5">
+            <div className="bg-neutral-50 rounded-xl p-3.5">
+              <div className="flex items-center gap-1.5 text-neutral-400 mb-1.5">
                 <FileText size={13} />
                 <span className="text-[11px] font-medium">Документы</span>
               </div>
-              <p className="text-[22px] font-bold text-[var(--text-main)]" style={{ fontFamily: 'var(--font-syne)' }}>
+              <p className="text-[22px] font-bold font-inter text-neutral-900">
                 {user.documents_uploaded}
               </p>
             </div>
@@ -350,41 +348,41 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
           <div className="flex flex-col gap-3">
             {periodEnd && (
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-alt)] flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar size={13} className="text-[var(--text-dim)]" />
+                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <Calendar size={13} className="text-neutral-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-[var(--text-dim)] font-medium uppercase tracking-wide">Подписка до</p>
-                  <p className="text-[13px] text-[var(--text-main)] mt-0.5">{periodEnd}</p>
+                  <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">Подписка до</p>
+                  <p className="text-[13px] text-neutral-900 mt-0.5">{periodEnd}</p>
                 </div>
               </div>
             )}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-alt)] flex items-center justify-center shrink-0 mt-0.5">
-                <Users size={13} className="text-[var(--text-dim)]" />
+              <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+                <Users size={13} className="text-neutral-400" />
               </div>
               <div>
-                <p className="text-[11px] text-[var(--text-dim)] font-medium uppercase tracking-wide">Зарегистрирован</p>
-                <p className="text-[13px] text-[var(--text-main)] mt-0.5">{createdAt}</p>
+                <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">Зарегистрирован</p>
+                <p className="text-[13px] text-neutral-900 mt-0.5">{createdAt}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-alt)] flex items-center justify-center shrink-0 mt-0.5">
-                <CreditCard size={13} className="text-[var(--text-dim)]" />
+              <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+                <CreditCard size={13} className="text-neutral-400" />
               </div>
               <div>
-                <p className="text-[11px] text-[var(--text-dim)] font-medium uppercase tracking-wide">ID</p>
-                <p className="text-[12px] text-[var(--text-main)] mt-0.5 font-mono break-all">{user.id}</p>
+                <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">ID</p>
+                <p className="text-[12px] text-neutral-900 mt-0.5 font-mono break-all">{user.id}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-[var(--border-main)]">
+        <div className="px-5 py-4 border-t border-neutral-200">
           <button
             onClick={onChangePlan}
-            className="btn-primary w-full gap-2 text-sm justify-center"
+            className="w-full flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-6 py-3 text-sm transition-all"
           >
             <Zap size={14} />
             Изменить план
@@ -450,12 +448,11 @@ export default function AdminUsersPage() {
     <div className="pb-10">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[12px] text-[var(--text-dim)] mb-1.5 font-semibold uppercase tracking-wider">
+        <p className="text-[12px] text-neutral-400 mb-1.5 font-semibold uppercase tracking-wider">
           Управление
         </p>
         <h1
-          className="text-[28px] sm:text-[32px] font-bold text-[var(--text-main)] leading-tight"
-          style={{ letterSpacing: '-0.025em', fontFamily: 'var(--font-syne)' }}
+          className="text-[28px] sm:text-[32px] font-bold font-inter text-neutral-900 leading-tight tracking-[-0.025em]"
         >
           Пользователи
         </h1>
@@ -464,18 +461,18 @@ export default function AdminUsersPage() {
       {/* Search */}
       <div className="mb-5">
         <div className="relative max-w-sm">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-placeholder)]" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             placeholder="Поиск по email..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-main)] text-[14px] placeholder-[var(--text-placeholder)] focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-glow)] transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-neutral-900 text-[14px] placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
           />
           {search && (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-[var(--text-main)] cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900 cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -488,11 +485,11 @@ export default function AdminUsersPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-[var(--bg-surface)] rounded-[var(--radius-lg)] border border-[var(--border-main)] shadow-[var(--shadow-card)] overflow-hidden"
+        className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
       >
         {isLoading && (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin text-[var(--accent-primary)]" />
+            <Loader2 size={24} className="animate-spin text-neutral-900" />
           </div>
         )}
 
@@ -509,12 +506,12 @@ export default function AdminUsersPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[var(--border-main)] bg-[var(--bg-surface-alt)]">
+                  <tr className="border-b border-neutral-200 bg-neutral-50">
                     {['Email', 'План', 'Статус', 'Подписка до', 'Симуляции', 'Документы'].map(
                       (col) => (
                         <th
                           key={col}
-                          className="text-left px-4 py-3 text-[11px] font-semibold text-[var(--text-dim)] uppercase tracking-wider"
+                          className="text-left px-4 py-3 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider"
                         >
                           {col}
                         </th>
@@ -522,12 +519,12 @@ export default function AdminUsersPage() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-main)]">
+                <tbody className="divide-y divide-neutral-100">
                   {data.items.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
-                        className="text-center py-12 text-[var(--text-dim)] text-sm"
+                        className="text-center py-12 text-neutral-400 text-sm"
                       >
                         <Users size={28} className="mx-auto mb-2 opacity-30" />
                         Пользователи не найдены
@@ -546,13 +543,13 @@ export default function AdminUsersPage() {
                         <tr
                           key={user.id}
                           onClick={() => handleRowClick(user)}
-                          className={`hover:bg-[var(--bg-surface-alt)] transition-colors cursor-pointer ${
+                          className={`hover:bg-neutral-50 transition-colors cursor-pointer ${
                             selectedUser?.id === user.id
-                              ? 'bg-[var(--accent-primary-bg)]'
+                              ? 'bg-neutral-100'
                               : ''
                           }`}
                         >
-                          <td className="px-4 py-3.5 text-[13px] text-[var(--text-main)] font-medium max-w-[200px] truncate">
+                          <td className="px-4 py-3.5 text-[13px] text-neutral-900 font-medium max-w-[200px] truncate">
                             {user.email}
                           </td>
                           <td className="px-4 py-3.5">
@@ -561,13 +558,13 @@ export default function AdminUsersPage() {
                           <td className="px-4 py-3.5">
                             <StatusBadge status={user.subscription_status} />
                           </td>
-                          <td className="px-4 py-3.5 text-[12px] text-[var(--text-dim)] font-mono whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-[12px] text-neutral-400 font-mono whitespace-nowrap">
                             {periodEnd}
                           </td>
-                          <td className="px-4 py-3.5 text-[13px] text-[var(--text-muted)] text-center">
+                          <td className="px-4 py-3.5 text-[13px] text-neutral-500 text-center">
                             {user.simulations_used}
                           </td>
-                          <td className="px-4 py-3.5 text-[13px] text-[var(--text-muted)] text-center">
+                          <td className="px-4 py-3.5 text-[13px] text-neutral-500 text-center">
                             {user.documents_uploaded}
                           </td>
                         </tr>
@@ -580,15 +577,15 @@ export default function AdminUsersPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-main)] bg-[var(--bg-surface-alt)]">
-                <p className="text-[12px] text-[var(--text-dim)]">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+                <p className="text-[12px] text-neutral-400">
                   Стр. {page} из {totalPages} · Всего: {data.total}
                 </p>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={14} />
                   </button>
@@ -600,8 +597,8 @@ export default function AdminUsersPage() {
                         onClick={() => setPage(p)}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
                           p === page
-                            ? 'bg-[var(--accent-primary)] text-white border border-[var(--accent-primary)]'
-                            : 'border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)]'
+                            ? 'bg-[#171717] text-white border border-neutral-900'
+                            : 'border border-neutral-200 text-neutral-500 hover:bg-white'
                         }`}
                       >
                         {p}
@@ -611,7 +608,7 @@ export default function AdminUsersPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronRight size={14} />
                   </button>

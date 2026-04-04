@@ -69,22 +69,22 @@ export function ConfirmDialog({
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[75] flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="panel w-full max-w-sm pointer-events-auto p-6">
+            <div className="bg-white border border-neutral-200 rounded-xl w-full max-w-sm pointer-events-auto p-6">
               {/* Icon + Title */}
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-error-bg)] flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertTriangle size={20} className="text-[var(--color-error)]" />
+                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle size={20} className="text-red-500" />
                 </div>
                 <div>
                   <h3
                     id="confirm-dialog-title"
-                    className="font-syne text-base font-semibold text-[var(--text-main)] mb-1"
+                    className="font-inter text-base font-bold text-neutral-900 mb-1"
                   >
                     {title}
                   </h3>
                   <p
                     id="confirm-dialog-message"
-                    className="font-inter text-sm text-[var(--text-muted)] leading-relaxed"
+                    className="font-inter text-sm text-neutral-500 leading-relaxed"
                   >
                     {message}
                   </p>
@@ -95,14 +95,14 @@ export function ConfirmDialog({
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   onClick={onCancel}
-                  className="btn-secondary text-sm px-4 py-2"
+                  className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
                 >
                   {cancelLabel}
                 </button>
                 <button
                   ref={confirmButtonRef}
                   onClick={onConfirm}
-                  className="btn-danger text-sm px-4 py-2"
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm px-4 py-2 transition-colors"
                 >
                   {confirmLabel}
                 </button>

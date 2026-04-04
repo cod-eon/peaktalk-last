@@ -249,7 +249,7 @@ export default function AdminStatsPage() {
         </div>
         <button
           onClick={() => refetch()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[var(--text-dim)] border border-[var(--border-main)] rounded-lg hover:bg-[var(--bg-surface-alt)] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-neutral-400 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
         >
           <RefreshCw size={12} />
           Обновить
@@ -259,7 +259,7 @@ export default function AdminStatsPage() {
       {/* ── Loading ── */}
       {isLoading && (
         <div className="flex items-center justify-center py-24">
-          <Loader2 size={28} className="animate-spin text-[var(--accent-primary)]" />
+          <Loader2 size={28} className="animate-spin text-neutral-900" />
         </div>
       )}
 
@@ -382,7 +382,7 @@ export default function AdminStatsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-[11px] text-[var(--text-dim)] text-right"
+            className="text-[11px] text-neutral-400 text-right"
           >
             Данные обновляются каждые 30 сек · Графики за последние 30 / 14 дней
           </motion.p>

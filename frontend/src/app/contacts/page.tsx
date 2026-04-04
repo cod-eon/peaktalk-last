@@ -34,13 +34,13 @@ function ContactCard({
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       style={{
         display: "block",
-        background: "var(--bg-card)",
-        border: "1px solid var(--border-main)",
-        borderRadius: "var(--radius-lg)",
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "16px",
         padding: "24px 28px",
         textDecoration: "none",
         cursor: "pointer",
-        boxShadow: "var(--shadow-card)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
         transition: "border-color 0.15s ease, box-shadow 0.15s ease",
       }}
       onMouseEnter={(e) => {
@@ -49,17 +49,17 @@ function ContactCard({
           "0 4px 16px rgba(232,96,10,0.08), 0 0 0 1px rgba(232,96,10,0.12)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border-main)";
-        e.currentTarget.style.boxShadow = "var(--shadow-card)";
+        e.currentTarget.style.borderColor = "#e5e7eb";
+        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
       }}
     >
       <div
         style={{
-          fontFamily: "var(--font-mono)",
+          fontFamily: "monospace",
           fontSize: 10,
           letterSpacing: "0.09em",
           textTransform: "uppercase",
-          color: "var(--text-dim)",
+          color: "#737373",
           marginBottom: 10,
           fontWeight: 500,
         }}
@@ -68,11 +68,11 @@ function ContactCard({
       </div>
       <div
         style={{
-          fontFamily: "var(--font-syne)",
+          fontFamily: "Inter, sans-serif",
           fontWeight: 700,
           fontSize: 18,
           letterSpacing: "-0.02em",
-          color: "var(--accent-primary)",
+          color: "#E8600A",
           marginBottom: 8,
         }}
       >
@@ -82,7 +82,7 @@ function ContactCard({
         style={{
           fontSize: 14,
           lineHeight: 1.6,
-          color: "var(--text-muted)",
+          color: "#737373",
         }}
       >
         {description}
@@ -95,7 +95,7 @@ export default function ContactsPage() {
   return (
     <main
       style={{
-        background: "var(--bg-main)",
+        background: "#fff",
         minHeight: "100vh",
         paddingTop: 120,
         paddingBottom: 80,
@@ -117,12 +117,12 @@ export default function ContactsPage() {
           <Link
             href="/"
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               fontWeight: 500,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--text-dim)",
+              color: "#737373",
               textDecoration: "none",
               display: "inline-flex",
               alignItems: "center",
@@ -131,10 +131,10 @@ export default function ContactsPage() {
               transition: "color 0.15s ease",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "var(--text-main)")
+              (e.currentTarget.style.color = "#171717")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--text-dim)")
+              (e.currentTarget.style.color = "#737373")
             }
           >
             &larr; Назад
@@ -150,11 +150,11 @@ export default function ContactsPage() {
         >
           <div
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--accent-primary)",
+              color: "#E8600A",
               marginBottom: 12,
               fontWeight: 500,
             }}
@@ -163,11 +163,11 @@ export default function ContactsPage() {
           </div>
           <h1
             style={{
-              fontFamily: "var(--font-syne)",
+              fontFamily: "Inter, sans-serif",
               fontWeight: 800,
               fontSize: 36,
               letterSpacing: "-0.03em",
-              color: "var(--text-main)",
+              color: "#171717",
               margin: 0,
               lineHeight: 1.15,
             }}
@@ -185,7 +185,7 @@ export default function ContactsPage() {
           style={{
             fontSize: 15,
             lineHeight: 1.7,
-            color: "var(--text-muted)",
+            color: "#737373",
             marginTop: 20,
             marginBottom: 0,
           }}
@@ -202,7 +202,7 @@ export default function ContactsPage() {
           variants={fadeUp}
           style={{
             height: 1,
-            background: "var(--border-main)",
+            background: "#e5e7eb",
             marginTop: 40,
             marginBottom: 40,
           }}
@@ -236,9 +236,9 @@ export default function ContactsPage() {
             gap: 10,
             marginTop: 32,
             padding: "14px 18px",
-            background: "var(--bg-surface-alt)",
-            border: "1px solid var(--border-main)",
-            borderRadius: "var(--radius-md)",
+            background: "#f5f5f5",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
           }}
         >
           <div
@@ -246,16 +246,16 @@ export default function ContactsPage() {
               width: 7,
               height: 7,
               borderRadius: "50%",
-              background: "var(--color-success)",
+              background: "#16a34a",
               flexShrink: 0,
             }}
           />
           <p
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 12,
               letterSpacing: "0.04em",
-              color: "var(--text-dim)",
+              color: "#737373",
               margin: 0,
             }}
           >
@@ -281,11 +281,11 @@ export default function ContactsPage() {
           >
             <h2
               style={{
-                fontFamily: "var(--font-syne)",
+                fontFamily: "Inter, sans-serif",
                 fontWeight: 700,
                 fontSize: 17,
                 letterSpacing: "-0.02em",
-                color: "var(--text-main)",
+                color: "#171717",
                 whiteSpace: "nowrap",
                 margin: 0,
               }}
@@ -296,7 +296,7 @@ export default function ContactsPage() {
               style={{
                 flex: 1,
                 height: 1,
-                background: "var(--border-main)",
+                background: "#e5e7eb",
               }}
             />
           </div>
@@ -306,9 +306,9 @@ export default function ContactsPage() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
               gap: 1,
-              background: "var(--border-main)",
-              border: "1px solid var(--border-main)",
-              borderRadius: "var(--radius-md)",
+              background: "#e5e7eb",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
               overflow: "hidden",
             }}
           >
@@ -321,17 +321,17 @@ export default function ContactsPage() {
               <div
                 key={label}
                 style={{
-                  background: "var(--bg-card)",
+                  background: "#fff",
                   padding: "16px 20px",
                 }}
               >
                 <div
                   style={{
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "monospace",
                     fontSize: 10,
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
-                    color: "var(--text-dim)",
+                    color: "#737373",
                     marginBottom: 6,
                   }}
                 >
@@ -341,7 +341,7 @@ export default function ContactsPage() {
                   style={{
                     fontSize: 14,
                     fontWeight: 600,
-                    color: "var(--text-main)",
+                    color: "#171717",
                     letterSpacing: "-0.01em",
                   }}
                 >
@@ -361,15 +361,15 @@ export default function ContactsPage() {
           style={{
             marginTop: 64,
             paddingTop: 24,
-            borderTop: "1px solid var(--border-main)",
+            borderTop: "1px solid #e5e7eb",
           }}
         >
           <p
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               letterSpacing: "0.05em",
-              color: "var(--text-placeholder)",
+              color: "#a3a3a3",
               margin: 0,
               lineHeight: 1.6,
             }}

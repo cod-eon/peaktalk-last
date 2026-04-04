@@ -26,11 +26,11 @@ function SectionHeading({ title }: { title: string }) {
     >
       <h2
         style={{
-          fontFamily: "var(--font-syne)",
+          fontFamily: "Inter, sans-serif",
           fontWeight: 700,
           fontSize: 17,
           letterSpacing: "-0.02em",
-          color: "var(--text-main)",
+          color: "#171717",
           margin: 0,
           lineHeight: 1.3,
           minWidth: 0,
@@ -43,7 +43,7 @@ function SectionHeading({ title }: { title: string }) {
         style={{
           flex: 1,
           height: 1,
-          background: "var(--border-main)",
+          background: "#e5e7eb",
         }}
       />
     </div>
@@ -56,7 +56,7 @@ export default function PersonalDataPage() {
   return (
     <main
       style={{
-        background: "var(--bg-main)",
+        background: "#fff",
         minHeight: "100vh",
         paddingTop: 120,
         paddingBottom: 80,
@@ -78,12 +78,12 @@ export default function PersonalDataPage() {
           <button
             onClick={() => router.back()}
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               fontWeight: 500,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--text-dim)",
+              color: "#737373",
               textDecoration: "none",
               display: "inline-flex",
               alignItems: "center",
@@ -96,10 +96,10 @@ export default function PersonalDataPage() {
               padding: 0,
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "var(--text-main)")
+              (e.currentTarget.style.color = "#171717")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "var(--text-dim)")
+              (e.currentTarget.style.color = "#737373")
             }
           >
             &larr; Назад
@@ -115,11 +115,11 @@ export default function PersonalDataPage() {
         >
           <div
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--accent-primary)",
+              color: "#E8600A",
               marginBottom: 12,
               fontWeight: 500,
             }}
@@ -128,11 +128,11 @@ export default function PersonalDataPage() {
           </div>
           <h1
             style={{
-              fontFamily: "var(--font-syne)",
+              fontFamily: "Inter, sans-serif",
               fontWeight: 800,
               fontSize: "clamp(24px, 6vw, 36px)",
               letterSpacing: "-0.03em",
-              color: "var(--text-main)",
+              color: "#171717",
               margin: 0,
               lineHeight: 1.15,
             }}
@@ -141,9 +141,9 @@ export default function PersonalDataPage() {
           </h1>
           <p
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 12,
-              color: "var(--text-dim)",
+              color: "#737373",
               marginTop: 12,
               letterSpacing: "0.04em",
             }}
@@ -161,7 +161,7 @@ export default function PersonalDataPage() {
           style={{
             fontSize: 15,
             lineHeight: 1.7,
-            color: "var(--text-muted)",
+            color: "#737373",
             marginTop: 32,
             marginBottom: 0,
           }}
@@ -185,9 +185,9 @@ export default function PersonalDataPage() {
           <SectionHeading title="1. Оператор персональных данных" />
           <div
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-main)",
-              borderRadius: "var(--radius-md)",
+              background: "#fff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
               padding: "20px 24px",
               display: "grid",
               gap: 10,
@@ -209,11 +209,11 @@ export default function PersonalDataPage() {
               >
                 <span
                   style={{
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "monospace",
                     fontSize: 11,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
-                    color: "var(--text-dim)",
+                    color: "#737373",
                     minWidth: 80,
                     flexShrink: 0,
                   }}
@@ -223,7 +223,7 @@ export default function PersonalDataPage() {
                 <span
                   style={{
                     fontSize: 14,
-                    color: "var(--text-main)",
+                    color: "#171717",
                     fontWeight: 500,
                   }}
                 >
@@ -231,7 +231,7 @@ export default function PersonalDataPage() {
                     <a
                       href="mailto:support@peaktalk.ru"
                       style={{
-                        color: "var(--accent-primary)",
+                        color: "#E8600A",
                         textDecoration: "none",
                       }}
                     >
@@ -253,7 +253,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="2. Принципы обработки персональных данных" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             В соответствии со ст. 5 152-ФЗ Оператор при обработке персональных
             данных руководствуется следующими принципами:
           </p>
@@ -261,39 +261,39 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
             }}
           >
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Законность и справедливость</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Законность и справедливость</span>{" "}
               — обработка осуществляется только при наличии правового основания;
               пользователи не вводятся в заблуждение.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Целевой характер</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Целевой характер</span>{" "}
               — данные обрабатываются только для конкретных, заранее определённых
               и правомерных целей; не допускается обработка в целях, несовместимых
               с заявленными.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Минимизация данных</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Минимизация данных</span>{" "}
               — Оператор собирает только те данные, которые необходимы для
               достижения указанных целей.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Точность</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Точность</span>{" "}
               — принимаются меры по обеспечению достоверности и актуальности
               данных; неточные данные уточняются или удаляются.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ограничение хранения</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ограничение хранения</span>{" "}
               — данные хранятся не дольше, чем требуется для целей их обработки.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Целостность и конфиденциальность</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Целостность и конфиденциальность</span>{" "}
               — применяются технические и организационные меры, исключающие
               несанкционированный доступ или утрату данных.
             </li>
@@ -307,7 +307,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="3. Перечень обрабатываемых персональных данных" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             Субъекты персональных данных — физические лица (пользователи сервиса).
             Оператор обрабатывает следующие категории персональных данных:
           </p>
@@ -315,34 +315,34 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
             }}
           >
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Адрес электронной почты (email)</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Адрес электронной почты (email)</span>{" "}
               — обязателен для регистрации, аутентификации и направления
               уведомлений.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Имя пользователя</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Имя пользователя</span>{" "}
               — опционально, предоставляется пользователем самостоятельно при
               заполнении профиля.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>IP-адрес</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>IP-адрес</span>{" "}
               — фиксируется автоматически при каждом запросе в целях обеспечения
               безопасности.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Пользовательские документы</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Пользовательские документы</span>{" "}
               — текстовые материалы (резюме, тексты докладов, сценарии),
               добровольно загружаемые пользователем для проведения симуляций.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>История сессий</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>История сессий</span>{" "}
               — тексты вопросов, ответов и оценок в рамках тренировочных
               AI-симуляций; сохраняются для отображения прогресса пользователя.
             </li>
@@ -351,7 +351,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 16,
               marginBottom: 0,
             }}
@@ -369,7 +369,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="4. Цели обработки и правовые основания" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             Оператор обрабатывает персональные данные исключительно в следующих
             целях при наличии соответствующего правового основания:
           </p>
@@ -377,48 +377,48 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
             }}
           >
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Регистрация и предоставление доступа к Сервису
               </span>{" "}
               — основание: исполнение договора (ст. 6 ч. 1 п. 5 152-ФЗ).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Проведение AI-симуляций
               </span>{" "}
               — обработка текстов пользователя для формирования обратной связи —
               основание: исполнение договора (ст. 6 ч. 1 п. 5 152-ФЗ).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Хранение и отображение истории сессий
               </span>{" "}
               — для аналитики прогресса — основание: согласие
               пользователя (ст. 6 ч. 1 п. 1, ст. 9 152-ФЗ).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Улучшение качества Сервиса
               </span>{" "}
               — в обезличенном виде — основание: согласие пользователя
               (ст. 6 ч. 1 п. 1 152-ФЗ).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Направление технических уведомлений
               </span>{" "}
               (изменения Сервиса, обновления Политики) — основание: исполнение
               договора (ст. 6 ч. 1 п. 5 152-ФЗ).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+              <span style={{ color: "#171717", fontWeight: 500 }}>
                 Обеспечение безопасности
               </span>{" "}
               — защита от несанкционированного доступа — основание: законные
@@ -434,7 +434,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="5. Способы обработки персональных данных" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             В соответствии со ст. 3 152-ФЗ обработка персональных данных
             включает следующие действия: сбор, запись, систематизацию,
             накопление, хранение, уточнение (обновление, изменение),
@@ -445,7 +445,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 12,
               marginBottom: 0,
             }}
@@ -463,7 +463,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="6. Условия передачи третьим лицам" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             Передача персональных данных третьим лицам допускается только в
             следующих случаях, предусмотренных ст. 6 и ст. 18.1 152-ФЗ:
           </p>
@@ -471,7 +471,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
@@ -486,13 +486,13 @@ export default function PersonalDataPage() {
               случаях, прямо предусмотренных законодательством.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Google LLC (Gemini API)</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Google LLC (Gemini API)</span>{" "}
               — тексты документов и сообщений передаются для генерации
               AI-ответов на основании договора-поручения обработки данных.
               Провайдер не использует переданные данные для обучения моделей.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Supabase Inc.</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Supabase Inc.</span>{" "}
               — хранение загружаемых пользователем файлов на основании
               договора-поручения обработки данных.
             </li>
@@ -501,7 +501,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 16,
               marginBottom: 0,
             }}
@@ -519,7 +519,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="7. Трансграничная передача данных" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             В соответствии со ст. 12 152-ФЗ Оператор осуществляет трансграничную
             передачу персональных данных следующим получателям:
           </p>
@@ -527,14 +527,14 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
             }}
           >
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Google LLC (США)</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Google LLC (США)</span>{" "}
               — для обработки текстовых запросов через Gemini API. Google LLC
               обеспечивает защиту персональных данных в соответствии со
               стандартами, которые Оператор признаёт достаточными; передача
@@ -543,7 +543,7 @@ export default function PersonalDataPage() {
               (TLS 1.2+) и не используются для обучения моделей.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Supabase Inc. (США)</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Supabase Inc. (США)</span>{" "}
               — для хранения загружаемых пользователем файлов. Передача
               осуществляется с согласия пользователя на основании договора
               о поручении обработки данных, включающего требования по защите
@@ -554,7 +554,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 16,
               marginBottom: 0,
             }}
@@ -572,7 +572,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="8. Меры по обеспечению безопасности" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             В соответствии со ст. 19 152-ФЗ и требованиями Постановления
             Правительства РФ № 1119 Оператор применяет следующие меры защиты
             персональных данных:
@@ -581,7 +581,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
@@ -615,7 +615,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="9. Права субъекта персональных данных" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             В соответствии со статьями 14–17 Федерального закона № 152-ФЗ
             субъект персональных данных вправе:
           </p>
@@ -623,32 +623,32 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.9,
-              color: "var(--text-muted)",
+              color: "#737373",
               paddingLeft: 20,
               marginTop: 12,
               marginBottom: 0,
             }}
           >
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ст. 14 — Право на доступ:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ст. 14 — Право на доступ:</span>{" "}
               получить подтверждение факта обработки, перечень обрабатываемых
               данных, цели и способы обработки, сведения о третьих лицах,
               которым передавались данные.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ст. 15 — Право на уточнение:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ст. 15 — Право на уточнение:</span>{" "}
               потребовать уточнения неполных, устаревших или неточных
               персональных данных, а также их блокирования до устранения
               нарушений.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ст. 17 — Право на удаление:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ст. 17 — Право на удаление:</span>{" "}
               потребовать уничтожения персональных данных, если они обрабатываются
               незаконно, цель обработки достигнута или субъект отзывает согласие.
               Срок исполнения — 30 дней.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ст. 9 — Отзыв согласия:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ст. 9 — Отзыв согласия:</span>{" "}
               в любой момент отозвать ранее данное согласие на обработку.
               Отзыв не влияет на законность обработки, осуществлённой до его
               получения. После отзыва Оператор прекращает обработку в течение
@@ -656,12 +656,12 @@ export default function PersonalDataPage() {
               основания для их хранения.
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Переносимость:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Переносимость:</span>{" "}
               запросить выгрузку персональных данных в машиночитаемом формате
               (JSON).
             </li>
             <li>
-              <span style={{ color: "var(--text-main)", fontWeight: 500 }}>Ст. 17 — Право на обжалование:</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Ст. 17 — Право на обжалование:</span>{" "}
               обжаловать действия или бездействие Оператора в Роскомнадзоре
               (rkn.gov.ru) или в судебном порядке.
             </li>
@@ -670,7 +670,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 16,
               marginBottom: 0,
             }}
@@ -678,7 +678,7 @@ export default function PersonalDataPage() {
             Для реализации указанных прав направьте запрос на:{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "var(--accent-primary)", textDecoration: "none" }}
+              style={{ color: "#E8600A", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>
@@ -695,11 +695,11 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="10. Заключительные положения" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             Настоящая Политика вступает в силу с даты её утверждения и действует
             бессрочно. Оператор вправе вносить изменения в Политику; новая
             редакция публикуется по адресу{" "}
-            <span style={{ color: "var(--text-main)" }}>
+            <span style={{ color: "#171717" }}>
               peaktalk.ru/personal-data
             </span>{" "}
             и вступает в силу с даты публикации, если иное не указано в
@@ -710,7 +710,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 12,
               marginBottom: 0,
             }}
@@ -726,7 +726,7 @@ export default function PersonalDataPage() {
           variants={fadeUp}
         >
           <SectionHeading title="11. Контактные данные оператора" />
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-muted)", margin: 0 }}>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#737373", margin: 0 }}>
             Оператор: Самозанятый, ИНН&nbsp;583414998055, сервис PeakTalk
             (peaktalk.ru).
           </p>
@@ -734,7 +734,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 8,
               marginBottom: 0,
             }}
@@ -742,7 +742,7 @@ export default function PersonalDataPage() {
             Электронная почта:{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "var(--accent-primary)", textDecoration: "none" }}
+              style={{ color: "#E8600A", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>
@@ -751,7 +751,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 8,
               marginBottom: 0,
             }}
@@ -762,7 +762,7 @@ export default function PersonalDataPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.7,
-              color: "var(--text-muted)",
+              color: "#737373",
               marginTop: 8,
               marginBottom: 0,
             }}
@@ -782,15 +782,15 @@ export default function PersonalDataPage() {
           style={{
             marginTop: 64,
             paddingTop: 24,
-            borderTop: "1px solid var(--border-main)",
+            borderTop: "1px solid #e5e7eb",
           }}
         >
           <p
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "monospace",
               fontSize: 11,
               letterSpacing: "0.05em",
-              color: "var(--text-placeholder)",
+              color: "#a3a3a3",
               margin: 0,
               lineHeight: 1.6,
             }}

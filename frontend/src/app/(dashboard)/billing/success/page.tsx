@@ -60,7 +60,7 @@ export default function BillingSuccessPage() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-6 bg-white border border-[var(--border-main)] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
+          className="flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
         >
           {/* Icon */}
           <div className="w-16 h-16 rounded-full bg-accent-100 flex items-center justify-center">
@@ -76,12 +76,12 @@ export default function BillingSuccessPage() {
           {/* Text */}
           <div className="flex flex-col gap-2">
             <h1
-              className="text-2xl font-bold text-[var(--text-main)]"
-              style={{ fontFamily: 'var(--font-syne)', letterSpacing: '-0.02em' }}
+              className="text-2xl font-bold text-[#171717]"
+              style={{ letterSpacing: '-0.02em' }}
             >
               Подписка активирована!
             </h1>
-            <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+            <p className="text-[#737373] text-sm leading-relaxed">
               Добро пожаловать в PRO! Теперь вам доступны безлимитные симуляции, все персоны и PDF отчёты.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function BillingSuccessPage() {
           {/* PRO badge */}
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-accent-500 to-amber-400 text-white">
             <Zap size={15} />
-            <span className="font-semibold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>
+            <span className="font-semibold text-sm" >
               PeakTalk PRO активен
             </span>
           </div>
@@ -97,8 +97,8 @@ export default function BillingSuccessPage() {
           {/* CTA */}
           <Link
             href="/simulation"
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[var(--accent-primary)] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
-            style={{ fontFamily: 'var(--font-syne)' }}
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[#E8600A] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
+            
           >
             Начать симуляцию
             <ArrowRight size={15} />
@@ -106,7 +106,7 @@ export default function BillingSuccessPage() {
 
           <Link
             href="/billing"
-            className="text-[12px] text-[var(--text-dim)] hover:text-[var(--text-muted)] underline transition-colors"
+            className="text-[12px] text-[#737373] hover:text-[#737373] underline transition-colors"
           >
             Управление подпиской
           </Link>

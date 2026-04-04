@@ -98,14 +98,14 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
             className="fixed inset-0 z-[81] flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="pointer-events-auto w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl shadow-2xl overflow-hidden"
+              className="pointer-events-auto w-full max-w-md bg-white border border-neutral-200 rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="relative px-6 pt-6 pb-4">
                 <button
                   onClick={onClose}
-                  className="absolute top-5 right-5 w-7 h-7 flex items-center justify-center rounded-full text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] transition-colors"
+                  className="absolute top-5 right-5 w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
                   aria-label="Закрыть"
                 >
                   <X size={16} />
@@ -117,14 +117,13 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                   </div>
                   <div>
                     <h2
-                      className="text-[var(--text-main)] font-semibold text-base leading-tight"
-                      style={{ fontFamily: 'var(--font-syne)' }}
+                      className="text-neutral-900 font-inter font-bold text-base leading-tight"
                     >
                       {config.title}
                     </h2>
                   </div>
                 </div>
-                <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+                <p className="text-neutral-500 text-sm leading-relaxed">
                   {config.subtitle}
                 </p>
               </div>
@@ -132,23 +131,22 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               {/* Plan comparison */}
               <div className="px-6 pb-4 grid grid-cols-2 gap-3">
                 {/* Starter card */}
-                <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+                <div className="rounded-xl border border-neutral-200 bg-white p-4">
                   <div className="mb-3">
-                    <span className="inline-block text-[10px] font-semibold tracking-widest text-[var(--text-dim)] uppercase mb-1">
+                    <span className="inline-block text-[10px] font-semibold tracking-widest text-neutral-400 uppercase mb-1">
                       Текущий
                     </span>
                     <div
-                      className="text-[var(--text-main)] font-bold text-sm"
-                      style={{ fontFamily: 'var(--font-syne)' }}
+                      className="text-neutral-900 font-inter font-bold text-sm"
                     >
                       STARTER
                     </div>
-                    <div className="text-[var(--text-dim)] text-[11px] mt-0.5">Бесплатно</div>
+                    <div className="text-neutral-400 text-[11px] mt-0.5">Бесплатно</div>
                   </div>
                   <ul className="space-y-1.5">
                     {STARTER_FEATURES.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-muted)]">
-                        <span className="w-3 h-3 mt-0.5 shrink-0 text-[var(--text-dim)]">—</span>
+                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-neutral-500">
+                        <span className="w-3 h-3 mt-0.5 shrink-0 text-neutral-400">—</span>
                         {f}
                       </li>
                     ))}
@@ -167,8 +165,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                       Рекомендуем
                     </span>
                     <div
-                      className="text-[var(--text-main)] font-bold text-sm"
-                      style={{ fontFamily: 'var(--font-syne)' }}
+                      className="text-neutral-900 font-inter font-bold text-sm"
                     >
                       PRO
                     </div>
@@ -176,7 +173,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                   </div>
                   <ul className="space-y-1.5">
                     {PRO_FEATURES.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-main)]">
+                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-neutral-900">
                         <Check size={10} className="mt-0.5 shrink-0 text-accent-500" />
                         {f}
                       </li>
@@ -189,13 +186,12 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               <div className="px-6 pb-6">
                 <button
                   onClick={handleUpgrade}
-                  className="w-full h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-                  style={{ fontFamily: 'var(--font-syne)' }}
+                  className="w-full h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-inter font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Infinity size={16} />
                   Перейти на PRO — 990 ₽/мес
                 </button>
-                <p className="text-center text-[11px] text-[var(--text-dim)] mt-2.5">
+                <p className="text-center text-[11px] text-neutral-400 mt-2.5">
                   Отменить можно в любой момент без условий
                 </p>
               </div>

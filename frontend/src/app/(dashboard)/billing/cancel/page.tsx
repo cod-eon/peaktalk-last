@@ -15,7 +15,7 @@ export default function BillingCancelPage() {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md text-center flex flex-col items-center gap-6 bg-white border border-[var(--border-main)] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
+        className="w-full max-w-md text-center flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
       >
         {/* Icon */}
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
@@ -25,12 +25,12 @@ export default function BillingCancelPage() {
         {/* Text */}
         <div className="flex flex-col gap-2">
           <h1
-            className="text-2xl font-bold text-[var(--text-main)]"
-            style={{ fontFamily: 'var(--font-syne)', letterSpacing: '-0.02em' }}
+            className="text-2xl font-bold text-[#171717]"
+            style={{ letterSpacing: '-0.02em' }}
           >
             Оплата отменена
           </h1>
-          <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+          <p className="text-[#737373] text-sm leading-relaxed">
             Вы отменили процесс оплаты. Ничего не было списано с вашего счёта. Вы можете попробовать снова в любое время.
           </p>
         </div>
@@ -40,7 +40,7 @@ export default function BillingCancelPage() {
           <button
             onClick={() => openUpgradeModal('simulations')}
             className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
-            style={{ fontFamily: 'var(--font-syne)' }}
+            
           >
             <Zap size={15} />
             Попробовать снова
@@ -48,16 +48,16 @@ export default function BillingCancelPage() {
 
           <Link
             href="/dashboard"
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-light)] font-medium text-sm transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-[#e5e7eb] text-[#737373] hover:text-[#171717] hover:border-[#f3f4f6] font-medium text-sm transition-all cursor-pointer"
           >
             <ArrowLeft size={14} />
             Вернуться в дашборд
           </Link>
         </div>
 
-        <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <p className="text-[11px] text-[#737373] leading-relaxed">
           Если возникли проблемы с оплатой, обратитесь в{' '}
-          <a href="mailto:support@peaktalk.ru" className="underline hover:text-[var(--text-muted)]">
+          <a href="mailto:support@peaktalk.ru" className="underline hover:text-[#737373]">
             поддержку
           </a>
         </p>

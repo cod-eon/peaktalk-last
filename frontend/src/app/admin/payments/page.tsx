@@ -50,13 +50,13 @@ function PaymentStatusBadge({ status }: { status: PaymentStatus | string }) {
       );
     case 'cancelled':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border border-[var(--border-main)]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
           Отменён
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border border-[var(--border-main)]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
           {status}
         </span>
       );
@@ -68,7 +68,7 @@ function PaymentStatusBadge({ status }: { status: PaymentStatus | string }) {
 function YookassaIdCell({ id }: { id: string | null }) {
   const [copied, setCopied] = useState(false);
 
-  if (!id) return <span className="text-[var(--text-dim)]">—</span>;
+  if (!id) return <span className="text-neutral-400">—</span>;
 
   const shortId = id.length > 12 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
 
@@ -85,7 +85,7 @@ function YookassaIdCell({ id }: { id: string | null }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 text-[12px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors group cursor-pointer"
+      className="flex items-center gap-1.5 text-[12px] font-mono text-neutral-400 hover:text-neutral-900 transition-colors group cursor-pointer"
       title={id}
     >
       <span>{shortId}</span>
@@ -121,19 +121,19 @@ function PaymentsSummary({ payments }: { payments: AdminPayment[] }) {
         {
           label: 'На сумму',
           value: `${total.toLocaleString('ru-RU')} ₽`,
-          cls: 'text-[var(--accent-primary)]',
+          cls: 'text-neutral-900 font-extrabold',
         },
         { label: 'Ожидают', value: pending, cls: 'text-amber-600' },
         { label: 'Ошибок', value: failed, cls: 'text-red-500' },
       ].map((stat) => (
         <div
           key={stat.label}
-          className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-main)] px-4 py-3"
+          className="bg-white rounded-xl border border-neutral-200 px-4 py-3"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-dim)] mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1">
             {stat.label}
           </p>
-          <p className={`text-[20px] font-bold ${stat.cls}`} style={{ fontFamily: 'var(--font-syne)' }}>
+          <p className={`text-[20px] font-bold font-inter ${stat.cls}`}>
             {stat.value}
           </p>
         </div>
@@ -160,12 +160,11 @@ export default function AdminPaymentsPage() {
     <div className="pb-10">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[12px] text-[var(--text-dim)] mb-1.5 font-semibold uppercase tracking-wider">
+        <p className="text-[12px] text-neutral-400 mb-1.5 font-semibold uppercase tracking-wider">
           Управление
         </p>
         <h1
-          className="text-[28px] sm:text-[32px] font-bold text-[var(--text-main)] leading-tight"
-          style={{ letterSpacing: '-0.025em', fontFamily: 'var(--font-syne)' }}
+          className="text-[28px] sm:text-[32px] font-bold font-inter text-neutral-900 leading-tight tracking-[-0.025em]"
         >
           Платежи
         </h1>
@@ -179,11 +178,11 @@ export default function AdminPaymentsPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-[var(--bg-surface)] rounded-[var(--radius-lg)] border border-[var(--border-main)] shadow-[var(--shadow-card)] overflow-hidden"
+        className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
       >
         {isLoading && (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin text-[var(--accent-primary)]" />
+            <Loader2 size={24} className="animate-spin text-neutral-900" />
           </div>
         )}
 
@@ -199,12 +198,12 @@ export default function AdminPaymentsPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-[var(--border-main)] bg-[var(--bg-surface-alt)]">
+                  <tr className="border-b border-neutral-200 bg-neutral-50">
                     {['Дата', 'Email', 'Сумма', 'План', 'Статус', 'YooKassa ID'].map(
                       (col) => (
                         <th
                           key={col}
-                          className="text-left px-4 py-3 text-[11px] font-semibold text-[var(--text-dim)] uppercase tracking-wider whitespace-nowrap"
+                          className="text-left px-4 py-3 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider whitespace-nowrap"
                         >
                           {col}
                         </th>
@@ -212,12 +211,12 @@ export default function AdminPaymentsPage() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-main)]">
+                <tbody className="divide-y divide-neutral-100">
                   {data.items.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
-                        className="text-center py-14 text-[var(--text-dim)] text-sm"
+                        className="text-center py-14 text-neutral-400 text-sm"
                       >
                         <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
                         Платежей пока нет
@@ -238,26 +237,26 @@ export default function AdminPaymentsPage() {
                       return (
                         <tr
                           key={payment.id}
-                          className="hover:bg-[var(--bg-surface-alt)] transition-colors"
+                          className="hover:bg-neutral-50 transition-colors"
                         >
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <p className="text-[13px] text-[var(--text-main)] font-mono">{date}</p>
-                            <p className="text-[11px] text-[var(--text-dim)] font-mono">{time}</p>
+                            <p className="text-[13px] text-neutral-900 font-mono">{date}</p>
+                            <p className="text-[11px] text-neutral-400 font-mono">{time}</p>
                           </td>
                           <td className="px-4 py-3.5 max-w-[180px]">
                             {payment.user_email ? (
-                              <span className="text-[13px] text-[var(--text-main)] truncate block">
+                              <span className="text-[13px] text-neutral-900 truncate block">
                                 {payment.user_email}
                               </span>
                             ) : (
-                              <span className="text-[var(--text-dim)] text-[13px]">—</span>
+                              <span className="text-neutral-400 text-[13px]">—</span>
                             )}
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap">
-                            <span className="text-[14px] font-semibold text-[var(--text-main)] font-mono">
+                            <span className="text-[14px] font-semibold text-neutral-900 font-mono">
                               {payment.amount.toLocaleString('ru-RU')}
                             </span>
-                            <span className="text-[12px] text-[var(--text-dim)] ml-1">
+                            <span className="text-[12px] text-neutral-400 ml-1">
                               {payment.currency}
                             </span>
                           </td>
@@ -269,13 +268,13 @@ export default function AdminPaymentsPage() {
                                     ? 'text-accent-600'
                                     : payment.plan === 'team'
                                       ? 'text-violet-600'
-                                      : 'text-[var(--text-dim)]'
+                                      : 'text-neutral-400'
                                 }`}
                               >
                                 {PLAN_LABELS[payment.plan] ?? payment.plan}
                               </span>
                             ) : (
-                              <span className="text-[var(--text-dim)] text-[12px]">—</span>
+                              <span className="text-neutral-400 text-[12px]">—</span>
                             )}
                           </td>
                           <td className="px-4 py-3.5">
@@ -294,15 +293,15 @@ export default function AdminPaymentsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-main)] bg-[var(--bg-surface-alt)]">
-                <p className="text-[12px] text-[var(--text-dim)]">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+                <p className="text-[12px] text-neutral-400">
                   Стр. {page} из {totalPages} · Всего: {data.total}
                 </p>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={14} />
                   </button>
@@ -314,8 +313,8 @@ export default function AdminPaymentsPage() {
                         onClick={() => setPage(p)}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
                           p === page
-                            ? 'bg-[var(--accent-primary)] text-white border border-[var(--accent-primary)]'
-                            : 'border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)]'
+                            ? 'bg-[#171717] text-white border border-neutral-900'
+                            : 'border border-neutral-200 text-neutral-400 hover:bg-white'
                         }`}
                       >
                         {p}
@@ -325,7 +324,7 @@ export default function AdminPaymentsPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-surface)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronRight size={14} />
                   </button>
@@ -341,7 +340,7 @@ export default function AdminPaymentsPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mt-5 flex items-start gap-2.5 p-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface-alt)] text-[12px] text-[var(--text-dim)]"
+        className="mt-5 flex items-start gap-2.5 p-4 rounded-xl border border-neutral-200 bg-neutral-50 text-[12px] text-neutral-500"
       >
         <CreditCard size={14} className="shrink-0 mt-0.5" />
         <p>
