@@ -8,22 +8,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] md:bg-page-geo-subtle text-white flex">
+    <div className="min-h-screen bg-white flex">
       {/* Desktop Sidebar (Fixed) */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col relative z-0 pb-16 md:pb-0 transition-all duration-300 overflow-x-hidden">
-        {/* Decorative corner geometry */}
-        <div className="pointer-events-none absolute top-0 right-0 w-[480px] h-[380px] -z-10 overflow-hidden" aria-hidden="true">
-          <svg width="480" height="380" viewBox="0 0 480 380" fill="none" className="opacity-[0.035]">
-            <circle cx="480" cy="0" r="320" stroke="#8B5CF6" strokeWidth="1.5"/>
-            <circle cx="480" cy="0" r="240" stroke="#E8600A" strokeWidth="1"/>
-            <circle cx="480" cy="0" r="170" stroke="#8B5CF6" strokeWidth="1.5"/>
-            <circle cx="480" cy="0" r="110" stroke="#E8600A" strokeWidth="1"/>
-            <circle cx="480" cy="0" r="60" fill="#8B5CF6" fillOpacity="0.06"/>
-          </svg>
-        </div>
+      <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col bg-white pb-16 md:pb-0 overflow-x-hidden">
         {children}
       </main>
 

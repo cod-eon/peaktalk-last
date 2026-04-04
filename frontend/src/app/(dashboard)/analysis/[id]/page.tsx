@@ -84,7 +84,7 @@ function ScoreRing({ score, size = 64 }: { score: number; size?: number }) {
     return (
         <div className="relative shrink-0" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--bg-surface)" strokeWidth={sw} />
+                <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#f5f5f5" strokeWidth={sw} />
                 <motion.circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color}
                     strokeWidth={sw} strokeLinecap="round" strokeDasharray={c}
                     initial={{ strokeDashoffset: c }}
@@ -93,8 +93,8 @@ function ScoreRing({ score, size = 64 }: { score: number; size?: number }) {
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-syne font-bold leading-none" style={{ color, fontSize: size * 0.27 }}>{score}</span>
-                <span className="font-mono text-[var(--text-dim)]" style={{ fontSize: size * 0.13 }}>/10</span>
+                <span className="font-inter font-bold leading-none" style={{ color, fontSize: size * 0.27 }}>{score}</span>
+                <span className="font-mono text-neutral-400" style={{ fontSize: size * 0.13 }}>/10</span>
             </div>
         </div>
     );
@@ -106,7 +106,7 @@ function CopyButton({ text }: { text: string }) {
     const [copied, setCopied] = useState(false);
     return (
         <button onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all text-[12px] font-mono cursor-pointer">
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-900 transition-all text-[12px] font-mono cursor-pointer">
             {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
             {copied ? 'Скопировано!' : 'Скопировать'}
         </button>
@@ -119,7 +119,7 @@ function DownloadButton({ text, title }: { text: string; title: string }) {
             const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
             Object.assign(document.createElement('a'), { href: url, download: `${title.slice(0,40).replace(/[^а-яёa-z0-9]/gi,'_')}_AI.txt` }).click();
             URL.revokeObjectURL(url);
-        }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-dim)] hover:text-[var(--color-ai)] hover:border-[var(--color-ai)]/40 transition-all text-[12px] font-mono cursor-pointer">
+        }} className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 transition-all text-[12px] font-mono cursor-pointer">
             <Download size={12} /> Скачать .txt
         </button>
     );
@@ -140,8 +140,8 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
             <button onClick={() => onFilter(null)}
                 className={`text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                     !activeFilter
-                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
-                        : 'border-[var(--border-main)] text-[var(--text-dim)] bg-[var(--bg-surface-alt)] hover:text-[var(--text-muted)]'
+                        ? 'bg-[#171717] text-white border-[#171717]'
+                        : 'border-neutral-200 text-neutral-400 bg-neutral-50 hover:text-neutral-500'
                 }`}>
                 Все · {annotations.length}
             </button>
@@ -154,9 +154,9 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
                         onClick={() => onFilter(activeFilter === type ? null : type)}
                         className="text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer"
                         style={{
-                            backgroundColor: isA ? c.pill : 'var(--bg-surface-alt)',
-                            borderColor: isA ? c.pill : 'var(--border-main)',
-                            color: isA ? '#fff' : 'var(--text-dim)',
+                            backgroundColor: isA ? c.pill : '#fafafa',
+                            borderColor: isA ? c.pill : '#e5e5e5',
+                            color: isA ? '#fff' : '#a3a3a3',
                         }}>
                         {c.label} · {count}
                     </button>
@@ -179,9 +179,9 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
     const hi = isHovered || isActive;
     return (
         <button ref={ref}
-            className="w-full text-left rounded-xl transition-all cursor-pointer"
+            className="w-full text-left transition-all cursor-pointer"
             style={{
-                backgroundColor: 'var(--bg-card)',
+                backgroundColor: '#ffffff',
                 borderLeftWidth: '4px',
                 borderLeftColor: c.pill,
                 borderTopWidth: 0, borderRightWidth: 0, borderBottomWidth: 0,
@@ -199,15 +199,15 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
                     style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>{c.label}</span>
                 <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full"
                     style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
-                <span className="ml-auto text-[10px] font-mono text-[var(--text-dim)]">#{realIdx + 1}</span>
+                <span className="ml-auto text-[10px] font-mono text-neutral-400">#{realIdx + 1}</span>
             </div>
             <div className="rounded px-2.5 py-2 mb-2.5"
-                style={{ backgroundColor: 'var(--bg-surface)', borderLeft: `2px solid ${c.pill}50` }}>
-                <p className="text-[11px] font-mono italic leading-relaxed text-[var(--text-main)] line-clamp-2">
+                style={{ backgroundColor: '#fafafa', borderLeft: `2px solid ${c.pill}50` }}>
+                <p className="text-[11px] font-mono italic leading-relaxed text-neutral-900 line-clamp-2">
                     «{ann.text}»
                 </p>
             </div>
-            <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">
+            <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">
                 {ann.comment}
             </p>
         </button>
@@ -232,13 +232,13 @@ function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, o
     return (
         <div className="h-full flex flex-col">
             {/* Score hero */}
-            <div className="flex flex-col items-center gap-3 px-5 pt-6 pb-5 border-b border-[var(--border-main)]">
+            <div className="flex flex-col items-center gap-3 px-5 pt-6 pb-5 border-b border-neutral-200">
                 <ScoreRing score={fb.overall_score} size={88} />
                 <div className="text-center">
-                    <p className="font-syne font-bold text-[18px] leading-tight mb-1.5" style={{ color: scoreColor }}>
+                    <p className="font-inter font-bold text-[18px] leading-tight mb-1.5" style={{ color: scoreColor }}>
                         {scoreLabel}
                     </p>
-                    <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed max-w-[220px]">
+                    <p className="text-[12px] text-neutral-500 font-inter leading-relaxed max-w-[220px]">
                         {micro}
                     </p>
                 </div>
@@ -259,17 +259,17 @@ function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, o
                             style={{ backgroundColor: 'rgba(16,185,129,0.1)' }}>
                             <CheckCircle2 size={22} className="text-emerald-400" strokeWidth={1.5} />
                         </div>
-                        <p className="text-sm text-[var(--text-dim)] font-inter text-center leading-relaxed">
+                        <p className="text-sm text-neutral-400 font-inter text-center leading-relaxed">
                             Отличная работа!
                         </p>
                     </>
                 ) : (
                     <>
                         <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: 'var(--bg-surface)' }}>
-                            <MousePointer2 size={20} className="text-[var(--text-dim)]" strokeWidth={1.5} />
+                            style={{ backgroundColor: '#fafafa' }}>
+                            <MousePointer2 size={20} className="text-neutral-400" strokeWidth={1.5} />
                         </div>
-                        <p className="text-sm text-[var(--text-dim)] font-inter leading-relaxed text-center max-w-[180px]">
+                        <p className="text-sm text-neutral-400 font-inter leading-relaxed text-center max-w-[180px]">
                             Кликните на любой подчёркнутый фрагмент в тексте, чтобы увидеть детальный разбор и советы
                         </p>
                     </>
@@ -290,19 +290,19 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
     return (
         <div className="h-full flex flex-col">
             {/* Header row */}
-            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--border-main)]">
+            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-neutral-200">
                 <button onClick={onClose}
-                    className="flex items-center gap-1.5 text-[12px] font-mono px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)] transition-all cursor-pointer">
+                    className="flex items-center gap-1.5 text-[12px] font-mono px-3 py-1.5 border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-900 hover:bg-white transition-all cursor-pointer">
                     <ArrowLeft size={12} /> К сводке
                 </button>
                 <div className="flex items-center gap-1">
                     <button onClick={onPrev} disabled={idx === 0}
-                        className="p-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
                         <ChevronLeft size={14} />
                     </button>
-                    <span className="text-[11px] font-mono text-[var(--text-dim)] px-1">{idx + 1} / {total}</span>
+                    <span className="text-[11px] font-mono text-neutral-400 px-1">{idx + 1} / {total}</span>
                     <button onClick={onNext} disabled={idx === total - 1}
-                        className="p-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
                         <ChevronRight size={14} />
                     </button>
                 </div>
@@ -322,22 +322,22 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
                 </div>
 
                 {/* Quote */}
-                <div className="rounded-xl px-4 py-4 mb-5"
+                <div className="px-4 py-4 mb-5"
                     style={{
-                        backgroundColor: 'var(--bg-surface)',
+                        backgroundColor: '#fafafa',
                         border: `1px solid ${c.pill}25`,
                         borderLeftWidth: '4px',
                         borderLeftColor: c.pill,
                     }}>
                     <p className="text-[10px] font-mono uppercase tracking-widest mb-2"
                         style={{ color: c.pill }}>Фрагмент</p>
-                    <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">
+                    <p className="text-[13px] font-mono italic leading-relaxed text-neutral-900">
                         «{ann.text}»
                     </p>
                 </div>
 
                 {/* Full comment — never truncated */}
-                <p className="text-[14px] text-[var(--text-muted)] font-inter leading-[1.9]">
+                <p className="text-[14px] text-neutral-500 font-inter leading-[1.9]">
                     {ann.comment}
                 </p>
             </div>
@@ -359,10 +359,10 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                 transition={{ duration: 0.2 }} className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 30, stiffness: 280 }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-card)] rounded-t-[24px] border-t border-[var(--border-main)] shadow-2xl"
+                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-[24px] border-t border-neutral-200 shadow-2xl"
                 style={{ maxWidth: '680px', margin: '0 auto' }}>
                 <div className="flex justify-center pt-3 pb-1 cursor-grab" onClick={onClose}>
-                    <div className="w-10 h-1 rounded-full bg-[var(--border-main)]" />
+                    <div className="w-10 h-1 rounded-full bg-neutral-200" />
                 </div>
                 <div className="px-5 pb-10 pt-2">
                     <div className="flex items-center justify-between mb-4">
@@ -376,32 +376,32 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                                 style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <span className="text-[11px] font-mono text-[var(--text-dim)] px-1">{idx + 1}/{total}</span>
+                            <span className="text-[11px] font-mono text-neutral-400 px-1">{idx + 1}/{total}</span>
                             <button onClick={onPrev} disabled={idx === 0}
-                                className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                                className="p-1 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
                                 <ChevronLeft size={15} />
                             </button>
                             <button onClick={onNext} disabled={idx === total - 1}
-                                className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                                className="p-1 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer">
                                 <ChevronRight size={15} />
                             </button>
-                            <button onClick={onClose} className="p-1 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer">
+                            <button onClick={onClose} className="p-1 text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer">
                                 <X size={16} />
                             </button>
                         </div>
                     </div>
-                    <div className="rounded-[var(--radius-md)] px-4 py-3 mb-4 bg-[var(--bg-surface)]"
+                    <div className="px-4 py-3 mb-4 bg-neutral-50"
                         style={{ borderLeft: `3px solid ${c.pill}` }}>
-                        <p className="text-[13px] font-mono italic leading-relaxed text-[var(--text-main)]">«{ann.text}»</p>
+                        <p className="text-[13px] font-mono italic leading-relaxed text-neutral-900">«{ann.text}»</p>
                     </div>
-                    <p className="text-[15px] text-[var(--text-muted)] font-inter leading-[1.75] mb-6">{ann.comment}</p>
+                    <p className="text-[15px] text-neutral-500 font-inter leading-[1.75] mb-6">{ann.comment}</p>
                     <div className="flex items-center justify-between">
                         <button onClick={onPrev} disabled={idx === 0}
-                            className="flex items-center gap-1.5 text-[13px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer py-2 px-1">
+                            className="flex items-center gap-1.5 text-[13px] font-mono text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer py-2 px-1">
                             <ChevronLeft size={15} /> Предыдущая
                         </button>
                         <button onClick={onNext} disabled={idx === total - 1}
-                            className="flex items-center gap-1.5 text-[13px] font-mono text-[var(--text-dim)] hover:text-[var(--text-main)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer py-2 px-1">
+                            className="flex items-center gap-1.5 text-[13px] font-mono text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer py-2 px-1">
                             Следующая <ChevronRight size={15} />
                         </button>
                     </div>
@@ -426,7 +426,7 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
     const segments = useMemo(() => buildSegments(text, annotations), [text, annotations]);
     return (
         <div
-            className="font-inter text-[18px] leading-[1.75] text-[var(--text-muted)] whitespace-pre-wrap break-words"
+            className="font-inter text-[18px] leading-[1.75] text-neutral-500 whitespace-pre-wrap break-words"
             onClick={onEmpty}
         >
             {segments.map((seg, i) => {
@@ -527,14 +527,14 @@ export default function AnalysisPage() {
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="w-6 h-6 border-2 border-[var(--border-light)] border-t-[var(--accent-primary)] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
         </div>
     );
     if (isError || !draft) return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
             <AlertCircle size={32} className="text-red-400" strokeWidth={1.5} />
-            <p className="text-[14px] text-[var(--text-muted)] font-inter">Материал не найден</p>
-            <button onClick={() => router.back()} className="btn-secondary text-sm gap-2"><ArrowLeft size={14} /> Назад</button>
+            <p className="text-[14px] text-neutral-500 font-inter">Материал не найден</p>
+            <button onClick={() => router.back()} className="inline-flex items-center gap-2 bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium text-sm px-4 py-2 transition-colors cursor-pointer"><ArrowLeft size={14} /> Назад</button>
         </div>
     );
 
@@ -544,15 +544,15 @@ export default function AnalysisPage() {
     if (!analysis || !fb) return (
         <div className="w-full py-8 pb-16">
             <div className="max-w-2xl mx-auto px-4">
-                <button onClick={() => router.back()} className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors mb-5 cursor-pointer group">
+                <button onClick={() => router.back()} className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors mb-5 cursor-pointer group">
                     <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                     <span className="text-[12px] font-inter">Назад</span>
                 </button>
-                <div className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-8 text-center">
-                    <BarChart2 size={24} className="text-[var(--text-dim)] mx-auto mb-4" strokeWidth={1.5} />
-                    <h2 className="font-syne text-[16px] font-semibold text-[var(--text-main)] mb-2">Анализ ещё не запущен</h2>
-                    <p className="text-[13px] text-[var(--text-muted)] font-inter mb-5 max-w-sm mx-auto">AI разберёт структуру, логику и стиль вашего текста</p>
-                    <button className="btn-primary gap-2 cursor-pointer"><Zap size={14} /> Запустить анализ</button>
+                <div className="bg-white border border-neutral-200 p-8 text-center">
+                    <BarChart2 size={24} className="text-neutral-400 mx-auto mb-4" strokeWidth={1.5} />
+                    <h2 className="font-inter text-[16px] font-semibold text-neutral-900 mb-2">Анализ ещё не запущен</h2>
+                    <p className="text-[13px] text-neutral-500 font-inter mb-5 max-w-sm mx-auto">AI разберёт структуру, логику и стиль вашего текста</p>
+                    <button className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white font-medium px-5 py-2.5 transition-colors cursor-pointer"><Zap size={14} /> Запустить анализ</button>
                 </div>
             </div>
         </div>
@@ -584,17 +584,17 @@ export default function AnalysisPage() {
 
     // ── Desktop header: Back + Title + Simulation (score & toggle moved out) ──
     const DesktopHeader = () => (
-        <header className="shrink-0 border-b border-[var(--border-main)] bg-[var(--bg-main)] z-10">
+        <header className="shrink-0 border-b border-neutral-200 bg-white z-10">
             <div className="h-14 flex items-center gap-3 px-6">
                 <button onClick={() => router.back()}
-                    className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0">
+                    className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer group shrink-0">
                     <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                     <span className="text-[13px] font-inter">Назад</span>
                 </button>
-                <h1 className="flex-1 min-w-0 font-syne text-[14px] font-semibold text-[var(--text-main)] truncate">
+                <h1 className="flex-1 min-w-0 font-inter text-[14px] font-semibold text-neutral-900 truncate">
                     {draft.title}
                 </h1>
-                <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 shrink-0">
+                <Link href={`/simulation?draft=${draftId}`} className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white font-medium text-sm px-4 py-2 transition-colors shrink-0">
                     <Zap size={13} /> Симуляция
                 </Link>
             </div>
@@ -603,18 +603,18 @@ export default function AnalysisPage() {
 
     // ── iOS segmented control (above text in left column) ─────────────────────
     const TextAiToggle = () => (
-        <div className="inline-flex items-center gap-0.5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-0.5">
+        <div className="inline-flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-lg p-0.5">
             <button onClick={() => setDesktopView('text')}
                 className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                     desktopView === 'text'
-                        ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm'
-                        : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                        ? 'bg-white text-neutral-900 shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-500'
                 }`}>Текст</button>
             <button onClick={() => setDesktopView('ai')}
                 className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                     desktopView === 'ai'
-                        ? 'bg-[var(--bg-card)] text-[var(--color-ai)] shadow-sm'
-                        : 'text-[var(--text-dim)] hover:text-[var(--text-muted)]'
+                        ? 'bg-white text-neutral-900 shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-500'
                 }`}>
                 <Sparkles size={9} /> AI версия
             </button>
@@ -640,7 +640,7 @@ export default function AnalysisPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <TextAiToggle />
                                 {annotations.length > 0 && desktopView === 'text' && (
-                                    <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter">
+                                    <p className="flex items-center gap-1.5 text-[12px] text-neutral-400 font-inter">
                                         <MessageSquare size={12} className="shrink-0" />
                                         Кликните подчёркнутый фрагмент
                                     </p>
@@ -665,9 +665,9 @@ export default function AnalysisPage() {
                                     <motion.div key="d-ai"
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                         transition={{ duration: 0.15 }}>
-                                        <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
-                                            <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
-                                            <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
+                                        <div className="flex items-start gap-2.5 p-3.5 bg-neutral-50 border border-neutral-200 mb-4">
+                                            <Sparkles size={14} className="text-neutral-500 shrink-0 mt-0.5" />
+                                            <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">
                                                 AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность
                                             </p>
                                         </div>
@@ -675,7 +675,7 @@ export default function AnalysisPage() {
                                             <CopyButton text={analysis.improved_text} />
                                             <DownloadButton text={analysis.improved_text} title={draft.title} />
                                         </div>
-                                        <p className="font-inter text-[18px] leading-[1.75] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+                                        <p className="font-inter text-[18px] leading-[1.75] text-neutral-500 whitespace-pre-wrap break-words">
                                             {analysis.improved_text}
                                         </p>
                                     </motion.div>
@@ -685,7 +685,7 @@ export default function AnalysisPage() {
                     </div>
 
                     {/* RIGHT: contextual sidebar — Summary or Detail */}
-                    <div className="flex flex-col min-h-0 border-l border-[var(--border-main)] overflow-hidden">
+                    <div className="flex flex-col min-h-0 border-l border-neutral-200 overflow-hidden">
                         <AnimatePresence mode="wait">
                             {sheetIdx === null ? (
                                 <motion.div
@@ -735,17 +735,17 @@ export default function AnalysisPage() {
             ══════════════════════════════════════════════════════════════ */}
             <div className="lg:hidden min-h-screen pb-24">
 
-                <header className="sticky top-0 z-30 bg-[var(--bg-main)]/95 backdrop-blur-md border-b border-[var(--border-main)]">
+                <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200">
                     <div className="h-14 flex items-center gap-2 px-4">
                         <button onClick={() => router.back()}
-                            className="flex items-center gap-1.5 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors cursor-pointer group shrink-0 min-h-[44px] pr-1">
+                            className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer group shrink-0 min-h-[44px] pr-1">
                             <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                         </button>
-                        <h1 className="flex-1 min-w-0 font-syne text-[13px] font-semibold text-[var(--text-main)] truncate">
+                        <h1 className="flex-1 min-w-0 font-inter text-[13px] font-semibold text-neutral-900 truncate">
                             {draft.title}
                         </h1>
-                        <span className="text-[13px] font-syne font-bold shrink-0" style={{ color: scoreColor }}>{fb.overall_score}/10</span>
-                        <Link href={`/simulation?draft=${draftId}`} className="btn-primary gap-1.5 text-[12px] py-1.5 px-3 shrink-0 min-h-[36px]">
+                        <span className="text-[13px] font-inter font-bold shrink-0" style={{ color: scoreColor }}>{fb.overall_score}/10</span>
+                        <Link href={`/simulation?draft=${draftId}`} className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white font-medium text-[12px] py-1.5 px-3 transition-colors shrink-0 min-h-[36px]">
                             <Zap size={12} />
                         </Link>
                     </div>
@@ -754,12 +754,12 @@ export default function AnalysisPage() {
                 <div className="px-4 pt-4">
                     {/* Mobile score card */}
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-                        className="bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-4 mb-4">
+                        className="bg-white border border-neutral-200 p-4 mb-4">
                         <div className="flex items-center gap-3">
                             <ScoreRing score={fb.overall_score} size={52} />
                             <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-mono text-[var(--text-dim)] mb-0.5">Разбор материала</p>
-                                <p className="text-[13px] font-syne font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
+                                <p className="text-[11px] font-mono text-neutral-400 mb-0.5">Разбор материала</p>
+                                <p className="text-[13px] font-inter font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                     {(['grammar','logic','clarity','style'] as IssueType[]).map(type => {
                                         const cnt = countByType[type] ?? 0;
@@ -779,17 +779,17 @@ export default function AnalysisPage() {
                     </motion.div>
 
                     {/* Tab bar */}
-                    <div className="flex bg-[var(--bg-surface-alt)] rounded-[var(--radius-md)] border border-[var(--border-main)] p-1 mb-5">
+                    <div className="flex bg-neutral-50 border border-neutral-200 p-1 mb-5">
                         {mobileTabs.map(tab => (
                             <button key={tab.id} onClick={() => setMobileTab(tab.id)}
-                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[var(--radius-sm)] text-[12px] font-mono transition-all cursor-pointer ${
-                                    mobileTab === tab.id ? 'bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm' : 'text-[var(--text-dim)]'
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-mono transition-all cursor-pointer ${
+                                    mobileTab === tab.id ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-400'
                                 }`}>
-                                {tab.icon && <Sparkles size={10} className={mobileTab === tab.id ? 'text-[var(--color-ai)]' : ''} />}
+                                {tab.icon && <Sparkles size={10} className={mobileTab === tab.id ? 'text-neutral-500' : ''} />}
                                 {tab.label}
                                 {tab.badge !== null && tab.badge > 0 && (
                                     <span className={`text-[9px] px-1.5 py-px rounded-full font-bold ${
-                                        mobileTab === tab.id ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-main)] text-[var(--text-dim)]'
+                                        mobileTab === tab.id ? 'bg-[#171717] text-white' : 'bg-white text-neutral-400'
                                     }`}>{tab.badge}</span>
                                 )}
                             </button>
@@ -804,7 +804,7 @@ export default function AnalysisPage() {
                                 {annotations.length > 0 && (
                                     <>
                                         <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={setActiveFilter} />
-                                        <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)] font-inter mt-3 mb-4">
+                                        <p className="flex items-center gap-1.5 text-[12px] text-neutral-400 font-inter mt-3 mb-4">
                                             <MessageSquare size={12} className="shrink-0" />
                                             Нажмите на подчёркнутый фрагмент
                                         </p>
@@ -837,14 +837,14 @@ export default function AnalysisPage() {
                                         })}
                                     </div>
                                     <div>
-                                        <p className="font-syne text-[13px] font-semibold text-[var(--text-main)] mb-2.5">Оценка по критериям</p>
+                                        <p className="font-inter text-[13px] font-semibold text-neutral-900 mb-2.5">Оценка по критериям</p>
                                         <div className="space-y-2">
                                             {categories.map(({ key, label, text }) => {
                                                 const c = ISSUE[key]; const cnt = countByType[key] ?? 0;
                                                 return (
-                                                    <div key={key} className="rounded-xl p-3.5"
+                                                    <div key={key} className="p-3.5"
                                                         style={{
-                                                            backgroundColor: 'var(--bg-card)',
+                                                            backgroundColor: 'white',
                                                             borderLeftWidth: '4px',
                                                             borderLeftColor: c.pill,
                                                             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -858,7 +858,7 @@ export default function AnalysisPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-[12px] text-[var(--text-muted)] font-inter leading-relaxed">{text}</p>
+                                                        <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">{text}</p>
                                                     </div>
                                                 );
                                             })}
@@ -872,9 +872,9 @@ export default function AnalysisPage() {
                             <motion.div key="m-ai"
                                 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                                 transition={{ duration: 0.15 }}>
-                                <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--radius-md)] bg-[var(--color-ai-bg)]/25 border border-[var(--color-ai)]/20 mb-4">
-                                    <Sparkles size={14} className="text-[var(--color-ai)] shrink-0 mt-0.5" />
-                                    <p className="text-[12px] text-[var(--color-ai)] font-inter leading-relaxed">
+                                <div className="flex items-start gap-2.5 p-3.5 bg-neutral-50 border border-neutral-200 mb-4">
+                                    <Sparkles size={14} className="text-neutral-500 shrink-0 mt-0.5" />
+                                    <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">
                                         AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
                                     </p>
                                 </div>
@@ -882,7 +882,7 @@ export default function AnalysisPage() {
                                     <CopyButton text={analysis.improved_text} />
                                     <DownloadButton text={analysis.improved_text} title={draft.title} />
                                 </div>
-                                <p className="font-inter text-[15px] leading-[1.9] text-[var(--text-muted)] whitespace-pre-wrap break-words">
+                                <p className="font-inter text-[15px] leading-[1.9] text-neutral-500 whitespace-pre-wrap break-words">
                                     {analysis.improved_text}
                                 </p>
                             </motion.div>

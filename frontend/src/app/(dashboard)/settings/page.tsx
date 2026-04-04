@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Bell, Shield, Wallet, Loader2, CheckCircle2, Clock, Lock, LogOut } from 'lucide-react';
+import { User, Bell, Shield, Wallet, Loader2, LogOut, Check, Lock, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
@@ -10,381 +9,294 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 const TABS = [
-    { id: 'profile', label: 'Профиль', icon: User },
-    { id: 'security', label: 'Безопасность', icon: Shield },
-    { id: 'notifications', label: 'Уведомления', icon: Bell },
-    { id: 'billing', label: 'Оплата', icon: Wallet },
+  { id: 'profile', label: 'ПРОФИЛЬ', icon: User },
+  { id: 'security', label: 'БЕЗОПАСНОСТЬ', icon: Shield },
+  { id: 'notifications', label: 'УВЕДОМЛЕНИЯ', icon: Bell },
+  { id: 'billing', label: 'БИЛЛИНГ', icon: Wallet },
 ];
 
 type OnboardingProfile = {
-    segment: string;
-    primary_goal: string;
+  segment: string;
+  primary_goal: string;
 };
 
 const SEGMENT_LABELS: Record<string, string> = {
-    student: 'Студент',
-    junior: 'Специалист',
-    founder: 'Фаундер',
-    manager: 'Руководитель',
-    other: 'Другое',
+  student: 'Студент',
+  junior: 'Специалист',
+  founder: 'Фаундер',
+  manager: 'Руководитель',
+  other: 'Другое',
 };
 
 const GOAL_LABELS: Record<string, string> = {
-    interview: 'Собеседование',
-    pitch: 'Питч',
-    conference: 'Конференция',
-    defense: 'Защита',
-    other: 'Другое',
+  interview: 'Собеседование',
+  pitch: 'Питч',
+  conference: 'Конференция',
+  defense: 'Защита',
+  other: 'Другое',
 };
 
-const inputClass =
-    'w-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-[var(--radius-sm)] px-3.5 py-2.5 text-[13px] font-inter text-[var(--text-main)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-primary)]/50 transition-colors';
-
 function ComingSoonTab({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
-    const isBell = Icon === Bell;
-    const isWallet = Icon === Wallet;
-    const iconBgClass = isBell
-        ? 'bg-amber-50 border-amber-100'
-        : isWallet
-            ? 'bg-emerald-50 border-emerald-100'
-            : 'bg-[var(--bg-surface-alt)] border-[var(--border-main)]';
-    const iconColorClass = isBell
-        ? 'text-amber-500'
-        : isWallet
-            ? 'text-emerald-600'
-            : 'text-[var(--text-dim)]';
-    return (
-        <motion.div
-            key="coming-soon"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="flex flex-col items-center justify-center h-full min-h-[280px] gap-4 text-center"
-        >
-            <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center ${iconBgClass}`}>
-                <Icon size={24} className={iconColorClass} strokeWidth={1.5} />
-            </div>
-            <div>
-                <h3 className="font-syne text-[15px] font-semibold text-[var(--text-main)] mb-2">{label}</h3>
-                <p className="text-[12px] text-[var(--text-dim)] font-inter flex items-center gap-1.5 justify-center mb-3">
-                    <Clock size={11} />
-                    Будет доступно в следующих обновлениях
-                </p>
-                <span className="inline-block text-[10px] font-mono text-[var(--text-dim)] bg-[var(--bg-surface-alt)] border border-[var(--border-main)] px-2 py-0.5 rounded-full tracking-widest">
-                    СКОРО
-                </span>
-            </div>
-        </motion.div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[320px] bg-white border border-neutral-200 rounded-none  p-10 text-center">
+      <Icon className="w-8 h-8 text-neutral-300 mb-4" />
+      <h3 className="text-sm font-semibold text-neutral-900 tracking-wider uppercase mb-2">{label}</h3>
+      <p className="text-sm text-neutral-500 mb-4 max-w-md">Модуль находится в разработке и будет доступен в следующих релизах системы.</p>
+      <span className="inline-block px-2 py-1 text-[10px] font-mono text-neutral-500 bg-neutral-100 border border-neutral-200 tracking-widest">
+        ОТЛОЖЕНО
+      </span>
+    </div>
+  );
 }
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState('profile');
-    const user = useAuthStore((s) => s.user);
+  const [activeTab, setActiveTab] = useState('profile');
+  const user = useAuthStore((s) => s.user);
 
-    const [displayName, setDisplayName] = useState('');
-    const [isSavingProfile, setIsSavingProfile] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const router = useRouter();
-    const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+  const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
 
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-    useEffect(() => {
-        if (user) setDisplayName(user.user_metadata?.display_name || '');
-        api.get('/me')
-            .then((me: { onboarding_profile: OnboardingProfile | null }) => setOnboardingProfile(me.onboarding_profile))
-            .catch(() => {});
-    }, [user]);
+  useEffect(() => {
+    if (user) setDisplayName(user.user_metadata?.display_name || '');
+    api.get('/me')
+      .then((me: { onboarding_profile: OnboardingProfile | null }) => setOnboardingProfile(me.onboarding_profile))
+      .catch(() => {});
+  }, [user]);
 
-    const handleSaveProfile = async () => {
-        const trimmed = displayName.trim();
-        if (trimmed.length > 100) { toast.error('Имя не может быть длиннее 100 символов'); return; }
-        setIsSavingProfile(true);
-        try {
-            const supabase = createClient();
-            const { error } = await supabase.auth.updateUser({ data: { display_name: trimmed } });
-            if (error) throw error;
-            toast.success('Профиль обновлён');
-        } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Ошибка');
-        } finally {
-            setIsSavingProfile(false);
-        }
-    };
+  const handleSaveProfile = async () => {
+    const trimmed = displayName.trim();
+    if (trimmed.length > 100) { toast.error('Имя превышает лимит (100)'); return; }
+    setIsSavingProfile(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ data: { display_name: trimmed } });
+      if (error) throw error;
+      toast.success('Профиль синхронизирован');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Критическая ошибка сохранения');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
-    const handleSignOut = async () => {
-        setIsLoggingOut(true);
-        try {
-            const supabase = createClient();
-            await supabase.auth.signOut();
-            router.push('/');
-            toast.success('Вы вышли из аккаунта');
-        } catch (err) {
-            toast.error('Ошибка при выходе');
-        } finally {
-            setIsLoggingOut(false);
-        }
-    };
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/');
+      toast.success('Сессия завершена');
+    } catch (err) {
+      toast.error('Сбой при отключении');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
-    const handleChangePassword = async () => {
-        if (newPassword !== confirmPassword) { toast.error('Пароли не совпадают'); return; }
-        if (newPassword.length < 8) { toast.error('Минимум 8 символов'); return; }
-        setIsSavingPassword(true);
-        try {
-            const supabase = createClient();
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
-            if (error) throw error;
-            toast.success('Пароль изменён');
-            setNewPassword(''); setConfirmPassword('');
-        } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Ошибка');
-        } finally {
-            setIsSavingPassword(false);
-        }
-    };
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) { toast.error('Токены не совпадают'); return; }
+    if (newPassword.length < 8) { toast.error('Длина токена < 8'); return; }
+    setIsSavingPassword(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Конфигурация доступа обновлена');
+      setNewPassword(''); setConfirmPassword('');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Сбой обновления доступа');
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
 
-    const avatarInitials = (user?.user_metadata?.display_name || user?.email || 'U')
-        .split(' ')
-        .map((w: string) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase();
+  const inputClasses = "w-full bg-white border border-neutral-200 text-neutral-900 rounded-none py-2.5 px-3.5 text-sm focus:outline-none focus:ring-0 focus:border-neutral-900 transition-all font-inter ";
 
-    return (
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-5 py-6 sm:py-8 lg:px-8 pb-20 md:pb-10">
-                <div className="mb-6 sm:mb-8 flex justify-between items-end">
-                    <div>
-                        <p className="label-kicker mb-2">Аккаунт</p>
-                        <h1 className="font-syne text-[22px] sm:text-[26px] font-bold text-[var(--text-main)] tracking-tight">
-                            Настройки
-                        </h1>
-                    </div>
-                    {/* Mobile high-visibility logout */}
-                    <button
-                        onClick={handleSignOut}
-                        disabled={isLoggingOut}
-                        className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-[var(--color-destructive)] text-[12px] font-medium active:scale-95 transition-all"
-                    >
-                        {isLoggingOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
-                        Выйти
-                    </button>
-                </div>
-
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Tab nav */}
-                <div className="w-full md:w-48 shrink-0 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
-                    {TABS.map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-all duration-150 text-[13px] font-medium font-inter text-left whitespace-nowrap border relative ${
-                                    isActive
-                                        ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary)] border-[var(--accent-primary-glow)]'
-                                        : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] border-transparent'
-                                }`}
-                            >
-                                <tab.icon size={15} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-[var(--accent-primary)]' : 'text-[var(--text-dim)]'} />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-
-                    <div className="hidden md:block h-px bg-[var(--border-main)] my-2 opacity-50" />
-
-                    <button
-                        onClick={handleSignOut}
-                        disabled={isLoggingOut}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-[var(--radius-sm)] transition-colors duration-200 text-[13px] font-medium font-inter text-left whitespace-nowrap border border-transparent text-neutral-400 hover:text-neutral-900 hover:bg-[var(--bg-surface-alt)] disabled:opacity-50 mt-auto"
-                    >
-                        {isLoggingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
-                        Выйти
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border-main)] rounded-[var(--radius-lg)] p-5 sm:p-7 min-h-[360px]">
-                    <AnimatePresence mode="wait">
-                        {/* Profile */}
-                        {activeTab === 'profile' && (
-                            <motion.div
-                                key="profile"
-                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2 }}
-                                className="flex flex-col gap-6"
-                            >
-                                <div>
-                                    <h2 className="font-syne text-[16px] font-semibold text-[var(--text-main)] tracking-tight mb-0.5">Профиль</h2>
-                                    <p className="text-[12px] text-[var(--text-dim)] font-inter">Персональные данные аккаунта</p>
-                                </div>
-
-                                {/* Avatar row */}
-                                <div className="flex items-center gap-4 pb-5 border-b border-[var(--border-main)]">
-                                    <div className="w-20 h-20 rounded-full bg-[var(--accent-primary-bg)] border-2 border-accent-200 ring-4 ring-offset-2 ring-accent-100 flex items-center justify-center shrink-0">
-                                        <span className="font-syne text-2xl font-bold text-[var(--accent-primary)]">
-                                            {avatarInitials}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[14px] font-semibold text-[var(--text-main)] font-inter">
-                                            {user?.user_metadata?.display_name || 'Пользователь'}
-                                        </p>
-                                        <p className="text-[12px] text-[var(--text-dim)] font-mono">{user?.email}</p>
-                                        {onboardingProfile && (
-                                            <div className="flex gap-1.5 flex-wrap mt-1.5">
-                                                <span className="label-kicker px-2 py-0.5 rounded bg-[var(--bg-surface-alt)] border border-[var(--border-main)]">
-                                                    {SEGMENT_LABELS[onboardingProfile.segment] ?? onboardingProfile.segment}
-                                                </span>
-                                                <span className="label-kicker px-2 py-0.5 rounded bg-[var(--bg-surface-alt)] border border-[var(--border-main)]">
-                                                    {GOAL_LABELS[onboardingProfile.primary_goal] ?? onboardingProfile.primary_goal}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Fields */}
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="label-kicker">Отображаемое имя</label>
-                                        <input
-                                            type="text"
-                                            value={displayName}
-                                            onChange={(e) => setDisplayName(e.target.value)}
-                                            placeholder="Ваше имя"
-                                            maxLength={100}
-                                            className={inputClass}
-                                        />
-                                        {displayName.length > 80 && (
-                                            <p className="text-[11px] font-mono text-[var(--color-warning)]">
-                                                {100 - displayName.length} символов осталось
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="label-kicker">Email</label>
-                                        <div className="relative">
-                                            <input
-                                                type="email"
-                                                value={user?.email || ''}
-                                                readOnly
-                                                className={`${inputClass} bg-[var(--bg-surface-alt)] cursor-not-allowed pr-9`}
-                                            />
-                                            <Lock size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
-                                        </div>
-                                        <p className="text-[11px] text-[var(--text-dim)] font-inter">
-                                            Для изменения email обратитесь в поддержку
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center pt-2">
-                                    <button
-                                        onClick={handleSignOut}
-                                        disabled={isLoggingOut}
-                                        className="md:hidden flex items-center gap-2 text-[12px] font-medium text-[var(--color-destructive)] px-2 py-1 hover:bg-red-500/5 rounded transition-colors"
-                                    >
-                                        <LogOut size={14} />
-                                        Выйти из аккаунта
-                                    </button>
-                                    <button
-                                        onClick={handleSaveProfile}
-                                        disabled={isSavingProfile}
-                                        className="btn-primary gap-2 disabled:opacity-60 ml-auto"
-                                    >
-                                        {isSavingProfile
-                                            ? <Loader2 size={14} className="animate-spin" />
-                                            : <CheckCircle2 size={14} />
-                                        }
-                                        Сохранить
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Security */}
-                        {activeTab === 'security' && (
-                            <motion.div
-                                key="security"
-                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2 }}
-                                className="flex flex-col gap-6"
-                            >
-                                <div>
-                                    <h2 className="font-syne text-[16px] font-semibold text-[var(--text-main)] tracking-tight mb-0.5">Безопасность</h2>
-                                    <p className="text-[12px] text-[var(--text-dim)] font-inter">Управление паролем аккаунта</p>
-                                </div>
-
-                                <div className="flex flex-col gap-4 pb-5 border-b border-[var(--border-main)]">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="label-kicker">Новый пароль</label>
-                                        <input
-                                            type="password"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Минимум 8 символов"
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="label-kicker">Подтвердите пароль</label>
-                                        <input
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Повторите новый пароль"
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={handleChangePassword}
-                                            disabled={isSavingPassword || !newPassword || !confirmPassword}
-                                            className="btn-primary gap-2 disabled:opacity-60"
-                                        >
-                                            {isSavingPassword
-                                                ? <Loader2 size={14} className="animate-spin" />
-                                                : <Shield size={14} />
-                                            }
-                                            Изменить пароль
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Active session */}
-                                <div>
-                                    <p className="label-kicker mb-3">Активная сессия</p>
-                                    <div className="p-3.5 bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-[var(--radius-sm)] flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[13px] font-medium text-[var(--text-main)] font-inter">
-                                                Текущее устройство
-                                            </p>
-                                            <p className="text-[11px] text-[var(--text-dim)] font-mono mt-0.5">{user?.email}</p>
-                                        </div>
-                                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                                            Активна
-                                        </span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Notifications */}
-                        {activeTab === 'notifications' && (
-                            <ComingSoonTab label="Уведомления" icon={Bell} />
-                        )}
-
-                        {/* Billing */}
-                        {activeTab === 'billing' && (
-                            <ComingSoonTab label="Оплата и тарифы" icon={Wallet} />
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
+  return (
+    <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 font-inter bg-white min-h-screen">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Настройки</h1>
+          <p className="text-sm font-medium text-neutral-500 mt-1">Управление профилем и безопасностью аккаунта.</p>
         </div>
-    );
+        <button
+          onClick={handleSignOut}
+          disabled={isLoggingOut}
+          className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-neutral-200 text-neutral-700 text-sm font-semibold rounded-none hover:border-neutral-400 hover:text-red-600 transition-colors disabled:opacity-50"
+        >
+          {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+          Выйти из аккаунта
+        </button>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="border-b border-neutral-200 flex gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-3 text-[11px] font-bold tracking-widest uppercase whitespace-nowrap transition-colors border-b-2 -mb-[2px] ${
+                isActive
+                  ? 'border-neutral-900 text-neutral-900'
+                  : 'border-transparent text-neutral-400 hover:text-neutral-700'
+              }`}
+            >
+              <tab.icon className="w-3.5 h-3.5" strokeWidth={isActive ? 2.5 : 2} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div>
+
+        {/* Content Pane */}
+        <div className="w-full relative mt-6">
+          
+          {activeTab === 'profile' && (
+            <div className="bg-white border border-neutral-200 rounded-none  p-6 md:p-8 space-y-8">
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-neutral-200">
+                <div className="w-16 h-16 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-none border border-neutral-300 flex items-center justify-center shrink-0 ">
+                  <span className="font-inter text-xl font-bold text-neutral-900">
+                    {(user?.user_metadata?.display_name || user?.email || 'U').slice(0,2)}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-inter text-xl font-bold text-neutral-900 tracking-tight">
+                    {user?.user_metadata?.display_name || 'UNDEFINED'}
+                  </p>
+                  <p className="font-inter text-[13px] text-neutral-500 mt-1 font-medium">{user?.email}</p>
+                  {onboardingProfile && (
+                    <div className="flex gap-2 flex-wrap mt-3">
+                      <span className="px-2 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-none">
+                        Сегмент: {SEGMENT_LABELS[onboardingProfile.segment] ?? onboardingProfile.segment}
+                      </span>
+                      <span className="px-2 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-none">
+                        Цель: {GOAL_LABELS[onboardingProfile.primary_goal] ?? onboardingProfile.primary_goal}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
+                    Отображаемое имя
+                  </label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={100}
+                    className={inputClasses}
+                  />
+                  {displayName.length > 80 && (
+                    <p className="text-[10px] font-mono text-amber-600 mt-2">
+                      ЛИМИТ: {100 - displayName.length}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
+                    Адрес электронной почты
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={user?.email || ''}
+                      readOnly
+                      className={`${inputClasses} bg-neutral-100 text-neutral-400 cursor-not-allowed`}
+                    />
+                    <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 pointer-events-none" />
+                  </div>
+                  <p className="text-[12px] text-neutral-400 mt-2 font-medium">Системный идентификатор (только чтение).</p>
+                </div>
+
+                <div className="pt-4 flex justify-end">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                    className="inline-flex items-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all  disabled:opacity-50"
+                  >
+                    {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Сохранить изменения
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="bg-white border border-neutral-200 rounded-none  p-6 md:p-8 space-y-8">
+              <div>
+                <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Доступ к системе</h2>
+                <p className="text-xs text-neutral-400">Установка нового ключа аутентификации</p>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
+                    Новый пароль
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Мин. 8 символов"
+                    className={inputClasses}
+                  />
+                </div>
+                <div>
+                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
+                    Подтверждение пароля
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Повторите пароль"
+                    className={inputClasses}
+                  />
+                </div>
+                
+                <div className="pt-4">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={isSavingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all  disabled:opacity-50"
+                  >
+                    {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                    Обновить пароль
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <ComingSoonTab label="СИГНАЛЫ" icon={Bell} />
+          )}
+
+          {activeTab === 'billing' && (
+            <ComingSoonTab label="БИЛЛИНГ" icon={Wallet} />
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -80,13 +80,13 @@ const ROLE_VISUALS: Record<string, RoleVisual> = {
     peer:       { icon: Users,         iconColor: 'text-teal-600',   iconBg: 'bg-teal-50' },
     board:      { icon: Briefcase,     iconColor: 'text-slate-600',  iconBg: 'bg-slate-100' },
     subordinate:{ icon: Users,         iconColor: 'text-amber-500',  iconBg: 'bg-amber-50' },
-    journalist: { icon: Mic,           iconColor: 'text-accent-500', iconBg: 'bg-accent-50' },
+    journalist: { icon: Mic,           iconColor: 'text-neutral-600', iconBg: 'bg-neutral-100' },
     audience:   { icon: Mic,           iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     moderator:  { icon: MessageSquare, iconColor: 'text-stone-600',  iconBg: 'bg-stone-100' },
     listener:   { icon: MessageSquare, iconColor: 'text-rose-500',   iconBg: 'bg-rose-50' },
 };
 
-const DEFAULT_VISUAL: RoleVisual = { icon: Bot, iconColor: 'text-[var(--text-dim)]', iconBg: 'bg-[var(--bg-surface-alt)]' };
+const DEFAULT_VISUAL: RoleVisual = { icon: Bot, iconColor: 'text-neutral-400', iconBg: 'bg-neutral-50' };
 
 // Short labels for KPI "Сложнее всего" card
 const SHORT_PERSONA: Record<string, string> = {
@@ -140,22 +140,22 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
             onClick={onClick}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`text-left w-full p-4 sm:p-5 rounded-xl border transition-all group min-h-[44px] ${
+            className={`text-left w-full p-4 sm:p-5 border transition-all group min-h-[44px] ${
                 variant === 'active'
-                    ? 'bg-white border-[var(--accent-primary)] border-2 shadow-[0_4px_16px_rgba(232,96,10,0.12)] hover:shadow-[0_6px_20px_rgba(232,96,10,0.18)]'
-                    : 'bg-[var(--bg-surface)] border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                    ? 'bg-white border-neutral-900 border-2'
+                    : 'bg-white border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
             }`}
         >
             <div className="flex items-start justify-between gap-3 pb-3 mb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`w-8 h-8 rounded-lg ${visual.iconBg} ${visual.iconColor} flex items-center justify-center shrink-0`}>
+                    <div className={`w-8 h-8 ${visual.iconBg} ${visual.iconColor} flex items-center justify-center shrink-0`}>
                         <RoleIcon size={16} />
                     </div>
                     <div className="min-w-0">
-                        <div className="font-syne font-semibold text-[var(--text-main)] text-sm truncate">
+                        <div className="font-inter font-semibold text-neutral-900 text-sm truncate">
                             {personaLabel}
                         </div>
-                        <div className="font-inter text-xs text-[var(--text-muted)] truncate">
+                        <div className="font-inter text-xs text-neutral-500 truncate">
                             {session.persona_config.industry}
                         </div>
                     </div>
@@ -176,15 +176,15 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
             {isActive && (
                 <div className="mb-3">
                     <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[11px] text-[var(--text-dim)] font-inter">Прогресс сессии</span>
-                        <span className="text-[11px] font-mono text-[var(--text-muted)]">{session.message_count} сообщ.</span>
+                        <span className="text-[11px] text-neutral-400 font-inter">Прогресс сессии</span>
+                        <span className="text-[11px] font-mono text-neutral-500">{session.message_count} сообщ.</span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-neutral-100 overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
-                            className="h-full bg-[var(--accent-primary)] rounded-full"
+                            className="h-full bg-neutral-900"
                         />
                     </div>
                 </div>
@@ -209,13 +209,13 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
                 )}
                 {isActive ? (
                     <div className="ml-auto">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white text-[11px] font-semibold min-h-[32px] shadow-sm">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#171717] text-white text-[11px] font-semibold min-h-[32px]">
                             Продолжить
                             <ChevronRight size={12} />
                         </span>
                     </div>
                 ) : (
-                    <div className="ml-auto text-gray-400 group-hover:text-[var(--accent-primary)] transition-colors">
+                    <div className="ml-auto text-gray-400 group-hover:text-neutral-900 transition-colors">
                         <ChevronRight size={14} />
                     </div>
                 )}
@@ -224,7 +224,7 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
             {/* Insight tag for completed sessions */}
             {insightTag && (
                 <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-2">
-                    <span className="text-[11px] font-medium text-[var(--text-muted)] font-inter">{insightTag}</span>
+                    <span className="text-[11px] font-medium text-neutral-500 font-inter">{insightTag}</span>
                 </div>
             )}
 
@@ -445,7 +445,7 @@ function SimulationPageContent() {
     if (view === 'loading') {
         return (
             <div className="flex-1 flex items-center justify-center min-h-[40vh]">
-                <Loader2 className="animate-spin text-[var(--accent-primary)]" size={28} />
+                <Loader2 className="animate-spin text-neutral-400" size={28} />
             </div>
         );
     }
@@ -465,10 +465,10 @@ function SimulationPageContent() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
                     <div>
-                        <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight mb-1 sm:mb-2">
+                        <h1 className="font-inter text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight tracking-tight mb-1 sm:mb-2">
                             Симуляции
                         </h1>
-                        <p className="font-inter text-[var(--text-muted)] text-xs sm:text-sm">
+                        <p className="font-inter text-neutral-500 text-xs sm:text-sm">
                             {sessions.length} {sessions.length === 1 ? 'сессия' : sessions.length < 5 ? 'сессии' : 'сессий'} · нажми на любую, чтобы открыть
                         </p>
                         {(activeSessions.length > 0 || completedSessions.length > 0) && (
@@ -495,7 +495,7 @@ function SimulationPageContent() {
                                 setView('setup');
                             }
                         }}
-                        className="btn-primary shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px]"
+                        className="inline-flex items-center bg-[#171717] hover:bg-black text-white font-medium shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px] transition-colors"
                     >
                         <Plus size={16} />
                         <span className="hidden sm:inline">Новая тренировка</span>
@@ -574,14 +574,14 @@ function SimulationPageContent() {
                     const hardestVisual = hardestRole ? (ROLE_VISUALS[hardestRole.role] ?? DEFAULT_VISUAL) : DEFAULT_VISUAL;
                     const HardestIcon = hardestVisual.icon;
 
-                    const kpiCard = "relative overflow-hidden bg-white rounded-xl border border-gray-100 shadow-[0_2px_8px_rgb(0,0,0,0.04)] p-3 sm:p-4 lg:p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col";
+                    const kpiCard = "relative overflow-hidden bg-white border border-neutral-200 p-3 sm:p-4 lg:p-5 transition-all duration-200 flex flex-col";
 
                     return (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
 
                             {/* Индекс готовности */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300 rounded-t-xl" />
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
                                     <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -608,7 +608,7 @@ function SimulationPageContent() {
 
                             {/* Тренд роста */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400 rounded-t-xl" />
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
                                     <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${trendIconBg}`}>
@@ -655,7 +655,7 @@ function SimulationPageContent() {
 
                             {/* Личный рекорд */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-accent-300 rounded-t-xl" />
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-amber-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
                                     <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-amber-50 flex items-center justify-center">
@@ -681,7 +681,7 @@ function SimulationPageContent() {
 
                             {/* Сложнее всего */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300 rounded-t-xl" />
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
                                     <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
@@ -715,8 +715,8 @@ function SimulationPageContent() {
                 {/* Active sessions */}
                 {activeSessions.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="label-kicker mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-[var(--accent-primary)] rounded-full animate-pulse" />
+                        <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-neutral-900 rounded-full animate-pulse" />
                             Активные
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -730,7 +730,7 @@ function SimulationPageContent() {
                 {/* Completed sessions */}
                 {completedSessions.length > 0 && (
                     <div className={cancelledSessions.length > 0 ? 'mb-8' : ''}>
-                        <h2 className="label-kicker mb-3">Завершённые</h2>
+                        <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3">Завершённые</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {completedSessions.map(s => (
                                 <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} />
@@ -742,7 +742,7 @@ function SimulationPageContent() {
                 {/* Cancelled sessions */}
                 {cancelledSessions.length > 0 && (
                     <div>
-                        <h2 className="label-kicker mb-3 text-[var(--text-dim)]">Прерванные</h2>
+                        <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-400 mb-3">Прерванные</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-50">
                             {cancelledSessions.map(s => (
                                 <SessionCard key={s.id} session={s} onClick={() => handleSessionClick(s)} />
@@ -764,16 +764,16 @@ function SimulationPageContent() {
                     {sessions.length > 0 && (
                         <button
                             onClick={() => setView('history')}
-                            className="mt-1 p-1.5 rounded-lg text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-alt)] transition-colors"
+                            className="mt-1 p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 transition-colors"
                         >
                             <ArrowLeft size={18} />
                         </button>
                     )}
                     <div>
-                        <h1 className="font-syne text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--text-main)] leading-tight tracking-tight m-0 mb-2">
+                        <h1 className="font-inter text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight tracking-tight m-0 mb-2">
                             Выбери себе вызов
                         </h1>
-                        <p className="font-inter text-[var(--text-muted)] max-w-2xl text-sm leading-relaxed">
+                        <p className="font-inter text-neutral-500 max-w-2xl text-sm leading-relaxed">
                             Кто сегодня по ту сторону стола? Настрой контекст и покажи класс.
                         </p>
                     </div>
@@ -793,21 +793,21 @@ function SimulationPageContent() {
                                 <div className="flex items-center gap-2">
                                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                                         isDone
-                                            ? 'bg-[var(--color-success)] text-white'
+                                            ? 'bg-emerald-500 text-white'
                                             : isActive
-                                                ? 'bg-[var(--accent-primary)] text-white'
-                                                : 'bg-[var(--bg-surface-alt)] border border-[var(--border-main)] text-[var(--text-dim)]'
+                                                ? 'bg-neutral-900 text-white'
+                                                : 'bg-neutral-50 border border-neutral-200 text-neutral-400'
                                     }`}>
                                         {isDone ? <CheckCircle2 size={14} /> : step}
                                     </div>
                                     <span className={`text-xs font-inter hidden sm:block transition-colors ${
-                                        isActive ? 'text-[var(--text-main)]' : isDone ? 'text-[var(--color-success)]' : 'text-[var(--text-dim)]'
+                                        isActive ? 'text-neutral-900' : isDone ? 'text-emerald-500' : 'text-neutral-400'
                                     }`}>
                                         {label}
                                     </span>
                                 </div>
                                 {i < 2 && (
-                                    <div className={`flex-1 h-px max-w-[40px] transition-colors ${isDone ? 'bg-[var(--color-success)]' : 'bg-[var(--border-main)]'}`} />
+                                    <div className={`flex-1 h-px max-w-[40px] transition-colors ${isDone ? 'bg-emerald-500' : 'bg-neutral-200'}`} />
                                 )}
                             </React.Fragment>
                         );
@@ -818,12 +818,12 @@ function SimulationPageContent() {
             <div className="space-y-12">
                 {/* 1. ROLE SELECTION */}
                 <section>
-                    <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 1:</span> Кого нужно убедить?
+                    <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+                        <span className="text-neutral-500">Шаг 1:</span> Кого нужно убедить?
                     </h2>
                     <AnimatePresence mode="wait">
                         {personasLoading ? (
-                            <div className="flex items-center gap-3 py-8 text-[var(--text-muted)]">
+                            <div className="flex items-center gap-3 py-8 text-neutral-500">
                                 <Loader2 className="animate-spin" size={20} />
                                 <span className="font-inter text-sm">Загружаем собеседников...</span>
                             </div>
@@ -837,14 +837,14 @@ function SimulationPageContent() {
                                         <button
                                             key={key}
                                             onClick={() => { setSelectedRole(key); scrollToStep(step2Ref); }}
-                                            className={`text-left p-5 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                                            className={`text-left p-5 border transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-accent-50 border-2 border-accent-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
-                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                                                    ? 'bg-neutral-50 border-2 border-neutral-900'
+                                                    : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-accent-500">
+                                                <div className="absolute top-4 right-4 text-neutral-900">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
@@ -854,13 +854,13 @@ function SimulationPageContent() {
                                                     <circle cx="60" cy="60" r="30" stroke="#6B7280" strokeWidth="1" />
                                                 </svg>
                                             )}
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${visual.iconBg} border border-[var(--border-light)] ${visual.iconColor}`}>
+                                            <div className={`w-10 h-10 flex items-center justify-center mb-4 transition-colors ${visual.iconBg} border border-neutral-200 ${visual.iconColor}`}>
                                                 <IconComp size={20} />
                                             </div>
-                                            <div className="font-syne text-lg font-semibold text-[var(--text-main)] mb-2">
+                                            <div className="font-inter text-lg font-semibold text-neutral-900 mb-2">
                                                 {persona.title}
                                             </div>
-                                            <div className="font-inter text-xs text-[var(--text-muted)] leading-relaxed">
+                                            <div className="font-inter text-xs text-neutral-500 leading-relaxed">
                                                 {persona.description}
                                             </div>
                                         </button>
@@ -876,24 +876,24 @@ function SimulationPageContent() {
                                         <button
                                             key={role.id}
                                             onClick={() => { setSelectedRole(role.id); scrollToStep(step2Ref); }}
-                                            className={`text-left p-5 rounded-xl transition-all duration-300 relative overflow-hidden group ${
+                                            className={`text-left p-5 transition-all duration-300 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-accent-50 border-2 border-accent-500 shadow-[0_0_20px_var(--accent-primary-glow)]'
-                                                    : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--border-light)] hover:bg-[var(--bg-surface-hover)]'
+                                                    ? 'bg-neutral-50 border-2 border-neutral-900'
+                                                    : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="absolute top-4 right-4 text-accent-500">
+                                                <div className="absolute top-4 right-4 text-neutral-900">
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 border border-[var(--border-light)] ${role.iconBg} ${role.iconColor}`}>
+                                            <div className={`w-10 h-10 flex items-center justify-center mb-4 border border-neutral-200 ${role.iconBg} ${role.iconColor}`}>
                                                 <Icon size={20} />
                                             </div>
-                                            <div className="font-syne text-lg font-semibold text-[var(--text-main)] mb-2">
+                                            <div className="font-inter text-lg font-semibold text-neutral-900 mb-2">
                                                 {role.name}
                                             </div>
-                                            <div className="font-inter text-xs text-[var(--text-muted)] leading-relaxed">
+                                            <div className="font-inter text-xs text-neutral-500 leading-relaxed">
                                                 {role.desc}
                                             </div>
                                         </button>
@@ -906,18 +906,18 @@ function SimulationPageContent() {
 
                 {/* 2. DOMAIN SELECTION */}
                 <section ref={step2Ref}>
-                    <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 2:</span> Индустрия / Ниша
+                    <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+                        <span className="text-neutral-500">Шаг 2:</span> Индустрия / Ниша
                     </h2>
                     <div className="flex flex-wrap gap-3">
                         {domains.map((domain) => (
                             <button
                                 key={domain.id}
                                 onClick={() => { setSelectedDomain(domain.id); scrollToStep(step3Ref); }}
-                                className={`px-4 py-2.5 rounded-lg border text-sm font-inter transition-all ${
+                                className={`px-4 py-2.5 border text-sm font-inter transition-all ${
                                     selectedDomain === domain.id
-                                        ? 'bg-[var(--accent-primary-bg)] border-[var(--accent-primary)] text-[var(--accent-primary)]'
-                                        : 'bg-[var(--bg-surface)] border-[var(--border-main)] text-[var(--text-muted)] hover:border-[var(--border-light)]'
+                                        ? 'bg-neutral-100 border-neutral-900 text-neutral-900'
+                                        : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400'
                                 }`}
                             >
                                 {domain.name}
@@ -932,7 +932,7 @@ function SimulationPageContent() {
                                 value={customDomain}
                                 onChange={(e) => setCustomDomain(e.target.value)}
                                 maxLength={100}
-                                className="w-full max-w-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] rounded-lg px-4 py-3 text-sm text-[var(--text-main)] placeholder:text-[var(--text-dim)] outline-none transition-all font-inter"
+                                className="w-full max-w-md bg-neutral-50 border border-neutral-200 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-all font-inter"
                                 autoFocus
                             />
                         </div>
@@ -941,8 +941,8 @@ function SimulationPageContent() {
 
                 {/* 3. DOCUMENT SELECTION */}
                 <section ref={step3Ref}>
-                    <h2 className="label-kicker mb-4 flex items-center gap-2 border-b border-[var(--border-main)] pb-3">
-                        <span className="text-[var(--text-muted)]">Шаг 3:</span> Контекст для тренера
+                    <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+                        <span className="text-neutral-500">Шаг 3:</span> Контекст для тренера
                     </h2>
 
                     {/* Combobox */}
@@ -952,23 +952,23 @@ function SimulationPageContent() {
                             type="button"
                             ref={docTriggerRef}
                             onClick={handleDocDropdownToggle}
-                            className={`w-full h-14 flex items-center gap-3 px-4 rounded-xl border transition-all text-left cursor-pointer ${
+                            className={`w-full h-14 flex items-center gap-3 px-4 border transition-all text-left cursor-pointer ${
                                 docDropdownOpen
-                                    ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary-glow)] bg-[var(--bg-surface)]'
+                                    ? 'border-neutral-400 ring-2 ring-neutral-300 bg-white'
                                     : selectedDoc !== null
-                                        ? 'border-accent-300 bg-accent-50'
-                                        : 'border-[var(--border-main)] bg-[var(--bg-surface)] hover:border-[var(--border-light)]'
+                                        ? 'border-neutral-400 bg-neutral-50'
+                                        : 'border-neutral-200 bg-white hover:border-neutral-400'
                             }`}
                         >
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[var(--bg-surface-alt)] border border-[var(--border-light)]">
+                            <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-neutral-50 border border-neutral-200">
                                 {selectedDoc === 'none'
-                                    ? <Ban size={16} className="text-[var(--text-dim)]" />
+                                    ? <Ban size={16} className="text-neutral-400" />
                                     : selectedDoc
-                                        ? <FileText size={16} className="text-accent-500" />
-                                        : <FileText size={16} className="text-[var(--text-dim)]" />
+                                        ? <FileText size={16} className="text-neutral-500" />
+                                        : <FileText size={16} className="text-neutral-400" />
                                 }
                             </div>
-                            <span className={`flex-1 text-sm font-inter truncate ${selectedDoc !== null ? 'text-[var(--text-main)] font-medium' : 'text-[var(--text-dim)]'}`}>
+                            <span className={`flex-1 text-sm font-inter truncate ${selectedDoc !== null ? 'text-neutral-900 font-medium' : 'text-neutral-400'}`}>
                                 {selectedDoc === 'none'
                                     ? 'Без документа — общее интервью'
                                     : selectedDoc
@@ -977,7 +977,7 @@ function SimulationPageContent() {
                             </span>
                             <ChevronDown
                                 size={16}
-                                className={`shrink-0 text-[var(--text-dim)] transition-transform duration-200 ${docDropdownOpen ? 'rotate-180' : ''}`}
+                                className={`shrink-0 text-neutral-400 transition-transform duration-200 ${docDropdownOpen ? 'rotate-180' : ''}`}
                             />
                         </button>
 
@@ -989,21 +989,21 @@ function SimulationPageContent() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: docDropdownPlacement === 'top' ? 6 : -6, scale: 0.98 }}
                                     transition={{ duration: 0.13 }}
-                                    className={`absolute left-0 right-0 z-30 max-h-[320px] flex flex-col bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden ${
+                                    className={`absolute left-0 right-0 z-30 max-h-[320px] flex flex-col bg-white border border-neutral-200 shadow-lg overflow-hidden ${
                                         docDropdownPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
                                     }`}
                                 >
                                     {/* Search — sticky */}
-                                    <div className="p-2 border-b border-[var(--border-main)]">
+                                    <div className="p-2 border-b border-neutral-200">
                                         <div className="relative">
-                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] pointer-events-none" />
+                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                                             <input
                                                 type="text"
                                                 placeholder="Поиск по документам..."
                                                 value={docSearch}
                                                 onChange={(e) => setDocSearch(e.target.value)}
                                                 autoFocus
-                                            className="w-full pl-9 pr-3 py-2 text-sm font-inter bg-[var(--bg-surface-alt)] border border-[var(--border-main)] rounded-lg text-[var(--text-main)] placeholder:text-[var(--text-dim)] outline-none focus:border-[var(--accent-primary)] transition-colors"
+                                            className="w-full pl-9 pr-3 py-2 text-sm font-inter bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-400 transition-colors"
                                                 style={{ fontSize: '16px' }}
                                             />
                                         </div>
@@ -1013,18 +1013,18 @@ function SimulationPageContent() {
                                     <button
                                         type="button"
                                         onClick={() => { setSelectedDoc('none'); setDocDropdownOpen(false); setDocSearch(''); }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-[var(--border-main)] ${
-                                            selectedDoc === 'none' ? 'bg-accent-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-neutral-200 ${
+                                            selectedDoc === 'none' ? 'bg-neutral-50' : 'hover:bg-neutral-50'
                                         }`}
                                     >
-                                        <div className="w-7 h-7 rounded-md bg-[var(--bg-surface-alt)] border border-[var(--border-light)] flex items-center justify-center shrink-0">
-                                            <Ban size={14} className="text-[var(--text-dim)]" />
+                                        <div className="w-7 h-7 rounded-md bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
+                                            <Ban size={14} className="text-neutral-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium font-inter text-[var(--text-main)]">Без документа</div>
-                                            <div className="text-xs text-[var(--text-dim)] font-inter">Общее интервью по выбранной роли и сфере</div>
+                                            <div className="text-sm font-medium font-inter text-neutral-900">Без документа</div>
+                                            <div className="text-xs text-neutral-400 font-inter">Общее интервью по выбранной роли и сфере</div>
                                         </div>
-                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-accent-500 shrink-0" />}
+                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-neutral-900 shrink-0" />}
                                     </button>
 
                                     {/* Document list */}
@@ -1035,7 +1035,7 @@ function SimulationPageContent() {
                                             );
                                             if (filtered.length === 0) {
                                                 return (
-                                                    <div className="py-8 text-center text-sm text-[var(--text-dim)] font-inter">
+                                                    <div className="py-8 text-center text-sm text-neutral-400 font-inter">
                                                         {docSearch ? `Ничего не найдено по «${docSearch}»` : 'Нет загруженных документов'}
                                                     </div>
                                                 );
@@ -1051,20 +1051,20 @@ function SimulationPageContent() {
                                                         type="button"
                                                         onClick={() => { setSelectedDoc(doc.id); setDocDropdownOpen(false); setDocSearch(''); }}
                                                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                                                            isSelected ? 'bg-accent-50' : 'hover:bg-[var(--bg-surface-alt)]'
+                                                            isSelected ? 'bg-neutral-50' : 'hover:bg-neutral-50'
                                                         }`}
                                                     >
-                                                        <div className="w-7 h-7 rounded-md bg-accent-50 border border-accent-100 flex items-center justify-center shrink-0">
-                                                            <FileText size={14} className="text-accent-400" />
+                                                        <div className="w-7 h-7 rounded-md bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
+                                                            <FileText size={14} className="text-neutral-400" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-sm font-medium font-inter text-[var(--text-main)] truncate">{doc.name}</div>
+                                                            <div className="text-sm font-medium font-inter text-neutral-900 truncate">{doc.name}</div>
                                                         </div>
                                                         <div className="flex items-center gap-2.5 shrink-0">
                                                             {dateStr && (
-                                                                <span className="text-[11px] font-mono text-[var(--text-dim)]">{dateStr}</span>
+                                                                <span className="text-[11px] font-mono text-neutral-400">{dateStr}</span>
                                                             )}
-                                                            {isSelected && <CheckCircle2 size={15} className="text-accent-500" />}
+                                                            {isSelected && <CheckCircle2 size={15} className="text-neutral-900" />}
                                                         </div>
                                                     </button>
                                                 );
@@ -1073,11 +1073,11 @@ function SimulationPageContent() {
                                     </div>
 
                                     {/* Upload link — bottom */}
-                                    <div className="p-2 border-t border-[var(--border-main)]">
+                                    <div className="p-2 border-t border-neutral-200">
                                         <Link
                                             href="/upload"
                                             onClick={() => setDocDropdownOpen(false)}
-                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium font-inter text-[var(--accent-primary)] hover:bg-[var(--accent-primary-bg)] rounded-lg transition-colors"
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium font-inter text-neutral-900 hover:bg-neutral-50 transition-colors"
                                         >
                                             <Plus size={15} />
                                             Загрузить новый документ
@@ -1090,13 +1090,13 @@ function SimulationPageContent() {
                 </section>
 
                 {/* LAUNCH BUTTON — desktop */}
-                <div className="hidden md:flex pt-6 border-t border-[var(--border-main)] justify-end">
+                <div className="hidden md:flex pt-6 border-t border-neutral-200 justify-end">
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
-                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-[var(--radius-sm)] text-sm font-semibold font-inter transition-all duration-200 ${
+                        className={`inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold font-inter transition-all duration-200 ${
                             isReady && !isStarting
-                                ? 'bg-[var(--accent-primary)] text-white cursor-pointer shadow-[0_4px_16px_rgba(232,96,10,0.35)] hover:bg-[var(--accent-primary-hover)] hover:shadow-[0_6px_24px_rgba(232,96,10,0.45)]'
+                                ? 'bg-[#171717] text-white cursor-pointer hover:bg-black'
                                 : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                         }`}
                     >
@@ -1108,24 +1108,24 @@ function SimulationPageContent() {
 
             {/* STICKY BOTTOM CTA — mobile */}
             <div className="md:hidden fixed bottom-20 left-4 right-4 z-20">
-                <div className="bg-[var(--bg-surface-alt)]/95 backdrop-blur-md border border-[var(--border-light)] rounded-2xl p-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                <div className="bg-white/95 backdrop-blur-md border border-neutral-200 p-3 flex items-center gap-3 shadow-lg">
                     <div className="flex-1 min-w-0">
-                        <p className="font-inter text-xs text-[var(--text-dim)] truncate">
+                        <p className="font-inter text-xs text-neutral-400 truncate">
                             {!selectedRoleName 
                                 ? 'Шаг 1: Выберите собеседника' 
                                 : !selectedDomain 
                                     ? 'Шаг 2: Укажите индустрию' 
                                     : selectedDoc === null 
                                         ? 'Шаг 3: Выберите контекст' 
-                                        : <span className="text-[var(--text-muted)] font-medium">Готово: {selectedRoleName}</span>}
+                                        : <span className="text-neutral-500 font-medium">Готово: {selectedRoleName}</span>}
                         </p>
                     </div>
                     <button
                         disabled={!isReady || isStarting}
                         onClick={handleStart}
-                        className={`inline-flex items-center gap-2 text-sm px-4 py-2.5 shrink-0 rounded-[var(--radius-sm)] font-semibold font-inter transition-all ${
+                        className={`inline-flex items-center gap-2 text-sm px-4 py-2.5 shrink-0 font-semibold font-inter transition-all ${
                             isReady && !isStarting
-                                ? 'bg-[var(--accent-primary)] text-white shadow-[0_4px_14px_rgba(232,96,10,0.35)] hover:bg-[var(--accent-primary-hover)]'
+                                ? 'bg-[#171717] text-white hover:bg-black'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         }`}
                     >
@@ -1141,7 +1141,7 @@ export default function SimulationPage() {
     return (
         <Suspense fallback={
             <div className="flex-1 flex items-center justify-center min-h-[40vh]">
-                <Loader2 className="animate-spin text-[var(--accent-primary)]" size={28} />
+                <Loader2 className="animate-spin text-neutral-400" size={28} />
             </div>
         }>
             <SimulationPageContent />

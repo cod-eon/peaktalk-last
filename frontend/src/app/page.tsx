@@ -246,8 +246,16 @@ function Hero() {
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-8 items-center h-full">
             
             {/* Text Content - Center on mobile, left on desktop */}
-            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-center text-center lg:items-start lg:text-left mt-12 lg:mt-0">
+            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-start text-left sm:items-center sm:text-center lg:items-start lg:text-left mt-12 lg:mt-0">
 
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0 }}
+                className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--text-dim)] border border-[var(--border-main)] rounded-full px-4 py-1.5 mb-5"
+              >
+                AI-тренер для переговоров
+              </motion.div>
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -264,38 +272,64 @@ function Hero() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 style={{
                   fontFamily: 'var(--font-inter)',
-                  fontSize: 'clamp(13px, 1.5vw, 18px)',
+                  fontSize: 'clamp(14px, 1.5vw, 18px)',
                   lineHeight: 1.5,
                   color: 'var(--text-muted)',
                   marginBottom: 16,
                   maxWidth: 480,
-                  textWrap: 'balance',
                 }}
               >
-                Загружаешь свой питч-дек, роадмап или стратегию — PeakTalk читает именно его и генерирует вопросы от конкретной роли: CFO, инвестора, скептика из совета директоров. После каждого ответа — разбор по навыкам и подсветка слабых мест прямо в транскрипте. Не курс про ораторство. Тренировка под твою следующую встречу.
+                Загрузи документ — получи жёсткие вопросы от <strong style={{ color: 'var(--text-main)', fontWeight: 600 }}>CFO, инвестора или совета директоров</strong>. Разбор каждого ответа. Тренировка под твою следующую встречу.
               </motion.p>
+
+              {/* Hero metrics strip */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+                className="flex gap-6 sm:gap-8 mb-5"
+              >
+                {[
+                  { value: '15', label: 'персон' },
+                  { value: '90с', label: 'на старт' },
+                  { value: '3', label: 'бесплатно' },
+                ].map((m, i) => (
+                  <div key={i} className="flex items-baseline gap-1.5">
+                    <span className="font-syne font-bold text-xl text-[var(--text-main)]">{m.value}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-dim)]">{m.label}</span>
+                  </div>
+                ))}
+              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col items-center lg:items-start gap-3 w-full"
+                className="flex flex-col items-start sm:items-center lg:items-start gap-3 w-full"
               >
                 <div className="flex flex-col sm:flex-row w-full gap-3">
                   <a href="/register" className="btn-primary w-full sm:w-auto flex items-center justify-center p-3 sm:px-6" >
                     Начать подготовку →
                   </a>
                   <button
-                    className="btn-secondary w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 transition-all hover:bg-[var(--bg-surface-alt)]"
+                    className="btn-secondary hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all hover:bg-[var(--bg-surface-alt)]"
                     onClick={() => smoothScroll('#how')}
                     style={{ border: '1px solid var(--border-main)' }}
                   >
                     Как это работает →
                   </button>
                 </div>
-                <p className="font-mono text-xs opacity-75 text-[var(--text-dim)] uppercase tracking-widest mt-6">
-                  Бесплатно. Без карты. Без звонка от менеджера.
-                </p>
+                <div className="flex items-center gap-4 mt-2">
+                  <p className="font-mono text-xs text-[var(--text-dim)] uppercase tracking-widest">
+                    Бесплатно. Без карты.
+                  </p>
+                  <button
+                    className="sm:hidden font-inter text-sm text-[var(--text-muted)] underline underline-offset-2 transition-colors hover:text-[var(--text-main)]"
+                    onClick={() => smoothScroll('#how')}
+                  >
+                    Как это работает →
+                  </button>
+                </div>
               </motion.div>
             </div>
 
@@ -1107,9 +1141,9 @@ export default function Page() {
     <main className="relative min-h-screen selection:bg-[var(--color-accent)] selection:text-white">
       <Nav />
       <Hero />
-      <ProblemAgitation />
       <SocialProofStrip />
       <ActionFlow />
+      <ProblemAgitation />
       <ImpactEvidence />
       <ComparisonBlock />
       <Testimonials />

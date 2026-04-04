@@ -14,17 +14,17 @@ const PLAN_CONFIG: Record<
   starter: {
     label: 'STARTER',
     className:
-      'bg-[var(--bg-surface-alt)] text-[var(--text-dim)] border border-[var(--border-main)]',
+      'bg-neutral-100 text-neutral-500 border border-neutral-200',
   },
   pro: {
     label: 'PRO',
     className:
-      'bg-gradient-to-r from-accent-500 to-amber-400 text-white border-0',
+      'bg-neutral-900 text-white border-0',
   },
   team: {
     label: 'TEAM',
     className:
-      'bg-gradient-to-r from-violet-600 to-purple-500 text-white border-0',
+      'bg-neutral-700 text-white border-0',
   },
 };
 
