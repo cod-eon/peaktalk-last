@@ -102,6 +102,11 @@ async def supabase_user_deleted(
 _SUBSCRIPTION_PERIOD_DAYS = 30
 
 
+def _resolve_yookassa_event_type(event: YookassaWebhookEvent) -> str:
+    """Normalize YooKassa webhook envelope into an actionable event name."""
+    return event.event or event.type
+
+
 def _extract_plan_from_payment(payment_obj: dict) -> PlanType:
     """Derive PlanType from YooKassa payment metadata."""
     meta = payment_obj.get("metadata") or {}
@@ -258,18 +263,29 @@ async def yookassa_webhook(
             detail="Untrusted IP address",
         )
 
-    logger.info("webhooks/yookassa: received event type=%s ip=%s", event.type, real_ip)
+    event_type = _resolve_yookassa_event_type(event)
 
-    if event.type == "payment.succeeded":
+    logger.info(
+        "webhooks/yookassa: received envelope_type=%s event_type=%s ip=%s",
+        event.type,
+        event_type,
+        real_ip,
+    )
+
+    if event_type == "payment.succeeded":
         await _handle_payment_succeeded(event.object, db)
-    elif event.type == "payment.cancelled":
+    elif event_type == "payment.cancelled":
         await _handle_payment_cancelled(event.object, db)
-    elif event.type == "refund.succeeded":
+    elif event_type == "refund.succeeded":
         logger.info(
             "webhooks/yookassa: refund.succeeded refund_id=%s — logged only",
             event.object.get("id"),
         )
     else:
-        logger.info("webhooks/yookassa: unhandled event type=%s", event.type)
+        logger.info(
+            "webhooks/yookassa: unhandled event envelope_type=%s event_type=%s",
+            event.type,
+            event_type,
+        )
 
     return {"status": "ok"}

@@ -89,5 +89,6 @@ class TestSetPlanRequest(BaseModel):
 class YookassaWebhookEvent(BaseModel):
     """YooKassa webhook event envelope."""
 
-    type: str   # payment.succeeded / payment.cancelled / refund.succeeded
+    type: str   # Usually "notification" in YooKassa webhook envelopes
+    event: str | None = None  # payment.succeeded / payment.cancelled / refund.succeeded
     object: dict  # Raw Payment or Refund object from YooKassa

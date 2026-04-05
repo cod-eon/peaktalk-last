@@ -81,3 +81,58 @@ async def test_payment_method_summary_for_cancelled_subscription(
     assert data["is_bound"] is True
     assert data["display_label"] == "Привязанный способ оплаты"
     assert data["auto_renew_enabled"] is False
+
+
+@pytest.mark.asyncio
+async def test_yookassa_notification_webhook_activates_subscription(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    await client.get("/billing/status")
+
+    user = (await db_session.execute(select(User).where(User.email == "test@peaktalk.io"))).scalar_one()
+
+    payload = {
+        "type": "notification",
+        "event": "payment.succeeded",
+        "object": {
+            "id": "yk_notification_payment_1",
+            "description": "PeakTalk PRO — месячная подписка",
+            "amount": {"value": "990.00", "currency": "RUB"},
+            "metadata": {
+                "user_id": str(user.id),
+                "plan": "pro",
+            },
+            "payment_method": {
+                "id": "pm_saved_123",
+                "saved": True,
+                "type": "bank_card",
+                "card": {"last4": "4242", "card_type": "visa"},
+            },
+        },
+    }
+
+    response = await client.post(
+        "/webhooks/yookassa",
+        json=payload,
+        headers={"X-Forwarded-For": "77.75.153.78"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+    subscription = (
+        await db_session.execute(select(Subscription).where(Subscription.user_id == user.id))
+    ).scalar_one()
+    payment = (
+        await db_session.execute(
+            select(Payment).where(Payment.yookassa_payment_id == "yk_notification_payment_1")
+        )
+    ).scalar_one()
+
+    assert subscription.plan == PlanType.pro
+    assert subscription.status == SubscriptionStatus.active
+    assert subscription.yookassa_payment_method_id == "pm_saved_123"
+    assert subscription.period_end is not None
+    assert payment.status == PaymentStatus.succeeded
+    assert payment.subscription_id == subscription.id
