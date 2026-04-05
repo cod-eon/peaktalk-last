@@ -12,7 +12,7 @@ const safariMotionStyle: React.CSSProperties = {
   WebkitBackfaceVisibility: 'hidden',
   transformStyle: 'preserve-3d',
   WebkitTransformStyle: 'preserve-3d',
-  contain: 'layout paint style',
+  outline: '1px solid transparent',
 };
 
 type RevealTarget = {
@@ -63,6 +63,34 @@ function useRevealTrigger<T extends HTMLElement>(margin: RevealMargin = '-64px 0
   return { ref, isInView };
 }
 
+function useIsIOSSafari() {
+  const [isIOSSafari, setIsIOSSafari] = useState(false);
+
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent;
+    const isIOS = /iP(hone|ad|od)/.test(userAgent);
+    const isWebKit = /WebKit/i.test(userAgent);
+    const isCriOS = /CriOS/i.test(userAgent);
+    const isFxiOS = /FxiOS/i.test(userAgent);
+
+    setIsIOSSafari(isIOS && isWebKit && !isCriOS && !isFxiOS);
+  }, []);
+
+  return isIOSSafari;
+}
+
+function normalizeRevealTarget(target: RevealTarget, disableScale: boolean): RevealTarget {
+  if (!disableScale) {
+    return target;
+  }
+
+  return {
+    ...target,
+    scale: 1,
+    scaleX: target.scaleX,
+  };
+}
+
 function buildRevealTransform(target: RevealTarget) {
   const x = target.x ?? 0;
   const y = target.y ?? 0;
@@ -83,9 +111,10 @@ function RevealDiv({
   margin,
 }: RevealProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isIOSSafari = useIsIOSSafari();
   const { ref, isInView } = useRevealTrigger<HTMLDivElement>(margin);
-  const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
-  const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+  const hiddenState = prefersReducedMotion ? { opacity: 0 } : normalizeRevealTarget(hidden, isIOSSafari);
+  const visibleState = prefersReducedMotion ? { opacity: 1 } : normalizeRevealTarget(visible, isIOSSafari);
   const state = isInView ? visibleState : hiddenState;
 
   return (
@@ -120,9 +149,10 @@ function RevealP({
   margin,
 }: RevealProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isIOSSafari = useIsIOSSafari();
   const { ref, isInView } = useRevealTrigger<HTMLParagraphElement>(margin);
-  const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
-  const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+  const hiddenState = prefersReducedMotion ? { opacity: 0 } : normalizeRevealTarget(hidden, isIOSSafari);
+  const visibleState = prefersReducedMotion ? { opacity: 1 } : normalizeRevealTarget(visible, isIOSSafari);
   const state = isInView ? visibleState : hiddenState;
 
   return (
