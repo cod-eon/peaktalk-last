@@ -119,7 +119,7 @@ export default function PrivacyPage() {
               fontSize: 11,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#2563EB",
+              color: "#E8600A",
               marginBottom: 12,
               fontWeight: 500,
             }}
@@ -527,7 +527,7 @@ export default function PrivacyPage() {
             Для реализации любого из указанных прав направьте запрос на:{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "#2563EB", textDecoration: "none" }}
+              style={{ color: "#E8600A", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>
@@ -619,7 +619,7 @@ export default function PrivacyPage() {
             <span style={{ color: "#171717", fontWeight: 500 }}>Email:</span>{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "#2563EB", textDecoration: "none" }}
+              style={{ color: "#E8600A", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>

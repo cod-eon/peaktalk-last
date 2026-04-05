@@ -154,7 +154,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                 </div>
 
                 {/* Pro card */}
-                <div className="rounded-none border-2 border-accent-400 bg-gradient-to-b from-accent-50/60 to-accent-50/10 p-4 relative overflow-hidden">
+                <div className="rounded-none border-2 border-accent-400 bg-gradient-to-b from-accent-50/60 to-amber-50/30 p-4 relative overflow-hidden">
                   <div className="absolute top-2 right-2">
                     <span className="text-[9px] font-bold tracking-widest text-accent-500 bg-accent-100 px-1.5 py-0.5 rounded-none uppercase">
                       Выбрать
@@ -186,7 +186,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               <div className="px-6 pb-6">
                 <button
                   onClick={handleUpgrade}
-                  className="w-full h-11 rounded-none bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-inter font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full h-11 rounded-none bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-inter font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Infinity size={16} />
                   Перейти на PRO — 990 ₽/мес

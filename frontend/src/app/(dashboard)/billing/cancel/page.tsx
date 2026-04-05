@@ -39,7 +39,7 @@ export default function BillingCancelPage() {
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={() => openUpgradeModal('simulations')}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
             
           >
             <Zap size={15} />

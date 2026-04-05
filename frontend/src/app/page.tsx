@@ -328,7 +328,7 @@ function Hero() {
               transition={{ duration: 1.5, delay: 0.2 }}
               className="w-full px-4 lg:px-0 relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-4 sm:mt-8 lg:mt-0 lg:-translate-y-3"
             >
-              <div className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_65%_35%,rgba(37,99,235,0.08),transparent_42%),radial-gradient(circle_at_38%_72%,rgba(0,0,0,0.05),transparent_40%)]" />
+              <div className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_65%_35%,rgba(232,96,10,0.08),transparent_42%),radial-gradient(circle_at_38%_72%,rgba(0,0,0,0.05),transparent_40%)]" />
               <HeroVisual />
             </motion.div>
           </div>
@@ -358,7 +358,7 @@ function MockupUpload() {
       {/* Drop zone */}
       <div className="border border-dashed border-neutral-300 rounded-none mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
         <div className="w-9 h-9 rounded-none bg-orange-50 flex items-center justify-center">
-          <FileText size={18} style={{ color: '#2563EB' }} strokeWidth={1.5} />
+          <FileText size={18} style={{ color: '#E8600A' }} strokeWidth={1.5} />
         </div>
         <div className="text-center">
           <p className="text-neutral-900 font-semibold text-sm">Перетащи файл или выбери</p>
@@ -375,7 +375,7 @@ function MockupUpload() {
           >
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-6 h-6 rounded-none bg-orange-50 flex items-center justify-center shrink-0">
-                <FileText size={12} style={{ color: '#2563EB' }} />
+                <FileText size={12} style={{ color: '#E8600A' }} />
               </div>
               <span className="text-gray-700 text-xs truncate font-mono">
                 {f.name}
@@ -411,8 +411,8 @@ function MockupSession() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <Timer size={11} style={{ color: '#2563EB' }} />
-            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#2563EB' }}>1:23</span>
+            <Timer size={11} style={{ color: '#E8600A' }} />
+            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#E8600A' }}>1:23</span>
           </div>
           <span className="text-gray-400 text-xs opacity-75 font-mono">Q 3/10</span>
         </div>
@@ -422,7 +422,7 @@ function MockupSession() {
       <div className="h-1 bg-gray-100">
         <motion.div
           className="h-full rounded-none"
-          style={{ background: '#2563EB' }}
+          style={{ background: '#E8600A' }}
           initial={{ width: 0 }}
           whileInView={{ width: '30%' }}
           viewport={{ once: true }}
@@ -434,7 +434,7 @@ function MockupSession() {
       <div className="mx-4 sm:mx-8 mt-6 mb-3">
         <p className="font-mono" style={{
           fontSize: 12,
-          color: '#2563EB',
+          color: '#E8600A',
           opacity: 0.7,
           marginBottom: '6px'
         }}>
@@ -482,7 +482,7 @@ function MockupReport() {
           <div className="font-mono text-neutral-400" style={{ fontSize: 12, opacity: 0.75, marginTop: '4px' }}>Готовность: выше среднего</div>
         </div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[#2563EB] text-sm">✦</span>
+          <span className="text-[#E8600A] text-sm">✦</span>
           <p className="text-gray-800 font-semibold text-sm">Разбор завершён</p>
         </div>
         <p className="text-gray-500 text-xs opacity-75 leading-relaxed mb-3">
@@ -493,7 +493,7 @@ function MockupReport() {
               <span
                 key={m.label}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-none text-xs font-bold text-white shrink-0 font-mono"
-                style={{ backgroundColor: '#2563EB', opacity: getScoreOpacity(m.score) }}
+                style={{ backgroundColor: '#E8600A', opacity: getScoreOpacity(m.score) }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
                 {m.label} {m.score}/10
@@ -611,7 +611,7 @@ function ActionFlow() {
                 transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
               >
-                <div className="font-mono text-xs text-[#2563EB] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
+                <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
                 <h3 className="font-inter font-bold text-3xl text-neutral-900 mb-6 leading-tight max-w-lg">{s.title}</h3>
                 <p className="font-inter text-base text-neutral-500 leading-relaxed max-w-lg">{s.desc}</p>
               </motion.div>
@@ -692,7 +692,7 @@ function ImpactEvidence() {
               key={i}
               className="group relative bg-[#0A0A0A] flex flex-col p-8 lg:p-12 transition-all hover:bg-neutral-900 overflow-hidden"
             >
-              <div className="font-mono text-xs opacity-75 text-[#2563EB] tracking-widest uppercase mb-8">{item.tag}</div>
+              <div className="font-mono text-xs opacity-75 text-[#E8600A] tracking-widest uppercase mb-8">{item.tag}</div>
               <h3 className="font-inter font-bold text-2xl text-white mb-4 leading-tight">{item.title}</h3>
               <p className="font-inter text-sm text-neutral-400 leading-relaxed">{item.detail}</p>
               
@@ -706,7 +706,7 @@ function ImpactEvidence() {
               </div>
 
               {/* Hover reveal line */}
-              <div className="absolute bottom-0 left-0 h-[2px] bg-[#2563EB] w-0 group-hover:w-full transition-all duration-150 ease-out" />
+              <div className="absolute bottom-0 left-0 h-[2px] bg-[#E8600A] w-0 group-hover:w-full transition-all duration-150 ease-out" />
             </motion.div>
           ))}
         </div>
@@ -738,7 +738,7 @@ function FooterCTA() {
           className="font-mono"
           style={{
             fontSize: '12px',
-            color: '#2563EB',
+            color: '#E8600A',
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
             opacity: 0.85,
@@ -805,7 +805,7 @@ function ProblemAgitation() {
   return (
     <section style={{ backgroundColor: '#fff', padding: 'clamp(80px,10vw,120px) 0', borderTop: '1px solid #e5e7eb' }}>
       <div className="container-custom">
-        <div className="font-mono text-[10px] text-[#2563EB] tracking-widest uppercase mb-4">[ PEAKTALK // ПРОБЛЕМАТИКА ]</div>
+        <div className="font-mono text-[10px] text-[#E8600A] tracking-widest uppercase mb-4">[ PEAKTALK // ПРОБЛЕМАТИКА ]</div>
         <h2 className="font-inter font-bold text-3xl md:text-4xl lg:text-5xl text-neutral-900 tracking-tight leading-tight mb-12">
           Почему стандартные решения не работают в нужный момент.
         </h2>
@@ -859,7 +859,7 @@ function SocialProofStrip() {
   return (
     <section className="relative" style={{ backgroundColor: '#0A0A0A', padding: 'clamp(60px,8vw,100px) 0', overflow: 'hidden' }}>
       <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.03, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }} />
-      <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.06) 0%, transparent 60%)' }} />
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(232,96,10,0.06) 0%, transparent 60%)' }} />
 
       <div className="container-custom relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3">
@@ -910,7 +910,7 @@ function Counter({ target, accent }: { target: number, accent?: boolean }) {
   }, [target]);
 
   return (
-    <div ref={nodeRef} className="font-inter font-extrabold" style={{ fontSize: 'clamp(48px,6vw,80px)', color: accent ? '#2563EB' : '#FFF', lineHeight: 1, letterSpacing: '-0.04em' }}>
+    <div ref={nodeRef} className="font-inter font-extrabold" style={{ fontSize: 'clamp(48px,6vw,80px)', color: accent ? '#E8600A' : '#FFF', lineHeight: 1, letterSpacing: '-0.04em' }}>
       {count}
     </div>
   );
@@ -944,7 +944,7 @@ function ComparisonBlock() {
           >
             <div className="flex items-center gap-3 mb-8">
               <h3 className="font-inter font-bold text-xl text-white m-0">PeakTalk</h3>
-              <div className="font-mono text-xs text-white opacity-90 tracking-widest bg-[#2563EB] px-3 py-1 rounded-none uppercase">
+              <div className="font-mono text-xs text-white opacity-90 tracking-widest bg-[#E8600A] px-3 py-1 rounded-none uppercase">
                 Рекомендуем
               </div>
             </div>
@@ -957,7 +957,7 @@ function ComparisonBlock() {
               ))}
             </div>
             <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <a href="/register" className="font-inter font-medium text-sm text-[#2563EB] no-underline hover:text-white transition-colors">Выбрать этот вариант →</a>
+              <a href="/register" className="font-inter font-medium text-sm text-[#E8600A] no-underline hover:text-white transition-colors">Выбрать этот вариант →</a>
             </div>
           </motion.div>
 
@@ -1030,8 +1030,8 @@ function Testimonials() {
               </p>
               
               <div className="flex gap-4 items-center" style={{ marginTop: '24px' }}>
-                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(37,99,235,0.08)', borderRadius: '0px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="font-mono" style={{ fontSize: 12, opacity: 0.75, color: '#2563EB', fontWeight: 'bold' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(232,96,10,0.08)', borderRadius: '0px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span className="font-mono" style={{ fontSize: 12, opacity: 0.75, color: '#E8600A', fontWeight: 'bold' }}>
                     {t.name.split(' ')[0][0] + (t.name.split(' ')[1] ? t.name.split(' ')[1][0] : '')}
                   </span>
                 </div>
@@ -1096,7 +1096,7 @@ function PricingBlock() {
             transition={{ duration: 0.7 }}
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
-            <div className="font-mono text-xs opacity-75 text-[#2563EB] uppercase tracking-widest">Профессиональный доступ</div>
+            <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Профессиональный доступ</div>
             <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">от ₽990 <span className="text-2xl font-medium text-white/50">/ мес</span></div>
             <div className="font-inter text-sm text-white/50 mt-2">Отмени в любой момент.</div>
             
@@ -1127,7 +1127,7 @@ function PricingBlock() {
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen selection:bg-[#2563EB] selection:text-white">
+    <main className="relative min-h-screen selection:bg-[#E8600A] selection:text-white">
       <Nav />
       <Hero />
       <SocialProofStrip />

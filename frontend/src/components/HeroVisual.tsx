@@ -17,7 +17,7 @@ export default function HeroVisual() {
 
   return (
     <div className="relative w-[343px] sm:w-auto max-w-[calc(100vw-32px)] sm:max-w-[680px] mx-auto overflow-visible my-4">
-      <div className="absolute inset-x-8 top-8 bottom-10 rounded-none bg-[radial-gradient(circle_at_50%_35%,rgba(37,99,235,0.10),transparent_45%)] blur-3xl opacity-80" />
+      <div className="absolute inset-x-8 top-8 bottom-10 rounded-none bg-[radial-gradient(circle_at_50%_35%,rgba(232,96,10,0.10),transparent_45%)] blur-3xl opacity-80" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -42,7 +42,7 @@ export default function HeroVisual() {
             {/* Block 1: Investor */}
             <div className="mb-8">
               <div className="bg-neutral-50 border border-neutral-100 rounded-none p-5 sm:p-6">
-                <div className="font-mono text-[10px] text-[#2563EB] uppercase tracking-widest mb-3 opacity-90 break-words whitespace-normal">
+                <div className="font-mono text-[10px] text-[#E8600A] uppercase tracking-widest mb-3 opacity-90 break-words whitespace-normal">
                   [ ИНВЕСТОР ]
                 </div>
                 <p className="font-inter text-base leading-relaxed text-black break-words whitespace-normal font-medium">
@@ -64,7 +64,7 @@ export default function HeroVisual() {
                   </span>
                   {/* Highlight */}
                   <motion.span 
-                    className="absolute bottom-0 left-0 h-[2px] bg-[#2563EB]"
+                    className="absolute bottom-0 left-0 h-[2px] bg-[#E8600A]"
                     initial={{ width: 0 }}
                     animate={{ width: step >= 1 ? '100%' : '0%' }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
@@ -76,7 +76,7 @@ export default function HeroVisual() {
                 <motion.span
                    animate={{ opacity: [1, 0, 1] }}
                    transition={{ duration: 0.8, repeat: Infinity }}
-                   className="inline-block w-[2px] h-[1em] bg-[#2563EB] translate-y-[2px] ml-1"
+                   className="inline-block w-[2px] h-[1em] bg-[#E8600A] translate-y-[2px] ml-1"
                 />
               </p>
             </div>
@@ -92,14 +92,14 @@ export default function HeroVisual() {
                   style={{ zIndex: 30 }}
                 >
                   <div className="flex items-center justify-between mb-3 border-b border-[rgba(0,0,0,0.06)] pb-2">
-                    <span className="font-mono text-[10px] text-[#2563EB] uppercase tracking-widest font-bold break-words whitespace-normal">
+                    <span className="font-mono text-[10px] text-[#E8600A] uppercase tracking-widest font-bold break-words whitespace-normal">
                       [ PEAKTALK AI ]
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-300">signal</span>
                   </div>
                   
                   <div className="font-inter text-[13px] leading-relaxed text-black font-medium flex gap-2 items-start mt-3">
-                    <span className="text-[#2563EB] shrink-0 font-mono mt-0.5">✦</span>
+                    <span className="text-[#E8600A] shrink-0 font-mono mt-0.5">✦</span>
                     <span className="break-words">
                       Уход от конкретики. Инвестор ждет точных метрик по удержанию CAC, а не абстрактных планов.
                     </span>
