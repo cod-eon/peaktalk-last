@@ -85,8 +85,8 @@ def _build_http_options() -> types.HttpOptions | None:
         return None
 
     return types.HttpOptions(
-        clientArgs={"proxy": proxy_url, "trust_env": False},
-        asyncClientArgs={"proxy": proxy_url, "trust_env": False},
+        client_args={"proxy": proxy_url, "trust_env": False},
+        async_client_args={"proxy": proxy_url, "trust_env": False},
     )
 
 
