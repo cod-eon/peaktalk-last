@@ -73,27 +73,29 @@ async def get_current_user(
     )
     user = result.scalar_one_or_none()
 
-    # Re-registration detection: if the Supabase account was created AFTER our local
-    # user record, the user was deleted from Supabase and signed up again.
-    # Delete stale local data so they get a clean slate (onboarding, etc.).
-    if user is not None and sb_created_at is not None:
-        local_created = user.created_at
-        if local_created.tzinfo is None:
-            local_created = local_created.replace(tzinfo=timezone.utc)
-        # Trigger wipe if:
-        # A) IDs don't match (user deleted in Supabase and re-registered with same email)
-        # B) Supabase account is much newer than our record
+    # Re-registration detection: if Supabase returns a different UUID for the same
+    # email, or a clearly newer account timestamp, the old local row is stale and
+    # must be wiped so onboarding starts from a clean state.
+    if user is not None:
         is_new_uuid = user.id != user_id
-        is_newer_sb = sb_created_at > local_created + timedelta(seconds=60)
-        
+        is_newer_sb = False
+
+        if sb_created_at is not None:
+            local_created = user.created_at
+            if local_created.tzinfo is None:
+                local_created = local_created.replace(tzinfo=timezone.utc)
+            is_newer_sb = sb_created_at > local_created + timedelta(seconds=60)
+
         if is_new_uuid or is_newer_sb:
+            reason = "new UUID" if is_new_uuid else "newer account"
             logger.info(
                 "auth: stale data detected for email=%s (reason: %s) — wiping local record",
-                email, "new UUID" if is_new_uuid else "newer account"
+                email,
+                reason,
             )
             await db.delete(user)
-            await db.commit() # Commit deletion before provisioning fresh
-            user = None  # will be provisioned fresh below
+            await db.commit()
+            user = None
 
     if user is None:
         # Auto-provision user on first authenticated request
