@@ -87,7 +87,7 @@ export default function BillingSuccessPage() {
           </div>
 
           {/* PRO badge */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-none bg-gradient-to-r from-accent-500 to-amber-400 text-white">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-none bg-accent-500 text-white">
             <Zap size={15} />
             <span className="font-semibold text-sm" >
               PeakTalk PRO активен
@@ -97,7 +97,7 @@ export default function BillingSuccessPage() {
           {/* CTA */}
           <Link
             href="/simulation"
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-[#E8600A] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-[#2563EB] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
             
           >
             Начать симуляцию

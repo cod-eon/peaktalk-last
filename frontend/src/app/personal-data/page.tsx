@@ -119,7 +119,7 @@ export default function PersonalDataPage() {
               fontSize: 11,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#E8600A",
+              color: "#2563EB",
               marginBottom: 12,
               fontWeight: 500,
             }}
@@ -231,7 +231,7 @@ export default function PersonalDataPage() {
                     <a
                       href="mailto:support@peaktalk.ru"
                       style={{
-                        color: "#E8600A",
+                        color: "#2563EB",
                         textDecoration: "none",
                       }}
                     >
@@ -678,7 +678,7 @@ export default function PersonalDataPage() {
             Для реализации указанных прав направьте запрос на:{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "#E8600A", textDecoration: "none" }}
+              style={{ color: "#2563EB", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>
@@ -742,7 +742,7 @@ export default function PersonalDataPage() {
             Электронная почта:{" "}
             <a
               href="mailto:support@peaktalk.ru"
-              style={{ color: "#E8600A", textDecoration: "none" }}
+              style={{ color: "#2563EB", textDecoration: "none" }}
             >
               support@peaktalk.ru
             </a>

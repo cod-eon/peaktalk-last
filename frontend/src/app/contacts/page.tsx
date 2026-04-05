@@ -44,9 +44,9 @@ function ContactCard({
         transition: "border-color 0.15s ease, box-shadow 0.15s ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(232,96,10,0.35)";
+        e.currentTarget.style.borderColor = "rgba(37,99,235,0.35)";
         e.currentTarget.style.boxShadow =
-          "0 4px 16px rgba(232,96,10,0.08), 0 0 0 1px rgba(232,96,10,0.12)";
+          "0 4px 16px rgba(37,99,235,0.08), 0 0 0 1px rgba(37,99,235,0.12)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "#e5e7eb";
@@ -72,7 +72,7 @@ function ContactCard({
           fontWeight: 700,
           fontSize: 18,
           letterSpacing: "-0.02em",
-          color: "#E8600A",
+          color: "#2563EB",
           marginBottom: 8,
         }}
       >
@@ -154,7 +154,7 @@ export default function ContactsPage() {
               fontSize: 11,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "#E8600A",
+              color: "#2563EB",
               marginBottom: 12,
               fontWeight: 500,
             }}
