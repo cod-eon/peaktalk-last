@@ -80,7 +80,7 @@ export default function OnboardingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+        <div className="min-h-screen bg-white flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-8 relative overflow-hidden">
             {/* Background grid — hidden on mobile for clean look */}
             <div className="fixed inset-0 pointer-events-none opacity-40 hidden md:block"
                 style={{ backgroundImage: 'linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px)', backgroundSize: '40px 40px' }}
@@ -108,21 +108,21 @@ export default function OnboardingPage() {
                 </div>
             )}
 
-            <div className="w-full max-w-2xl relative z-10">
+            <div className="w-full max-w-4xl relative z-10">
                 {/* Logo / Brand */}
                 {step !== 3 && (
-                    <div className="text-center mb-10">
-                        <a href="/" className="flex flex-col items-center gap-1.5 mb-6 hover:opacity-80 transition-opacity">
-                            <Image src="/logo_svg.svg" alt="PeakTalk" width={36} height={36} className="block" />
-                            <span className="font-inter font-extrabold text-[18px] tracking-tight text-neutral-900">PeakTalk</span>
+                    <div className="text-center mb-6 sm:mb-8">
+                        <a href="/" className="flex flex-col items-center gap-1 mb-4 sm:mb-5 hover:opacity-80 transition-opacity">
+                            <Image src="/logo_svg.svg" alt="PeakTalk" width={32} height={32} className="block sm:w-9 sm:h-9" />
+                            <span className="font-inter font-extrabold text-[17px] sm:text-[18px] tracking-tight text-neutral-900">PeakTalk</span>
                         </a>
-                        <div className="font-mono text-[11px] text-neutral-900 tracking-[0.15em] uppercase mb-3">
+                        <div className="font-mono text-[10px] sm:text-[11px] text-neutral-900 tracking-[0.15em] uppercase mb-2">
                             Onboarding
                         </div>
-                        <h1 className="font-inter text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+                        <h1 className="font-inter text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">
                             {step === 1 ? 'Расскажите о себе' : 'К чему готовитесь?'}
                         </h1>
-                        <p className="text-neutral-400 font-inter text-sm max-w-md mx-auto">
+                        <p className="text-neutral-400 font-inter text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                             {step === 1
                                 ? 'Это поможет AI-тренеру подобрать правильный стиль и уровень сложности.'
                                 : 'Укажите главную цель — тренер сфокусируется именно на ней.'}
@@ -132,20 +132,20 @@ export default function OnboardingPage() {
 
                 {/* Step indicator */}
                 {step !== 3 && (
-                    <div className="flex items-center justify-center gap-3 mb-10">
+                    <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
                         {[1, 2].map((s) => (
-                            <div key={s} className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-none flex items-center justify-center font-mono text-xs font-bold transition-all duration-300 ${
+                            <div key={s} className="flex items-center gap-2 sm:gap-3">
+                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-none flex items-center justify-center font-mono text-[11px] sm:text-xs font-bold transition-all duration-300 ${
                                     step > s
                                         ? 'bg-emerald-500 text-white'
                                         : step === s
                                             ? 'bg-neutral-900 text-white'
                                             : 'bg-neutral-50 border border-neutral-200 text-neutral-400'
                                 }`}>
-                                    {step > s ? <CheckCircle2 size={14} /> : s}
+                                    {step > s ? <CheckCircle2 size={13} className="sm:w-[14px] sm:h-[14px]" /> : s}
                                 </div>
                                 {s < 2 && (
-                                    <div className={`w-12 h-px transition-colors duration-300 ${step > s ? 'bg-emerald-500' : 'bg-neutral-200'}`} />
+                                    <div className={`w-10 sm:w-12 h-px transition-colors duration-300 ${step > s ? 'bg-emerald-500' : 'bg-neutral-200'}`} />
                                 )}
                             </div>
                         ))}
@@ -162,31 +162,31 @@ export default function OnboardingPage() {
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                                 {SEGMENTS.map((seg) => (
                                     <button
                                         key={seg.id}
                                         onClick={() => setSegment(seg.id)}
-                                        className={`text-left p-5 rounded-none border transition-all duration-200 relative group min-h-[140px] flex flex-col justify-start ${
+                                        className={`text-left p-4 sm:p-5 rounded-none border transition-all duration-200 relative group min-h-[116px] sm:min-h-[128px] flex flex-col justify-start ${
                                             segment === seg.id
                                                 ? 'bg-neutral-100 border-neutral-900'
                                                 : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100'
                                         }`}
                                     >
                                         {segment === seg.id && (
-                                            <div className="absolute top-4 right-4 text-neutral-900">
-                                                <CheckCircle2 size={16} />
+                                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-neutral-900">
+                                                <CheckCircle2 size={15} />
                                             </div>
                                         )}
-                                        <div className={`w-10 h-10 rounded-none flex items-center justify-center mb-4 transition-colors ${
+                                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-none flex items-center justify-center mb-3 sm:mb-4 transition-colors ${
                                             segment === seg.id
                                                 ? 'bg-neutral-200 text-neutral-900'
                                                 : 'bg-neutral-100 border border-neutral-200 text-neutral-500 group-hover:text-neutral-900'
                                         }`}>
                                             {seg.icon}
                                         </div>
-                                        <div className="font-inter text-base font-semibold text-neutral-900 mb-1">{seg.label}</div>
-                                        <div className="font-inter text-xs text-neutral-500 leading-relaxed">{seg.desc}</div>
+                                        <div className="font-inter text-sm sm:text-[15px] font-semibold text-neutral-900 mb-1">{seg.label}</div>
+                                        <div className="font-inter text-[11px] sm:text-xs text-neutral-500 leading-relaxed">{seg.desc}</div>
                                     </button>
                                 ))}
                             </div>
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!segment}
                                     onClick={() => setStep(2)}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+                                    className="flex items-center gap-2 px-5 py-3 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
                                 >
                                     Далее <ChevronRight size={18} />
                                 </button>
@@ -211,30 +211,30 @@ export default function OnboardingPage() {
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                                 {GOALS.map((g) => (
                                     <button
                                         key={g.id}
                                         onClick={() => setGoal(g.id)}
-                                        className={`text-left p-5 rounded-none border transition-all duration-200 flex items-center gap-4 relative group min-h-[88px] ${
+                                        className={`text-left p-4 sm:p-5 rounded-none border transition-all duration-200 flex items-center gap-3 sm:gap-4 relative group min-h-[72px] sm:min-h-[84px] ${
                                             goal === g.id
                                                 ? 'bg-neutral-100 border-neutral-900'
                                                 : 'bg-white border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                                         }`}
                                     >
                                         {goal === g.id && (
-                                            <div className="absolute top-4 right-4 text-neutral-900">
-                                                <CheckCircle2 size={16} />
+                                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-neutral-900">
+                                                <CheckCircle2 size={15} />
                                             </div>
                                         )}
-                                        <div className={`w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0 transition-colors ${
+                                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-none flex items-center justify-center flex-shrink-0 transition-colors ${
                                             goal === g.id
                                                 ? 'bg-neutral-200 text-neutral-900'
                                                 : 'bg-neutral-100 border border-neutral-200 text-neutral-500 group-hover:text-neutral-900'
                                         }`}>
                                             {g.icon}
                                         </div>
-                                        <div className="font-inter text-base font-semibold text-neutral-900">{g.label}</div>
+                                        <div className="font-inter text-sm sm:text-[15px] font-semibold text-neutral-900 pr-5 sm:pr-6">{g.label}</div>
                                     </button>
                                 ))}
                             </div>
@@ -242,14 +242,14 @@ export default function OnboardingPage() {
                             <div className="flex justify-between">
                                 <button
                                     onClick={() => setStep(1)}
-                                    className="px-6 py-3.5 rounded-none font-mono text-sm border border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 transition-colors min-h-[48px]"
+                                    className="px-5 py-3 rounded-none font-mono text-sm border border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 transition-colors min-h-[44px]"
                                 >
                                     Назад
                                 </button>
                                 <button
                                     disabled={!goal || isSubmitting}
                                     onClick={handleSubmit}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+                                    className="flex items-center gap-2 px-5 py-3 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 size={16} className="animate-spin" /> Сохранение...</>
@@ -267,46 +267,46 @@ export default function OnboardingPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             transition={{ duration: 0.5, ease: "easeOut" }}
-                            className="text-center bg-neutral-50 border border-neutral-200 p-8 sm:p-12 rounded-none relative overflow-hidden shadow-sm"
+                            className="text-center bg-neutral-50 border border-neutral-200 p-6 sm:p-10 rounded-none relative overflow-hidden shadow-sm"
                         >
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-500 rounded-none flex items-center justify-center mx-auto mb-6">
+                            <div className="w-14 h-14 sm:w-18 sm:h-18 bg-emerald-500/10 text-emerald-500 rounded-none flex items-center justify-center mx-auto mb-5 sm:mb-6">
                                 <CheckCircle2 size={36} className="sm:hidden" />
                                 <CheckCircle2 size={40} className="hidden sm:block" />
                             </div>
-                            <h2 className="font-inter text-2xl sm:text-3xl font-bold text-neutral-900 mb-3 leading-tight">
+                            <h2 className="font-inter text-xl sm:text-3xl font-bold text-neutral-900 mb-2 sm:mb-3 leading-tight">
                                 Профиль успешно настроен!
                             </h2>
-                            <p className="text-neutral-400 mb-10 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
+                            <p className="text-neutral-400 mb-7 sm:mb-10 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
                                 Ваш персональный ИИ-тренер готов к работе. Выберите, с чего хотите начать первую тренировку.
                             </p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                                 <button
                                     onClick={() => router.push('/upload')}
-                                    className="p-5 sm:p-6 rounded-none border border-neutral-200 bg-white hover:border-neutral-900 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
+                                    className="p-4 sm:p-5 rounded-none border border-neutral-200 bg-white hover:border-neutral-900 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[136px] sm:min-h-[152px]"
                                 >
-                                    <div className="w-12 h-12 rounded-none bg-neutral-100 text-neutral-900 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-none bg-neutral-100 text-neutral-900 flex items-center justify-center mb-4 sm:mb-5 group-hover:-translate-y-1 transition-transform">
                                         <FileText size={24} />
                                     </div>
-                                    <h3 className="font-inter font-semibold text-lg sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить текст</h3>
+                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить текст</h3>
                                     <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Тренер проанализирует логику, структуру и тайминг вашего доклада.</p>
                                 </button>
                                 
                                 <button
                                     onClick={() => router.push('/simulation')}
-                                    className="p-5 sm:p-6 rounded-none border border-neutral-200 bg-white hover:border-emerald-500 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
+                                    className="p-4 sm:p-5 rounded-none border border-neutral-200 bg-white hover:border-emerald-500 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[136px] sm:min-h-[152px]"
                                 >
-                                    <div className="w-12 h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 sm:mb-5 group-hover:-translate-y-1 transition-transform">
                                         <Mic size={24} />
                                     </div>
-                                    <h3 className="font-inter font-semibold text-lg sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Симуляция Q&A</h3>
+                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Симуляция Q&A</h3>
                                     <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Отвечайте на сложные и провокационные вопросы в реальном времени.</p>
                                 </button>
                             </div>
                             
                             <button 
                                 onClick={() => router.push('/dashboard')} 
-                                className="mt-8 font-mono text-[11px] sm:text-xs tracking-wider uppercase text-neutral-500 hover:text-neutral-900 transition-colors underline underline-offset-4 p-2 cursor-pointer min-h-[44px] inline-flex items-center justify-center"
+                                className="mt-6 sm:mt-8 font-mono text-[11px] sm:text-xs tracking-wider uppercase text-neutral-500 hover:text-neutral-900 transition-colors underline underline-offset-4 p-2 cursor-pointer min-h-[44px] inline-flex items-center justify-center"
                             >
                                 Перейти в дашборд
                             </button>
