@@ -192,7 +192,7 @@ export function Sidebar() {
                             transition={{ duration: 0.15 }}
                             className="mt-2 px-2.5 py-2 flex items-center gap-2.5 border-t border-neutral-200"
                         >
-                            <div className="w-6 h-6 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
+                            <div className="w-6 h-6 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
                                 <span className="text-[10px] font-bold text-neutral-600">
                                     {displayName.charAt(0).toUpperCase()}
                                 </span>

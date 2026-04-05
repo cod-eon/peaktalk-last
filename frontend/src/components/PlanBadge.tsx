@@ -33,7 +33,7 @@ export function PlanBadge({ plan }: PlanBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest leading-none ${cfg.className}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-none text-[9px] font-bold tracking-widest leading-none ${cfg.className}`}
     >
       {cfg.label}
     </span>

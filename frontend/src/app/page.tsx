@@ -55,8 +55,10 @@ function Nav() {
           left: 0,
           right: 0,
           zIndex: 50,
-          padding: '16px 0',
-          background: scrolled ? 'rgba(255, 255, 255, 0.85)' : 'transparent',
+          padding: scrolled ? '14px 0' : '18px 0',
+          background: scrolled
+            ? 'rgba(255, 255, 255, 0.88)'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 42%, rgba(255,255,255,0) 100%)',
           backdropFilter: scrolled ? 'blur(32px) saturate(140%)' : 'none',
           WebkitBackdropFilter: scrolled ? 'blur(32px) saturate(140%)' : 'none',
           transition: 'all 0.3s ease',
@@ -98,14 +100,14 @@ function Nav() {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center' }}>
               <a href="/login" className="font-mono text-neutral-900" style={{
-                fontSize: 12,
+                fontSize: 11,
                 textTransform: 'uppercase',
-                letterSpacing: '0.05em',
+                letterSpacing: '0.08em',
                 textDecoration: 'none',
-                opacity: 0.8
+                opacity: 0.72
               }}>Вход</a>
               <div style={{ width: 1, height: 16, backgroundColor: '#e5e7eb' }} />
-              <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-5 py-2.5 text-sm flex items-center transition-all" >
+              <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-5 py-2.5 text-sm flex items-center transition-all" >
                 Начать подготовку
               </a>
             </div>
@@ -204,7 +206,7 @@ function Nav() {
                 textDecoration: 'none',
                 padding: '8px 0',
               }}>Личный кабинет</a>
-              <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-6 py-3.5 text-sm flex items-center justify-center w-full transition-all" >
+              <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-3.5 text-sm flex items-center justify-center w-full transition-all" >
                 Начать подготовку
               </a>
             </div>
@@ -232,13 +234,13 @@ function Hero() {
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-8 items-center h-full">
             
             {/* Text Content - Center on mobile, left on desktop */}
-            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-start text-left sm:items-center sm:text-center lg:items-start lg:text-left mt-12 lg:mt-0">
+            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-start text-left sm:items-center sm:text-center lg:items-start lg:text-left mt-12 lg:mt-0 lg:pr-10">
 
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0 }}
-                className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-400 border border-neutral-200 rounded-full px-4 py-1.5 mb-5"
+                className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 rounded-none px-4 py-1.5 mb-5 bg-white/80 shadow-[0_8px_24px_rgba(0,0,0,0.03)]"
               >
                 AI-тренер для переговоров
               </motion.div>
@@ -247,9 +249,11 @@ function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="font-inter font-bold text-[32px] sm:text-5xl lg:text-7xl text-neutral-900 tracking-tight leading-[0.95] mb-4 text-balance"
+                className="font-inter font-bold text-[34px] sm:text-5xl lg:text-[78px] text-neutral-900 tracking-tight leading-[0.92] mb-5 max-w-[10.5ch] sm:max-w-[11.5ch] lg:max-w-[11ch]"
               >
-                Стресс-тест для ваших питчей и стратегий.
+                <span className="block">Стресс-тест</span>
+                <span className="block">для ваших питчей</span>
+                <span className="block">и стратегий.</span>
               </motion.h1>
 
               <motion.p
@@ -257,11 +261,11 @@ function Hero() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
                 style={{
-                  fontSize: 'clamp(14px, 1.5vw, 18px)',
-                  lineHeight: 1.5,
+                  fontSize: 'clamp(15px, 1.55vw, 19px)',
+                  lineHeight: 1.58,
                   color: '#737373',
-                  marginBottom: 16,
-                  maxWidth: 480,
+                  marginBottom: 20,
+                  maxWidth: 560,
                 }}
               >
                 Загрузи документ — получи жёсткие вопросы от <strong style={{ color: '#171717', fontWeight: 600 }}>CFO, инвестора или совета директоров</strong>. Разбор каждого ответа. Тренировка под твою следующую встречу.
@@ -272,16 +276,16 @@ function Hero() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
-                className="flex gap-6 sm:gap-8 mb-5"
+                className="grid grid-cols-3 w-full max-w-[520px] mb-6 overflow-hidden rounded-none border border-neutral-200 bg-white/85 shadow-[0_18px_40px_rgba(0,0,0,0.04)]"
               >
                 {[
                   { value: '15', label: 'персон' },
                   { value: '90с', label: 'на старт' },
                   { value: '3', label: 'бесплатно' },
                 ].map((m, i) => (
-                  <div key={i} className="flex items-baseline gap-1.5">
-                    <span className="font-inter font-bold text-xl text-neutral-900">{m.value}</span>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">{m.label}</span>
+                  <div key={i} className={`flex flex-col gap-1 px-4 py-3 sm:px-5 sm:py-4 ${i !== 2 ? 'border-r border-neutral-200' : ''}`}>
+                    <span className="font-inter font-bold text-[22px] sm:text-2xl text-neutral-900 leading-none">{m.value}</span>
+                    <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-neutral-500">{m.label}</span>
                   </div>
                 ))}
               </motion.div>
@@ -290,14 +294,14 @@ function Hero() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col items-start sm:items-center lg:items-start gap-3 w-full"
+                className="flex flex-col items-start sm:items-center lg:items-start gap-3 w-full max-w-[520px]"
               >
                 <div className="flex flex-col sm:flex-row w-full gap-3">
-                  <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 text-sm transition-all" >
+                  <a href="/register" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 text-sm transition-all" >
                     Начать подготовку →
                   </a>
                   <button
-                    className="hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all rounded-xl border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50"
+                    className="hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all rounded-none border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50"
                     onClick={() => smoothScroll('#how')}
                   >
                     Как это работает →
@@ -322,10 +326,9 @@ function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5, delay: 0.2 }}
-              className="w-full px-4 lg:px-0 relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-4 sm:mt-8 lg:mt-0"
+              className="w-full px-4 lg:px-0 relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-4 sm:mt-8 lg:mt-0 lg:-translate-y-3"
             >
-              {/* Accent Bloom */}
-              <div className="absolute inset-0 opacity-0 pointer-events-none z-0" />
+              <div className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_65%_35%,rgba(232,96,10,0.08),transparent_42%),radial-gradient(circle_at_38%_72%,rgba(0,0,0,0.05),transparent_40%)]" />
               <HeroVisual />
             </motion.div>
           </div>
@@ -344,7 +347,7 @@ function MockupUpload() {
   ];
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border border-neutral-200 bg-white shadow-md relative"
+      className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md relative"
       style={{ minHeight: 240 }}
     >
       {/* Toolbar strip */}
@@ -353,8 +356,8 @@ function MockupUpload() {
       </div>
 
       {/* Drop zone */}
-      <div className="border border-dashed border-neutral-300 rounded-lg mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
-        <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center">
+      <div className="border border-dashed border-neutral-300 rounded-none mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
+        <div className="w-9 h-9 rounded-none bg-orange-50 flex items-center justify-center">
           <FileText size={18} style={{ color: '#E8600A' }} strokeWidth={1.5} />
         </div>
         <div className="text-center">
@@ -368,10 +371,10 @@ function MockupUpload() {
         {files.map((f) => (
           <div
             key={f.name}
-            className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-100"
+            className="flex items-center justify-between px-3 py-2.5 rounded-none bg-gray-50 border border-gray-100"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-none bg-orange-50 flex items-center justify-center shrink-0">
                 <FileText size={12} style={{ color: '#E8600A' }} />
               </div>
               <span className="text-gray-700 text-xs truncate font-mono">
@@ -392,13 +395,13 @@ function MockupUpload() {
 function MockupSession() {
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col"
+      className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col"
       style={{ minHeight: 260 }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-gray-100 bg-gray-50">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.10)' }}>
+          <div className="w-7 h-7 rounded-none flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.10)' }}>
             <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#8B5CF6' }}>AM</span>
           </div>
           <div className="flex flex-col leading-none gap-0.5">
@@ -418,7 +421,7 @@ function MockupSession() {
       {/* Progress bar */}
       <div className="h-1 bg-gray-100">
         <motion.div
-          className="h-full rounded-full"
+          className="h-full rounded-none"
           style={{ background: '#E8600A' }}
           initial={{ width: 0 }}
           whileInView={{ width: '30%' }}
@@ -437,7 +440,7 @@ function MockupSession() {
         }}>
           ↻ Уточняет ответ на предыдущий
         </p>
-        <div className="p-3.5 rounded-2xl rounded-tl-sm bg-gray-50 border border-gray-100">
+        <div className="p-3.5 rounded-none bg-gray-50 border border-gray-100">
           <p className="text-gray-800 text-sm leading-relaxed font-medium">
             Как обосновать тех. долг команде, которая хочет только новые фичи?
           </p>
@@ -445,7 +448,7 @@ function MockupSession() {
       </div>
 
       {/* AI Reasoning hint */}
-      <div className="bg-neutral-100 border-l-2 border-[#8B5CF6] rounded-r-sm p-4 mx-4 sm:mx-8 my-3 mb-8">
+      <div className="bg-neutral-100 border-l-2 border-[#8B5CF6] p-4 mx-4 sm:mx-8 my-3 mb-8">
         <div className="font-mono text-xs text-[#8B5CF6]">
           ✦ PeakTalk думает: слабая точка — отсутствие метрик
         </div>
@@ -469,7 +472,7 @@ function MockupReport() {
 
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border border-neutral-200 bg-white shadow-md"
+      className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md"
       style={{ minHeight: 280 }}
     >
       {/* Summary header */}
@@ -489,7 +492,7 @@ function MockupReport() {
           {metrics.map((m) => (
               <span
                 key={m.label}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-bold text-white shrink-0 font-mono"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-none text-xs font-bold text-white shrink-0 font-mono"
                 style={{ backgroundColor: '#E8600A', opacity: getScoreOpacity(m.score) }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
@@ -516,7 +519,7 @@ function MockupReport() {
             <p className="text-gray-700 text-xs opacity-75 leading-relaxed">
               Это важно для стабильности системы,{' '}
               <span
-                className="rounded px-1 cursor-pointer"
+                className="rounded-none px-1 cursor-pointer"
                 style={{ background: '#fef3c7', color: '#92400e' }}
               >
                 без конкретики...
@@ -532,12 +535,12 @@ function MockupReport() {
       {/* Action buttons */}
       <div className="flex flex-wrap gap-3 px-4 sm:px-8 py-4">
         <button
-          className="flex items-center justify-center flex-1 gap-1.5 px-2 py-2 rounded-lg border border-neutral-200 text-gray-600 text-xs opacity-75 hover:bg-gray-50 transition-colors font-mono"
+          className="flex items-center justify-center flex-1 gap-1.5 px-2 py-2 rounded-none border border-neutral-200 text-gray-600 text-xs opacity-75 hover:bg-gray-50 transition-colors font-mono"
         >
           <Download size={12} /> Скачать PDF
         </button>
         <button
-           className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl flex items-center justify-center flex-1 gap-1.5 px-2 py-2 text-xs transition-all"
+           className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none flex items-center justify-center flex-1 gap-1.5 px-2 py-2 text-xs transition-all"
         >
           <Share2 size={12} /> Поделиться
         </button>
@@ -618,7 +621,7 @@ function ActionFlow() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="relative w-full shadow-2xl rounded-lg"
+                className="relative w-full shadow-2xl rounded-none"
               >
                 {s.mockup}
               </motion.div>
@@ -750,7 +753,7 @@ function FooterCTA() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
           <a 
             href="/register" 
-            className="px-6 py-3 rounded border border-white/30 text-white bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all duration-150 flex items-center justify-center gap-3 font-inter font-semibold text-base group" 
+            className="px-6 py-3 rounded-none border border-white/30 text-white bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all duration-150 flex items-center justify-center gap-3 font-inter font-semibold text-base group" 
           >
             <span className="relative z-10">Начать подготовку</span>
             <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform duration-150" />
@@ -937,11 +940,11 @@ function ComparisonBlock() {
             whileInView={{ y: 0, opacity: 1, scale: 1.03 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0 }}
-            className="order-first md:order-none flex flex-col bg-[#0A0A0A] rounded-[12px] p-8 lg:p-10 relative"
+            className="order-first md:order-none flex flex-col bg-[#0A0A0A] rounded-none p-8 lg:p-10 relative"
           >
             <div className="flex items-center gap-3 mb-8">
               <h3 className="font-inter font-bold text-xl text-white m-0">PeakTalk</h3>
-              <div className="font-mono text-xs text-white opacity-90 tracking-widest bg-[#E8600A] px-3 py-1 rounded-sm uppercase">
+              <div className="font-mono text-xs text-white opacity-90 tracking-widest bg-[#E8600A] px-3 py-1 rounded-none uppercase">
                 Рекомендуем
               </div>
             </div>
@@ -966,7 +969,7 @@ function ComparisonBlock() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: (i + 1) * 0.08 }}
               className="hover:opacity-100 transition-opacity opacity-75 flex flex-col"
-              style={{ backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px' }}
+              style={{ backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '0px', padding: '24px' }}
             >
               <h3 className="font-inter" style={{ fontWeight: 700, fontSize: '18px', color: '#171717', marginBottom: '16px' }}>{alt.title}</h3>
               <div className="flex flex-col gap-3">
@@ -999,9 +1002,17 @@ function Testimonials() {
   return (
     <section style={{ backgroundColor: '#f9fafb', padding: 'clamp(80px,10vw,120px) 0' }}>
       <div className="container-custom">
-        <h2 className="font-mono" style={{ fontSize: 12, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#737373', marginBottom: '48px' }}>
-          Результаты
-        </h2>
+        <div className="max-w-3xl mb-12">
+          <div className="font-mono" style={{ fontSize: 12, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#737373', marginBottom: '12px' }}>
+            Результаты
+          </div>
+          <h2 className="font-inter font-extrabold text-neutral-900 tracking-tight" style={{ fontSize: 'clamp(24px,3vw,40px)', lineHeight: 1.06, letterSpacing: '-0.03em', margin: 0 }}>
+            Что меняется после нескольких жёстких сессий.
+          </h2>
+          <p className="font-inter text-neutral-500" style={{ fontSize: 16, lineHeight: 1.65, marginTop: '14px', marginBottom: 0, maxWidth: 700 }}>
+            Не абстрактное «стало увереннее», а конкретный эффект: слабые места всплывают до реальной встречи, а не во время неё.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {testimonials.map((t, i) => (
@@ -1012,14 +1023,14 @@ function Testimonials() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
               className={`flex flex-col bg-white group hover:-translate-y-1 transition-all duration-150 ${!t.large ? 'md:col-span-2 md:justify-self-center md:max-w-xl w-full' : ''}`}
-              style={{ border: '1px solid #f3f4f6', borderRadius: '12px', padding: '32px' }}
+              style={{ border: '1px solid #e5e7eb', borderRadius: '0px', padding: '32px', boxShadow: '0 12px 32px rgba(0,0,0,0.03)' }}
             >
               <p className="font-inter text-base text-neutral-900 leading-relaxed flex-1 mb-6">
                 "{t.quote}"
               </p>
               
               <div className="flex gap-4 items-center" style={{ marginTop: '24px' }}>
-                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(232,96,10,0.08)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(232,96,10,0.08)', borderRadius: '0px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="font-mono" style={{ fontSize: 12, opacity: 0.75, color: '#E8600A', fontWeight: 'bold' }}>
                     {t.name.split(' ')[0][0] + (t.name.split(' ')[1] ? t.name.split(' ')[1][0] : '')}
                   </span>
@@ -1056,7 +1067,7 @@ function PricingBlock() {
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="flex flex-col bg-[#141414] border border-white/10 rounded-[12px] p-8 md:p-10"
+            className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-white/50 uppercase tracking-widest">Попробовать</div>
             <div className="font-inter font-bold text-5xl text-white leading-none mt-2">Бесплатно</div>
@@ -1073,7 +1084,7 @@ function PricingBlock() {
               ))}
             </div>
             
-            <a href="/register" className="w-full py-4 text-center border border-white/20 rounded-md bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
+            <a href="/register" className="w-full py-4 text-center border border-white/20 rounded-none bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
               Начать бесплатно
             </a>
           </motion.div>
@@ -1083,7 +1094,7 @@ function PricingBlock() {
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="flex flex-col bg-[#141414] border border-white/10 rounded-[12px] p-8 md:p-10"
+            className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Профессиональный доступ</div>
             <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">от ₽990 <span className="text-2xl font-medium text-white/50">/ мес</span></div>
@@ -1100,7 +1111,7 @@ function PricingBlock() {
               ))}
             </div>
             
-            <a href="/pricing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-xl w-full mt-auto block text-center py-3 text-sm transition-all">
+            <a href="/pricing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-none w-full mt-auto block text-center py-3 text-sm transition-all">
               Выбрать Pro
             </a>
           </motion.div>

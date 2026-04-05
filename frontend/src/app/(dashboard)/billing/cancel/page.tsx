@@ -15,7 +15,7 @@ export default function BillingCancelPage() {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md text-center flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
+        className="w-full max-w-md text-center flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-none p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
       >
         {/* Icon */}
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
@@ -39,7 +39,7 @@ export default function BillingCancelPage() {
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={() => openUpgradeModal('simulations')}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-semibold text-sm transition-all shadow-md cursor-pointer"
             
           >
             <Zap size={15} />
@@ -48,7 +48,7 @@ export default function BillingCancelPage() {
 
           <Link
             href="/dashboard"
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-[#e5e7eb] text-[#737373] hover:text-[#171717] hover:border-[#f3f4f6] font-medium text-sm transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-none border border-[#e5e7eb] text-[#737373] hover:text-[#171717] hover:border-[#f3f4f6] font-medium text-sm transition-all cursor-pointer"
           >
             <ArrowLeft size={14} />
             Вернуться в дашборд

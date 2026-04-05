@@ -97,7 +97,7 @@ export default function DocumentsPage() {
                 </div>
                 <Link
                     href="/upload"
-                    className="inline-flex items-center shrink-0 gap-1.5 px-3 sm:px-4 py-2 text-sm min-h-[44px] bg-[#171717] hover:bg-black text-white font-medium transition-colors"
+                    className="inline-flex items-center shrink-0 gap-1.5 px-3 sm:px-4 py-2 text-sm min-h-[44px] rounded-none bg-[#171717] hover:bg-black text-white font-medium transition-colors"
                 >
                     <Plus size={14} />
                     <span className="hidden sm:inline">Загрузить текст</span>
@@ -114,10 +114,10 @@ export default function DocumentsPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по названию..."
-                        className="w-full bg-white border border-neutral-200 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200 py-2.5 pl-9 pr-8 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors min-h-[44px]"
+                        className="w-full bg-white border border-neutral-200 rounded-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200 py-2.5 pl-9 pr-8 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors min-h-[44px]"
                     />
                     {!search && (
-                        <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded font-mono pointer-events-none">
+                        <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-none font-mono pointer-events-none">
                             /
                         </kbd>
                     )}
@@ -129,12 +129,12 @@ export default function DocumentsPage() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-start gap-3">
-                    <div className="flex items-center gap-1 bg-gray-100 rounded-sm p-1">
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-none p-1">
                         {FILTERS.map((f) => (
                             <button
                                 key={f}
                                 onClick={() => setActiveFilter(f)}
-                                className={`px-3 py-1.5 rounded-md text-sm transition-all min-h-[36px] ${
+                                className={`px-3 py-1.5 rounded-none text-sm transition-all min-h-[36px] ${
                                     activeFilter === f
                                         ? 'bg-white shadow-sm text-gray-900 font-medium'
                                         : 'text-gray-500 hover:text-gray-700'
@@ -165,13 +165,13 @@ export default function DocumentsPage() {
                     </button>
                 </div>
             ) : !hasDocuments ? (
-                <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-neutral-200">
-                    <div className="w-16 h-16 bg-neutral-50 border border-neutral-200 flex items-center justify-center mb-5">
+                <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-neutral-200 rounded-none">
+                    <div className="w-16 h-16 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-center mb-5">
                         <UploadCloud size={28} className="text-neutral-400" />
                     </div>
                     <p className="text-sm font-medium text-neutral-900 mb-1">Пока нет материалов</p>
                     <p className="text-xs text-neutral-400 mb-6">Загрузите файл или создайте текстовый документ</p>
-                    <Link href="/upload" className="inline-flex items-center gap-2 text-sm bg-[#171717] hover:bg-black text-white font-medium px-4 py-2 transition-colors">
+                    <Link href="/upload" className="inline-flex items-center gap-2 text-sm bg-[#171717] hover:bg-black text-white font-medium rounded-none px-4 py-2 transition-colors">
                         <Plus size={14} /> Загрузить текст
                     </Link>
                 </div>
@@ -183,7 +183,7 @@ export default function DocumentsPage() {
             ) : (
                 <>
                     {/* Table — desktop, Card list — mobile */}
-                    <div className="bg-white border border-neutral-200 overflow-hidden">
+                    <div className="bg-white border border-neutral-200 rounded-none overflow-hidden">
                         {/* Head — desktop only */}
                         <div className="hidden sm:grid grid-cols-[1fr_80px_110px_120px] bg-gray-50 border-b border-gray-100 px-5 py-2.5">
                             {['НАЗВАНИЕ', 'ФОРМАТ', 'ДАТА', 'ДЕЙСТВИЕ'].map((col) => (
@@ -204,7 +204,7 @@ export default function DocumentsPage() {
                                     <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     {/* Mobile card layout */}
                                     <div className="flex items-center gap-3 px-4 py-3.5 sm:hidden">
-                                        <div className="w-9 h-9 rounded-sm bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                                        <div className="w-9 h-9 rounded-none bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
                                             <DocIcon doc={doc} />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -212,7 +212,7 @@ export default function DocumentsPage() {
                                                 {doc.name}
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${getExtBadgeClass(doc)}`}>
+                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-none ${getExtBadgeClass(doc)}`}>
                                                     {ext}
                                                 </span>
                                                 <span className="text-[11px] text-neutral-400">
@@ -249,7 +249,7 @@ export default function DocumentsPage() {
                                         </div>
 
                                         {/* Format badge */}
-                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded w-fit ${getExtBadgeClass(doc)}`}>
+                                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-none w-fit ${getExtBadgeClass(doc)}`}>
                                             {ext}
                                         </span>
 
@@ -286,7 +286,7 @@ export default function DocumentsPage() {
             {/* Delete confirm */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)}>
-                    <div className="bg-white rounded-sm shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-white rounded-none shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-base font-semibold text-gray-900 mb-1">Удалить материал?</h3>
                         <p className="text-sm text-gray-500 mb-5">
                             «{deleteTarget.name}» будет удалён. Это действие нельзя отменить.
@@ -294,14 +294,14 @@ export default function DocumentsPage() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setDeleteTarget(null)}
-                                className="flex-1 px-4 py-2 rounded-sm border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="flex-1 px-4 py-2 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 Отмена
                             </button>
                             <button
                                 onClick={() => deleteMutation.mutate(deleteTarget.id)}
                                 disabled={deleteMutation.isPending}
-                                className="flex-1 px-4 py-2 rounded-sm bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                className="flex-1 px-4 py-2 rounded-none bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
                             >
                                 {deleteMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : null}
                                 Удалить

@@ -32,12 +32,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete }) =
     return (
         <Link
             href={`/projects/${project.id}`}
-            className="group bg-white border border-neutral-200 hover:border-neutral-300 rounded-xl p-4 flex flex-col gap-3.5 cursor-pointer transition-all duration-150 relative"
+            className="group bg-white border border-neutral-200 hover:border-neutral-300 rounded-none p-4 flex flex-col gap-3.5 cursor-pointer transition-all duration-150 relative"
         >
             {/* Header row */}
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-md bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center">
                         <Icon size={15} className="text-neutral-900" />
                     </div>
                     <span className="label-kicker">{EVENT_TYPE_LABELS[project.event_type]}</span>
@@ -49,7 +49,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete }) =
                     )}
                     <button
                         onClick={(e) => onDelete(project.id, e)}
-                        className="w-7 h-7 flex items-center justify-center rounded-md text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 border border-transparent hover:border-red-400/20 transition-all duration-150"
+                        className="w-7 h-7 flex items-center justify-center rounded-none text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 border border-transparent hover:border-red-400/20 transition-all duration-150"
                         title="Удалить проект"
                     >
                         <Trash2 size={13} />

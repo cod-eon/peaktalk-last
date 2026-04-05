@@ -146,7 +146,7 @@ export default function UploadPage() {
                         className="w-full max-w-2xl mx-auto"
                     >
                         {/* ─── UPLOAD WORKSPACE ─── */}
-                        <div className="bg-white border border-neutral-200 overflow-hidden">
+                        <div className="bg-white border border-neutral-200 rounded-none overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.03)]">
                             
                             {/* Tabs */}
                             <div className="flex w-full border-b border-neutral-200 bg-white">
@@ -187,7 +187,7 @@ export default function UploadPage() {
                                                 onDragOver={handleDragOver}
                                                 onDragLeave={handleDragLeave}
                                                 onDrop={handleDrop}
-                                                className={`h-full w-full flex flex-col items-center justify-center border-2 border-dashed transition-all cursor-pointer ${
+                                                className={`h-full w-full flex flex-col items-center justify-center rounded-none border-2 border-dashed transition-all cursor-pointer ${
                                                     isDragging 
                                                         ? 'border-neutral-900 bg-neutral-50 scale-[0.98]' 
                                                         : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
@@ -198,7 +198,7 @@ export default function UploadPage() {
                                                 
                                                 {file ? (
                                                     <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
-                                                        <div className="w-16 h-16 bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-900">
+                                                        <div className="w-16 h-16 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-900">
                                                             <CheckCircle2 size={32} />
                                                         </div>
                                                         <div className="text-center">
@@ -214,7 +214,7 @@ export default function UploadPage() {
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col items-center pointer-events-none">
-                                                        <div className={`p-4 rounded-full mb-4 transition-colors ${isDragging ? 'bg-neutral-100 text-neutral-900' : 'bg-neutral-50 border border-neutral-200 text-neutral-500'}`}>
+                                                        <div className={`p-4 rounded-none mb-4 transition-colors ${isDragging ? 'bg-neutral-100 text-neutral-900' : 'bg-neutral-50 border border-neutral-200 text-neutral-500'}`}>
                                                             <UploadCloud size={28} strokeWidth={1.5} />
                                                         </div>
                                                         <h3 className="text-neutral-900 font-medium mb-1">Брось черновик сюда</h3>
@@ -222,7 +222,7 @@ export default function UploadPage() {
                                                         
                                                         <div className="flex gap-2 flex-wrap justify-center">
                                                             {['PDF', 'DOCX', 'TXT'].map((ext) => (
-                                                                <span key={ext} className="px-2 py-1 bg-neutral-50 border border-neutral-200 font-mono text-[10px] text-neutral-500 tracking-wider">
+                                                                <span key={ext} className="px-2 py-1 rounded-none bg-neutral-50 border border-neutral-200 font-mono text-[10px] text-neutral-500 tracking-wider">
                                                                     {ext}
                                                                 </span>
                                                             ))}
@@ -244,7 +244,7 @@ export default function UploadPage() {
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
                                                 placeholder="Вставьте текст вашего выступления (рекомендуется от 500 символов)..."
-                                                className="w-full flex-1 bg-neutral-50 border border-neutral-200 p-4 text-sm text-neutral-900 placeholder:text-neutral-400 resize-none outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-300 transition-all font-inter leading-relaxed"
+                                                className="w-full flex-1 bg-neutral-50 border border-neutral-200 rounded-none p-4 text-sm text-neutral-900 placeholder:text-neutral-400 resize-none outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-300 transition-all font-inter leading-relaxed"
                                             />
                                             <div className="flex justify-between items-center mt-3 px-1">
                                                 <div className="flex items-center gap-3">
@@ -254,7 +254,7 @@ export default function UploadPage() {
                                                     {text.length === 0 && (
                                                         <button 
                                                             onClick={setDemoText} 
-                                                            className="text-[11px] text-neutral-600 hover:text-neutral-900 transition-colors bg-neutral-50 hover:bg-neutral-100 px-2.5 py-1.5 font-medium border border-neutral-200"
+                                                            className="text-[11px] text-neutral-600 hover:text-neutral-900 transition-colors bg-neutral-50 hover:bg-neutral-100 rounded-none px-2.5 py-1.5 font-medium border border-neutral-200"
                                                         >
                                                             Вставить демо-питч
                                                         </button>
@@ -279,7 +279,7 @@ export default function UploadPage() {
                                             (mode === 'file' && !file) ||
                                             (mode === 'text' && text.length < 50)
                                         }
-                                        className="w-full sm:w-auto bg-[#171717] hover:bg-black text-white font-medium relative px-6 py-2.5 min-h-[44px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                        className="w-full sm:w-auto bg-[#171717] hover:bg-black text-white font-medium relative rounded-none px-6 py-2.5 min-h-[44px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         <span className="flex items-center gap-2 justify-center">
                                             <Zap size={16} /> Сделать текст сильнее
@@ -301,7 +301,7 @@ export default function UploadPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-full max-w-2xl mx-auto"
                     >
-                        <div className="bg-white border border-neutral-200 overflow-hidden flex flex-col">
+                        <div className="bg-white border border-neutral-200 rounded-none overflow-hidden flex flex-col shadow-[0_12px_32px_rgba(0,0,0,0.03)]">
                             {/* Log Viewer Header */}
                             <div className="px-5 py-3 border-b border-neutral-200 bg-neutral-50 flex items-center">
                                 <div className="flex gap-2 mr-4 opacity-50">

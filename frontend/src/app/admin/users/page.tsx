@@ -29,7 +29,7 @@ import type { PlanId } from '@/types/billing';
 function PlanBadge({ plan }: { plan: PlanId }) {
   if (plan === 'pro') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-accent-100 text-accent-700 border border-accent-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-semibold bg-accent-100 text-accent-700 border border-accent-200">
         <Zap size={9} />
         PRO
       </span>
@@ -37,14 +37,14 @@ function PlanBadge({ plan }: { plan: PlanId }) {
   }
   if (plan === 'team') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-violet-100 text-violet-700 border border-violet-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-semibold bg-violet-100 text-violet-700 border border-violet-200">
         <UserCheck size={9} />
         TEAM
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
       <CreditCard size={9} />
       Starter
     </span>
@@ -56,7 +56,7 @@ function PlanBadge({ plan }: { plan: PlanId }) {
 function StatusBadge({ status }: { status: string }) {
   if (status === 'active') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
         Активна
       </span>
@@ -64,20 +64,20 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === 'cancelled') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
         Отменена
       </span>
     );
   }
   if (status === 'past_due') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-50 text-red-600 border border-red-200">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-red-50 text-red-600 border border-red-200">
         Просрочена
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
       {status}
     </span>
   );
@@ -143,7 +143,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 12 }}
         transition={{ duration: 0.2 }}
-        className="relative bg-white rounded-2xl border border-neutral-200 w-full max-w-md z-[70]"
+        className="relative bg-white rounded-none border border-neutral-200 w-full max-w-md z-[70]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -158,7 +158,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-none hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -178,7 +178,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
                   <button
                     key={option.id}
                     onClick={() => setSelectedPlan(option.id)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`flex items-center justify-between px-4 py-3 rounded-none border text-left transition-all cursor-pointer ${
                       isSelected
                         ? 'border-neutral-900 bg-neutral-100'
                         : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50'
@@ -192,7 +192,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
                       {option.label}
                     </span>
                     {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-[#171717] flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-none bg-[#171717] flex items-center justify-center">
                         <Check size={11} className="text-white" />
                       </div>
                     )}
@@ -223,7 +223,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
                 max={3650}
                 value={periodDays}
                 onChange={(e) => setPeriodDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-900 text-[14px] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
+                className="w-full px-3 py-2.5 rounded-none border border-neutral-200 bg-white text-neutral-900 text-[14px] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
               />
               <p className="mt-1.5 text-[11px] text-neutral-400">
                 Доступ будет активен {periodDays} {periodDays === 1 ? 'день' : periodDays <= 4 ? 'дня' : 'дней'}
@@ -236,14 +236,14 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
         <div className="px-6 pb-6 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-none border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             onClick={handleApply}
             disabled={loading}
-            className="flex items-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-6 py-2 text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-2 text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 size={13} className="animate-spin" /> : null}
             Применить
@@ -305,7 +305,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-none hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -324,7 +324,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-neutral-50 rounded-xl p-3.5">
+            <div className="bg-neutral-50 rounded-none p-3.5">
               <div className="flex items-center gap-1.5 text-neutral-400 mb-1.5">
                 <Activity size={13} />
                 <span className="text-[11px] font-medium">Симуляции</span>
@@ -333,7 +333,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
                 {user.simulations_used}
               </p>
             </div>
-            <div className="bg-neutral-50 rounded-xl p-3.5">
+            <div className="bg-neutral-50 rounded-none p-3.5">
               <div className="flex items-center gap-1.5 text-neutral-400 mb-1.5">
                 <FileText size={13} />
                 <span className="text-[11px] font-medium">Документы</span>
@@ -348,7 +348,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
           <div className="flex flex-col gap-3">
             {periodEnd && (
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-none bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
                   <Calendar size={13} className="text-neutral-400" />
                 </div>
                 <div>
@@ -358,7 +358,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
               </div>
             )}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-none bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
                 <Users size={13} className="text-neutral-400" />
               </div>
               <div>
@@ -367,7 +367,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-none bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
                 <CreditCard size={13} className="text-neutral-400" />
               </div>
               <div>
@@ -382,7 +382,7 @@ function UserDetailDrawer({ user, onClose, onChangePlan }: UserDetailDrawerProps
         <div className="px-5 py-4 border-t border-neutral-200">
           <button
             onClick={onChangePlan}
-            className="w-full flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-xl px-6 py-3 text-sm transition-all"
+            className="w-full flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-3 text-sm transition-all"
           >
             <Zap size={14} />
             Изменить план
@@ -467,7 +467,7 @@ export default function AdminUsersPage() {
             placeholder="Поиск по email..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-neutral-900 text-[14px] placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 rounded-none border border-neutral-200 bg-white text-neutral-900 text-[14px] placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200 transition-colors"
           />
           {search && (
             <button
@@ -485,7 +485,7 @@ export default function AdminUsersPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
+        className="bg-white rounded-none border border-neutral-200 overflow-hidden"
       >
         {isLoading && (
           <div className="flex items-center justify-center py-20">
@@ -494,7 +494,7 @@ export default function AdminUsersPage() {
         )}
 
         {isError && (
-          <div className="flex items-start gap-3 m-5 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          <div className="flex items-start gap-3 m-5 p-4 rounded-none border border-red-200 bg-red-50 text-sm text-red-700">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
             <p>{error instanceof Error ? error.message : 'Не удалось загрузить пользователей.'}</p>
           </div>
@@ -585,7 +585,7 @@ export default function AdminUsersPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-none border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={14} />
                   </button>
@@ -595,7 +595,7 @@ export default function AdminUsersPage() {
                       <button
                         key={p}
                         onClick={() => setPage(p)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-none text-[13px] font-medium transition-colors cursor-pointer ${
                           p === page
                             ? 'bg-[#171717] text-white border border-neutral-900'
                             : 'border border-neutral-200 text-neutral-500 hover:bg-white'
@@ -608,7 +608,7 @@ export default function AdminUsersPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-none border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronRight size={14} />
                   </button>

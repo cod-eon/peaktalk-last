@@ -76,13 +76,13 @@ export function UpgradeBanner() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleUpgrade}
-              className="text-[12px] font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+              className="text-[12px] font-semibold bg-white/20 hover:bg-white/30 px-3 py-1 rounded-none transition-colors cursor-pointer whitespace-nowrap"
             >
               Апгрейд →
             </button>
             <button
               onClick={handleDismiss}
-              className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors cursor-pointer"
+              className="w-6 h-6 flex items-center justify-center rounded-none hover:bg-white/20 transition-colors cursor-pointer"
               aria-label="Закрыть баннер"
             >
               <X size={12} />

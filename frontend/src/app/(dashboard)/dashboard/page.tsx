@@ -17,7 +17,7 @@ function MetricPod({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-neutral-200 p-6 flex flex-col justify-between">
+    <div className="bg-white border border-neutral-200 rounded-none p-6 flex flex-col justify-between">
       <div className="flex justify-between items-start gap-3 mb-6">
         <span className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase leading-tight">
           {label}
@@ -57,14 +57,14 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/upload"
-            className="inline-flex items-center justify-center gap-2 bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-700 hover:text-neutral-900 px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-white border border-neutral-200 rounded-none hover:border-neutral-400 text-neutral-700 hover:text-neutral-900 px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Upload size={14} />
             Загрузить документ
           </Link>
           <Link
             href="/simulation"
-            className="inline-flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Play size={14} className="fill-white" />
             Новый стресс-тест
@@ -92,7 +92,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── 3. CHART SECTION ── */}
-      <div className="bg-white border border-neutral-200 mb-8 flex flex-col">
+      <div className="bg-white border border-neutral-200 rounded-none overflow-hidden mb-8 flex flex-col">
         <div className="p-6 pb-0">
           <h2 className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
             ДИНАМИКА ИНДЕКСА УСТОЙЧИВОСТИ
@@ -112,7 +112,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── 4. HISTORY SECTION ── */}
-      <div className="bg-white border border-neutral-200">
+      <div className="bg-white border border-neutral-200 rounded-none overflow-hidden">
         <div className="p-6 border-b border-neutral-200">
           <h2 className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
             ЛЕНТА СИМУЛЯЦИЙ

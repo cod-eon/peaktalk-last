@@ -160,7 +160,7 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
                         </div>
                     </div>
                 </div>
-                <span className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md ${
+                <span className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-none ${
                     isActive
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : isCancelled
@@ -474,13 +474,13 @@ function SimulationPageContent() {
                         {(activeSessions.length > 0 || completedSessions.length > 0) && (
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 {activeSessions.length > 0 && (
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-none font-medium">
                                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                                         {activeSessions.length} активных
                                     </span>
                                 )}
                                 {completedSessions.length > 0 && (
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full font-medium">
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-none font-medium">
                                         {completedSessions.length} завершено
                                     </span>
                                 )}
@@ -584,7 +584,7 @@ function SimulationPageContent() {
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-50 flex items-center justify-center">
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-emerald-50 flex items-center justify-center">
                                         <Target size={14} className="text-emerald-500 sm:hidden" />
                                         <Target size={16} className="text-emerald-500 hidden sm:block" />
                                     </div>
@@ -595,9 +595,9 @@ function SimulationPageContent() {
                                     ) : '—'}
                                 </div>
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">{readinessSub}</p>
-                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                     <div
-                                        className="h-full rounded-full transition-all duration-700"
+                                        className="h-full rounded-none transition-all duration-700"
                                         style={{
                                             width: `${(avgScore10 ?? 0) * 10}%`,
                                             background: (avgScore10 ?? 0) >= 7 ? '#10b981' : (avgScore10 ?? 0) >= 4 ? '#f59e0b' : '#f43f5e',
@@ -611,7 +611,7 @@ function SimulationPageContent() {
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${trendIconBg}`}>
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center ${trendIconBg}`}>
                                         <TrendIcon size={14} className={`${trendIconColor} sm:hidden`} />
                                         <TrendIcon size={16} className={`${trendIconColor} hidden sm:block`} />
                                     </div>
@@ -658,7 +658,7 @@ function SimulationPageContent() {
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-amber-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-amber-50 flex items-center justify-center">
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-amber-50 flex items-center justify-center">
                                         <Trophy size={14} className="text-amber-500 sm:hidden" />
                                         <Trophy size={16} className="text-amber-500 hidden sm:block" />
                                     </div>
@@ -671,9 +671,9 @@ function SimulationPageContent() {
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">
                                     {bestScore10 != null ? 'Личный рекорд' : 'Пройди симуляцию'}
                                 </p>
-                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                     <div
-                                        className="h-full bg-amber-300 rounded-full transition-all duration-700"
+                                        className="h-full bg-amber-300 rounded-none transition-all duration-700"
                                         style={{ width: `${(bestScore10 ?? 0) * 10}%` }}
                                     />
                                 </div>
@@ -684,7 +684,7 @@ function SimulationPageContent() {
                                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
                                         <HardestIcon size={14} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} sm:hidden`} />
                                         <HardestIcon size={16} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} hidden sm:block`} />
                                     </div>
@@ -700,9 +700,9 @@ function SimulationPageContent() {
                                         : 'Пройди симуляцию'}
                                 </p>
                                 {hardestRole && (
-                                    <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                         <div
-                                            className="h-full bg-rose-300 rounded-full transition-all duration-700"
+                                            className="h-full bg-rose-300 rounded-none transition-all duration-700"
                                             style={{ width: `${hardestRole.avg * 10}%` }}
                                         />
                                     </div>
@@ -791,7 +791,7 @@ function SimulationPageContent() {
                         return (
                             <React.Fragment key={step}>
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                                    <div className={`w-7 h-7 rounded-none flex items-center justify-center text-xs font-semibold transition-colors ${
                                         isDone
                                             ? 'bg-emerald-500 text-white'
                                             : isActive
@@ -1017,7 +1017,7 @@ function SimulationPageContent() {
                                             selectedDoc === 'none' ? 'bg-neutral-50' : 'hover:bg-neutral-50'
                                         }`}
                                     >
-                                        <div className="w-7 h-7 rounded-md bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
+                                        <div className="w-7 h-7 rounded-none bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
                                             <Ban size={14} className="text-neutral-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -1054,7 +1054,7 @@ function SimulationPageContent() {
                                                             isSelected ? 'bg-neutral-50' : 'hover:bg-neutral-50'
                                                         }`}
                                                     >
-                                                        <div className="w-7 h-7 rounded-md bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
+                                                        <div className="w-7 h-7 rounded-none bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
                                                             <FileText size={14} className="text-neutral-400" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">

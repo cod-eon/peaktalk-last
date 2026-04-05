@@ -38,11 +38,11 @@ const GOAL_LABELS: Record<string, string> = {
 
 function ComingSoonTab({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[320px] bg-white border border-neutral-200 rounded-none  p-10 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[320px] bg-white border border-neutral-200 rounded-none p-10 text-center">
       <Icon className="w-8 h-8 text-neutral-300 mb-4" />
       <h3 className="text-sm font-semibold text-neutral-900 tracking-wider uppercase mb-2">{label}</h3>
       <p className="text-sm text-neutral-500 mb-4 max-w-md">Модуль находится в разработке и будет доступен в следующих релизах системы.</p>
-      <span className="inline-block px-2 py-1 text-[10px] font-mono text-neutral-500 bg-neutral-100 border border-neutral-200 tracking-widest">
+      <span className="inline-block px-3 py-1 text-[10px] font-mono text-neutral-500 bg-neutral-100 border border-neutral-200 rounded-none tracking-widest">
         ОТЛОЖЕНО
       </span>
     </div>
@@ -165,7 +165,7 @@ export default function SettingsPage() {
         <div className="w-full relative mt-6">
           
           {activeTab === 'profile' && (
-            <div className="bg-white border border-neutral-200 rounded-none  p-6 md:p-8 space-y-8">
+            <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-neutral-200">
                 <div className="w-16 h-16 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-none border border-neutral-300 flex items-center justify-center shrink-0 ">
@@ -180,10 +180,10 @@ export default function SettingsPage() {
                   <p className="font-inter text-[13px] text-neutral-500 mt-1 font-medium">{user?.email}</p>
                   {onboardingProfile && (
                     <div className="flex gap-2 flex-wrap mt-3">
-                      <span className="px-2 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-none">
+                      <span className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-none">
                         Сегмент: {SEGMENT_LABELS[onboardingProfile.segment] ?? onboardingProfile.segment}
                       </span>
-                      <span className="px-2 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-none">
+                      <span className="px-2.5 py-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-none">
                         Цель: {GOAL_LABELS[onboardingProfile.primary_goal] ?? onboardingProfile.primary_goal}
                       </span>
                     </div>
@@ -241,7 +241,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'security' && (
-            <div className="bg-white border border-neutral-200 rounded-none  p-6 md:p-8 space-y-8">
+            <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
               <div>
                 <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Доступ к системе</h2>
                 <p className="text-xs text-neutral-400">Установка нового ключа аутентификации</p>

@@ -66,7 +66,7 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 shadow-lg text-sm font-inter text-white min-w-[120px]">
+    <div className="bg-black border border-neutral-800 rounded-none px-3 py-2 shadow-lg text-sm font-inter text-white min-w-[120px]">
       <p className="text-neutral-400 mb-2 text-xs">{label}</p>
       {payload.map((entry: any, index: number) => (
         <div key={index} className="flex flex-row items-center justify-between gap-3 mb-1 last:mb-0 text-xs">
@@ -100,13 +100,13 @@ function StatCard({ label, value, sub, icon, delay = 0, trend }: StatCardProps) 
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-      className="bg-white border border-black/5 rounded-xl p-8 shadow-sm relative overflow-hidden flex flex-col justify-between hover:border-black/10 transition-colors"
+      className="bg-white border border-black/5 rounded-none p-8 shadow-sm relative overflow-hidden flex flex-col justify-between hover:border-black/10 transition-colors"
     >
       <div className="flex items-start justify-between mb-6">
         <p className="font-inter text-sm md:text-base font-semibold text-neutral-800 leading-tight">
           {label}
         </p>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700 ml-2">
+        <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700 ml-2">
           {icon}
         </div>
       </div>
@@ -146,13 +146,13 @@ function ChartCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay, ease: 'easeOut' }}
-      className={`bg-white border border-black/5 rounded-xl p-6 shadow-sm flex flex-col ${className}`}
+      className={`bg-white border border-black/5 rounded-none p-6 shadow-sm flex flex-col ${className}`}
     >
       <div className="mb-6 shrink-0">
         <p className="font-inter text-base font-semibold text-neutral-800">{title}</p>
         {sub && <p className="font-inter text-sm text-neutral-500 mt-1">{sub}</p>}
       </div>
-      <div className="flex-1 bg-neutral-50/50 border border-black/[0.03] rounded-lg p-4 relative overflow-hidden flex flex-col justify-center">
+      <div className="flex-1 bg-neutral-50/50 border border-black/[0.03] rounded-none p-4 relative overflow-hidden flex flex-col justify-center">
          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wNCkiLz48L3N2Zz4=')] opacity-50 pointer-events-none" />
          <div className="relative z-10 w-full h-full min-h-[220px] flex items-center">
            {children}
@@ -179,16 +179,16 @@ function TranscriptionList() {
         <div key={i} className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className={`w-1.5 h-4 rounded-[1px] ${it.color} shrink-0`} />
+              <span className={`w-1.5 h-4 rounded-none ${it.color} shrink-0`} />
               <span className="font-inter text-sm font-medium text-neutral-700 truncate max-w-[140px] md:max-w-[200px]">{it.title}</span>
-              <span className="text-[10px] bg-white border border-neutral-200 text-neutral-500 px-1.5 py-0.5 rounded font-semibold uppercase">{it.lang}</span>
+              <span className="text-[10px] bg-white border border-neutral-200 text-neutral-500 px-1.5 py-0.5 rounded-none font-semibold uppercase">{it.lang}</span>
             </div>
             <span className="font-inter text-sm font-semibold text-neutral-900">
               {it.acc}%
             </span>
           </div>
-          <div className="h-1.5 w-full bg-white border border-neutral-100 rounded-full overflow-hidden">
-            <div className={`h-full ${it.color} rounded-full`} style={{ width: `${it.acc}%` }} />
+          <div className="h-1.5 w-full bg-white border border-neutral-100 rounded-none overflow-hidden">
+            <div className={`h-full ${it.color} rounded-none`} style={{ width: `${it.acc}%` }} />
           </div>
         </div>
       ))}
@@ -249,7 +249,7 @@ export default function AdminStatsPage() {
         </div>
         <button
           onClick={() => refetch()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-neutral-400 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-neutral-400 border border-neutral-200 rounded-none hover:bg-neutral-100 transition-colors cursor-pointer"
         >
           <RefreshCw size={12} />
           Обновить
@@ -265,7 +265,7 @@ export default function AdminStatsPage() {
 
       {/* ── Error ── */}
       {statsError && (
-        <div className="flex items-start gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+        <div className="flex items-start gap-3 p-4 rounded-none border border-red-200 bg-red-50 text-sm text-red-700">
           <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
           <p>
             <span className="font-semibold">Ошибка:</span>{' '}

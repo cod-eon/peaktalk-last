@@ -69,10 +69,10 @@ export function ConfirmDialog({
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[75] flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="bg-white border border-neutral-200 rounded-xl w-full max-w-sm pointer-events-auto p-6">
+            <div className="bg-white border border-neutral-200 rounded-none w-full max-w-sm pointer-events-auto p-6">
               {/* Icon + Title */}
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-10 h-10 rounded-none bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
                   <AlertTriangle size={20} className="text-red-500" />
                 </div>
                 <div>
@@ -95,14 +95,14 @@ export function ConfirmDialog({
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   onClick={onCancel}
-                  className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
+                  className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-none text-sm px-4 py-2 transition-colors"
                 >
                   {cancelLabel}
                 </button>
                 <button
                   ref={confirmButtonRef}
                   onClick={onConfirm}
-                  className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm px-4 py-2 transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-none text-sm px-4 py-2 transition-colors"
                 >
                   {confirmLabel}
                 </button>

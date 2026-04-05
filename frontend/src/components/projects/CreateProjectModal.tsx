@@ -50,7 +50,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-lg bg-white border border-neutral-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="relative w-full max-w-lg bg-white border border-neutral-200 rounded-none shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between p-6 border-b border-neutral-200">
               <h2 className="text-xl font-bold font-inter">Новый проект</h2>
@@ -75,7 +75,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Например: Собеседование в Google"
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-sm focus:border-neutral-900 outline-none transition-all"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-none p-3 text-sm focus:border-neutral-900 outline-none transition-all"
                 />
               </div>
 
@@ -88,7 +88,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                       key={type}
                       type="button"
                       onClick={() => setEventType(type)}
-                      className={`px-3 py-2 text-[10px] uppercase font-mono tracking-wider rounded-lg border transition-all ${
+                      className={`px-3 py-2 text-[10px] uppercase font-mono tracking-wider rounded-none border transition-all ${
                         eventType === type 
                           ? 'bg-[#171717] border-[#171717] text-white' 
                           : 'bg-neutral-50 border-neutral-200 text-neutral-400 hover:border-neutral-300'
@@ -109,7 +109,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-sm focus:border-neutral-900 outline-none transition-all"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-none p-3 text-sm focus:border-neutral-900 outline-none transition-all"
                 />
               </div>
 
@@ -122,7 +122,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Опишите ваши цели подготовки..."
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-sm focus:border-neutral-900 outline-none transition-all resize-none"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-none p-3 text-sm focus:border-neutral-900 outline-none transition-all resize-none"
                 />
               </div>
             </form>
@@ -131,7 +131,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-lg px-4 py-2.5 transition-colors flex-1"
+                className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-none px-4 py-2.5 transition-colors flex-1"
                 disabled={isSubmitting}
               >
                 Отмена
@@ -140,7 +140,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 type="submit"
                 onClick={handleSubmit}
                 disabled={!title.trim() || isSubmitting}
-                className="bg-[#171717] hover:bg-black text-white font-medium rounded-lg px-4 py-2.5 transition-colors flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#171717] hover:bg-black text-white font-medium rounded-none px-4 py-2.5 transition-colors flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Создание...' : 'Создать проект'}
               </button>

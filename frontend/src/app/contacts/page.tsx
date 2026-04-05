@@ -36,7 +36,7 @@ function ContactCard({
         display: "block",
         background: "#fff",
         border: "1px solid #e5e7eb",
-        borderRadius: "16px",
+        borderRadius: "0px",
         padding: "24px 28px",
         textDecoration: "none",
         cursor: "pointer",
@@ -238,7 +238,7 @@ export default function ContactsPage() {
             padding: "14px 18px",
             background: "#f5f5f5",
             border: "1px solid #e5e7eb",
-            borderRadius: "12px",
+            borderRadius: "0px",
           }}
         >
           <div
@@ -308,7 +308,7 @@ export default function ContactsPage() {
               gap: 1,
               background: "#e5e7eb",
               border: "1px solid #e5e7eb",
-              borderRadius: "12px",
+              borderRadius: "0px",
               overflow: "hidden",
             }}
           >

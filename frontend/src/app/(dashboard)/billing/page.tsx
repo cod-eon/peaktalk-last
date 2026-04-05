@@ -79,7 +79,7 @@ function PaymentStatusBadge({ status }: { status: string }) {
           ? { label: 'Ошибка', cls: 'bg-red-50 text-red-600 border border-red-200' }
           : { label: 'Отменён', cls: 'bg-neutral-100 text-neutral-500' };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium ${cfg.cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-none text-[11px] font-medium ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
@@ -224,7 +224,7 @@ export default function BillingPage() {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex items-start gap-3 p-4 border border-neutral-200 bg-neutral-50 text-sm text-neutral-700 mb-4"
+          className="flex items-start gap-3 p-4 rounded-none border border-neutral-200 bg-neutral-50 text-sm text-neutral-700 mb-4"
         >
           <AlertCircle size={16} className="shrink-0 mt-0.5 text-neutral-500" />
           <p>
@@ -239,7 +239,7 @@ export default function BillingPage() {
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.05 }}
-          className="border border-dashed border-neutral-300 bg-neutral-50 p-4 mb-4"
+          className="border border-dashed border-neutral-300 rounded-none bg-neutral-50 p-4 mb-4"
         >
           <div className="flex items-center gap-2 mb-3">
             <div className="w-2 h-2 bg-neutral-900 animate-pulse" />
@@ -255,7 +255,7 @@ export default function BillingPage() {
               <button
                 key={p}
                 onClick={() => handleTestSetPlan(p, p === 'starter' ? undefined : 30)}
-                className={`px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+                className={`px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded-none border ${
                   plan === p
                     ? 'bg-neutral-900 text-white border-neutral-900'
                     : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100'
@@ -266,7 +266,7 @@ export default function BillingPage() {
             ))}
             <button
               onClick={() => handleTestSetPlan('pro', -1)}
-              className="px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer border bg-white text-amber-700 border-amber-300 hover:bg-amber-50"
+              className="px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded-none border bg-white text-amber-700 border-amber-300 hover:bg-amber-50"
             >
               PRO (истёк вчера)
             </button>
@@ -289,7 +289,7 @@ export default function BillingPage() {
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center">
                   {plan === 'team' ? (
                     <Users size={22} className="text-neutral-700" />
                   ) : plan === 'pro' ? (
@@ -304,13 +304,13 @@ export default function BillingPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     {subStatus === 'active' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-none px-2.5 py-1">
                         <span className="w-1.5 h-1.5 bg-emerald-500 animate-pulse" />
                         Активна
                       </span>
                     )}
                     {subStatus === 'cancelled' && (
-                      <span className="inline-flex items-center text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5">
+                      <span className="inline-flex items-center text-xs text-neutral-500 bg-neutral-100 rounded-none px-2.5 py-1">
                         Отменена
                       </span>
                     )}
@@ -326,14 +326,14 @@ export default function BillingPage() {
                 {paymentsEnabled && plan === 'starter' && (
                   <button
                     onClick={() => openUpgradeModal('simulations')}
-                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
                   >
                     <Zap size={14} />
                     Перейти на PRO
                   </button>
                 )}
                 {!paymentsEnabled && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-neutral-50 text-neutral-600 text-xs font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-neutral-200 bg-neutral-50 text-neutral-600 text-xs font-medium">
                     <Zap size={11} />
                     Скоро
                   </span>
@@ -342,7 +342,7 @@ export default function BillingPage() {
                   <>
                     <button
                       onClick={() => handleUpgrade('team')}
-                      className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
                     >
                       <Users size={14} />
                       Апгрейд до TEAM
@@ -350,7 +350,7 @@ export default function BillingPage() {
                     {subStatus === 'active' && (
                       <button
                         onClick={handleCancel}
-                        className="flex items-center gap-1.5 px-4 py-2 border border-neutral-200 text-neutral-500 text-sm hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-none border border-neutral-200 text-neutral-500 text-sm hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
                       >
                         <X size={13} />
                         Отменить
@@ -408,14 +408,14 @@ export default function BillingPage() {
                 return (
                   <div
                     key={p.id}
-                    className={`relative border p-4 transition-all ${
+                    className={`relative rounded-none border p-4 transition-all ${
                       isCurrent
                         ? 'border-neutral-900 bg-neutral-50'
                         : 'border-neutral-200 bg-white hover:border-neutral-400'
                     }`}
                   >
                     {isCurrent && (
-                      <span className="absolute top-3 right-3 text-[9px] font-bold tracking-widest text-neutral-500 bg-white px-1.5 py-0.5 border border-neutral-200 uppercase">
+                      <span className="absolute top-3 right-3 text-[9px] font-bold tracking-widest text-neutral-500 bg-white rounded-none px-2 py-1 border border-neutral-200 uppercase">
                         Текущий
                       </span>
                     )}
@@ -438,13 +438,13 @@ export default function BillingPage() {
                     {!isCurrent && p.id !== 'starter' && paymentsEnabled && (
                       <button
                         onClick={() => handleUpgrade(p.id as 'pro' | 'team')}
-                        className="w-full py-2 text-[12px] font-semibold bg-[#171717] hover:bg-black text-white transition-all cursor-pointer"
+                        className="w-full py-2 rounded-none text-[12px] font-semibold bg-[#171717] hover:bg-black text-white transition-all cursor-pointer"
                       >
                         Выбрать {p.name}
                       </button>
                     )}
                     {!isCurrent && p.id !== 'starter' && !paymentsEnabled && (
-                      <div className="w-full py-2 text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
+                      <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
                         Скоро
                       </div>
                     )}

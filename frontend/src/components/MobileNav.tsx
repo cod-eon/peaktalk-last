@@ -41,7 +41,7 @@ export function MobileNav() {
                             `}
                         >
                             {isActive && (
-                                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[2px] bg-neutral-900 rounded-b-full" />
+                                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[2px] bg-neutral-900" />
                             )}
                             <item.icon
                                 size={19}

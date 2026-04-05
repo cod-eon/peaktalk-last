@@ -65,7 +65,7 @@ function AdminNavbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-none text-[13px] font-medium transition-colors ${
                     isActive
                       ? 'bg-neutral-100 text-neutral-900'
                       : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'
@@ -83,14 +83,14 @@ function AdminNavbar() {
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-400 text-[13px] font-medium hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-neutral-200 text-neutral-400 text-[13px] font-medium hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
             >
               <LogOut size={13} />
               Выйти
             </button>
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+              className="md:hidden p-1.5 rounded-none hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Меню"
             >
@@ -120,7 +120,7 @@ function AdminNavbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-none text-[14px] font-medium transition-colors ${
                   isActive
                     ? 'bg-neutral-100 text-neutral-900'
                     : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'
@@ -134,7 +134,7 @@ function AdminNavbar() {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer mt-1 border-t border-neutral-200 pt-3"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-none text-[14px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer mt-1 border-t border-neutral-200 pt-3"
           >
             <LogOut size={16} />
             Выйти

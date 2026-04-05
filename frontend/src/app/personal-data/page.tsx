@@ -187,7 +187,7 @@ export default function PersonalDataPage() {
             style={{
               background: "#fff",
               border: "1px solid #e5e7eb",
-              borderRadius: "12px",
+              borderRadius: "0px",
               padding: "20px 24px",
               display: "grid",
               gap: 10,

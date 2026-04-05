@@ -46,7 +46,7 @@ export default function LoginPage() {
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white border border-neutral-200 p-6 sm:p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
+      className="bg-white border border-neutral-200 p-6 sm:p-8 rounded-none shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
     >
       <div className="text-center mb-8">
         <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">С возвращением</h1>
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg">
+          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-none">
             {error}
           </div>
         )}
@@ -70,7 +70,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
             placeholder="arthur@example.com"
           />
         </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
             placeholder="••••••••"
           />
         </div>
@@ -109,7 +109,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading || !captchaToken}
-          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-lg py-3.5 text-xs font-semibold relative overflow-hidden group mt-4 h-11 transition-colors"
+          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-none py-3.5 text-xs font-semibold relative overflow-hidden group mt-4 h-11 transition-colors"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -138,7 +138,7 @@ export default function LoginPage() {
               options: { redirectTo: `${window.location.origin}/auth/callback` },
             });
           }}
-          className="flex-1 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-lg py-2.5 flex items-center justify-center gap-2 transition-colors"
+          className="flex-1 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-none py-2.5 flex items-center justify-center gap-2 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

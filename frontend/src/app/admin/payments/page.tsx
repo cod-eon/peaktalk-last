@@ -24,39 +24,39 @@ function PaymentStatusBadge({ status }: { status: PaymentStatus | string }) {
   switch (status) {
     case 'succeeded':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
           Оплачен
         </span>
       );
     case 'pending':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
           <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
           Ожидание
         </span>
       );
     case 'failed':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-red-50 text-red-600 border border-red-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-red-50 text-red-600 border border-red-200">
           Ошибка
         </span>
       );
     case 'refunded':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-600 border border-blue-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-blue-50 text-blue-600 border border-blue-200">
           Возврат
         </span>
       );
     case 'cancelled':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
           Отменён
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-medium bg-neutral-100 text-neutral-500 border border-neutral-200">
           {status}
         </span>
       );
@@ -128,7 +128,7 @@ function PaymentsSummary({ payments }: { payments: AdminPayment[] }) {
       ].map((stat) => (
         <div
           key={stat.label}
-          className="bg-white rounded-xl border border-neutral-200 px-4 py-3"
+          className="bg-white rounded-none border border-neutral-200 px-4 py-3"
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1">
             {stat.label}
@@ -178,7 +178,7 @@ export default function AdminPaymentsPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
+        className="bg-white rounded-none border border-neutral-200 overflow-hidden"
       >
         {isLoading && (
           <div className="flex items-center justify-center py-20">
@@ -187,7 +187,7 @@ export default function AdminPaymentsPage() {
         )}
 
         {isError && (
-          <div className="flex items-start gap-3 m-5 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
+          <div className="flex items-start gap-3 m-5 p-4 rounded-none border border-red-200 bg-red-50 text-sm text-red-700">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
             <p>{error instanceof Error ? error.message : 'Не удалось загрузить платежи.'}</p>
           </div>
@@ -301,7 +301,7 @@ export default function AdminPaymentsPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-none border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronLeft size={14} />
                   </button>
@@ -311,7 +311,7 @@ export default function AdminPaymentsPage() {
                       <button
                         key={p}
                         onClick={() => setPage(p)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-none text-[13px] font-medium transition-colors cursor-pointer ${
                           p === page
                             ? 'bg-[#171717] text-white border border-neutral-900'
                             : 'border border-neutral-200 text-neutral-400 hover:bg-white'
@@ -324,7 +324,7 @@ export default function AdminPaymentsPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-none border border-neutral-200 text-neutral-400 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <ChevronRight size={14} />
                   </button>
@@ -340,7 +340,7 @@ export default function AdminPaymentsPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mt-5 flex items-start gap-2.5 p-4 rounded-xl border border-neutral-200 bg-neutral-50 text-[12px] text-neutral-500"
+        className="mt-5 flex items-start gap-2.5 p-4 rounded-none border border-neutral-200 bg-neutral-50 text-[12px] text-neutral-500"
       >
         <CreditCard size={14} className="shrink-0 mt-0.5" />
         <p>

@@ -60,7 +60,7 @@ export default function BillingSuccessPage() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-2xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
+          className="flex flex-col items-center gap-6 bg-white border border-[#e5e7eb] rounded-none p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
         >
           {/* Icon */}
           <div className="w-16 h-16 rounded-full bg-accent-100 flex items-center justify-center">
@@ -87,7 +87,7 @@ export default function BillingSuccessPage() {
           </div>
 
           {/* PRO badge */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-accent-500 to-amber-400 text-white">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-none bg-gradient-to-r from-accent-500 to-amber-400 text-white">
             <Zap size={15} />
             <span className="font-semibold text-sm" >
               PeakTalk PRO активен
@@ -97,7 +97,7 @@ export default function BillingSuccessPage() {
           {/* CTA */}
           <Link
             href="/simulation"
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-[#E8600A] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-[#E8600A] hover:opacity-90 text-white font-semibold text-sm transition-all cursor-pointer"
             
           >
             Начать симуляцию

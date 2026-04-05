@@ -138,7 +138,7 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
     return (
         <div className="flex flex-wrap gap-1.5">
             <button onClick={() => onFilter(null)}
-                className={`text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                className={`text-[11px] font-mono px-3 py-1.5 rounded-none border transition-all cursor-pointer ${
                     !activeFilter
                         ? 'bg-[#171717] text-white border-[#171717]'
                         : 'border-neutral-200 text-neutral-400 bg-neutral-50 hover:text-neutral-500'
@@ -152,7 +152,7 @@ function FilterPills({ annotations, activeFilter, onFilter }: {
                 return (
                     <button key={type}
                         onClick={() => onFilter(activeFilter === type ? null : type)}
-                        className="text-[11px] font-mono px-3 py-1.5 rounded-full border transition-all cursor-pointer"
+                        className="text-[11px] font-mono px-3 py-1.5 rounded-none border transition-all cursor-pointer"
                         style={{
                             backgroundColor: isA ? c.pill : '#fafafa',
                             borderColor: isA ? c.pill : '#e5e5e5',
@@ -195,13 +195,13 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
             onMouseLeave={onMouseLeave}
             onClick={onClick}>
             <div className="flex items-center gap-2 mb-2.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-none"
                     style={{ backgroundColor: `${c.pill}15`, color: c.pill }}>{c.label}</span>
-                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full"
+                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-none"
                     style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                 <span className="ml-auto text-[10px] font-mono text-neutral-400">#{realIdx + 1}</span>
             </div>
-            <div className="rounded px-2.5 py-2 mb-2.5"
+            <div className="rounded-none px-2.5 py-2 mb-2.5"
                 style={{ backgroundColor: '#fafafa', borderLeft: `2px solid ${c.pill}50` }}>
                 <p className="text-[11px] font-mono italic leading-relaxed text-neutral-900 line-clamp-2">
                     «{ann.text}»
@@ -297,12 +297,12 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
                 </button>
                 <div className="flex items-center gap-1">
                     <button onClick={onPrev} disabled={idx === 0}
-                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-none">
                         <ChevronLeft size={14} />
                     </button>
                     <span className="text-[11px] font-mono text-neutral-400 px-1">{idx + 1} / {total}</span>
                     <button onClick={onNext} disabled={idx === total - 1}
-                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-md">
+                        className="p-1.5 text-neutral-400 hover:text-neutral-900 disabled:opacity-25 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-none">
                         <ChevronRight size={14} />
                     </button>
                 </div>
@@ -312,12 +312,12 @@ function DetailPanel({ ann, idx, total, onClose, onPrev, onNext }: {
             <div className="flex-1 overflow-y-auto px-5 py-5">
                 {/* Category + severity badges */}
                 <div className="flex items-center gap-2 mb-4">
-                    <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                    <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-none"
                         style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.pill }} />
                         {c.label}
                     </span>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-none"
                         style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                 </div>
 
@@ -359,20 +359,20 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
                 transition={{ duration: 0.2 }} className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 30, stiffness: 280 }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-[24px] border-t border-neutral-200 shadow-2xl"
+                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-none border-t border-neutral-200 shadow-2xl"
                 style={{ maxWidth: '680px', margin: '0 auto' }}>
                 <div className="flex justify-center pt-3 pb-1 cursor-grab" onClick={onClose}>
-                    <div className="w-10 h-1 rounded-full bg-neutral-200" />
+                    <div className="w-10 h-1 rounded-none bg-neutral-200" />
                 </div>
                 <div className="px-5 pb-10 pt-2">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                            <span className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-none"
                                 style={{ backgroundColor: `${c.pill}20`, color: c.pill }}>
                                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.pill }} />
                                 {c.label}
                             </span>
-                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-none"
                                 style={{ backgroundColor: sev.bg, color: sev.color }}>{sev.label}</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -462,7 +462,7 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                             textDecorationThickness: '2px',
                             textUnderlineOffset: '4px',
                             backgroundColor: isActive ? c.bgHover : 'transparent',
-                            borderRadius: '3px',
+                            borderRadius: '0px',
                             cursor: 'pointer',
                             padding: isActive ? '1px 3px' : '1px 0',
                             color: isActive ? '#111827' : 'inherit',
@@ -603,15 +603,15 @@ export default function AnalysisPage() {
 
     // ── iOS segmented control (above text in left column) ─────────────────────
     const TextAiToggle = () => (
-        <div className="inline-flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-lg p-0.5">
+        <div className="inline-flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-none p-0.5">
             <button onClick={() => setDesktopView('text')}
-                className={`text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                className={`text-[11px] font-mono px-3 py-1.5 rounded-none transition-all cursor-pointer ${
                     desktopView === 'text'
                         ? 'bg-white text-neutral-900 shadow-sm'
                         : 'text-neutral-400 hover:text-neutral-500'
                 }`}>Текст</button>
             <button onClick={() => setDesktopView('ai')}
-                className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-none transition-all cursor-pointer ${
                     desktopView === 'ai'
                         ? 'bg-white text-neutral-900 shadow-sm'
                         : 'text-neutral-400 hover:text-neutral-500'

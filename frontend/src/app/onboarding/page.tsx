@@ -99,7 +99,7 @@ export default function OnboardingPage() {
                                 y: (Math.random() - 0.5) * 500 - 150
                             }}
                             transition={{ duration: 2, ease: "easeOut", delay: Math.random() * 0.3 }}
-                            className="w-3 h-3 rounded-full absolute"
+                            className="w-3 h-3 rounded-none absolute"
                             style={{ 
                                 backgroundColor: i % 3 === 0 ? '#10B981' : i % 2 === 0 ? '#404040' : '#a3a3a3' 
                             }}
@@ -135,7 +135,7 @@ export default function OnboardingPage() {
                     <div className="flex items-center justify-center gap-3 mb-10">
                         {[1, 2].map((s) => (
                             <div key={s} className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all duration-300 ${
+                                <div className={`w-8 h-8 rounded-none flex items-center justify-center font-mono text-xs font-bold transition-all duration-300 ${
                                     step > s
                                         ? 'bg-emerald-500 text-white'
                                         : step === s
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
                                     <button
                                         key={seg.id}
                                         onClick={() => setSegment(seg.id)}
-                                        className={`text-left p-5 rounded-2xl border transition-all duration-200 relative group min-h-[140px] flex flex-col justify-start ${
+                                        className={`text-left p-5 rounded-none border transition-all duration-200 relative group min-h-[140px] flex flex-col justify-start ${
                                             segment === seg.id
                                                 ? 'bg-neutral-100 border-neutral-900'
                                                 : 'bg-neutral-50 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100'
@@ -178,7 +178,7 @@ export default function OnboardingPage() {
                                                 <CheckCircle2 size={16} />
                                             </div>
                                         )}
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors ${
+                                        <div className={`w-10 h-10 rounded-none flex items-center justify-center mb-4 transition-colors ${
                                             segment === seg.id
                                                 ? 'bg-neutral-200 text-neutral-900'
                                                 : 'bg-neutral-100 border border-neutral-200 text-neutral-500 group-hover:text-neutral-900'
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                                 <button
                                     disabled={!segment}
                                     onClick={() => setStep(2)}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
                                 >
                                     Далее <ChevronRight size={18} />
                                 </button>
@@ -216,7 +216,7 @@ export default function OnboardingPage() {
                                     <button
                                         key={g.id}
                                         onClick={() => setGoal(g.id)}
-                                        className={`text-left p-5 rounded-2xl border transition-all duration-200 flex items-center gap-4 relative group min-h-[88px] ${
+                                        className={`text-left p-5 rounded-none border transition-all duration-200 flex items-center gap-4 relative group min-h-[88px] ${
                                             goal === g.id
                                                 ? 'bg-neutral-100 border-neutral-900'
                                                 : 'bg-white border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
                                                 <CheckCircle2 size={16} />
                                             </div>
                                         )}
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                                        <div className={`w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0 transition-colors ${
                                             goal === g.id
                                                 ? 'bg-neutral-200 text-neutral-900'
                                                 : 'bg-neutral-100 border border-neutral-200 text-neutral-500 group-hover:text-neutral-900'
@@ -242,14 +242,14 @@ export default function OnboardingPage() {
                             <div className="flex justify-between">
                                 <button
                                     onClick={() => setStep(1)}
-                                    className="px-6 py-3.5 rounded-xl font-mono text-sm border border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 transition-colors min-h-[48px]"
+                                    className="px-6 py-3.5 rounded-none font-mono text-sm border border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 transition-colors min-h-[48px]"
                                 >
                                     Назад
                                 </button>
                                 <button
                                     disabled={!goal || isSubmitting}
                                     onClick={handleSubmit}
-                                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+                                    className="flex items-center gap-2 px-6 py-3.5 rounded-none bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 size={16} className="animate-spin" /> Сохранение...</>
@@ -267,9 +267,9 @@ export default function OnboardingPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             transition={{ duration: 0.5, ease: "easeOut" }}
-                            className="text-center bg-neutral-50 border border-neutral-200 p-8 sm:p-12 rounded-3xl relative overflow-hidden shadow-sm"
+                            className="text-center bg-neutral-50 border border-neutral-200 p-8 sm:p-12 rounded-none relative overflow-hidden shadow-sm"
                         >
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-500 rounded-none flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle2 size={36} className="sm:hidden" />
                                 <CheckCircle2 size={40} className="hidden sm:block" />
                             </div>
@@ -283,9 +283,9 @@ export default function OnboardingPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 <button
                                     onClick={() => router.push('/upload')}
-                                    className="p-5 sm:p-6 rounded-2xl border border-neutral-200 bg-white hover:border-neutral-900 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
+                                    className="p-5 sm:p-6 rounded-none border border-neutral-200 bg-white hover:border-neutral-900 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-900 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
+                                    <div className="w-12 h-12 rounded-none bg-neutral-100 text-neutral-900 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
                                         <FileText size={24} />
                                     </div>
                                     <h3 className="font-inter font-semibold text-lg sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить текст</h3>
@@ -294,9 +294,9 @@ export default function OnboardingPage() {
                                 
                                 <button
                                     onClick={() => router.push('/simulation')}
-                                    className="p-5 sm:p-6 rounded-2xl border border-neutral-200 bg-white hover:border-emerald-500 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
+                                    className="p-5 sm:p-6 rounded-none border border-neutral-200 bg-white hover:border-emerald-500 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[160px]"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
+                                    <div className="w-12 h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-5 group-hover:-translate-y-1 transition-transform">
                                         <Mic size={24} />
                                     </div>
                                     <h3 className="font-inter font-semibold text-lg sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Симуляция Q&A</h3>

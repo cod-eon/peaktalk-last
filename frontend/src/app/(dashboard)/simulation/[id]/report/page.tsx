@@ -146,7 +146,7 @@ function Popover({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-50 w-[calc(100vw-32px)] sm:w-96 bg-white shadow-xl border border-gray-100 rounded-xl p-4 sm:p-5"
+            className="fixed z-50 w-[calc(100vw-32px)] sm:w-96 bg-white shadow-xl border border-gray-100 rounded-none p-4 sm:p-5"
             style={{
                 top: state.rectBottom + 8 + 240 > window.innerHeight
                     ? Math.max(8, state.rectTop - 248)
@@ -190,8 +190,8 @@ function UserLine({
     const highlightClass = !hasIssue
         ? ''
         : metric.score < 0.45
-        ? 'bg-rose-100 hover:bg-rose-200 cursor-pointer rounded px-1 transition-colors'
-        : 'bg-yellow-100 hover:bg-yellow-200 cursor-pointer rounded px-1 transition-colors';
+        ? 'bg-rose-100 hover:bg-rose-200 cursor-pointer px-1 transition-colors'
+        : 'bg-yellow-100 hover:bg-yellow-200 cursor-pointer px-1 transition-colors';
 
     function handleClick(e: React.MouseEvent<HTMLSpanElement>) {
         if (!hasIssue || !metric?.comment) return;
@@ -419,7 +419,7 @@ export default function SimulationReportPage() {
                             {[...Array(60)].map((_, i) => (
                                 <motion.div
                                     key={`confetti-${i}`}
-                                    className="absolute w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-sm"
+                                    className="absolute w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-none"
                                     style={{
                                         backgroundColor: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 5)],
                                         top: -20,
@@ -467,13 +467,13 @@ export default function SimulationReportPage() {
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <button
                             onClick={handleDownloadPdf}
-                            className="flex items-center gap-1.5 border border-gray-200 hover:border-gray-400 text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors min-h-[32px]"
+                            className="flex items-center gap-1.5 border border-gray-200 hover:border-gray-400 text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-none text-[12px] transition-colors min-h-[32px]"
                         >
                             <Download size={13} />
                             <span className="hidden sm:inline">PDF</span>
                         </button>
                         <button
-                            className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 text-gray-600 text-[12px] transition-colors min-h-[32px] hidden sm:block"
+                            className="px-2.5 sm:px-3 py-1.5 rounded-none border border-gray-200 hover:border-gray-300 text-gray-600 text-[12px] transition-colors min-h-[32px] hidden sm:block"
                             onClick={() => router.push('/dashboard')}
                         >
                             Дашборд
@@ -498,7 +498,7 @@ export default function SimulationReportPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
-                            className="bg-accent-50/60 border border-accent-100 rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12"
+                            className="bg-accent-50/60 border border-accent-100 rounded-none p-4 sm:p-6 mb-8 sm:mb-12"
                         >
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles size={15} className="text-accent-400 shrink-0" />
@@ -528,7 +528,7 @@ export default function SimulationReportPage() {
                                         return (
                                             <span
                                                 key={m.metric_name}
-                                                className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
+                                                className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-none border"
                                                 style={{
                                                     color,
                                                     backgroundColor: `${color}12`,
@@ -589,7 +589,7 @@ export default function SimulationReportPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 mb-20 border-t border-gray-100 pt-10">
                             <button
                                 onClick={() => router.push('/upload')}
-                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-xl border border-gray-200 transition-all shadow-sm h-12"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-none border border-gray-200 transition-all shadow-sm h-12"
                             >
                                 <RefreshCw size={18} />
                                 Пройти еще раз (Сложнее)
@@ -597,7 +597,7 @@ export default function SimulationReportPage() {
                             {avgScore10 >= 7 && (
                                 <button
                                     onClick={handleShare}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all h-12"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold px-6 py-3 rounded-none shadow-md transition-all h-12"
                                 >
                                     <Share2 size={18} />
                                     Поделиться результатом

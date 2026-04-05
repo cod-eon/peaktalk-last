@@ -251,7 +251,7 @@ export default function SimulationPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white border border-neutral-200 rounded-2xl p-6 sm:p-10 w-full"
+          className="bg-white border border-neutral-200 rounded-none p-6 sm:p-10 w-full"
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
             <CheckCircle2 size={32} className="sm:hidden" />
@@ -266,13 +266,13 @@ export default function SimulationPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => router.push('/dashboard')}
-              className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-lg px-4 py-2.5 transition-colors min-h-[44px]"
+              className="bg-white border border-neutral-200 hover:border-neutral-400 text-neutral-900 font-medium rounded-none px-4 py-2.5 transition-colors min-h-[44px]"
             >
               В дашборд
             </button>
             <button
               onClick={() => router.push(`/simulation/${sessionId}/report`)}
-              className="bg-[#171717] hover:bg-black text-white font-medium rounded-lg px-4 py-2.5 transition-colors min-h-[44px]"
+              className="bg-[#171717] hover:bg-black text-white font-medium rounded-none px-4 py-2.5 transition-colors min-h-[44px]"
             >
               Посмотреть полный отчет
             </button>
@@ -305,7 +305,7 @@ export default function SimulationPage() {
         {/* Шапка */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 border border-neutral-200 rounded-full flex items-center justify-center text-neutral-900">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 border border-neutral-200 rounded-none flex items-center justify-center text-neutral-900">
               <Bot size={16} className="sm:hidden" />
               <Bot size={20} className="hidden sm:block" />
             </div>
@@ -313,13 +313,13 @@ export default function SimulationPage() {
               <div className="font-mono text-[10px] sm:text-xs text-neutral-900 tracking-wider uppercase mb-0.5 sm:mb-1 truncate max-w-[140px] sm:max-w-none">
                 {personaLabel}
               </div>
-              <div className="text-sm text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
+              <div className="text-sm text-neutral-400 border border-neutral-200 rounded-none px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
                 Тренировка
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className={`flex items-center gap-1.5 font-mono text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border transition-colors ${timeLeft === 0 ? 'bg-red-50 border-red-200 text-red-600' : isWarningTime ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-neutral-50 border-neutral-200 text-neutral-900'}`}>
+            <div className={`flex items-center gap-1.5 font-mono text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-none border transition-colors ${timeLeft === 0 ? 'bg-red-50 border-red-200 text-red-600' : isWarningTime ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-neutral-50 border-neutral-200 text-neutral-900'}`}>
               <Timer size={14} className={(isWarningTime && timeLeft > 0) ? "animate-pulse" : ""} />
               {formatTime(timeLeft)}
             </div>
@@ -331,7 +331,7 @@ export default function SimulationPage() {
             <button
               onClick={handleComplete}
               disabled={isCompleting || isAnalyzing}
-              className="text-xs font-mono border border-neutral-200 hover:border-red-500/50 bg-neutral-50 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-1.5 disabled:opacity-40 min-h-[36px]"
+              className="text-xs font-mono border border-neutral-200 hover:border-red-500/50 bg-neutral-50 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 px-2.5 sm:px-3 py-1.5 rounded-none transition-colors flex items-center gap-1 sm:gap-1.5 disabled:opacity-40 min-h-[36px]"
             >
               {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
               <span className="hidden sm:inline">Завершить досрочно</span>
@@ -341,9 +341,9 @@ export default function SimulationPage() {
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-neutral-100 rounded-none overflow-hidden">
           <motion.div
-            className={`h-full rounded-full transition-colors ${isLastQuestion ? 'bg-emerald-500' : 'bg-neutral-900'}`}
+            className={`h-full rounded-none transition-colors ${isLastQuestion ? 'bg-emerald-500' : 'bg-neutral-900'}`}
             initial={{ width: 0 }}
             animate={{ width: `${progressPct}%` }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -373,7 +373,7 @@ export default function SimulationPage() {
             className="w-full max-w-3xl mx-auto"
           >
             {/* Карточка Вопроса */}
-            <div className="mb-5 sm:mb-8 p-5 sm:p-6 md:p-8 bg-neutral-50 border border-neutral-200 rounded-2xl relative shadow-sm">
+            <div className="mb-5 sm:mb-8 p-5 sm:p-6 md:p-8 bg-neutral-50 border border-neutral-200 rounded-none relative shadow-sm">
               <div className="absolute -left-2 -top-2 sm:-left-3 sm:-top-3 text-neutral-400 bg-white rounded-full p-1 opacity-50">
                 <Bot size={18} className="sm:hidden" />
                 <Bot size={24} className="hidden sm:block" />
@@ -391,7 +391,7 @@ export default function SimulationPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.2 }}
-                  className="mb-4 flex items-start gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl"
+                  className="mb-4 flex items-start gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-none"
                 >
                   <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                   <div>
@@ -411,7 +411,7 @@ export default function SimulationPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white border border-neutral-300 px-4 py-2 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center max-w-full truncate"
+                    className="bg-white border border-neutral-300 px-4 py-2 rounded-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-center max-w-full truncate"
                   >
                     <span className="text-sm font-medium text-neutral-700">{interimText}</span>
                     <span className="animate-pulse ml-1 text-neutral-700">...</span>
@@ -424,7 +424,7 @@ export default function SimulationPage() {
                 placeholder={timeLeft > 0 ? `Ваш ответ ${personaDative}...` : 'Время вышло! Давление растет...'}
                 autoFocus
                 disabled={isAnalyzing}
-                className={`w-full bg-neutral-50 border ${isListening ? 'border-neutral-900 ring-1 ring-neutral-900' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-neutral-200'} rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all resize-none shadow-sm relative z-0`}
+                className={`w-full bg-neutral-50 border ${isListening ? 'border-neutral-900 ring-1 ring-neutral-900' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-neutral-200'} rounded-none p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all resize-none shadow-sm relative z-0`}
                 style={{ fontSize: '16px' }}
               />
 
@@ -438,7 +438,7 @@ export default function SimulationPage() {
                     <button
                       type="button"
                       onClick={isListening ? stopListening : startListening}
-                      className={`flex-shrink-0 flex items-center justify-center rounded-2xl transition-all duration-300 ${
+                      className={`flex-shrink-0 flex items-center justify-center rounded-none transition-all duration-300 ${
                         isListening 
                           ? 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] border border-rose-500 w-[64px] h-[64px] sm:w-[56px] sm:h-[56px] scale-105' 
                           : 'bg-neutral-100 border border-neutral-200 text-neutral-900 w-[64px] h-[64px] sm:w-[56px] sm:h-[56px] hover:bg-neutral-200'
@@ -451,7 +451,7 @@ export default function SimulationPage() {
                   <button
                     type="submit"
                     disabled={!answer.trim() || isAnalyzing}
-                    className="bg-[#171717] hover:bg-black text-white font-medium group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-1 sm:flex-none justify-center h-[64px] sm:h-[56px] rounded-2xl min-w-[160px] transition-colors"
+                    className="bg-[#171717] hover:bg-black text-white font-medium group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-1 sm:flex-none justify-center h-[64px] sm:h-[56px] rounded-none min-w-[160px] transition-colors"
                   >
                     {isAnalyzing ? (
                       <>

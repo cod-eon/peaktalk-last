@@ -98,21 +98,21 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
             className="fixed inset-0 z-[81] flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="pointer-events-auto w-full max-w-md bg-white border border-neutral-200 rounded-2xl shadow-2xl overflow-hidden"
+              className="pointer-events-auto w-full max-w-md bg-white border border-neutral-200 rounded-none shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="relative px-6 pt-6 pb-4">
                 <button
                   onClick={onClose}
-                  className="absolute top-5 right-5 w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+                  className="absolute top-5 right-5 w-7 h-7 flex items-center justify-center rounded-none text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
                   aria-label="Закрыть"
                 >
                   <X size={16} />
                 </button>
 
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-accent-100 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-none bg-accent-100 flex items-center justify-center">
                     <Zap size={18} className="text-accent-500" />
                   </div>
                   <div>
@@ -131,7 +131,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               {/* Plan comparison */}
               <div className="px-6 pb-4 grid grid-cols-2 gap-3">
                 {/* Starter card */}
-                <div className="rounded-xl border border-neutral-200 bg-white p-4">
+                <div className="rounded-none border border-neutral-200 bg-white p-4">
                   <div className="mb-3">
                     <span className="inline-block text-[10px] font-semibold tracking-widest text-neutral-400 uppercase mb-1">
                       Текущий
@@ -154,9 +154,9 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                 </div>
 
                 {/* Pro card */}
-                <div className="rounded-xl border-2 border-accent-400 bg-gradient-to-b from-accent-50/60 to-amber-50/30 p-4 relative overflow-hidden">
+                <div className="rounded-none border-2 border-accent-400 bg-gradient-to-b from-accent-50/60 to-amber-50/30 p-4 relative overflow-hidden">
                   <div className="absolute top-2 right-2">
-                    <span className="text-[9px] font-bold tracking-widest text-accent-500 bg-accent-100 px-1.5 py-0.5 rounded-full uppercase">
+                    <span className="text-[9px] font-bold tracking-widest text-accent-500 bg-accent-100 px-1.5 py-0.5 rounded-none uppercase">
                       Выбрать
                     </span>
                   </div>
@@ -186,7 +186,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
               <div className="px-6 pb-6">
                 <button
                   onClick={handleUpgrade}
-                  className="w-full h-11 rounded-xl bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-inter font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full h-11 rounded-none bg-gradient-to-r from-accent-500 to-amber-500 hover:from-accent-600 hover:to-amber-600 text-white font-inter font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Infinity size={16} />
                   Перейти на PRO — 990 ₽/мес

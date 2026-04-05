@@ -16,17 +16,18 @@ export default function HeroVisual() {
   }, []);
 
   return (
-    <div className="relative w-[343px] sm:w-auto max-w-[calc(100vw-32px)] sm:max-w-xl mx-auto overflow-visible my-4">
+    <div className="relative w-[343px] sm:w-auto max-w-[calc(100vw-32px)] sm:max-w-[680px] mx-auto overflow-visible my-4">
+      <div className="absolute inset-x-8 top-8 bottom-10 rounded-none bg-[radial-gradient(circle_at_50%_35%,rgba(232,96,10,0.10),transparent_45%)] blur-3xl opacity-80" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 w-full"
       >
-        <div className="rounded-lg overflow-hidden bg-white border border-black/5 shadow-[0px_1px_3px_rgba(0,0,0,0.05),_0px_10px_20px_rgba(0,0,0,0.04),_0px_20px_40px_rgba(0,0,0,0.04),_0px_30px_60px_rgba(0,0,0,0.06)] flex flex-col relative w-full">
+        <div className="rounded-none overflow-hidden bg-white border border-black/5 shadow-[0px_1px_3px_rgba(0,0,0,0.05),_0px_10px_20px_rgba(0,0,0,0.04),_0px_20px_40px_rgba(0,0,0,0.04),_0px_30px_60px_rgba(0,0,0,0.06)] flex flex-col relative w-full">
           
           {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-black/5 bg-[#F9FAFB]">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-black/5 bg-[#F9FAFB]">
             <div className="font-mono text-[10px] sm:text-xs text-neutral-400 uppercase tracking-widest flex items-center gap-2">
               <span className="break-words whitespace-normal text-center sm:text-left">[ СЕССИЯ // ПИТЧ СЕРИИ А ]</span>
             </div>
@@ -40,7 +41,7 @@ export default function HeroVisual() {
             
             {/* Block 1: Investor */}
             <div className="mb-8">
-              <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-5">
+              <div className="bg-neutral-50 border border-neutral-100 rounded-none p-5 sm:p-6">
                 <div className="font-mono text-[10px] text-[#E8600A] uppercase tracking-widest mb-3 opacity-90 break-words whitespace-normal">
                   [ ИНВЕСТОР ]
                 </div>
@@ -51,7 +52,7 @@ export default function HeroVisual() {
             </div>
 
             {/* Block 2: User Response */}
-            <div className="pl-2 relative">
+            <div className="pl-2 relative max-w-[80%] sm:max-w-[76%]">
               <div className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest mb-3 break-words whitespace-normal">
                 [ ВАШ ОТВЕТ ]
               </div>
@@ -87,13 +88,14 @@ export default function HeroVisual() {
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute bottom-4 sm:bottom-8 right-4 left-4 sm:left-auto sm:w-[360px] rounded-lg border border-neutral-100 bg-white shadow-[0px_20px_40px_rgba(0,0,0,0.12)] p-5"
+                  className="absolute bottom-4 sm:bottom-6 right-4 left-4 sm:left-auto sm:w-[350px] rounded-none border border-neutral-200 bg-white/98 shadow-[0px_24px_60px_rgba(0,0,0,0.14)] p-5 backdrop-blur-sm"
                   style={{ zIndex: 30 }}
                 >
                   <div className="flex items-center justify-between mb-3 border-b border-[rgba(0,0,0,0.06)] pb-2">
                     <span className="font-mono text-[10px] text-[#E8600A] uppercase tracking-widest font-bold break-words whitespace-normal">
                       [ PEAKTALK AI ]
                     </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-300">signal</span>
                   </div>
                   
                   <div className="font-inter text-[13px] leading-relaxed text-black font-medium flex gap-2 items-start mt-3">
