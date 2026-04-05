@@ -1,17 +1,45 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Download, Share2 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
-  transform: 'translateZ(0)',
-  WebkitTransform: 'translateZ(0)',
   backfaceVisibility: 'hidden',
   WebkitBackfaceVisibility: 'hidden',
+  transformStyle: 'preserve-3d',
+  WebkitTransformStyle: 'preserve-3d',
+  isolation: 'isolate',
+};
+
+const stableTransformTemplate = (_latest: Record<string, string | number>, generatedTransform: string) => {
+  if (!generatedTransform || generatedTransform === 'none') {
+    return 'translateZ(0)';
+  }
+
+  return `${generatedTransform} translateZ(0)`;
+};
+
+type RevealTarget = {
+  opacity: number;
+  x?: number;
+  y?: number;
+  scale?: number;
+  scaleX?: number;
+};
+
+type RevealProps = {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  hidden?: RevealTarget;
+  visible?: RevealTarget;
+  delay?: number;
+  duration?: number;
+  margin?: string;
 };
 
 const smoothScroll = (id: string) => {
@@ -32,6 +60,73 @@ function useScrolled() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return scrolled;
+}
+
+function useRevealTrigger<T extends HTMLElement>(margin = '-64px 0px') {
+  const ref = useRef<T | null>(null);
+  const isInView = useInView(ref, { once: true, margin, amount: 0.2 });
+
+  return { ref, isInView };
+}
+
+function RevealDiv({
+  children,
+  className,
+  style,
+  hidden = { opacity: 0, y: 24, scale: 0.985 },
+  visible = { opacity: 1, y: 0, scale: 1 },
+  delay = 0,
+  duration = 0.6,
+  margin,
+}: RevealProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const { ref, isInView } = useRevealTrigger<HTMLDivElement>(margin);
+  const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
+  const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={hiddenState}
+      animate={isInView ? visibleState : hiddenState}
+      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+      transformTemplate={stableTransformTemplate}
+      style={{ ...safariMotionStyle, ...style }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function RevealP({
+  children,
+  className,
+  style,
+  hidden = { opacity: 0, y: 18 },
+  visible = { opacity: 1, y: 0 },
+  delay = 0,
+  duration = 0.6,
+  margin,
+}: RevealProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const { ref, isInView } = useRevealTrigger<HTMLParagraphElement>(margin);
+  const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
+  const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+
+  return (
+    <motion.p
+      ref={ref}
+      initial={hiddenState}
+      animate={isInView ? visibleState : hiddenState}
+      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+      transformTemplate={stableTransformTemplate}
+      style={{ ...safariMotionStyle, ...style }}
+      className={className}
+    >
+      {children}
+    </motion.p>
+  );
 }
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
@@ -403,6 +498,8 @@ function MockupUpload() {
 }
 
 function MockupSession() {
+  const { ref: progressBarRef, isInView: progressVisible } = useRevealTrigger<HTMLDivElement>('-72px 0px');
+
   return (
     <div
       className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col"
@@ -429,14 +526,14 @@ function MockupSession() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 bg-gray-100">
+      <div className="h-1 bg-gray-100" ref={progressBarRef}>
         <motion.div
           className="h-full rounded-none origin-left"
           style={{ background: '#E8600A', ...safariMotionStyle, transformOrigin: 'left center' }}
           initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 0.3 }}
-          viewport={{ once: true }}
+          animate={progressVisible ? { scaleX: 0.3 } : { scaleX: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+          transformTemplate={stableTransformTemplate}
         />
       </div>
 
@@ -606,29 +703,27 @@ function ActionFlow() {
               key={s.num}
               className={`grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-24 py-16 ${i !== steps.length - 1 ? 'border-b border-neutral-200' : ''}`}
             >
-              <motion.div 
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                style={safariMotionStyle}
+              <RevealDiv
+                hidden={{ opacity: 0, x: s.direction, y: s.direction === 0 ? 24 : 0, scale: s.scale ?? 1 }}
+                visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                delay={0.1}
+                margin="-50px 0px"
                 className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
               >
                 <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
                 <h3 className="font-inter font-bold text-3xl text-neutral-900 mb-6 leading-tight max-w-lg">{s.title}</h3>
                 <p className="font-inter text-base text-neutral-500 leading-relaxed max-w-lg">{s.desc}</p>
-              </motion.div>
+              </RevealDiv>
 
-              <motion.div 
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={safariMotionStyle}
+              <RevealDiv
+                hidden={{ opacity: 0, y: 28, scale: 0.97 }}
+                visible={{ opacity: 1, y: 0, scale: 1 }}
+                delay={0.2}
+                margin="-50px 0px"
                 className="relative w-full shadow-2xl rounded-none"
               >
                 {s.mockup}
-              </motion.div>
+              </RevealDiv>
             </div>
           ))}
         </div>
@@ -688,13 +783,13 @@ function ImpactEvidence() {
               stat: 'Оценки по 8 навыкам после каждой сессии',
             },
           ].map((item, i) => (
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+            <RevealDiv
               key={i}
-              style={safariMotionStyle}
+              delay={i * 0.1}
+              duration={0.5}
+              margin="-50px 0px"
+              hidden={{ opacity: 0, y: 28, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
               className="group relative bg-[#0A0A0A] flex flex-col p-8 lg:p-12 transition-all hover:bg-neutral-900 overflow-hidden"
             >
               <div className="font-mono text-xs opacity-75 text-[#E8600A] tracking-widest uppercase mb-8">{item.tag}</div>
@@ -712,7 +807,7 @@ function ImpactEvidence() {
 
               {/* Hover reveal line */}
               <div className="absolute bottom-0 left-0 h-[2px] bg-[#E8600A] w-0 group-hover:w-full transition-all duration-150 ease-out" />
-            </motion.div>
+            </RevealDiv>
           ))}
         </div>
       </div>
@@ -735,11 +830,11 @@ function FooterCTA() {
       <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
 
       <div className="py-32 lg:py-48 text-center container-custom relative z-10 transition-colors">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          viewport={{ once: true }}
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.8}
+          delay={0.3}
           className="font-mono"
           style={{
             fontSize: '12px',
@@ -750,7 +845,7 @@ function FooterCTA() {
             marginBottom: '20px'
           }}>
           Первая сессия — сегодня.
-        </motion.div>
+        </RevealDiv>
         <h2 className="font-inter font-extrabold text-4xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] text-white max-w-4xl mx-auto">
           Питч, в котором нет слабых мест.
         </h2>
@@ -817,12 +912,13 @@ function ProblemAgitation() {
         
         <div className="grid grid-cols-1 gap-0">
           {problems.map((p, i) => (
-            <motion.div 
+            <RevealDiv
               key={i}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              hidden={{ opacity: 0, x: -20 }}
+              visible={{ opacity: 1, x: 0 }}
+              delay={i * 0.1}
+              duration={0.5}
+              margin="-40px 0px"
               className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 hover:bg-neutral-50 transition-colors items-start"
               style={{ ...safariMotionStyle, borderTop: '1px solid #e5e7eb', padding: '28px 0' }}
             >
@@ -835,19 +931,19 @@ function ProblemAgitation() {
                   {p.problem}
                 </p>
               </div>
-            </motion.div>
+            </RevealDiv>
           ))}
         </div>
 
-        <motion.p 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+        <RevealP
+          hidden={{ opacity: 0, y: 14 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          delay={0.4}
           className="font-inter font-extrabold text-left"
           style={{ ...safariMotionStyle, fontSize: 'clamp(18px,2.5vw,28px)', color: '#171717', marginTop: '48px' }}>
           PeakTalk решает все три.
-        </motion.p>
+        </RevealP>
       </div>
     </section>
   );
@@ -939,12 +1035,10 @@ function ComparisonBlock() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0 }}
-            style={safariMotionStyle}
+          <RevealDiv
+            hidden={{ opacity: 0, y: 24, scale: 0.985 }}
+            visible={{ opacity: 1, y: 0, scale: 1 }}
+            duration={0.5}
             className="order-first md:order-none flex flex-col bg-[#0A0A0A] rounded-none p-8 lg:p-10 relative"
           >
             <div className="flex items-center gap-3 mb-8">
@@ -964,15 +1058,15 @@ function ComparisonBlock() {
             <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               <a href="/register" className="font-inter font-medium text-sm text-[#E8600A] no-underline hover:text-white transition-colors">Выбрать этот вариант →</a>
             </div>
-          </motion.div>
+          </RevealDiv>
 
           {alternatives.map((alt, i) => (
-            <motion.div
+            <RevealDiv
               key={i}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: (i + 1) * 0.08 }}
+              hidden={{ opacity: 0, y: 22, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
+              duration={0.5}
+              delay={(i + 1) * 0.08}
               className="hover:opacity-100 transition-opacity opacity-75 flex flex-col"
               style={{ ...safariMotionStyle, backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '0px', padding: '24px' }}
             >
@@ -988,7 +1082,7 @@ function ComparisonBlock() {
               <div className="font-mono" style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #e5e7eb', fontSize: 12, opacity: 0.75, color: '#737373', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {alt.note}
               </div>
-            </motion.div>
+            </RevealDiv>
           ))}
         </div>
       </div>
@@ -1021,12 +1115,12 @@ function Testimonials() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {testimonials.map((t, i) => (
-            <motion.div 
+            <RevealDiv
               key={i} 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.12 }}
+              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
+              duration={0.5}
+              delay={i * 0.12}
               className={`flex flex-col bg-white group hover:-translate-y-1 transition-all duration-150 ${!t.large ? 'md:col-span-2 md:justify-self-center md:max-w-xl w-full' : ''}`}
               style={{ ...safariMotionStyle, border: '1px solid #e5e7eb', borderRadius: '0px', padding: '32px', boxShadow: '0 12px 32px rgba(0,0,0,0.03)' }}
             >
@@ -1046,7 +1140,7 @@ function Testimonials() {
                   <span className="font-mono" style={{ fontSize: 12, color: '#737373', opacity: 0.7 }}>{t.company}</span>
                 </div>
               </div>
-            </motion.div>
+            </RevealDiv>
           ))}
         </div>
       </div>
@@ -1067,12 +1161,10 @@ function PricingBlock() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={safariMotionStyle}
+          <RevealDiv
+            hidden={{ opacity: 0, x: -24, scale: 0.985 }}
+            visible={{ opacity: 1, x: 0, scale: 1 }}
+            duration={0.7}
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-white/50 uppercase tracking-widest">Попробовать</div>
@@ -1093,14 +1185,12 @@ function PricingBlock() {
             <a href="/register" className="w-full py-4 text-center border border-white/20 rounded-none bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
               Начать бесплатно
             </a>
-          </motion.div>
+          </RevealDiv>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            style={safariMotionStyle}
+          <RevealDiv
+            hidden={{ opacity: 0, x: 24, scale: 0.985 }}
+            visible={{ opacity: 1, x: 0, scale: 1 }}
+            duration={0.7}
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Профессиональный доступ</div>
@@ -1121,7 +1211,7 @@ function PricingBlock() {
             <a href="/pricing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-none w-full mt-auto block text-center py-3 text-sm transition-all">
               Выбрать Pro
             </a>
-          </motion.div>
+          </RevealDiv>
         </div>
 
         <div className="font-mono text-xs text-white/40 text-center mt-8">
