@@ -15,7 +15,7 @@ const safariMotionStyle: React.CSSProperties = {
   isolation: 'isolate',
 };
 
-const stableTransformTemplate = (_latest: Record<string, string | number>, generatedTransform: string) => {
+const stableTransformTemplate = (_latest: unknown, generatedTransform: string) => {
   if (!generatedTransform || generatedTransform === 'none') {
     return 'translateZ(0)';
   }
@@ -31,6 +31,8 @@ type RevealTarget = {
   scaleX?: number;
 };
 
+type RevealMargin = `${number}px 0px`;
+
 type RevealProps = {
   children: React.ReactNode;
   className?: string;
@@ -39,7 +41,7 @@ type RevealProps = {
   visible?: RevealTarget;
   delay?: number;
   duration?: number;
-  margin?: string;
+  margin?: RevealMargin;
 };
 
 const smoothScroll = (id: string) => {
@@ -62,7 +64,7 @@ function useScrolled() {
   return scrolled;
 }
 
-function useRevealTrigger<T extends HTMLElement>(margin = '-64px 0px') {
+function useRevealTrigger<T extends HTMLElement>(margin: RevealMargin = '-64px 0px') {
   const ref = useRef<T | null>(null);
   const isInView = useInView(ref, { once: true, margin, amount: 0.2 });
 
