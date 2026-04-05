@@ -12,15 +12,7 @@ const safariMotionStyle: React.CSSProperties = {
   WebkitBackfaceVisibility: 'hidden',
   transformStyle: 'preserve-3d',
   WebkitTransformStyle: 'preserve-3d',
-  isolation: 'isolate',
-};
-
-const stableTransformTemplate = (_latest: unknown, generatedTransform: string) => {
-  if (!generatedTransform || generatedTransform === 'none') {
-    return 'translateZ(0)';
-  }
-
-  return `${generatedTransform} translateZ(0)`;
+  contain: 'layout paint style',
 };
 
 type RevealTarget = {
@@ -71,6 +63,15 @@ function useRevealTrigger<T extends HTMLElement>(margin: RevealMargin = '-64px 0
   return { ref, isInView };
 }
 
+function buildRevealTransform(target: RevealTarget) {
+  const x = target.x ?? 0;
+  const y = target.y ?? 0;
+  const scale = target.scale ?? 1;
+  const scaleX = target.scaleX ?? 1;
+
+  return `translate3d(${x}px, ${y}px, 0) scale(${scale}) scaleX(${scaleX})`;
+}
+
 function RevealDiv({
   children,
   className,
@@ -85,19 +86,26 @@ function RevealDiv({
   const { ref, isInView } = useRevealTrigger<HTMLDivElement>(margin);
   const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
   const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+  const state = isInView ? visibleState : hiddenState;
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={hiddenState}
-      animate={isInView ? visibleState : hiddenState}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      transformTemplate={stableTransformTemplate}
-      style={{ ...safariMotionStyle, ...style }}
+      style={{
+        ...safariMotionStyle,
+        ...style,
+        opacity: state.opacity,
+        transform: `${buildRevealTransform(state)} translateZ(0)`,
+        WebkitTransform: `${buildRevealTransform(state)} translateZ(0)`,
+        transitionProperty: 'opacity, transform',
+        transitionDuration: `${duration}s`,
+        transitionDelay: `${delay}s`,
+        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
       className={className}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -115,19 +123,26 @@ function RevealP({
   const { ref, isInView } = useRevealTrigger<HTMLParagraphElement>(margin);
   const hiddenState = prefersReducedMotion ? { opacity: 0 } : hidden;
   const visibleState = prefersReducedMotion ? { opacity: 1 } : visible;
+  const state = isInView ? visibleState : hiddenState;
 
   return (
-    <motion.p
+    <p
       ref={ref}
-      initial={hiddenState}
-      animate={isInView ? visibleState : hiddenState}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      transformTemplate={stableTransformTemplate}
-      style={{ ...safariMotionStyle, ...style }}
+      style={{
+        ...safariMotionStyle,
+        ...style,
+        opacity: state.opacity,
+        transform: `${buildRevealTransform(state)} translateZ(0)`,
+        WebkitTransform: `${buildRevealTransform(state)} translateZ(0)`,
+        transitionProperty: 'opacity, transform',
+        transitionDuration: `${duration}s`,
+        transitionDelay: `${delay}s`,
+        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
       className={className}
     >
       {children}
-    </motion.p>
+    </p>
   );
 }
 
@@ -529,13 +544,19 @@ function MockupSession() {
 
       {/* Progress bar */}
       <div className="h-1 bg-gray-100" ref={progressBarRef}>
-        <motion.div
+        <div
           className="h-full rounded-none origin-left"
-          style={{ background: '#E8600A', ...safariMotionStyle, transformOrigin: 'left center' }}
-          initial={{ scaleX: 0 }}
-          animate={progressVisible ? { scaleX: 0.3 } : { scaleX: 0 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-          transformTemplate={stableTransformTemplate}
+          style={{
+            background: '#E8600A',
+            ...safariMotionStyle,
+            transformOrigin: 'left center',
+            transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+            WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+            transitionProperty: 'transform',
+            transitionDuration: '1.2s',
+            transitionDelay: '0.3s',
+            transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
         />
       </div>
 
