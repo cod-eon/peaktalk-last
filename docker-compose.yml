@@ -56,6 +56,14 @@ services:
     environment:
       # Override DATABASE_URL so it points at the Docker postgres service
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-peaktalk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-peaktalk}
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "localhost,127.0.0.1,postgres,redis,api,frontend"
+      no_proxy: "localhost,127.0.0.1,postgres,redis,api,frontend"
     command: ["alembic", "upgrade", "head"]
     depends_on:
       postgres:
@@ -77,6 +85,14 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-peaktalk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-peaktalk}
       REDIS_URL: redis://redis:6379/0
       APP_ENV: production
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "localhost,127.0.0.1,postgres,redis,api,frontend"
+      no_proxy: "localhost,127.0.0.1,postgres,redis,api,frontend"
     depends_on:
       postgres:
         condition: service_healthy
@@ -105,6 +121,14 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-peaktalk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-peaktalk}
       REDIS_URL: redis://redis:6379/0
       APP_ENV: production
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "localhost,127.0.0.1,postgres,redis,api,frontend"
+      no_proxy: "localhost,127.0.0.1,postgres,redis,api,frontend"
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,6 +149,14 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-peaktalk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-peaktalk}
       REDIS_URL: redis://redis:6379/0
       APP_ENV: production
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "localhost,127.0.0.1,postgres,redis,api,frontend"
+      no_proxy: "localhost,127.0.0.1,postgres,redis,api,frontend"
     command: ["celery", "-A", "app.worker.celery_app", "beat", "--loglevel=info"]
     depends_on:
       postgres:

@@ -58,15 +58,17 @@ docker compose restart nginx
 echo ""
 echo "[4/4] Checking API health..."
 
+HEALTH_HOST="${DEPLOY_HEALTH_HOST:-peaktalk.ru}"
+
 MAX_RETRIES=10
 RETRY_DELAY=3
 for i in $(seq 1 $MAX_RETRIES); do
-    if curl -sf http://localhost/health > /dev/null 2>&1; then
+    if curl -ksf --resolve "$HEALTH_HOST:443:127.0.0.1" "https://$HEALTH_HOST/health" > /dev/null 2>&1; then
         echo "  API is healthy ✓"
         break
     fi
     if [ "$i" -eq "$MAX_RETRIES" ]; then
-        echo "  ERROR: API health check failed after $((MAX_RETRIES * RETRY_DELAY))s"
+        echo "  ERROR: API health check failed for host $HEALTH_HOST after $((MAX_RETRIES * RETRY_DELAY))s"
         echo "  Check logs with: docker compose logs api"
         exit 1
     fi
