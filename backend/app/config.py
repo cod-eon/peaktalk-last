@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # AI
     gemini_api_key: str
+    gemini_proxy_url: str = ""
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

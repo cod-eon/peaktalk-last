@@ -9,7 +9,7 @@ from google.genai import types
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
-from app.services.gemini import GeminiError
+from app.services.gemini import GeminiError, create_gemini_client
 
 CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to Gemini
 
@@ -363,7 +363,7 @@ async def generate_question(
     history: list[dict],
     user_context: dict | None = None,
 ) -> SimulationTurn:
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = create_gemini_client()
     prompt = _build_user_prompt(doc_text, history)
 
     try:
@@ -412,7 +412,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
         transcript=transcript,
     )
 
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = create_gemini_client()
     try:
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(

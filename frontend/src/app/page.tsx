@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Mic, Download, Share2 } from 'lucide-react';
+import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Download, Share2 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
 const safariMotionStyle: React.CSSProperties = {
@@ -587,14 +587,6 @@ function ActionFlow() {
   ];
 
   const sectionRef = React.useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start center", "end center"]
-  });
-  
-  const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
-
   return (
     <section ref={sectionRef} id="how" className="relative group/section" style={{ position: 'relative', padding: 'clamp(80px, 15vw, 180px) 0', backgroundColor: '#fff' }}>
       <div className="container-custom relative">
@@ -615,10 +607,11 @@ function ActionFlow() {
               className={`grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-24 py-16 ${i !== steps.length - 1 ? 'border-b border-neutral-200' : ''}`}
             >
               <motion.div 
-                initial={{ opacity: 0, x: i % 2 === 1 ? 30 : -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                style={safariMotionStyle}
                 className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
               >
                 <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
@@ -627,8 +620,8 @@ function ActionFlow() {
               </motion.div>
 
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 style={safariMotionStyle}
@@ -696,11 +689,12 @@ function ImpactEvidence() {
             },
           ].map((item, i) => (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               key={i}
+              style={safariMotionStyle}
               className="group relative bg-[#0A0A0A] flex flex-col p-8 lg:p-12 transition-all hover:bg-neutral-900 overflow-hidden"
             >
               <div className="font-mono text-xs opacity-75 text-[#E8600A] tracking-widest uppercase mb-8">{item.tag}</div>
@@ -825,12 +819,12 @@ function ProblemAgitation() {
           {problems.map((p, i) => (
             <motion.div 
               key={i}
-              initial={{ x: -20, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 hover:bg-neutral-50 transition-colors items-start"
-              style={{ borderTop: '1px solid #e5e7eb', padding: '28px 0' }}
+              style={{ ...safariMotionStyle, borderTop: '1px solid #e5e7eb', padding: '28px 0' }}
             >
               <div className="md:col-span-4 flex gap-3 items-start">
                 <span className="font-mono text-red-500 text-sm flex-shrink-0 mt-0.5">×</span>
@@ -846,12 +840,12 @@ function ProblemAgitation() {
         </div>
 
         <motion.p 
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="font-inter font-extrabold text-left"
-          style={{ fontSize: 'clamp(18px,2.5vw,28px)', color: '#171717', marginTop: '48px' }}>
+          style={{ ...safariMotionStyle, fontSize: 'clamp(18px,2.5vw,28px)', color: '#171717', marginTop: '48px' }}>
           PeakTalk решает все три.
         </motion.p>
       </div>
@@ -898,7 +892,6 @@ function Counter({ target, accent }: { target: number, accent?: boolean }) {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        let start = 0;
         const duration = 1200;
         const startTime = performance.now();
         const update = (currentTime: number) => {
@@ -947,8 +940,8 @@ function ComparisonBlock() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <motion.div
-            initial={{ y: 20, opacity: 0, scale: 0.97 }}
-            whileInView={{ y: 0, opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0 }}
             style={safariMotionStyle}
@@ -976,12 +969,12 @@ function ComparisonBlock() {
           {alternatives.map((alt, i) => (
             <motion.div
               key={i}
-              initial={{ y: 20, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: (i + 1) * 0.08 }}
               className="hover:opacity-100 transition-opacity opacity-75 flex flex-col"
-              style={{ backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '0px', padding: '24px' }}
+              style={{ ...safariMotionStyle, backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '0px', padding: '24px' }}
             >
               <h3 className="font-inter" style={{ fontWeight: 700, fontSize: '18px', color: '#171717', marginBottom: '16px' }}>{alt.title}</h3>
               <div className="flex flex-col gap-3">
@@ -1030,15 +1023,15 @@ function Testimonials() {
           {testimonials.map((t, i) => (
             <motion.div 
               key={i} 
-              initial={{ y: 30, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
               className={`flex flex-col bg-white group hover:-translate-y-1 transition-all duration-150 ${!t.large ? 'md:col-span-2 md:justify-self-center md:max-w-xl w-full' : ''}`}
-              style={{ border: '1px solid #e5e7eb', borderRadius: '0px', padding: '32px', boxShadow: '0 12px 32px rgba(0,0,0,0.03)' }}
+              style={{ ...safariMotionStyle, border: '1px solid #e5e7eb', borderRadius: '0px', padding: '32px', boxShadow: '0 12px 32px rgba(0,0,0,0.03)' }}
             >
               <p className="font-inter text-base text-neutral-900 leading-relaxed flex-1 mb-6">
-                "{t.quote}"
+                &ldquo;{t.quote}&rdquo;
               </p>
               
               <div className="flex gap-4 items-center" style={{ marginTop: '24px' }}>
@@ -1075,10 +1068,11 @@ function PricingBlock() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
           <motion.div
-            initial={{ x: -30, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
+            style={safariMotionStyle}
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-white/50 uppercase tracking-widest">Попробовать</div>
@@ -1102,10 +1096,11 @@ function PricingBlock() {
           </motion.div>
 
           <motion.div
-            initial={{ x: 30, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
+            style={safariMotionStyle}
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Профессиональный доступ</div>

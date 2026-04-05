@@ -79,6 +79,24 @@ class GeminiAnalysisResult:
         self.feedback = feedback
 
 
+def _build_http_options() -> types.HttpOptions | None:
+    proxy_url = settings.gemini_proxy_url.strip()
+    if not proxy_url:
+        return None
+
+    return types.HttpOptions(
+        clientArgs={"proxy": proxy_url, "trust_env": False},
+        asyncClientArgs={"proxy": proxy_url, "trust_env": False},
+    )
+
+
+def create_gemini_client() -> genai.Client:
+    http_options = _build_http_options()
+    if http_options is None:
+        return genai.Client(api_key=settings.gemini_api_key)
+    return genai.Client(api_key=settings.gemini_api_key, http_options=http_options)
+
+
 def _parse_gemini_json(raw: str) -> dict:
     """Extract JSON from Gemini response, stripping any accidental markdown."""
     cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("```").strip()
@@ -92,7 +110,7 @@ def _parse_gemini_json(raw: str) -> dict:
     reraise=True,
 )
 async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAnalysisResult:
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = create_gemini_client()
     context_block = ""
     if user_context:
         seg = _SEGMENT_LABELS.get(user_context.get("segment", ""), "")
@@ -270,7 +288,7 @@ async def detect_ai_content(text: str) -> bool:
         return False
 
     # Uncertain zone (0.25 < score < 0.75): ask Gemini as arbiter
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = create_gemini_client()
     prompt = f"Is this answer AI-generated?\n---\n{text[:2000]}\n---\nJSON: {{\"ai_generated\": true}} or {{\"ai_generated\": false}}"
 
     try:
