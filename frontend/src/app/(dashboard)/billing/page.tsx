@@ -18,7 +18,6 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
-import { UpgradeModal } from '@/components/UpgradeModal';
 import type { Payment, PaymentMethodSummary } from '@/types/billing';
 import { toast } from 'sonner';
 
@@ -133,8 +132,7 @@ function UsageBar({ used, limit, label, icon }: { used: number; limit: number | 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function BillingPage() {
-  const { status, isLoading, isPro, upgradeModalOpen, upgradeModalReason, openUpgradeModal, closeUpgradeModal } =
-    useBillingStore();
+  const { status, isLoading, isPro } = useBillingStore();
   const { refetch } = useBilling();
 
   const paymentsEnabled = status?.payments_enabled ?? true;
@@ -219,8 +217,6 @@ export default function BillingPage() {
 
   return (
     <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
-      <UpgradeModal isOpen={upgradeModalOpen} onClose={closeUpgradeModal} reason={upgradeModalReason} />
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
@@ -341,7 +337,7 @@ export default function BillingPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 {paymentsEnabled && plan === 'starter' && (
                   <button
-                    onClick={() => openUpgradeModal('simulations')}
+                    onClick={() => handleUpgrade('pro')}
                     className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
                   >
                     <Zap size={14} />
@@ -617,7 +613,7 @@ export default function BillingPage() {
                 Вы используете бесплатный план. При достижении лимитов симуляции и загрузка документов будут
                 заблокированы.{' '}
                 <button
-                  onClick={() => openUpgradeModal('simulations')}
+                  onClick={() => handleUpgrade('pro')}
                   className="underline font-medium cursor-pointer hover:text-amber-900"
                 >
                   Перейти на PRO
