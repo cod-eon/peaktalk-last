@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     yookassa_secret_key: str = ""
     yookassa_webhook_secret: str = ""
 
+    # 54-FZ receipt settings (fiscalization)
+    # Самозанятые (НПД) НЕ используют ККТ — чеки формируются через "Мой налог".
+    # Включайте только если вы ИП/ООО с подключённым ОФД.
+    yookassa_send_receipt: bool = False
+    # tax_system_code: 1=ОСН, 2=УСН доход, 3=УСН доход-расход, 6=ПСН
+    yookassa_tax_system_code: int = 2
+    # vat_code per item: 1=без НДС, 3=10%, 4=20%
+    yookassa_vat_code: int = 1
+
     # Public frontend URL (used as default return_url fallback)
     frontend_url: str = "https://peaktalk.ru"
 

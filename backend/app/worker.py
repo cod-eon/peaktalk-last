@@ -32,6 +32,11 @@ celery_app.conf.update(
             "task": "app.worker.expire_abandoned_sessions_task",
             "schedule": crontab(minute="*/30"),
         },
+        # Renew subscriptions and downgrade expired ones. Runs daily at 07:00 UTC.
+        "renew-subscriptions": {
+            "task": "app.worker.renew_subscriptions_task",
+            "schedule": crontab(hour=7, minute=0),
+        },
     },
 )
 
@@ -173,5 +178,182 @@ def expire_abandoned_sessions_task(self) -> dict:
             await db.commit()
 
         return {"stale_found": len(stale), "finalized": finalized, "cancelled": cancelled}
+
+    return asyncio.run(_run())
+
+
+# ---------------------------------------------------------------------------
+# Subscription renewal & downgrade task
+# ---------------------------------------------------------------------------
+
+
+@celery_app.task(bind=True, name="app.worker.renew_subscriptions_task", max_retries=1, default_retry_delay=600)
+def renew_subscriptions_task(self) -> dict:
+    """Daily task: auto-renew active subscriptions and downgrade expired ones.
+
+    Logic:
+    1. Find paid subscriptions where period_end <= now + 1 day (due for renewal).
+       - If has saved payment_method → attempt charge via YooKassa.
+       - Charge success → webhook will activate the new period.
+       - Charge failure → set status to past_due.
+    2. Find past_due/cancelled subscriptions where period_end + grace(3d) < now.
+       - Downgrade to starter, clear payment method.
+    """
+    import asyncio
+    import logging
+
+    from datetime import timedelta
+
+    from sqlalchemy import and_, or_, select
+
+    from app.models.subscription import (
+        PlanType,
+        Subscription,
+        SubscriptionStatus,
+    )
+    from app.models.user import User
+    from app.services.limits import GRACE_PERIOD_DAYS
+    from app.services.yookassa_service import charge_recurring
+
+    log = logging.getLogger("peaktalk.worker.renew")
+
+    async def _run() -> dict:
+        now = datetime.now(timezone.utc)
+        renewal_cutoff = now + timedelta(days=1)
+        grace_cutoff = now - timedelta(days=GRACE_PERIOD_DAYS)
+        renewed = 0
+        failed = 0
+        downgraded = 0
+
+        async with _make_session()() as db:
+            # === Phase 1: Auto-renew subscriptions approaching period_end ===
+            result = await db.execute(
+                select(Subscription)
+                .where(
+                    and_(
+                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.status == SubscriptionStatus.active,
+                        Subscription.period_end.isnot(None),
+                        Subscription.period_end <= renewal_cutoff,
+                        Subscription.yookassa_payment_method_id.isnot(None),
+                    )
+                )
+            )
+            due_subs = list(result.scalars().all())
+            log.info("renew_subscriptions: found %d subscriptions due for renewal", len(due_subs))
+
+            for sub in due_subs:
+                # Fetch user email for receipt
+                user_result = await db.execute(
+                    select(User).where(User.id == sub.user_id)
+                )
+                user = user_result.scalar_one_or_none()
+                if not user:
+                    log.warning("renew: user not found for subscription user_id=%s", sub.user_id)
+                    continue
+
+                idem_key = f"renew-{sub.id}-{sub.period_end.isoformat()}"
+                try:
+                    charge_result = await charge_recurring(
+                        user_id=str(sub.user_id),
+                        subscription_id=str(sub.id),
+                        payment_method_id=sub.yookassa_payment_method_id,
+                        plan=sub.plan,
+                        customer_email=user.email,
+                        idempotency_key=idem_key,
+                    )
+                    log.info(
+                        "renew: charge initiated user_id=%s payment_id=%s status=%s",
+                        sub.user_id, charge_result["payment_id"], charge_result["status"],
+                    )
+                    renewed += 1
+                except Exception as exc:
+                    log.error(
+                        "renew: charge failed user_id=%s plan=%s err=%s",
+                        sub.user_id, sub.plan.value, exc,
+                    )
+                    sub.status = SubscriptionStatus.past_due
+                    failed += 1
+
+            # === Phase 2: Retry past_due subscriptions still within grace ===
+            result = await db.execute(
+                select(Subscription)
+                .where(
+                    and_(
+                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.status == SubscriptionStatus.past_due,
+                        Subscription.period_end.isnot(None),
+                        Subscription.period_end > grace_cutoff,
+                        Subscription.yookassa_payment_method_id.isnot(None),
+                    )
+                )
+            )
+            past_due_subs = list(result.scalars().all())
+            log.info("renew_subscriptions: found %d past_due subscriptions to retry", len(past_due_subs))
+
+            for sub in past_due_subs:
+                user_result = await db.execute(
+                    select(User).where(User.id == sub.user_id)
+                )
+                user = user_result.scalar_one_or_none()
+                if not user:
+                    continue
+
+                idem_key = f"retry-{sub.id}-{now.strftime('%Y%m%d')}"
+                try:
+                    charge_result = await charge_recurring(
+                        user_id=str(sub.user_id),
+                        subscription_id=str(sub.id),
+                        payment_method_id=sub.yookassa_payment_method_id,
+                        plan=sub.plan,
+                        customer_email=user.email,
+                        idempotency_key=idem_key,
+                    )
+                    log.info(
+                        "renew: retry charge user_id=%s payment_id=%s status=%s",
+                        sub.user_id, charge_result["payment_id"], charge_result["status"],
+                    )
+                    renewed += 1
+                except Exception as exc:
+                    log.warning(
+                        "renew: retry failed user_id=%s err=%s (will retry tomorrow)",
+                        sub.user_id, exc,
+                    )
+                    failed += 1
+
+            # === Phase 3: Downgrade expired subscriptions past grace period ===
+            result = await db.execute(
+                select(Subscription)
+                .where(
+                    and_(
+                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.period_end.isnot(None),
+                        Subscription.period_end <= grace_cutoff,
+                        or_(
+                            Subscription.status == SubscriptionStatus.past_due,
+                            Subscription.status == SubscriptionStatus.cancelled,
+                        ),
+                    )
+                )
+            )
+            expired_subs = list(result.scalars().all())
+            log.info("renew_subscriptions: found %d expired subscriptions to downgrade", len(expired_subs))
+
+            for sub in expired_subs:
+                sub.plan = PlanType.starter
+                sub.status = SubscriptionStatus.active
+                sub.period_end = None
+                sub.yookassa_payment_method_id = None
+                sub.yookassa_subscription_id = None
+                downgraded += 1
+                log.info("renew: downgraded to starter user_id=%s", sub.user_id)
+
+            await db.commit()
+
+        return {
+            "renewed": renewed,
+            "failed": failed,
+            "downgraded": downgraded,
+        }
 
     return asyncio.run(_run())

@@ -151,6 +151,7 @@ async def create_subscription_payment(
             user_id=str(current_user.id),
             plan=body.plan,
             return_url=body.return_url,
+            customer_email=current_user.email,
         )
     except RuntimeError as exc:
         logger.error("billing: YooKassa create_payment failed: %s", exc)

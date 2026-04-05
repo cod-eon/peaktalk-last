@@ -178,9 +178,10 @@ async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None
     db.add(payment_record)
     await db.flush()
 
-    # Reset usage counter for the new billing period
+    # Reset usage counters for the new billing period
     counter = await get_usage_counter(str(user_id), db)
     counter.simulations_used = 0
+    counter.documents_uploaded = 0
     counter.period_start = now
     await db.flush()
 

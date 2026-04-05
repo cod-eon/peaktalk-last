@@ -74,10 +74,34 @@ def _get_configuration():
     return Configuration
 
 
+def _build_receipt(customer_email: str, description: str, amount_str: str) -> dict:
+    """Build a 54-FZ compliant receipt object for YooKassa payment."""
+    return {
+        "customer": {
+            "email": customer_email,
+        },
+        "tax_system_code": settings.yookassa_tax_system_code,
+        "items": [
+            {
+                "description": description,
+                "quantity": "1.00",
+                "amount": {
+                    "value": amount_str,
+                    "currency": "RUB",
+                },
+                "vat_code": settings.yookassa_vat_code,
+                "payment_subject": "service",
+                "payment_mode": "full_payment",
+            }
+        ],
+    }
+
+
 async def create_payment(
     user_id: str,
     plan: PlanType,
     return_url: str,
+    customer_email: str,
     idempotency_key: str | None = None,
 ) -> dict:
     """Create a YooKassa payment for subscription upgrade.
@@ -100,6 +124,7 @@ async def create_payment(
 
     idem_key = idempotency_key or str(uuid.uuid4())
     amount_str = _kopecks_to_rub(PLAN_PRICES[plan])
+    description = PLAN_DESCRIPTIONS[plan]
 
     payment_data = {
         "amount": {
@@ -112,12 +137,18 @@ async def create_payment(
         },
         "capture": True,
         "save_payment_method": True,  # Required for recurrent billing
-        "description": PLAN_DESCRIPTIONS[plan],
+        "description": description,
         "metadata": {
             "user_id": user_id,
             "plan": plan.value,
         },
     }
+
+    # 54-FZ receipt: only for ИП/ООО with ОФД. Самозанятые (НПД) exempt.
+    if settings.yookassa_send_receipt:
+        payment_data["receipt"] = _build_receipt(
+            customer_email, description, amount_str
+        )
 
     logger.info(
         "yookassa: creating payment user_id=%s plan=%s amount=%s",
@@ -143,6 +174,7 @@ async def charge_recurring(
     subscription_id: str,
     payment_method_id: str,
     plan: PlanType,
+    customer_email: str,
     idempotency_key: str,
 ) -> dict:
     """Auto-charge for subscription renewal using a saved payment method.
@@ -161,6 +193,7 @@ async def charge_recurring(
         raise RuntimeError("yookassa package not installed") from exc
 
     amount_str = _kopecks_to_rub(PLAN_PRICES[plan])
+    description = f"{PLAN_DESCRIPTIONS[plan]} (автопродление)"
 
     payment_data = {
         "amount": {
@@ -169,7 +202,7 @@ async def charge_recurring(
         },
         "capture": True,
         "payment_method_id": payment_method_id,
-        "description": f"{PLAN_DESCRIPTIONS[plan]} (автопродление)",
+        "description": description,
         "metadata": {
             "user_id": user_id,
             "subscription_id": subscription_id,
@@ -177,6 +210,12 @@ async def charge_recurring(
             "type": "recurrent",
         },
     }
+
+    # 54-FZ receipt: only for ИП/ООО with ОФД. Самозанятые (НПД) exempt.
+    if settings.yookassa_send_receipt:
+        payment_data["receipt"] = _build_receipt(
+            customer_email, description, amount_str
+        )
 
     logger.info(
         "yookassa: recurring charge user_id=%s plan=%s amount=%s "
