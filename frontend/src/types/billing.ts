@@ -48,6 +48,13 @@ export interface BillingStatus {
   payments_enabled: boolean;
 }
 
+export interface PaymentMethodSummary {
+  is_bound: boolean;
+  type: string | null;
+  display_label: string | null;
+  auto_renew_enabled: boolean;
+}
+
 export interface PaymentInitResponse {
   payment_url: string;
   payment_id: string;

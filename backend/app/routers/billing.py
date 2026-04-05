@@ -11,6 +11,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.subscription import (
     Payment,
+    PaymentStatus,
     PlanType,
     Subscription,
     SubscriptionStatus,
@@ -22,6 +23,7 @@ from app.schemas.subscription import (
     CreatePaymentRequest,
     CreatePaymentResponse,
     PaymentResponse,
+    PaymentMethodSummaryResponse,
     PlanInfo,
     PlanLimits,
     SubscriptionResponse,
@@ -35,7 +37,7 @@ from app.services.limits import (
     get_usage_counter,
     get_user_subscription,
 )
-from app.services.yookassa_service import create_payment
+from app.services.yookassa_service import create_payment, get_saved_payment_method_summary
 from sqlalchemy import select
 
 logger = logging.getLogger("peaktalk.billing")
@@ -116,6 +118,69 @@ async def get_billing_status(
         can_start_simulation=True if not settings.payments_enabled else can_sim,
         can_upload_document=True if not settings.payments_enabled else can_doc,
         payments_enabled=settings.payments_enabled,
+    )
+
+
+@router.get("/payment-method", response_model=PaymentMethodSummaryResponse)
+async def get_payment_method(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PaymentMethodSummaryResponse:
+    """Return masked saved payment method info for the billing page."""
+    subscription = await get_user_subscription(str(current_user.id), db)
+
+    is_paid_plan = subscription.plan in (PlanType.pro, PlanType.team)
+    has_saved_method = bool(subscription.yookassa_payment_method_id)
+    auto_renew_enabled = (
+        is_paid_plan
+        and has_saved_method
+        and subscription.status == SubscriptionStatus.active
+    )
+
+    if not is_paid_plan or not has_saved_method:
+        return PaymentMethodSummaryResponse(
+            is_bound=False,
+            type=None,
+            display_label=None,
+            auto_renew_enabled=False,
+        )
+
+    result = await db.execute(
+        select(Payment)
+        .where(
+            Payment.user_id == current_user.id,
+            Payment.subscription_id == subscription.id,
+            Payment.status == PaymentStatus.succeeded,
+        )
+        .order_by(Payment.created_at.desc())
+        .limit(1)
+    )
+    latest_payment = result.scalar_one_or_none()
+
+    display_label = "Привязанный способ оплаты"
+    payment_type: str | None = None
+
+    if latest_payment is not None:
+        try:
+            payment_summary = await get_saved_payment_method_summary(
+                latest_payment.yookassa_payment_id
+            )
+        except Exception as exc:
+            logger.warning(
+                "billing: failed to fetch saved payment method payment_id=%s err=%s",
+                latest_payment.yookassa_payment_id,
+                exc,
+            )
+        else:
+            if payment_summary is not None:
+                payment_type = payment_summary.get("type")
+                display_label = payment_summary.get("display_label") or display_label
+
+    return PaymentMethodSummaryResponse(
+        is_bound=True,
+        type=payment_type,
+        display_label=display_label,
+        auto_renew_enabled=auto_renew_enabled,
     )
 
 

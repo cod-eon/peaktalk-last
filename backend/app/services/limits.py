@@ -74,7 +74,11 @@ def _effective_plan(subscription: Subscription) -> PlanType:
         return subscription.plan
 
     now = datetime.now(timezone.utc)
-    grace_deadline = subscription.period_end + timedelta(days=GRACE_PERIOD_DAYS)
+    period_end = subscription.period_end
+    if period_end.tzinfo is None:
+        period_end = period_end.replace(tzinfo=timezone.utc)
+
+    grace_deadline = period_end + timedelta(days=GRACE_PERIOD_DAYS)
 
     if now > grace_deadline:
         # Period ended and grace period passed — treat as starter
@@ -92,7 +96,10 @@ def _is_subscription_active(subscription: Subscription) -> bool:
         if subscription.period_end is None:
             return True
         now = datetime.now(timezone.utc)
-        return now <= subscription.period_end + timedelta(days=GRACE_PERIOD_DAYS)
+        period_end = subscription.period_end
+        if period_end.tzinfo is None:
+            period_end = period_end.replace(tzinfo=timezone.utc)
+        return now <= period_end + timedelta(days=GRACE_PERIOD_DAYS)
     return False
 
 

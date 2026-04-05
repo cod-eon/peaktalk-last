@@ -45,6 +45,13 @@ class BillingStatusResponse(BaseModel):
     payments_enabled: bool = True
 
 
+class PaymentMethodSummaryResponse(BaseModel):
+    is_bound: bool
+    type: str | None = None
+    display_label: str | None = None
+    auto_renew_enabled: bool = False
+
+
 class CreatePaymentRequest(BaseModel):
     plan: PlanType = Field(..., description="Target plan: pro or team")
     return_url: str = Field(..., description="URL to redirect after payment")

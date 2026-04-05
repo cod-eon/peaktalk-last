@@ -19,7 +19,7 @@ import { api } from '@/lib/api';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
 import { UpgradeModal } from '@/components/UpgradeModal';
-import type { Payment, PlanInfo } from '@/types/billing';
+import type { Payment, PaymentMethodSummary } from '@/types/billing';
 import { toast } from 'sonner';
 
 // ─── Plan comparison data ──────────────────────────────────────────────────────
@@ -160,6 +160,18 @@ export default function BillingPage() {
     retry: false,
   });
 
+  const {
+    data: paymentMethod,
+    isLoading: paymentMethodLoading,
+    refetch: refetchPaymentMethod,
+  } = useQuery<PaymentMethodSummary>({
+    queryKey: ['billing-payment-method'],
+    queryFn: () => api.get('/billing/payment-method'),
+    staleTime: 60_000,
+    retry: false,
+    enabled: paymentsEnabled,
+  });
+
   const handleUpgrade = useCallback(
     async (plan: 'pro' | 'team') => {
       try {
@@ -182,13 +194,15 @@ export default function BillingPage() {
       await api.post('/billing/cancel', {});
       toast.success('Подписка отменена');
       await refetch();
+      await refetchPaymentMethod();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка';
       toast.error(message);
     }
-  }, [refetch]);
+  }, [refetch, refetchPaymentMethod]);
 
   const plan = status?.subscription.plan ?? 'starter';
+  const isPaidPlan = plan === 'pro' || plan === 'team';
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',
@@ -198,6 +212,8 @@ export default function BillingPage() {
     : null;
 
   const subStatus = status?.subscription.status;
+  const autoRenewEnabled = paymentMethod?.auto_renew_enabled ?? false;
+  const paymentMethodLabel = paymentMethod?.display_label ?? (paymentMethod?.is_bound ? 'Привязанный способ оплаты' : null);
 
   const PLAN_NAMES: Record<string, string> = { starter: 'Starter', pro: 'Pro', team: 'Team' };
 
@@ -347,20 +363,72 @@ export default function BillingPage() {
                       <Users size={14} />
                       Апгрейд до TEAM
                     </button>
-                    {subStatus === 'active' && (
-                      <button
-                        onClick={handleCancel}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-none border border-neutral-200 text-neutral-500 text-sm hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
-                      >
-                        <X size={13} />
-                        Отменить
-                      </button>
-                    )}
                   </>
+                )}
+                {paymentsEnabled && isPaidPlan && subStatus === 'active' && (
+                  <button
+                    onClick={handleCancel}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-none border border-neutral-200 text-neutral-500 text-sm hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
+                  >
+                    <X size={13} />
+                    Отключить автопродление
+                  </button>
                 )}
               </div>
             </div>
           </motion.div>
+
+          {/* ─── Renewal and payment method ─── */}
+          {paymentsEnabled && isPaidPlan && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.03 }}
+              className="bg-white rounded-none border border-neutral-200 p-6"
+            >
+              <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
+                Списание и автопродление
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-neutral-500 mb-2">
+                    <CreditCard size={12} />
+                    Способ оплаты
+                  </div>
+                  {paymentMethodLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-neutral-500">
+                      <Loader2 size={14} className="animate-spin" />
+                      Загружаем способ оплаты...
+                    </div>
+                  ) : paymentMethodLabel ? (
+                    <div className="text-sm font-semibold text-neutral-900">{paymentMethodLabel}</div>
+                  ) : (
+                    <div className="text-sm text-neutral-500">Привязанный способ оплаты пока не найден</div>
+                  )}
+                </div>
+
+                <div className="border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-neutral-500 mb-2">
+                    <Zap size={12} />
+                    Автопродление
+                  </div>
+                  {subStatus === 'cancelled' ? (
+                    <div className="text-sm text-neutral-700">
+                      Отключено{periodEnd ? `, доступ сохранится до ${periodEnd}` : ''}
+                    </div>
+                  ) : subStatus === 'past_due' ? (
+                    <div className="text-sm text-red-600">Есть проблема со списанием</div>
+                  ) : autoRenewEnabled ? (
+                    <div className="text-sm font-semibold text-emerald-700">
+                      Включено{periodEnd ? `, следующее списание ${periodEnd}` : ''}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-neutral-500">Не настроено</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* ─── Usage bars ─── */}
           <motion.div
@@ -405,6 +473,14 @@ export default function BillingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PLAN_DISPLAY.map((p) => {
                 const isCurrent = p.id === plan;
+                const isDowngrade = plan === 'team' && p.id === 'pro';
+                const canUpgradeToPlan =
+                  paymentsEnabled &&
+                  !isCurrent &&
+                  p.id !== 'starter' &&
+                  !isDowngrade &&
+                  ((plan === 'starter' && (p.id === 'pro' || p.id === 'team')) ||
+                    (plan === 'pro' && p.id === 'team'));
                 return (
                   <div
                     key={p.id}
@@ -416,7 +492,7 @@ export default function BillingPage() {
                   >
                     {isCurrent && (
                       <span className="absolute top-3 right-3 text-[9px] font-bold tracking-widest text-neutral-500 bg-white rounded-none px-2 py-1 border border-neutral-200 uppercase">
-                        Текущий
+                        {plan === 'starter' ? 'Текущий' : 'Активирован'}
                       </span>
                     )}
                     <div className="mb-4">
@@ -435,7 +511,7 @@ export default function BillingPage() {
                         </li>
                       ))}
                     </ul>
-                    {!isCurrent && p.id !== 'starter' && paymentsEnabled && (
+                    {canUpgradeToPlan && (
                       <button
                         onClick={() => handleUpgrade(p.id as 'pro' | 'team')}
                         className="w-full py-2 rounded-none text-[12px] font-semibold bg-[#171717] hover:bg-black text-white transition-all cursor-pointer"
@@ -448,9 +524,14 @@ export default function BillingPage() {
                         Скоро
                       </div>
                     )}
-                    {isCurrent && plan !== 'starter' && (
+                    {isDowngrade && (
+                      <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
+                        Ваш тариф выше
+                      </div>
+                    )}
+                    {isCurrent && (
                       <div className="text-[11px] text-neutral-500 text-center pt-1">
-                        Активный план
+                        {plan === 'starter' ? 'Текущий бесплатный план' : 'Уже активирован'}
                       </div>
                     )}
                   </div>

@@ -14,6 +14,7 @@ Payment flows:
 import ipaddress
 import logging
 import uuid
+from typing import Any
 from decimal import Decimal
 
 from app.config import settings
@@ -47,6 +48,15 @@ _YOOKASSA_IP_NETWORKS = [
 ]
 _YOOKASSA_INDIVIDUAL_IPS = {"77.75.156.11", "77.75.156.35"}
 
+_CARD_BRAND_LABELS = {
+    "mastercard": "Mastercard",
+    "visa": "Visa",
+    "mir": "Mir",
+    "unionpay": "UnionPay",
+    "jcb": "JCB",
+    "american_express": "Amex",
+}
+
 
 def _kopecks_to_rub(kopecks: int) -> str:
     """Convert kopecks integer to RUB decimal string (e.g. 99000 → '990.00')."""
@@ -72,6 +82,59 @@ def _get_configuration():
     Configuration.account_id = settings.yookassa_shop_id
     Configuration.secret_key = settings.yookassa_secret_key
     return Configuration
+
+
+def _read_nested_value(source: Any, *path: str) -> Any:
+    """Safely read a nested field from either dicts or SDK objects."""
+    current = source
+    for key in path:
+        if current is None:
+            return None
+        if isinstance(current, dict):
+            current = current.get(key)
+        else:
+            current = getattr(current, key, None)
+    return current
+
+
+def _format_payment_method_summary(payment_method_obj: Any) -> dict[str, str] | None:
+    """Normalize YooKassa payment method object into a UI-friendly summary."""
+    if payment_method_obj is None:
+        return None
+
+    payment_type = _read_nested_value(payment_method_obj, "type")
+    if not payment_type:
+        return None
+
+    payment_type = str(payment_type)
+
+    if payment_type == "bank_card":
+        last4 = _read_nested_value(payment_method_obj, "card", "last4") or _read_nested_value(payment_method_obj, "last4")
+        brand = _read_nested_value(payment_method_obj, "card", "card_type") or _read_nested_value(payment_method_obj, "card_type")
+        brand_label = _CARD_BRAND_LABELS.get(str(brand).lower(), "Карта") if brand else "Карта"
+        display_label = f"{brand_label} •••• {last4}" if last4 else brand_label
+        return {"type": payment_type, "display_label": display_label}
+
+    if payment_type in {"yoo_money", "yoomoney"}:
+        account_number = _read_nested_value(payment_method_obj, "account_number")
+        account_tail = str(account_number)[-4:] if account_number else ""
+        display_label = f"ЮMoney •••• {account_tail}" if account_tail else "ЮMoney кошелёк"
+        return {"type": payment_type, "display_label": display_label}
+
+    if payment_type == "sbp":
+        return {"type": payment_type, "display_label": "СБП"}
+
+    if payment_type in {"sberbank", "sber_bank"}:
+        return {"type": payment_type, "display_label": "SberPay"}
+
+    if payment_type in {"tinkoff_bank", "tbank"}:
+        return {"type": payment_type, "display_label": "T-Bank"}
+
+    title = _read_nested_value(payment_method_obj, "title") or _read_nested_value(payment_method_obj, "name")
+    return {
+        "type": payment_type,
+        "display_label": str(title or "Привязанный способ оплаты"),
+    }
 
 
 def _build_receipt(customer_email: str, description: str, amount_str: str) -> dict:
@@ -234,6 +297,20 @@ async def charge_recurring(
         "payment_id": payment.id,
         "status": payment.status,
     }
+
+
+async def get_saved_payment_method_summary(payment_id: str) -> dict[str, str] | None:
+    """Fetch the payment method details for a completed YooKassa payment."""
+    _get_configuration()
+
+    try:
+        from yookassa import Payment as YKPayment
+    except ImportError as exc:
+        raise RuntimeError("yookassa package not installed") from exc
+
+    payment = YKPayment.find_one(payment_id)
+    payment_method = getattr(payment, "payment_method", None)
+    return _format_payment_method_summary(payment_method)
 
 
 async def create_refund(payment_id: str, amount: Decimal) -> dict:
