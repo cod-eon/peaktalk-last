@@ -40,7 +40,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               height={52}
               style={{ display: 'block' }}
             />
-            <span className="font-inter font-extrabold text-[21.6px] tracking-tight text-neutral-900">
+            <span className="brand-wordmark text-[21.6px] text-neutral-900">
               PeakTalk
             </span>
           </Link>

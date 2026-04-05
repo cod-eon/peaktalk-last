@@ -48,9 +48,10 @@ function AdminNavbar() {
             <div className="w-7 h-7 flex items-center justify-center">
               <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
             </div>
-            <span className="font-inter font-extrabold text-[15px] tracking-[-0.02em] text-neutral-900">
-              PeakTalk <span className="text-neutral-900">Admin</span>
-            </span>
+            <div className="flex items-baseline gap-1.5 text-neutral-900">
+              <span className="brand-wordmark text-[15px]">PeakTalk</span>
+              <span className="font-inter font-semibold text-[15px] tracking-[-0.02em] text-neutral-900">Admin</span>
+            </div>
           </div>
 
           {/* Desktop Nav */}

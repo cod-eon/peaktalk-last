@@ -181,7 +181,7 @@ function Logo({ size = 24 }: { size?: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={52} height={52} style={{ width: 52, height: 52 }} />
-      <span className="font-inter font-extrabold tracking-[-0.02em] text-neutral-900" style={{ fontSize: size * 0.9 }}>
+      <span className="brand-wordmark text-neutral-900" style={{ fontSize: size * 0.9 }}>
         PeakTalk
       </span>
     </div>

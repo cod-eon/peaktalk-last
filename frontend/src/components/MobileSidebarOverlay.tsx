@@ -71,7 +71,7 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
                                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
                                     <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={32} height={32} />
                                 </div>
-                                <span className="text-neutral-900 font-inter font-extrabold text-[15px] tracking-tight">
+                                <span className="brand-wordmark text-neutral-900 text-[15px]">
                                     PeakTalk
                                 </span>
                             </Link>

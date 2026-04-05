@@ -26,9 +26,41 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PeakTalk — AI-тренер для публичных выступлений",
+  metadataBase: new URL("https://peaktalk.ru"),
+  title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
   description:
-    "Готовься к презентациям, питчам и защитам. AI найдет бреши в твоем сценарии и проведет стресс-тест каверзными вопросами.",
+    "Тренируйте защиту проектов, бюджетов, QBR и переговоров с жесткими стейкхолдерами. PeakTalk стресс-тестирует аргументацию перед реальной встречей.",
+  applicationName: "PeakTalk",
+  alternates: {
+    canonical: "/",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "96x96", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.png",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  openGraph: {
+    title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
+    description:
+      "Тренируйте защиту проектов, бюджетов, QBR и переговоров с жесткими стейкхолдерами. PeakTalk стресс-тестирует аргументацию перед реальной встречей.",
+    url: "https://peaktalk.ru",
+    siteName: "PeakTalk",
+    locale: "ru_RU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
+    description:
+      "Тренируйте защиту проектов, бюджетов, QBR и переговоров с жесткими стейкхолдерами.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

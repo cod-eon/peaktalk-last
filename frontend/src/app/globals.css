@@ -125,6 +125,13 @@
     line-height: 1.05;
   }
 
+  .brand-wordmark {
+    font-family: var(--font-syne), sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
   .font-mono {
     font-family: var(--font-mono), monospace;
   }

@@ -114,7 +114,7 @@ export default function OnboardingPage() {
                     <div className="text-center mb-6 sm:mb-8">
                         <a href="/" className="flex flex-col items-center gap-1 mb-4 sm:mb-5 hover:opacity-80 transition-opacity">
                             <Image src="/logo_svg.svg" alt="PeakTalk" width={32} height={32} className="block sm:w-9 sm:h-9" />
-                            <span className="font-inter font-extrabold text-[17px] sm:text-[18px] tracking-tight text-neutral-900">PeakTalk</span>
+                            <span className="brand-wordmark text-[17px] sm:text-[18px] text-neutral-900">PeakTalk</span>
                         </a>
                         <div className="font-mono text-[10px] sm:text-[11px] text-neutral-900 tracking-[0.15em] uppercase mb-2">
                             Onboarding

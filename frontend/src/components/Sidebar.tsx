@@ -66,7 +66,7 @@ export function Sidebar() {
                                 transition={{ duration: 0.15 }}
                                 className="overflow-hidden"
                             >
-                                <span className="whitespace-nowrap text-neutral-900 font-inter font-extrabold text-[15px] tracking-tight">
+                                <span className="brand-wordmark whitespace-nowrap text-neutral-900 text-[15px]">
                                     PeakTalk
                                 </span>
                             </motion.div>
