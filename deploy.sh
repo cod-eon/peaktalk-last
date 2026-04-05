@@ -38,16 +38,11 @@ docker compose build --no-cache frontend
 echo ""
 echo "[3/4] Starting services..."
 
-# Удаляем контейнеры приложения по compose-label — это находит в том числе
-# контейнеры с хеш-префиксом ({hash}_peaktalk-*), которые Docker Compose
-# оставляет после неудачных пересозданий и которые блокируют следующий деплой.
-# Postgres и Redis не трогаем — их данные в именованных volumes, контейнеры
-# перезапустятся автоматически через depends_on.
-# Удаляем ВСЕ контейнеры проекта по compose-label.
-# Данные хранятся в именованных volumes (postgres_data, redis_data) —
-# они переживают удаление контейнеров. docker compose up пересоздаст всё с нуля.
-docker ps -aq --filter "label=com.docker.compose.project=peaktalk" \
-  | xargs -r docker rm -f 2>/dev/null || true
+# Полностью останавливаем и удаляем compose-контейнеры проекта, но сохраняем
+# именованные volumes с данными Postgres/Redis. Это надежнее, чем ручной rm -f,
+# который иногда оставляет контейнеры в состоянии "marked for removal" и ломает
+# следующий docker compose up.
+docker compose down --remove-orphans
 
 docker compose up -d
 
