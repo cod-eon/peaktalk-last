@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const safariMotionStyle: React.CSSProperties = {
+  willChange: 'transform, opacity',
+  transform: 'translateZ(0)',
+  WebkitTransform: 'translateZ(0)',
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+};
+
 export default function HeroVisual() {
   const [step, setStep] = useState(0); // 0: typing, 1: generating AI, 2: completed
 
@@ -22,6 +30,7 @@ export default function HeroVisual() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        style={safariMotionStyle}
         className="relative z-10 w-full"
       >
         <div className="rounded-none overflow-hidden bg-white border border-black/5 shadow-[0px_1px_3px_rgba(0,0,0,0.05),_0px_10px_20px_rgba(0,0,0,0.04),_0px_20px_40px_rgba(0,0,0,0.04),_0px_30px_60px_rgba(0,0,0,0.06)] flex flex-col relative w-full">
@@ -64,9 +73,10 @@ export default function HeroVisual() {
                   </span>
                   {/* Highlight */}
                   <motion.span 
-                    className="absolute bottom-0 left-0 h-[2px] bg-[#E8600A]"
-                    initial={{ width: 0 }}
-                    animate={{ width: step >= 1 ? '100%' : '0%' }}
+                    className="absolute bottom-0 left-0 h-[2px] w-full origin-left bg-[#E8600A]"
+                    style={{ ...safariMotionStyle, transformOrigin: 'left center' }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: step >= 1 ? 1 : 0 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
                   />
                 </span>
@@ -85,11 +95,11 @@ export default function HeroVisual() {
             <AnimatePresence>
               {step >= 1 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute bottom-4 sm:bottom-6 right-4 left-4 sm:left-auto sm:w-[350px] rounded-none border border-neutral-200 bg-white/98 shadow-[0px_24px_60px_rgba(0,0,0,0.14)] p-5 backdrop-blur-sm"
-                  style={{ zIndex: 30 }}
+                  style={{ ...safariMotionStyle, zIndex: 30 }}
                 >
                   <div className="flex items-center justify-between mb-3 border-b border-[rgba(0,0,0,0.06)] pb-2">
                     <span className="font-mono text-[10px] text-[#E8600A] uppercase tracking-widest font-bold break-words whitespace-normal">

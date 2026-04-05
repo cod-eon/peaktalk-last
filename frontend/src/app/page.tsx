@@ -6,6 +6,14 @@ import Image from 'next/image';
 import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Mic, Download, Share2 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
+const safariMotionStyle: React.CSSProperties = {
+  willChange: 'transform, opacity',
+  transform: 'translateZ(0)',
+  WebkitTransform: 'translateZ(0)',
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+};
+
 const smoothScroll = (id: string) => {
   const element = document.querySelector(id);
   if (element) {
@@ -276,11 +284,12 @@ function Hero() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
+                style={safariMotionStyle}
                 className="grid grid-cols-3 w-full max-w-[520px] mb-6 overflow-hidden rounded-none border border-neutral-200 bg-white/85 shadow-[0_18px_40px_rgba(0,0,0,0.04)]"
               >
                 {[
                   { value: '15', label: 'персон' },
-                  { value: '90с', label: 'на старт' },
+                  { value: '90с', label: 'на ответ' },
                   { value: '3', label: 'бесплатно' },
                 ].map((m, i) => (
                   <div key={i} className={`flex flex-col gap-1 px-4 py-3 sm:px-5 sm:py-4 ${i !== 2 ? 'border-r border-neutral-200' : ''}`}>
@@ -326,6 +335,7 @@ function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5, delay: 0.2 }}
+              style={safariMotionStyle}
               className="w-full px-4 lg:px-0 relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-4 sm:mt-8 lg:mt-0 lg:-translate-y-3"
             >
               <div className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_65%_35%,rgba(232,96,10,0.08),transparent_42%),radial-gradient(circle_at_38%_72%,rgba(0,0,0,0.05),transparent_40%)]" />
@@ -421,10 +431,10 @@ function MockupSession() {
       {/* Progress bar */}
       <div className="h-1 bg-gray-100">
         <motion.div
-          className="h-full rounded-none"
-          style={{ background: '#E8600A' }}
-          initial={{ width: 0 }}
-          whileInView={{ width: '30%' }}
+          className="h-full rounded-none origin-left"
+          style={{ background: '#E8600A', ...safariMotionStyle, transformOrigin: 'left center' }}
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 0.3 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
         />
@@ -621,6 +631,7 @@ function ActionFlow() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={safariMotionStyle}
                 className="relative w-full shadow-2xl rounded-none"
               >
                 {s.mockup}
@@ -937,9 +948,10 @@ function ComparisonBlock() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <motion.div
             initial={{ y: 20, opacity: 0, scale: 0.97 }}
-            whileInView={{ y: 0, opacity: 1, scale: 1.03 }}
+            whileInView={{ y: 0, opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0 }}
+            style={safariMotionStyle}
             className="order-first md:order-none flex flex-col bg-[#0A0A0A] rounded-none p-8 lg:p-10 relative"
           >
             <div className="flex items-center gap-3 mb-8">
