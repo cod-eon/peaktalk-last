@@ -403,7 +403,7 @@ function Hero() {
               >
                 <span className="block">Найдите дыры</span>
                 <span className="block">в аргументации</span>
-                <span className="block">до <span className="text-blue-500 relative">
+                <span className="block">до <span className="text-[#E8600A] relative">
                   реального давления
                 </span>.</span>
               </motion.h1>
