@@ -2,29 +2,59 @@
 
 ## Project
 
-**PeakTalk** — Prosumer/B2B SaaS AI-симулятор трудных корпоративных переговоров, защиты проектов и стресс-тестирования аргументации (защита бюджетов, QBR, сложные управленческие коммуникации, инвест-питчи).
+**PeakTalk** — B2B SaaS AI-симулятор сложных рабочих коммуникаций: защита проектов, QBR, бюджетные защиты, инвест-питчи, клиентские эскалации и другие high-stakes разговоры.
 
-**Core flow:** Пользователь загружает документ (отчет, стратегию, драфт письма) → Ленивый парсинг (Lazy Parsing) перед симуляцией → Настройка параметров (выбор частотного рабочего сценария: токсичный руководитель, защита бюджета, жесткий фидбек, скептичный инвестор) → AI-симуляция Q&A сессии с использованием внутреннего монолога (Internal Reasoning) для поиска логических уязвимостей → Хранение всей истории и мыслей тренера в PostgreSQL для строгой аналитики прогресса. Никакой инфантильной геймификации.
+Это не consumer-продукт для “публичных выступлений вообще” и не студенческий тренажер.  
+Продуктовая суть — **stress-test аргументации до реальной встречи**, а не мотивационный speech coaching.
 
-**Target:** Менеджеры среднего и высшего звена, тимлиды и фаундеры. Люди с реальным бюджетом, которым еженедельно нужно защищать свои решения, доказывать метрики или проводить стрессовые разговоры с руководством и стейкхолдерами.
+## Current Product Shape
+
+**Core flow:**  
+Document or text input → draft analysis via Gemini → simulation with persona and difficulty → stored session history → skill evaluation → grouping into project context.
+
+### What exists in code
+
+- documents upload / text documents
+- drafts + AI analysis
+- simulations with persona config and internal reasoning
+- skill metrics and session reporting
+- projects linking documents and simulations
+- subscription plans and billing hooks
+
+## Target
+
+- managers and team leads
+- heads of function
+- founders
+- customer-facing teams
+- anyone inside a company who regularly has to defend a position under pressure
 
 ## Tech Stack
 
 | Layer | Technologies |
 |---|---|
-| Frontend | Next.js 15 (App Router) · TypeScript · Tailwind CSS · Framer Motion · TanStack Query · Zustand · next-pwa |
-| Backend | Python 3.12 · FastAPI · Celery · Redis |
-| DB / Storage | PostgreSQL · SQLAlchemy 2.0 · Supabase Storage |
-| AI | Gemini API (gemini-1.5-flash, анализ контента, внутренний монолог тренера, текстовые симуляции) |
-| Infra | DDoS-Guard → Yandex CDN → Nginx → FastAPI · 152-ФЗ |
+| Frontend | Next.js 16 · React 19 · TypeScript · Tailwind CSS · Framer Motion · TanStack Query · Zustand |
+| Backend | Python 3.12 · FastAPI · SQLAlchemy |
+| DB / Storage | PostgreSQL · Supabase Storage |
+| AI | Gemini API |
+| Infra | Docker Compose · Nginx · rate limiting · request logging |
 
 ## Architecture
 
 ```text
-[Next.js 15 PWA]
+[Next.js App]
       ↕ HTTP/REST
-[FastAPI — API, auth, CRUD]
-      ↕ Redis (task queue)
-[Celery AI-worker]  ←→  Gemini API
+[FastAPI API]
       ↕
-[PostgreSQL]  [Supabase Storage]
+[PostgreSQL]   [Supabase Storage]
+      ↕
+[Gemini API]
+```
+
+## Product Rules
+
+- Keep the narrative B2B and scenario-driven.
+- Do not drift into student/B2C positioning.
+- Emphasize pressure testing, decision defense, and difficult conversations.
+- Avoid infantilizing the product with gamification language.
+- If docs conflict, prefer the current codebase shape over older concept texts.
