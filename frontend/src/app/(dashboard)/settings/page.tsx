@@ -20,18 +20,18 @@ type OnboardingProfile = {
 };
 
 const SEGMENT_LABELS: Record<string, string> = {
-  student: 'Студент',
-  junior: 'Специалист',
-  founder: 'Фаундер',
-  manager: 'Руководитель',
+  manager: 'Тимлид / Менеджер',
+  head: 'Руководитель функции',
+  founder: 'Фаундер / CEO',
+  customer_facing: 'Клиентская команда',
   other: 'Другое',
 };
 
 const GOAL_LABELS: Record<string, string> = {
-  interview: 'Собеседование',
-  pitch: 'Спич',
-  conference: 'Конференция',
-  defense: 'Защита',
+  budget_defense: 'Защита бюджета / roadmap',
+  pitch: 'Инвест-спич / продажа',
+  qbr: 'QBR / клиентский review',
+  stakeholder: 'Сложный разговор со стейкхолдером',
   other: 'Другое',
 };
 
