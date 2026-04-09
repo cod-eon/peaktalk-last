@@ -789,6 +789,34 @@ function ActionFlow() {
 
 // ─── IMPACT EVIDENCE ─────────────────────────────────────────────────────────
 function ImpactEvidence() {
+  const glyphs = [
+    // Прицел — точность по конкретному файлу
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="6" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <circle cx="12" cy="12" r="1.5" fill="rgba(255,255,255,0.22)"/>
+      <line x1="12" y1="2" x2="12" y2="6" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="12" y1="18" x2="12" y2="22" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="2" y1="12" x2="6" y2="12" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="18" y1="12" x2="22" y2="12" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>,
+    // Сетка узлов — конкретная роль, не абстрактный интервьюер
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="2.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <circle cx="4" cy="6" r="1.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <circle cx="20" cy="6" r="1.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <circle cx="4" cy="18" r="1.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <circle cx="20" cy="18" r="1.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5"/>
+      <line x1="9.8" y1="10.8" x2="5.5" y2="7.4" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="14.2" y1="10.8" x2="18.5" y2="7.4" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="9.8" y1="13.2" x2="5.5" y2="16.6" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="14.2" y1="13.2" x2="18.5" y2="16.6" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>,
+    // Щит с галочкой — конкретный разбор, измеримый результат
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L4 6v5c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6L12 2z" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinejoin="round"/>
+      <polyline points="9,12 11,14 15,10" stroke="rgba(232,96,10,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>,
+  ];
   return (
     <section id="value" className="relative overflow-hidden" style={{ padding: 'clamp(80px, 10vw, 140px) 0', backgroundColor: '#0A0A0A' }}>
       {/* Subtle noise texture */}
@@ -847,7 +875,8 @@ function ImpactEvidence() {
               visible={{ opacity: 1, y: 0, scale: 1 }}
               className="group relative bg-[#0A0A0A] flex flex-col p-8 lg:p-12 transition-all hover:bg-neutral-900 overflow-hidden"
             >
-              <div className="font-mono text-xs opacity-75 text-[#E8600A] tracking-widest uppercase mb-8">{item.tag}</div>
+              <div className="font-mono text-xs opacity-75 text-[#E8600A] tracking-widest uppercase mb-6">{item.tag}</div>
+              <div className="mb-6">{glyphs[i]}</div>
               <h3 className="font-inter font-bold text-2xl text-white mb-4 leading-tight">{item.title}</h3>
               <p className="font-inter text-sm text-neutral-400 leading-relaxed">{item.detail}</p>
               
