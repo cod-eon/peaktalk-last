@@ -148,6 +148,31 @@ async def list_documents(
             draft_id=draft_map.get(doc.id),
         )
         items.append(dr)
+
+    # Standalone drafts (no document_id) — show as virtual documents
+    standalone_result = await db.execute(
+        select(SpeechDraft)
+        .where(
+            SpeechDraft.user_id == current_user.id,
+            SpeechDraft.document_id.is_(None),
+        )
+        .order_by(SpeechDraft.created_at.desc())
+    )
+    standalone_drafts = list(standalone_result.scalars().all())
+    for sd in standalone_drafts:
+        items.append(DocumentResponse(
+            id=sd.id,
+            name=sd.title,
+            file_type=FileType.other,
+            storage_path=None,
+            source="draft",
+            extracted_text=None,
+            parsed_at=None,
+            created_at=sd.created_at,
+            draft_id=sd.id,
+        ))
+    total += len(standalone_drafts)
+
     return DocumentListResponse(items=items, total=total, limit=limit, offset=offset)
 
 

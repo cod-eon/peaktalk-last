@@ -392,7 +392,7 @@ function Hero() {
                 transition={{ duration: 0.5, delay: 0 }}
                 className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 rounded-none px-4 py-1.5 mb-5 bg-white/80 shadow-[0_8px_24px_rgba(0,0,0,0.03)]"
               >
-                AI-тренер для переговоров
+                AI-симулятор рабочих коммуникаций
               </motion.div>
 
               <motion.h1
@@ -750,7 +750,7 @@ function ActionFlow() {
         }}>
           Как это работает.
         </h2>
-        <p className="mt-4 text-neutral-400 font-mono text-xs tracking-widest uppercase mb-16">Три шага до уверенного выступления.</p>
+        <p className="mt-4 text-neutral-400 font-mono text-xs tracking-widest uppercase mb-16">Три шага до уверенной защиты.</p>
 
         <div className="flex flex-col">
           {steps.map((s, i) => (
@@ -940,137 +940,6 @@ function Footer() {
   );
 }
 
-// ─── PROBLEM AGITATION ────────────────────────────────────────────────────────
-function ProblemAgitation() {
-  const problems = [
-    {
-      method: "Живой коуч",
-      problem: "Дорого. Недоступен в 6 утра. Его вопросы — не ваши вопросы по вашему материалу."
-    },
-    {
-      method: "Онлайн-курс",
-      problem: "Теория без практики под давлением. Срок результата — месяцы. Дедлайн — ближайший четверг."
-    },
-    {
-      method: "Универсальный AI-чат",
-      problem: "Не знает ваш контент. Не симулирует реального собеседника. Не даёт структурированного разбора."
-    }
-  ];
-
-  return (
-    <section style={{ backgroundColor: '#fff', padding: 'clamp(80px,10vw,120px) 0', borderTop: '1px solid #e5e7eb' }}>
-      <div className="container-custom">
-        <div className="font-mono text-[10px] text-[#E8600A] tracking-widest uppercase mb-4">[ PEAKTALK // ПРОБЛЕМАТИКА ]</div>
-        <h2 className="font-inter font-bold text-3xl md:text-4xl lg:text-5xl text-neutral-900 tracking-tight leading-tight mb-12">
-          Почему стандартные решения не работают в нужный момент.
-        </h2>
-        
-        <div className="grid grid-cols-1 gap-0">
-          {problems.map((p, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, x: -20 }}
-              visible={{ opacity: 1, x: 0 }}
-              delay={i * 0.1}
-              duration={0.5}
-              margin="-40px 0px"
-              className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 hover:bg-neutral-50 transition-colors items-start"
-              style={{ ...safariMotionStyle, borderTop: '1px solid #e5e7eb', padding: '28px 0' }}
-            >
-              <div className="md:col-span-4 flex gap-3 items-start">
-                <span className="font-mono text-red-500 text-sm flex-shrink-0 mt-0.5">×</span>
-                <h3 className="font-inter font-bold text-xl md:text-2xl text-neutral-900 m-0 leading-tight">{p.method}</h3>
-              </div>
-              <div className="md:col-span-8">
-                <p className="font-inter text-base text-neutral-500 leading-relaxed m-0 max-w-2xl">
-                  {p.problem}
-                </p>
-              </div>
-            </RevealDiv>
-          ))}
-        </div>
-
-        <RevealP
-          hidden={{ opacity: 0, y: 14 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          delay={0.4}
-          className="font-inter font-extrabold text-left"
-          style={{ ...safariMotionStyle, fontSize: 'clamp(18px,2.5vw,28px)', color: '#171717', marginTop: '48px' }}>
-          PeakTalk решает все три.
-        </RevealP>
-      </div>
-    </section>
-  );
-}
-
-// ─── SOCIAL PROOF STRIP ───────────────────────────────────────────────────────
-function SocialProofStrip() {
-  const stats = [
-    { number: 15, label: "персон-собеседников", sub: "От тимлида до венчурного инвестора" },
-    { number: 90, label: "секунд", sub: "На каждый ответ — реальный стресс-тест" },
-    { number: 3, label: "сессии бесплатно", sub: "Без карты. Без ожиданий.", accent: true }
-  ];
-
-  return (
-    <section className="relative" style={{ backgroundColor: '#0A0A0A', padding: 'clamp(60px,8vw,100px) 0', overflow: 'hidden' }}>
-      <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.03, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }} />
-      <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(232,96,10,0.06) 0%, transparent 60%)' }} />
-
-      <div className="container-custom relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3">
-          {stats.map((s, i) => (
-            <div key={i} className="text-center border-b md:border-b-0 last:border-b-0 md:border-r last:md:border-r-0 border-[rgba(255,255,255,0.08)] py-10 md:py-0 px-10">
-              <Counter target={s.number} accent={s.accent} />
-              <div className="font-mono" style={{ fontSize: 12, opacity: 0.75, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '8px' }}>
-                {s.label}
-              </div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
-                {s.sub}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Counter({ target, accent }: { target: number, accent?: boolean }) {
-  const [count, setCount] = useState(0);
-  const nodeRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        const duration = 1200;
-        const startTime = performance.now();
-        const update = (currentTime: number) => {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          const easeOut = 1 - Math.pow(1 - progress, 3);
-          setCount(Math.floor(easeOut * target));
-          if (progress < 1) {
-            requestAnimationFrame(update);
-          } else {
-            setCount(target);
-          }
-        };
-        requestAnimationFrame(update);
-        observer.disconnect();
-      }
-    }, { threshold: 0.5 });
-    if (nodeRef.current) observer.observe(nodeRef.current);
-    return () => observer.disconnect();
-  }, [target]);
-
-  return (
-    <div ref={nodeRef} className="font-inter font-extrabold" style={{ fontSize: 'clamp(48px,6vw,80px)', color: accent ? '#E8600A' : '#FFF', lineHeight: 1, letterSpacing: '-0.04em' }}>
-      {count}
-    </div>
-  );
-}
-
 // ─── COMPARISON BLOCK ─────────────────────────────────────────────────────────
 function ComparisonBlock() {
   const alternatives = [
@@ -1209,7 +1078,7 @@ function PricingBlock() {
     <section id="pricing" style={{ backgroundColor: '#0A0A0A', padding: 'clamp(80px,10vw,120px) 0' }}>
       <div className="container-custom">
         <h2 className="font-inter font-extrabold" style={{ fontSize: 'clamp(32px,4vw,52px)', color: '#FFF', letterSpacing: '-0.03em', textAlign: 'center', margin: 0 }}>
-          Начни без обязательств.
+          Начните без обязательств.
         </h2>
         <div className="font-mono" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', marginTop: '12px', marginBottom: '56px' }}>
           3 полных сессии — бесплатно. Карта не нужна.
@@ -1249,7 +1118,7 @@ function PricingBlock() {
             className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
           >
             <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Профессиональный доступ</div>
-            <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">от ₽990 <span className="text-2xl font-medium text-white/50">/ мес</span></div>
+            <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">от 990 ₽ <span className="text-2xl font-medium text-white/50">/ мес</span></div>
             <div className="font-inter text-sm text-white/50 mt-2">Отмени в любой момент.</div>
             
             <div className="h-px bg-white/10 my-8" />
@@ -1282,9 +1151,7 @@ export default function Page() {
     <main className="relative min-h-screen selection:bg-[#E8600A] selection:text-white">
       <Nav />
       <Hero />
-      <SocialProofStrip />
       <ActionFlow />
-      <ProblemAgitation />
       <ImpactEvidence />
       <ComparisonBlock />
       <Testimonials />

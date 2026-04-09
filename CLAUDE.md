@@ -10,7 +10,7 @@
 ## Current Product Shape
 
 **Core flow:**  
-Document or text input → draft analysis via Gemini → simulation with persona and difficulty → stored session history → skill evaluation → grouping into project context.
+Document or text input → draft analysis via Gemini → simulation with persona and difficulty → stored session history → skill evaluation.
 
 ### What exists in code
 
@@ -18,7 +18,6 @@ Document or text input → draft analysis via Gemini → simulation with persona
 - drafts + AI analysis
 - simulations with persona config and internal reasoning
 - skill metrics and session reporting
-- projects linking documents and simulations
 - subscription plans and billing hooks
 
 ## Target

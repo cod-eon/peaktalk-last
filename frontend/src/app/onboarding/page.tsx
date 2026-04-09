@@ -4,26 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { GraduationCap, Briefcase, Rocket, Users, ChevronRight, Mic, FileText, MonitorPlay, Globe, CheckCircle2, Loader2 } from 'lucide-react';
+import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
-type Segment = 'student' | 'junior' | 'founder' | 'manager' | 'other';
-type Goal = 'interview' | 'pitch' | 'conference' | 'defense' | 'other';
+type Segment = 'manager' | 'head' | 'founder' | 'customer_facing' | 'other';
+type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
 
 const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
-    { id: 'student', label: 'Студент', desc: 'Защита диплома, учебные конференции, стажировки', icon: <GraduationCap size={22} /> },
-    { id: 'junior', label: 'Молодой специалист', desc: 'Собеседования, онбординг, технические презентации', icon: <FileText size={22} /> },
-    { id: 'founder', label: 'Фаундер / Стартап', desc: 'Питчи инвесторам, ускорители, демо-дни', icon: <Rocket size={22} /> },
-    { id: 'manager', label: 'Руководитель', desc: 'Доклады, переговоры, мотивационные выступления', icon: <Users size={22} /> },
-    { id: 'other', label: 'Другое', desc: 'Любой другой тип коммуникации', icon: <Globe size={22} /> },
+    { id: 'manager', label: 'Тимлид / Менеджер', desc: 'Защита решений, приоритизация, апдейты руководству', icon: <Users size={22} /> },
+    { id: 'head', label: 'Руководитель функции', desc: 'Бюджетные защиты, согласование инициатив, board review', icon: <Briefcase size={22} /> },
+    { id: 'founder', label: 'Фаундер / CEO', desc: 'Инвест-питчи, партнёрские переговоры, стратегические продажи', icon: <Rocket size={22} /> },
+    { id: 'customer_facing', label: 'Клиентская команда', desc: 'QBR, эскалации, переговоры по продлению контракта', icon: <MessageSquare size={22} /> },
+    { id: 'other', label: 'Другое', desc: 'Любой другой тип рабочей коммуникации', icon: <Globe size={22} /> },
 ];
 
 const GOALS: { id: Goal; label: string; icon: React.ReactNode }[] = [
-    { id: 'interview', label: 'Собеседование', icon: <Briefcase size={20} /> },
-    { id: 'pitch', label: 'Питч инвестору', icon: <Rocket size={20} /> },
-    { id: 'conference', label: 'Конференция / Доклад', icon: <Mic size={20} /> },
-    { id: 'defense', label: 'Защита проекта', icon: <MonitorPlay size={20} /> },
+    { id: 'budget_defense', label: 'Защита бюджета / roadmap', icon: <FileText size={20} /> },
+    { id: 'pitch', label: 'Инвест-питч / продажа', icon: <Rocket size={20} /> },
+    { id: 'qbr', label: 'QBR / клиентский review', icon: <BarChart2 size={20} /> },
+    { id: 'stakeholder', label: 'Сложный разговор со стейкхолдером', icon: <Users size={20} /> },
     { id: 'other', label: 'Другое', icon: <Globe size={20} /> },
 ];
 
@@ -86,27 +86,6 @@ export default function OnboardingPage() {
                 style={{ backgroundImage: 'linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px)', backgroundSize: '40px 40px' }}
             />
 
-            {step === 3 && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0">
-                    {[...Array(20)].map((_, i) => (
-                        <motion.div
-                            key={`confetti-${i}`}
-                            initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-                            animate={{ 
-                                opacity: 0, 
-                                scale: [0, 1.5, 1],
-                                x: (Math.random() - 0.5) * 500, 
-                                y: (Math.random() - 0.5) * 500 - 150
-                            }}
-                            transition={{ duration: 2, ease: "easeOut", delay: Math.random() * 0.3 }}
-                            className="w-3 h-3 rounded-none absolute"
-                            style={{ 
-                                backgroundColor: i % 3 === 0 ? '#10B981' : i % 2 === 0 ? '#404040' : '#a3a3a3' 
-                            }}
-                        />
-                    ))}
-                </div>
-            )}
 
             <div className="w-full max-w-4xl relative z-10">
                 {/* Logo / Brand */}
@@ -120,12 +99,12 @@ export default function OnboardingPage() {
                             Onboarding
                         </div>
                         <h1 className="font-inter text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">
-                            {step === 1 ? 'Расскажите о себе' : 'К чему готовитесь?'}
+                            {step === 1 ? 'Ваша роль' : 'Какой тип встречи впереди?'}
                         </h1>
                         <p className="text-neutral-400 font-inter text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                             {step === 1
-                                ? 'Это поможет AI-тренеру подобрать правильный стиль и уровень сложности.'
-                                : 'Укажите главную цель — тренер сфокусируется именно на ней.'}
+                                ? 'Это поможет симулятору подобрать релевантные персоны и стиль давления.'
+                                : 'Выберите ближайший сценарий — симулятор настроит вопросы под него.'}
                         </p>
                     </div>
                 )}
@@ -274,10 +253,10 @@ export default function OnboardingPage() {
                                 <CheckCircle2 size={40} className="hidden sm:block" />
                             </div>
                             <h2 className="font-inter text-xl sm:text-3xl font-bold text-neutral-900 mb-2 sm:mb-3 leading-tight">
-                                Профиль успешно настроен!
+                                Профиль настроен
                             </h2>
                             <p className="text-neutral-400 mb-7 sm:mb-10 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-                                Ваш персональный ИИ-тренер готов к работе. Выберите, с чего хотите начать первую тренировку.
+                                Симулятор готов к работе. Выберите, с чего начать.
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -289,12 +268,12 @@ export default function OnboardingPage() {
                                         <FileText size={24} />
                                     </div>
                                     <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить текст</h3>
-                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Тренер проанализирует логику, структуру и тайминг вашего доклада.</p>
+                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Симулятор проанализирует логику, структуру и аргументацию вашего документа.</p>
                                 </button>
                                 
                                 <button
                                     onClick={() => router.push('/simulation')}
-                                    className="p-4 sm:p-5 rounded-none border border-neutral-200 bg-white hover:border-emerald-500 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[136px] sm:min-h-[152px]"
+                                    className="p-4 sm:p-5 rounded-none border border-neutral-200 bg-white hover:border-neutral-900 hover:bg-neutral-50 transition-all text-left flex flex-col group min-h-[136px] sm:min-h-[152px]"
                                 >
                                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 sm:mb-5 group-hover:-translate-y-1 transition-transform">
                                         <Mic size={24} />

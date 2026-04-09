@@ -22,15 +22,13 @@
 - **Documents** — исходный материал: стратегия, апдейт, pitch deck text, письмо, memo.
 - **Drafts** — рабочие версии текста с AI-анализом.
 - **Simulations** — тренировочные Q&A-сессии с persona-based pressure.
-- **Projects** — контейнер подготовки под конкретное событие.
 - **Billing** — ограничения и платные уровни доступа.
 
 ### Core flow
 
-1. Пользователь создаёт проект под событие или задачу.
-2. Загружает документ или вставляет текст.
-3. При необходимости делает draft и запускает AI-анализ.
-4. Запускает симуляцию с нужной персоной и уровнем давления.
+1. Загружает документ или вставляет текст.
+2. При необходимости делает draft и запускает AI-анализ.
+3. Запускает симуляцию с нужной персоной и уровнем давления.
 5. Получает историю, skill metrics и понимание слабых мест.
 
 ## 4. UX Direction
@@ -103,7 +101,7 @@
 - **Backend:** FastAPI, SQLAlchemy, PostgreSQL
 - **AI:** Gemini for draft analysis, question generation, skill evaluation
 - **Storage:** Supabase Storage for uploaded files
-- **Business layer:** projects, usage limits, subscription plans, YooKassa
+- **Business layer:** usage limits, subscription plans, YooKassa
 
 ## 7. Product Risks
 

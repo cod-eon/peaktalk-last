@@ -21,7 +21,7 @@ type Doc = {
 
 type DocListResponse = { items: Doc[]; total: number };
 
-const FILTERS = ['Все', 'Файлы', 'Тексты'] as const;
+const FILTERS = ['Все', 'Файлы', 'Тексты', 'Черновики'] as const;
 type Filter = (typeof FILTERS)[number];
 
 function getExtBadgeClass(doc: Doc): string {
@@ -77,6 +77,7 @@ export default function DocumentsPage() {
             const matchFilter =
                 activeFilter === 'Все' ? true :
                 activeFilter === 'Файлы' ? doc.source === 'upload' :
+                activeFilter === 'Черновики' ? doc.source === 'draft' :
                 doc.source === 'text';
             return matchSearch && matchFilter;
         });
@@ -208,8 +209,15 @@ export default function DocumentsPage() {
                                             <DocIcon doc={doc} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-neutral-900 truncate" title={doc.name}>
-                                                {doc.name}
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div className="text-sm font-medium text-neutral-900 truncate" title={doc.name}>
+                                                    {doc.name}
+                                                </div>
+                                                {doc.draft_id && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none shrink-0">
+                                                        Разобран
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-none ${getExtBadgeClass(doc)}`}>
@@ -243,9 +251,16 @@ export default function DocumentsPage() {
                                         {/* Name */}
                                         <div className="flex items-center gap-3 min-w-0">
                                             <DocIcon doc={doc} />
-                                            <span className="text-sm font-medium text-neutral-900 truncate" title={doc.name}>
-                                                {doc.name}
-                                            </span>
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="text-sm font-medium text-neutral-900 truncate" title={doc.name}>
+                                                    {doc.name}
+                                                </span>
+                                                {doc.draft_id && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none shrink-0">
+                                                        Разобран
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Format badge */}

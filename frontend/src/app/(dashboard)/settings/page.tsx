@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Wallet, Loader2, LogOut, Check, Lock, Clock } from 'lucide-react';
+import { User, Bell, Shield, Loader2, LogOut, Check, Lock, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
@@ -12,7 +12,6 @@ const TABS = [
   { id: 'profile', label: 'ПРОФИЛЬ', icon: User },
   { id: 'security', label: 'БЕЗОПАСНОСТЬ', icon: Shield },
   { id: 'notifications', label: 'УВЕДОМЛЕНИЯ', icon: Bell },
-  { id: 'billing', label: 'БИЛЛИНГ', icon: Wallet },
 ];
 
 type OnboardingProfile = {
@@ -78,9 +77,9 @@ export default function SettingsPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ data: { display_name: trimmed } });
       if (error) throw error;
-      toast.success('Профиль синхронизирован');
+      toast.success('Профиль сохранён');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Критическая ошибка сохранения');
+      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить профиль');
     } finally {
       setIsSavingProfile(false);
     }
@@ -92,26 +91,26 @@ export default function SettingsPage() {
       const supabase = createClient();
       await supabase.auth.signOut();
       router.push('/');
-      toast.success('Сессия завершена');
+      toast.success('Вы вышли из аккаунта');
     } catch (err) {
-      toast.error('Сбой при отключении');
+      toast.error('Не удалось выйти. Попробуйте ещё раз.');
     } finally {
       setIsLoggingOut(false);
     }
   };
 
   const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) { toast.error('Токены не совпадают'); return; }
-    if (newPassword.length < 8) { toast.error('Длина токена < 8'); return; }
+    if (newPassword !== confirmPassword) { toast.error('Пароли не совпадают'); return; }
+    if (newPassword.length < 8) { toast.error('Пароль должен содержать минимум 8 символов'); return; }
     setIsSavingPassword(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success('Конфигурация доступа обновлена');
+      toast.success('Пароль успешно изменён');
       setNewPassword(''); setConfirmPassword('');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Сбой обновления доступа');
+      toast.error(err instanceof Error ? err.message : 'Не удалось сменить пароль');
     } finally {
       setIsSavingPassword(false);
     }
@@ -175,7 +174,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="font-inter text-xl font-bold text-neutral-900 tracking-tight">
-                    {user?.user_metadata?.display_name || 'UNDEFINED'}
+                    {user?.user_metadata?.display_name || 'Пользователь'}
                   </p>
                   <p className="font-inter text-[13px] text-neutral-500 mt-1 font-medium">{user?.email}</p>
                   {onboardingProfile && (
@@ -223,7 +222,7 @@ export default function SettingsPage() {
                     />
                     <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 pointer-events-none" />
                   </div>
-                  <p className="text-[12px] text-neutral-400 mt-2 font-medium">Системный идентификатор (только чтение).</p>
+                  <p className="text-[12px] text-neutral-400 mt-2 font-medium">Email нельзя изменить.</p>
                 </div>
 
                 <div className="pt-4 flex justify-end">
@@ -243,8 +242,8 @@ export default function SettingsPage() {
           {activeTab === 'security' && (
             <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
               <div>
-                <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Доступ к системе</h2>
-                <p className="text-xs text-neutral-400">Установка нового ключа аутентификации</p>
+                <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Смена пароля</h2>
+                <p className="text-xs text-neutral-400">Установите новый пароль для вашего аккаунта.</p>
               </div>
 
               <div className="space-y-5">
@@ -289,10 +288,6 @@ export default function SettingsPage() {
 
           {activeTab === 'notifications' && (
             <ComingSoonTab label="СИГНАЛЫ" icon={Bell} />
-          )}
-
-          {activeTab === 'billing' && (
-            <ComingSoonTab label="БИЛЛИНГ" icon={Wallet} />
           )}
 
         </div>

@@ -260,7 +260,7 @@ export default function BillingPage() {
             </span>
           </div>
           <p className="text-xs text-neutral-500 mb-3">
-            Платёжная система отключена. Переключай план вручную чтобы тестировать лимиты и интерфейс.
+            Платёжная система отключена. Переключайте план вручную, чтобы тестировать лимиты и интерфейс.
           </p>
           <div className="flex flex-wrap gap-2">
             {(['starter', 'pro', 'team'] as const).map((p) => (
