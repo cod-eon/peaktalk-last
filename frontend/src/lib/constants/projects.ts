@@ -13,7 +13,7 @@ import { EventType } from '../types/projects';
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   interview: 'Собеседование',
-  pitch: 'Питч',
+  pitch: 'Спич',
   talk: 'Доклад',
   presentation: 'Презентация',
   other: 'Другое'

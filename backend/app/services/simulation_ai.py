@@ -143,7 +143,7 @@ _SEGMENT_LABELS: dict[str, str] = {
 }
 _GOAL_LABELS: dict[str, str] = {
     "budget_defense": "Защита бюджета / roadmap",
-    "pitch": "Инвест-питч / продажа",
+    "pitch": "Инвест-спич / продажа",
     "qbr": "QBR / клиентский review",
     "stakeholder": "Сложный разговор со стейкхолдером",
     "other": "Другое",

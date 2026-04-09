@@ -14,14 +14,14 @@ type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
 const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
     { id: 'manager', label: 'Тимлид / Менеджер', desc: 'Защита решений, приоритизация, апдейты руководству', icon: <Users size={22} /> },
     { id: 'head', label: 'Руководитель функции', desc: 'Бюджетные защиты, согласование инициатив, board review', icon: <Briefcase size={22} /> },
-    { id: 'founder', label: 'Фаундер / CEO', desc: 'Инвест-питчи, партнёрские переговоры, стратегические продажи', icon: <Rocket size={22} /> },
+    { id: 'founder', label: 'Фаундер / CEO', desc: 'Инвест-спичи, партнёрские переговоры, стратегические продажи', icon: <Rocket size={22} /> },
     { id: 'customer_facing', label: 'Клиентская команда', desc: 'QBR, эскалации, переговоры по продлению контракта', icon: <MessageSquare size={22} /> },
     { id: 'other', label: 'Другое', desc: 'Любой другой тип рабочей коммуникации', icon: <Globe size={22} /> },
 ];
 
 const GOALS: { id: Goal; label: string; icon: React.ReactNode }[] = [
     { id: 'budget_defense', label: 'Защита бюджета / roadmap', icon: <FileText size={20} /> },
-    { id: 'pitch', label: 'Инвест-питч / продажа', icon: <Rocket size={20} /> },
+    { id: 'pitch', label: 'Инвест-спич / продажа', icon: <Rocket size={20} /> },
     { id: 'qbr', label: 'QBR / клиентский review', icon: <BarChart2 size={20} /> },
     { id: 'stakeholder', label: 'Сложный разговор со стейкхолдером', icon: <Users size={20} /> },
     { id: 'other', label: 'Другое', icon: <Globe size={20} /> },

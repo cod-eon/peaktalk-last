@@ -539,7 +539,7 @@ function SimulationPageContent() {
                         .sort((a, b) => a.avg - b.avg)[0] ?? null;
 
                     const readinessSub = avgScore10 == null ? 'Пройди симуляцию'
-                        : avgScore10 >= 8 ? 'Готов к питчу'
+                        : avgScore10 >= 8 ? 'Готов к спичу'
                         : avgScore10 >= 6 ? 'Есть потенциал'
                         : avgScore10 >= 4 ? 'Нужна практика'
                         : 'Серьёзная работа';

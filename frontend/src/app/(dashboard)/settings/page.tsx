@@ -29,7 +29,7 @@ const SEGMENT_LABELS: Record<string, string> = {
 
 const GOAL_LABELS: Record<string, string> = {
   interview: 'Собеседование',
-  pitch: 'Питч',
+  pitch: 'Спич',
   conference: 'Конференция',
   defense: 'Защита',
   other: 'Другое',

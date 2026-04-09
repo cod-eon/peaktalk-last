@@ -38,7 +38,7 @@ export default function HeroVisual() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-black/5 bg-[#F9FAFB]">
             <div className="font-mono text-[10px] sm:text-xs text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-              <span className="break-words whitespace-normal text-center sm:text-left">[ СЕССИЯ // ПИТЧ СЕРИИ А ]</span>
+              <span className="break-words whitespace-normal text-center sm:text-left">[ СЕССИЯ // СПИЧ СЕРИИ А ]</span>
             </div>
             <div className="font-mono text-[10px] sm:text-xs text-[#10B981] uppercase tracking-widest flex items-center gap-1.5 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
