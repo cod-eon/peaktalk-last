@@ -971,30 +971,6 @@ function Footer() {
 
 // ─── COMPARISON BLOCK ─────────────────────────────────────────────────────────
 function ComparisonBlock() {
-  const altLogos = [
-    // Живой коуч → Zoom (video camera)
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="#2D8CFF" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="5.5" width="14.5" height="13" rx="2.5"/>
-      <path d="M16 8.8l6.5-3v12.5L16 15.2V8.8z"/>
-    </svg>,
-    // Онлайн-курс → YouTube / Udemy (play in rounded rect)
-    <svg width="80" height="80" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="4" width="22" height="16" rx="4" fill="#FF0000"/>
-      <path d="M9.5 8.5l7 3.5-7 3.5V8.5z" fill="white"/>
-    </svg>,
-    // Универсальный AI → OpenAI (6-petal bloom)
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="#10a37f" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(12,12)">
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8"/>
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8" transform="rotate(60)"/>
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8" transform="rotate(120)"/>
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8" transform="rotate(180)"/>
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8" transform="rotate(240)"/>
-        <rect x="-1.8" y="-8.5" width="3.6" height="8.5" rx="1.8" transform="rotate(300)"/>
-      </g>
-    </svg>,
-  ];
-
   const alternatives = [
     { title: "Живой коуч", issues: ["Не знает ваш конкретный материал", "Нужно записываться заранее", "Стоит в разы дороже за сессию"], note: "Работает. Но не для подготовки к встрече через три дня." },
     { title: "Онлайн-курс", issues: ["Учит выступать вообще, не под вашу задачу", "Результат через месяцы", "Нет практики под давлением вопросов"], note: "Полезно. Но горизонт — не ближайший четверг." },
@@ -1044,12 +1020,9 @@ function ComparisonBlock() {
               visible={{ opacity: 1, y: 0, scale: 1 }}
               duration={0.5}
               delay={(i + 1) * 0.08}
-              className="hover:opacity-100 transition-opacity opacity-75 flex flex-col relative overflow-hidden"
+              className="hover:opacity-100 transition-opacity opacity-75 flex flex-col"
               style={{ ...safariMotionStyle, backgroundColor: '#FFF', border: '1px solid #e5e7eb', borderRadius: '0px', padding: '24px' }}
             >
-              <div className="absolute top-3 right-3 pointer-events-none opacity-[0.07]">
-                {altLogos[i]}
-              </div>
               <h3 className="font-inter" style={{ fontWeight: 700, fontSize: '18px', color: '#171717', marginBottom: '16px' }}>{alt.title}</h3>
               <div className="flex flex-col gap-3">
                 {alt.issues.map((iss, j) => (
