@@ -31,10 +31,10 @@ async def test_save_onboarding(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_save_onboarding_update(client: AsyncClient) -> None:
     # First save
-    await client.post("/me/onboarding", json={"segment": "student", "primary_goal": "defense"})
+    await client.post("/me/onboarding", json={"segment": "manager", "primary_goal": "budget_defense"})
     # Update
-    response = await client.post("/me/onboarding", json={"segment": "junior", "primary_goal": "interview"})
+    response = await client.post("/me/onboarding", json={"segment": "head", "primary_goal": "stakeholder"})
     assert response.status_code == 200
     data = response.json()
-    assert data["onboarding_profile"]["segment"] == "junior"
-    assert data["onboarding_profile"]["primary_goal"] == "interview"
+    assert data["onboarding_profile"]["segment"] == "head"
+    assert data["onboarding_profile"]["primary_goal"] == "stakeholder"
