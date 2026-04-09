@@ -14,49 +14,49 @@ from app.services.gemini import GeminiError, create_gemini_client
 CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to Gemini
 
 _SEGMENT_PERSONAS: dict[str, dict] = {
-    "student": {
-        "default_difficulty": 2,
+    "manager": {
+        "default_difficulty": 4,
         "personas": {
-            "supervisor": {
-                "title": "Строгий научный руководитель",
-                "description": "Требовательный, ждёт академической строгости. Проверяет методологию и источники.",
-                "style": "demanding, detail-oriented, expects academic rigor",
-                "focus": "methodology, sources, logical consistency, depth of research",
+            "board": {
+                "title": "Член совета директоров",
+                "description": "Стратегический, нетерпеливый. Фокус на ROI, рисках и способности команды исполнять.",
+                "style": "strategic, numbers-focused, impatient",
+                "focus": "ROI, risk, strategic alignment, execution ability",
             },
-            "reviewer": {
-                "title": "Придирчивый рецензент",
-                "description": "Критичный и формальный. Ищет слабые аргументы и пробелы в логике.",
-                "style": "critical, formal, looks for gaps and weak arguments",
-                "focus": "evidence quality, conclusions, originality",
+            "subordinate": {
+                "title": "Скептичный подчинённый",
+                "description": "Циничный, видел провальные инициативы. Проверяет реальность планов и влияние на команду.",
+                "style": "cynical, has seen failed initiatives",
+                "focus": "feasibility, impact on team, leadership credibility",
             },
-            "peer": {
-                "title": "Однокурсник-скептик",
-                "description": "Дружелюбный, но задаёт неудобные вопросы о практической значимости.",
-                "style": "friendly but challenging, asks 'but why though?'",
-                "focus": "practical relevance, clarity of explanation",
+            "journalist": {
+                "title": "Журналист на пресс-конференции",
+                "description": "Провокационный. Ищет противоречия, задаёт острые вопросы о публичном резонансе.",
+                "style": "provocative, looks for contradictions",
+                "focus": "inconsistencies, controversy, public impact",
             },
         },
     },
-    "junior": {
-        "default_difficulty": 3,
+    "head": {
+        "default_difficulty": 4,
         "personas": {
-            "tech_lead": {
-                "title": "Тимлид / Principal Engineer",
-                "description": "Точный и прагматичный. Не впечатляется buzzwords, копает в архитектуру и компромиссы.",
-                "style": "precise, unimpressed by buzzwords",
-                "focus": "architecture, tradeoffs, scalability, technical depth",
+            "exec_sponsor": {
+                "title": "Исполнительный спонсор",
+                "description": "Требует ROI-обоснование. Нетерпелив, смотрит на стратегическое соответствие и бюджетный эффект.",
+                "style": "strategic, impatient, ROI-focused",
+                "focus": "business impact, budget justification, strategic alignment, execution risk",
             },
-            "hr": {
-                "title": "HR-менеджер",
-                "description": "Эмпатичный, но зондирующий. Оценивает мотивацию, soft skills и потенциал роста.",
-                "style": "empathetic but probing",
-                "focus": "motivation, soft skills, growth mindset",
+            "cfo": {
+                "title": "CFO / Финансовый директор",
+                "description": "Цифроориентированный скептик. Давит на финансовые допущения, ROI и альтернативные издержки.",
+                "style": "numbers-driven, skeptical, cost-conscious",
+                "focus": "financials, assumptions, ROI, opportunity cost, budget risk",
             },
-            "senior_dev": {
-                "title": "Старший разработчик на ревью",
-                "description": "Прямолинейный и прагматичный. Видел всё — проверяет качество кода и edge cases.",
-                "style": "blunt, pragmatic, seen it all",
-                "focus": "code quality, edge cases, maintainability",
+            "peer_exec": {
+                "title": "Руководитель смежной функции",
+                "description": "Защищает свои ресурсы и приоритеты. Проверяет влияние инициативы на свою зону.",
+                "style": "territorial, cross-functional tension",
+                "focus": "resource conflict, dependencies, impact on own team",
             },
         },
     },
@@ -83,26 +83,26 @@ _SEGMENT_PERSONAS: dict[str, dict] = {
             },
         },
     },
-    "manager": {
+    "customer_facing": {
         "default_difficulty": 4,
         "personas": {
-            "board": {
-                "title": "Член совета директоров",
-                "description": "Стратегический, нетерпеливый. Фокус на ROI, рисках и способности команды исполнять.",
-                "style": "strategic, numbers-focused, impatient",
-                "focus": "ROI, risk, strategic alignment, execution ability",
+            "demanding_client": {
+                "title": "Требовательный клиент на QBR",
+                "description": "Разочарован результатами. Сравнивает с конкурентами, ставит под сомнение ценность контракта.",
+                "style": "frustrated, results-focused, comparative",
+                "focus": "value delivered, SLA compliance, competitor comparison, renewal justification",
             },
-            "subordinate": {
-                "title": "Скептичный подчинённый",
-                "description": "Циничный, видел провальные инициативы. Проверяет реальность планов и влияние на команду.",
-                "style": "cynical, has seen failed initiatives",
-                "focus": "feasibility, impact on team, leadership credibility",
+            "procurement": {
+                "title": "Закупочный комитет",
+                "description": "Процессно-ориентированный. Давит на условия контракта, SLA, compliance и прозрачность ценообразования.",
+                "style": "process-driven, compliance-focused",
+                "focus": "contract terms, pricing transparency, SLA, vendor risk",
             },
-            "journalist": {
-                "title": "Журналист на пресс-конференции",
-                "description": "Провокационный. Ищет противоречия, задаёт острые вопросы о публичном резонансе.",
-                "style": "provocative, looks for contradictions",
-                "focus": "inconsistencies, controversy, public impact",
+            "churning_client": {
+                "title": "Клиент на грани оттока",
+                "description": "Холодный и закрытый. Уже изучает альтернативы. Ищет весомый повод остаться.",
+                "style": "disengaged, evaluating alternatives",
+                "focus": "concrete value, switching cost, retention argument",
             },
         },
     },
@@ -135,12 +135,18 @@ def get_default_difficulty(segment: str | None) -> int:
 
 
 _SEGMENT_LABELS: dict[str, str] = {
-    "student": "Студент", "junior": "Молодой специалист",
-    "founder": "Фаундер / Стартап", "manager": "Руководитель", "other": "Другое",
+    "manager": "Тимлид / Менеджер",
+    "head": "Руководитель функции",
+    "founder": "Фаундер / CEO",
+    "customer_facing": "Клиентская команда",
+    "other": "Другое",
 }
 _GOAL_LABELS: dict[str, str] = {
-    "interview": "Собеседование", "pitch": "Питч инвестору",
-    "conference": "Конференция / Доклад", "defense": "Защита проекта", "other": "Другое",
+    "budget_defense": "Защита бюджета / roadmap",
+    "pitch": "Инвест-питч / продажа",
+    "qbr": "QBR / клиентский review",
+    "stakeholder": "Сложный разговор со стейкхолдером",
+    "other": "Другое",
 }
 
 _SIMULATION_SYSTEM_TEMPLATE = """
@@ -257,11 +263,11 @@ def get_available_personas(segment: str | None) -> dict[str, dict]:
 
 
 _SEGMENT_INDUSTRIES: dict[str, list[str]] = {
-    "student": ["Академия / Наука", "IT / Технологии", "Медицина / Биотех", "Социальные науки", "Экономика / Финансы"],
-    "junior":  ["IT / Разработка", "Продуктовые компании", "FinTech", "Консалтинг", "E-commerce"],
-    "founder": ["B2B SaaS / IT", "FinTech", "EdTech", "HealthTech / MedTech", "E-commerce / Retail"],
-    "manager": ["Корпоративный сектор", "Производство / Промышленность", "Ритейл", "Финансы / Банки", "IT / Технологии"],
-    "other":   ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"],
+    "manager":         ["IT / Технологии", "FinTech", "E-commerce", "Консалтинг", "Производство"],
+    "head":            ["IT / Технологии", "FinTech", "Медицина / Биотех", "Ритейл", "Консалтинг"],
+    "founder":         ["SaaS / B2B", "FinTech", "E-commerce", "HealthTech", "EdTech"],
+    "customer_facing": ["SaaS / B2B", "Консалтинг", "Финансовые услуги", "Ритейл", "Телеком"],
+    "other":           ["IT / Технологии", "Бизнес / Консалтинг", "Финансы", "Медицина", "Образование"],
 }
 
 

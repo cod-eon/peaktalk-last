@@ -17,18 +17,18 @@ if TYPE_CHECKING:
 
 
 class UserSegment(str, enum.Enum):
-    student = "student"
-    junior = "junior"
-    founder = "founder"
     manager = "manager"
+    head = "head"
+    founder = "founder"
+    customer_facing = "customer_facing"
     other = "other"
 
 
 class UserGoal(str, enum.Enum):
-    interview = "interview"
+    budget_defense = "budget_defense"
     pitch = "pitch"
-    conference = "conference"
-    defense = "defense"
+    qbr = "qbr"
+    stakeholder = "stakeholder"
     other = "other"
 
 

@@ -86,13 +86,24 @@ export default function UploadPage() {
                 }
             }
 
+            // 1b. Create document for text mode
+            if (mode === 'text') {
+                setLogs(prev => [...prev, '> Сохранение текстового документа...']);
+                const draftTitle = 'Текстовый документ ' + new Date().toLocaleDateString('ru-RU');
+                const docRes = await api.post('/documents/from-text', {
+                    title: draftTitle,
+                    text: rawText,
+                });
+                documentId = docRes.id;
+            }
+
             if (rawText.length < 10) {
                 throw new Error('Текст слишком короткий, минимум 10 символов.');
             }
 
             // 2. Create draft
             setLogs(prev => [...prev, '> Создание черновика речи...']);
-            const draftTitle = mode === 'file' ? file?.name : 'Текстовый черновик ' + new Date().toLocaleTimeString();
+            const draftTitle = mode === 'file' ? (file?.name ?? 'Документ') : 'Анализ текста ' + new Date().toLocaleTimeString('ru-RU');
             
             const draftRes = await api.post('/drafts', {
                 title: draftTitle,

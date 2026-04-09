@@ -10,12 +10,18 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 from app.config import settings
 
 _SEGMENT_LABELS: dict[str, str] = {
-    "student": "Студент", "junior": "Молодой специалист",
-    "founder": "Фаундер / Стартап", "manager": "Руководитель", "other": "Другое",
+    "manager": "Тимлид / Менеджер",
+    "head": "Руководитель функции",
+    "founder": "Фаундер / CEO",
+    "customer_facing": "Клиентская команда",
+    "other": "Другое",
 }
 _GOAL_LABELS: dict[str, str] = {
-    "interview": "Собеседование", "pitch": "Питч инвестору",
-    "conference": "Конференция / Доклад", "defense": "Защита проекта", "other": "Другое",
+    "budget_defense": "Защита бюджета / roadmap",
+    "pitch": "Инвест-питч / продажа",
+    "qbr": "QBR / клиентский review",
+    "stakeholder": "Сложный разговор со стейкхолдером",
+    "other": "Другое",
 }
 
 _ANALYSIS_SYSTEM_PROMPT = """
