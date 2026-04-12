@@ -57,9 +57,15 @@ export const api = {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // Try refreshing the session once before giving up
+        // Try getting session again (it might have been refreshed by another concurrent request)
         const supabase = createClient()
-        const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
+        let { data: { session: refreshedSession } } = await supabase.auth.getSession()
+
+        if (refreshedSession?.access_token === session?.access_token) {
+          const { data } = await supabase.auth.refreshSession()
+          refreshedSession = data.session
+        }
+
         if (refreshedSession?.access_token) {
           // Retry the request with the new token
           const retryHeaders = new Headers(options.headers)
@@ -74,10 +80,12 @@ export const api = {
             return ct?.includes('application/json') ? retryResponse.json() : retryResponse.text()
           }
         }
-        // Session truly invalid — sign out and redirect
+        
+        // If we reach here, session is truly invalid
         await supabase.auth.signOut()
         if (typeof window !== 'undefined') {
-          window.location.href = '/login'
+          // Use safe redirect that preserves Next.js router cache limits
+          window.location.replace('/login')
         }
         throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
       }

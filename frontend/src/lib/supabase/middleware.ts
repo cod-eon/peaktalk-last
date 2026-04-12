@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   // All protected pages (route group `(dashboard)` strips the parens from URL)
-  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/projects', '/settings', '/analysis']
+  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/projects', '/settings', '/analysis', '/onboarding']
   const isDashboardRoute = protectedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
 

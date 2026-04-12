@@ -510,12 +510,11 @@ function SimulationPageContent() {
 
                             {/* Индекс готовности */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 to-teal-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-emerald-50 flex items-center justify-center">
-                                        <Target size={14} className="text-emerald-500 sm:hidden" />
-                                        <Target size={16} className="text-emerald-500 hidden sm:block" />
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-neutral-100 flex items-center justify-center">
+                                        <Target size={14} className="text-neutral-500 sm:hidden" />
+                                        <Target size={16} className="text-neutral-500 hidden sm:block" />
                                     </div>
                                 </div>
                                 <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
@@ -526,33 +525,29 @@ function SimulationPageContent() {
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">{readinessSub}</p>
                                 <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                     <div
-                                        className="h-full rounded-none transition-all duration-700"
-                                        style={{
-                                            width: `${(avgScore10 ?? 0) * 10}%`,
-                                            background: (avgScore10 ?? 0) >= 7 ? '#10b981' : (avgScore10 ?? 0) >= 4 ? '#f59e0b' : '#f43f5e',
-                                        }}
+                                        className="h-full bg-neutral-900 rounded-none transition-all duration-700"
+                                        style={{ width: `${(avgScore10 ?? 0) * 10}%` }}
                                     />
                                 </div>
                             </div>
 
                             {/* Тренд роста */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 to-violet-400" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center ${trendIconBg}`}>
-                                        <TrendIcon size={14} className={`${trendIconColor} sm:hidden`} />
-                                        <TrendIcon size={16} className={`${trendIconColor} hidden sm:block`} />
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center bg-neutral-100`}>
+                                        <TrendIcon size={14} className={`text-neutral-500 sm:hidden`} />
+                                        <TrendIcon size={16} className={`text-neutral-500 hidden sm:block`} />
                                     </div>
                                 </div>
-                                <div className={`text-2xl sm:text-3xl font-bold ${progressDelta == null ? 'text-gray-300' : progressDelta > 0 ? 'text-emerald-600' : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400'}`} style={{ letterSpacing: '-0.02em' }}>
+                                <div className={`text-2xl sm:text-3xl font-bold text-neutral-900`} style={{ letterSpacing: '-0.02em' }}>
                                     {progressDelta == null ? '—'
                                         : progressDelta === 0 ? '= 0'
                                         : `${progressDelta > 0 ? '+' : ''}${progressDelta}б`}
                                 </div>
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
                                     {progressDelta == null ? (
-                                        <span className="text-violet-600 font-medium">Пройди ещё один тест, чтобы увидеть динамику</span>
+                                        <span className="text-neutral-500 font-medium">Пройди ещё один тест, чтобы увидеть динамику</span>
                                     ) : trendSub}
                                 </p>
                                 {sparkPoints && (
@@ -561,11 +556,11 @@ function SimulationPageContent() {
                                             <polyline
                                                 points={sparkPoints}
                                                 fill="none"
-                                                stroke={sparkColor}
+                                                stroke="#171717"
                                                 strokeWidth="2"
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
-                                                opacity="0.7"
+                                                opacity="0.8"
                                             />
                                             {sparkScores.map((s, i) => (
                                                 <circle
@@ -573,7 +568,7 @@ function SimulationPageContent() {
                                                     cx={(i / (sparkScores.length - 1)) * 80}
                                                     cy={sparkY(s)}
                                                     r={i === sparkScores.length - 1 ? 2.5 : 1.5}
-                                                    fill={sparkColor}
+                                                    fill="#171717"
                                                     opacity={i === sparkScores.length - 1 ? 1 : 0.5}
                                                 />
                                             ))}
@@ -584,12 +579,11 @@ function SimulationPageContent() {
 
                             {/* Личный рекорд */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-amber-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-amber-50 flex items-center justify-center">
-                                        <Trophy size={14} className="text-amber-500 sm:hidden" />
-                                        <Trophy size={16} className="text-amber-500 hidden sm:block" />
+                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-neutral-100 flex items-center justify-center">
+                                        <Trophy size={14} className="text-neutral-500 sm:hidden" />
+                                        <Trophy size={16} className="text-neutral-500 hidden sm:block" />
                                     </div>
                                 </div>
                                 <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
@@ -602,7 +596,7 @@ function SimulationPageContent() {
                                 </p>
                                 <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                     <div
-                                        className="h-full bg-amber-300 rounded-none transition-all duration-700"
+                                        className="h-full bg-neutral-900 rounded-none transition-all duration-700"
                                         style={{ width: `${(bestScore10 ?? 0) * 10}%` }}
                                     />
                                 </div>
@@ -610,12 +604,11 @@ function SimulationPageContent() {
 
                             {/* Сложнее всего */}
                             <div className={kpiCard}>
-                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 to-pink-300" />
                                 <div className="flex justify-between items-center mb-2 sm:mb-3">
                                     <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center ${hardestRole ? hardestVisual.iconBg : 'bg-gray-50'}`}>
-                                        <HardestIcon size={14} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} sm:hidden`} />
-                                        <HardestIcon size={16} className={`${hardestRole ? hardestVisual.iconColor : 'text-gray-400'} hidden sm:block`} />
+                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center bg-neutral-100`}>
+                                        <HardestIcon size={14} className={`text-neutral-500 sm:hidden`} />
+                                        <HardestIcon size={16} className={`text-neutral-500 hidden sm:block`} />
                                     </div>
                                 </div>
                                 <div className="text-sm sm:text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
@@ -631,7 +624,7 @@ function SimulationPageContent() {
                                 {hardestRole && (
                                     <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
                                         <div
-                                            className="h-full bg-rose-300 rounded-none transition-all duration-700"
+                                            className="h-full bg-neutral-300 rounded-none transition-all duration-700"
                                             style={{ width: `${hardestRole.avg * 10}%` }}
                                         />
                                     </div>

@@ -447,16 +447,9 @@ export default function DashboardPage() {
       )}
 
       {isLoading || userState === 'loading' ? (
-        <div className="animate-pulse">
-            <div className="h-10 w-48 bg-neutral-100 mb-2"></div>
-            <div className="h-4 w-64 bg-neutral-100 mb-8"></div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-neutral-100 h-32"></div>
-              <div className="bg-neutral-100 h-32"></div>
-              <div className="bg-neutral-100 h-32"></div>
-            </div>
-            <div className="bg-neutral-100 h-64 mb-8"></div>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 size={32} className="animate-spin text-neutral-900 mb-4" />
+          <span className="font-mono text-[11px] text-neutral-500 tracking-widest uppercase">Загрузка аналитики...</span>
         </div>
       ) : userState === 'new' ? (
         <DashboardNewUser profile={profile} billing={billing} />

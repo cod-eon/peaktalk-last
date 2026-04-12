@@ -109,7 +109,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading || !captchaToken}
-          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-none py-3.5 text-xs font-semibold relative overflow-hidden group mt-4 h-11 transition-colors"
+          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-none py-3.5 text-xs font-semibold relative overflow-hidden group mt-4 h-11 transition-colors flex items-center justify-center"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

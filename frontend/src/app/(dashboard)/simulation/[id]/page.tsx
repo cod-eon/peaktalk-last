@@ -162,21 +162,16 @@ export default function SimulationPage() {
     }
   }, [messages, isAnalyzing]); // isAnalyzing flips when AI finishes answering
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isListening) stopListening();
-    setInterimText('');
-    
-    if (!answer.trim() || isAnalyzing) return;
-
+  const submitAnswer = async (currentAnswer: string, isTimeout: boolean = false) => {
+    if (isAnalyzing) return;
     setIsAnalyzing(true);
     setAiWarning(false);
-    const currentAnswer = answer;
-
+    
     // Add optimistic user message for instant UI feedback
     const optimisticUserMsg = { role: 'user', content: currentAnswer, turn_index: 999 };
     setMessages(prev => [...prev, optimisticUserMsg]);
     setAnswer("");
+    setTimeLeft(90); // reset right away for optimistic update UX
 
     try {
       const res = await api.post(`/simulation/${sessionId}/message`, { content: currentAnswer });
@@ -184,7 +179,7 @@ export default function SimulationPage() {
       // AI-generated content detected — reject the answer, let user rewrite
       if (res.ai_detected) {
         setMessages(prev => prev.filter(m => m !== optimisticUserMsg));
-        setAnswer(currentAnswer);
+        setAnswer(isTimeout ? "" : currentAnswer);
         setAiWarning(true);
         return;
       }
@@ -199,23 +194,47 @@ export default function SimulationPage() {
       }
     } catch(err: unknown) {
       const message = err instanceof Error ? err.message : 'Сбой сети';
+      
+      const lowerMessage = message.toLowerCase();
       // Detect 402-style limit errors and show upgrade modal
-      const isLimitError =
-        message.toLowerCase().includes('лимит') ||
-        message.toLowerCase().includes('limit') ||
-        message.toLowerCase().includes('exceeded') ||
-        message.toLowerCase().includes('симуляц');
+      // Removed generic 'симуляц' to avoid false positives!
+      const isLimitError = 
+        lowerMessage.includes('лимит исчерпан') ||
+        lowerMessage.includes('exceeded quota') ||
+        lowerMessage.includes('402');
+        
       if (isLimitError) {
         openUpgradeModal('simulations');
       } else {
-        toast.error('Ошибка отправки сообщения: ' + message);
+        let displayError = message;
+        // Mask Gemini/technical errors
+        if (lowerMessage.includes('gemini') || displayError.includes('40') || displayError.includes('50') || lowerMessage.includes('failed') || lowerMessage.includes('error')) {
+          displayError = 'Ошибка анализа, попробуйте еще раз';
+        }
+        toast.error('Ошибка отправки сообщения: ' + displayError);
       }
-      setAnswer(currentAnswer); // restore
+      setAnswer(isTimeout ? "" : currentAnswer); // restore
       setMessages(prev => prev.filter(m => m !== optimisticUserMsg)); // remove optimistic
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isListening) stopListening();
+    setInterimText('');
+    
+    if (!answer.trim() || isAnalyzing) return;
+    await submitAnswer(answer, false);
+  };
+
+  // Timer Timeout execution
+  useEffect(() => {
+    if (timeLeft === 0 && !isAnalyzing && !isFinished) {
+       submitAnswer(answer.trim() ? answer : "[Время на ответ истекло, ответ не предоставлен]", true);
+    }
+  }, [timeLeft, isAnalyzing, isFinished]);
 
   const handleComplete = async () => {
     if (messages.filter(m => m.role === 'user').length === 0) {
@@ -286,7 +305,9 @@ export default function SimulationPage() {
 
   // Find the last assistant message to display as the current question
   const aiMessages = messages.filter(m => m.role === 'assistant');
-  const lastQuestion = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1].content : "Загрузка вопроса...";
+  const rawLastQuestion = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1].content : "Загрузка вопроса...";
+  // Sanitize formatting (remove ** and *) for issue 3.3
+  const lastQuestion = rawLastQuestion.replace(/\*\*/g, '').replace(/\*/g, '');
   const turnCount = aiMessages.length;
   const progressPct = Math.min((turnCount / MAX_TURNS) * 100, 100);
   const isLastQuestion = turnCount >= MAX_TURNS;
