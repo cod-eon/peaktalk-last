@@ -352,11 +352,11 @@ export default function SimulationPage() {
             <button
               onClick={handleComplete}
               disabled={isCompleting || isAnalyzing}
-              className="text-xs font-mono border border-neutral-200 hover:border-red-500/50 bg-neutral-50 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 px-2.5 sm:px-3 py-1.5 rounded-none transition-colors flex items-center gap-1 sm:gap-1.5 disabled:opacity-40 min-h-[36px]"
+              className="text-xs font-mono border border-neutral-200 hover:border-red-500/50 bg-neutral-50 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 px-2.5 sm:px-3 py-1.5 rounded-none transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 min-h-[36px]"
             >
-              {isCompleting ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} />}
-              <span className="hidden sm:inline">Завершить досрочно</span>
-              <span className="sm:hidden">Завершить</span>
+              {isCompleting ? <Loader2 size={12} className="animate-spin shrink-0" /> : <Flag size={12} className="shrink-0" />}
+              <span className="hidden sm:inline">{isCompleting ? 'Завершение...' : 'Завершить досрочно'}</span>
+              <span className="sm:hidden">{isCompleting ? '...' : 'Завершить'}</span>
             </button>
           </div>
         </div>
@@ -472,19 +472,19 @@ export default function SimulationPage() {
                   <button
                     type="submit"
                     disabled={!answer.trim() || isAnalyzing}
-                    className="bg-[#171717] hover:bg-black text-white font-medium group disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-1 sm:flex-none justify-center h-[64px] sm:h-[56px] rounded-none min-w-[160px] transition-colors"
+                    className="bg-[#171717] hover:bg-black text-white font-medium group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 flex-1 sm:flex-none h-[64px] sm:h-[56px] rounded-none min-w-[160px] transition-colors overflow-hidden"
                   >
                     {isAnalyzing ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
+                      <div className="flex items-center justify-center gap-2.5">
+                        <Loader2 size={18} className="animate-spin shrink-0" />
                         <span className="hidden sm:inline">Анализ нейросетью...</span>
                         <span className="sm:hidden">Анализ...</span>
-                      </>
+                      </div>
                     ) : (
-                      <>
+                      <div className="flex items-center justify-center gap-2.5">
                         <span className="font-inter font-semibold text-lg sm:text-base">Ответить</span>
-                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                      </>
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
                     )}
                   </button>
                 </div>

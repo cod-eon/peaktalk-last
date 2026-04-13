@@ -20,7 +20,7 @@ function MetricPod({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-neutral-200 rounded-none p-6 flex flex-col justify-between">
+    <div className="bg-white border border-neutral-200 rounded-none p-6 flex flex-col justify-between h-full">
       <div className="flex justify-between items-start gap-3 mb-6">
         <span className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase leading-tight">
           {label}
@@ -30,9 +30,9 @@ function MetricPod({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <span className="font-inter text-3xl font-bold text-neutral-900 tracking-tight">
+        <div className="font-inter text-3xl font-bold text-neutral-900 tracking-tight flex items-baseline gap-1">
           {value}
-        </span>
+        </div>
         {subtitle && (
           <span className="font-inter text-[11px] font-medium tracking-wide text-neutral-400 mt-1">
             {subtitle}
@@ -303,15 +303,15 @@ function DashboardActive({ sessions, documents, profile }: { sessions: any[], do
   
   const validScores = completedSessions.filter(s => s.avg_score !== null).map(s => s.avg_score);
   
-  let indexMarkup: React.ReactNode = "--";
-  let indexSubtitle = "Завершите симуляцию для расчёта";
+  let indexMarkup: React.ReactNode = <span>0<span className="text-neutral-400 text-xl">/10</span></span>;
+  let indexSubtitle = "Пройдите первую симуляцию";
   
   if (validScores.length > 0) {
     const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
     const avg10 = Math.round(avg * 10);
     const colorClass = avg10 >= 7 ? "text-emerald-500" : avg10 >= 4 ? "text-amber-500" : "text-red-500";
     indexMarkup = <span className={colorClass}>{avg10}<span className="text-neutral-400 text-xl">/10</span></span>;
-    indexSubtitle = "Средний балл";
+    indexSubtitle = "Средний результат всех защит";
   }
 
   const criticalCount = validScores.filter(s => s < 0.4).length;
@@ -382,13 +382,13 @@ function DashboardActive({ sessions, documents, profile }: { sessions: any[], do
         <MetricPod
           label="КРИТИЧЕСКИЕ УЯЗВИМОСТИ"
           value={criticalCount}
-          subtitle="Оценка < 4/10"
+          subtitle="Сессии с баллом ниже 4/10"
           icon={<AlertTriangle size={18} className="text-red-500" />}
         />
         <MetricPod
           label="СЕССИЙ ЗА МЕСЯЦ"
           value={monthlySessionsCount}
-          subtitle="Активность"
+          subtitle="Интенсивность тренировок"
           icon={<Activity size={18} className="text-amber-500" />}
         />
       </motion.div>

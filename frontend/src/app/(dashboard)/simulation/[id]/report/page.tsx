@@ -185,11 +185,13 @@ function UserLine({
     onPopover: (id: number, metricName: string, comment: string, rect: DOMRect) => void;
     activePopoverId: number | null;
 }) {
+    const isTimeout = msg.content === "[Время на ответ истекло, ответ не предоставлен]";
     const isActive = activePopoverId === msg.turn_index;
-    const hasIssue = metric && metric.comment && metric.score < 0.75;
+    const hasIssue = !isTimeout && metric && metric.comment && metric.score < 0.75;
+    
     const highlightClass = !hasIssue
         ? ''
-        : metric.score < 0.45
+        : metric && metric.score < 0.45
         ? 'bg-rose-100 hover:bg-rose-200 cursor-pointer px-1 transition-colors'
         : 'bg-yellow-100 hover:bg-yellow-200 cursor-pointer px-1 transition-colors';
 
@@ -207,8 +209,10 @@ function UserLine({
             className="mb-6 sm:mb-10 pl-4 sm:pl-5 border-l-2 border-accent-200"
         >
             <p className="text-sm font-semibold text-accent-500 mb-2 uppercase tracking-wide">Вы</p>
-            <p className="text-[15px] sm:text-[17px] text-gray-900 leading-relaxed">
-                {hasIssue ? (
+            <p className={`text-[15px] sm:text-[17px] leading-relaxed ${isTimeout ? 'text-gray-400 italic' : 'text-gray-900'}`}>
+                {isTimeout ? (
+                    'Ответ не был предоставлен (время истекло)'
+                ) : hasIssue ? (
                     <span
                         className={`${highlightClass} ${isActive ? 'ring-2 ring-yellow-300' : ''}`}
                         onClick={handleClick}
