@@ -760,10 +760,10 @@ function SimulationPageContent() {
                                         <button
                                             key={key}
                                             onClick={() => { setSelectedRole(key); scrollToStep(step2Ref); }}
-                                            className={`text-left p-5 border transition-all duration-300 relative overflow-hidden group ${
+                                            className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-neutral-50 border-2 border-neutral-900'
-                                                    : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
+                                                    ? 'bg-neutral-50 border-neutral-900'
+                                                    : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
                                             }`}
                                         >
                                             {isSelected && (
@@ -799,10 +799,10 @@ function SimulationPageContent() {
                                         <button
                                             key={role.id}
                                             onClick={() => { setSelectedRole(role.id); scrollToStep(step2Ref); }}
-                                            className={`text-left p-5 transition-all duration-300 relative overflow-hidden group ${
+                                            className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
                                                 isSelected
-                                                    ? 'bg-neutral-50 border-2 border-neutral-900'
-                                                    : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
+                                                    ? 'bg-neutral-50 border-neutral-900'
+                                                    : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
                                             }`}
                                         >
                                             {isSelected && (
@@ -1044,10 +1044,10 @@ function SimulationPageContent() {
                                     key={opt.value}
                                     type="button"
                                     onClick={() => { setDifficulty(opt.value); setDifficultyManuallySet(true); }}
-                                    className={`text-left p-4 border transition-all duration-200 ${
+                                    className={`text-left p-4 border-2 transition-colors duration-200 ${
                                         isSelected
-                                            ? 'bg-neutral-50 border-2 border-neutral-900'
-                                            : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
+                                            ? 'bg-neutral-50 border-neutral-900'
+                                            : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
@@ -1059,12 +1059,12 @@ function SimulationPageContent() {
                                         }`}>{opt.range}</span>
                                     </div>
                                     <p className="font-inter text-xs text-neutral-500 leading-relaxed">{opt.desc}</p>
-                                    {isSelected && (
-                                        <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-neutral-900">
-                                            <CheckCircle2 size={12} />
-                                            Выбрано
-                                        </div>
-                                    )}
+                                    <div className={`mt-3 flex min-h-[16px] items-center gap-1.5 text-[11px] font-medium transition-opacity ${
+                                        isSelected ? 'text-neutral-900 opacity-100' : 'opacity-0'
+                                    }`}>
+                                        <CheckCircle2 size={12} />
+                                        Выбрано
+                                    </div>
                                 </button>
                             );
                         })}

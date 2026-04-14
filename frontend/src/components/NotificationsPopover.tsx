@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, CheckCheck } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface NotificationItem {
   id: string;
@@ -23,13 +24,10 @@ interface NotificationItem {
 
 export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpanded?: boolean; isMobile?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  useEffect(() => { setMounted(true); }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -65,12 +63,47 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => api.post(`/api/notifications/${id}/read`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<NotificationItem[]>(["notifications"]);
+      queryClient.setQueryData<NotificationItem[]>(["notifications"], (current = []) =>
+        current.map((item) => (item.id === id ? { ...item, is_read: true } : item))
+      );
+      return { previous };
+    },
+    onError: (error, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications"], context.previous);
+      }
+      toast.error(error instanceof Error ? error.message : "Не удалось отметить уведомление");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: () => api.post("/api/notifications/read-all"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<NotificationItem[]>(["notifications"]);
+      queryClient.setQueryData<NotificationItem[]>(["notifications"], (current = []) =>
+        current.map((item) => ({ ...item, is_read: true }))
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      toast.success("Все уведомления отмечены как прочитанные");
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications"], context.previous);
+      }
+      toast.error(error instanceof Error ? error.message : "Не удалось отметить все уведомления");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 
   const handleNotificationClick = async (notification: NotificationItem) => {
@@ -99,9 +132,10 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
             type="button"
             onClick={() => void markAllAsReadMutation.mutateAsync()}
             disabled={markAllAsReadMutation.isPending}
-            className="text-[11px] text-neutral-500 hover:text-neutral-900 transition-colors whitespace-nowrap shrink-0 ml-3"
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-none border border-neutral-300 bg-neutral-50 px-3 text-[11px] font-semibold text-neutral-700 shadow-sm transition-colors hover:border-neutral-900 hover:bg-neutral-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap shrink-0 ml-3 cursor-pointer"
           >
-            Прочитать все
+            <CheckCheck size={14} />
+            {markAllAsReadMutation.isPending ? "Отмечаем..." : "Прочитать все"}
           </button>
         )}
       </div>
@@ -126,7 +160,11 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void handleNotificationClick(notif); } }}
                 role="button"
                 tabIndex={0}
-                className={`relative px-4 py-3 hover:bg-neutral-50 transition-colors text-left w-full cursor-pointer border-b border-neutral-50 last:border-0 ${!notif.is_read ? "bg-white" : "opacity-60"}`}
+                className={`relative px-4 py-3 transition-colors text-left w-full cursor-pointer border-b last:border-0 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 focus:ring-inset ${
+                  !notif.is_read
+                    ? "border-neutral-100 bg-neutral-50/80 hover:bg-neutral-50"
+                    : "border-neutral-50 bg-white opacity-70 hover:opacity-100 hover:bg-neutral-50"
+                }`}
               >
                 {!notif.is_read && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-neutral-900" />}
                 <div className="flex flex-col gap-0.5">
@@ -137,10 +175,14 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
                     {!notif.is_read && (
                       <button
                         onClick={(e) => { e.stopPropagation(); void markAsReadMutation.mutateAsync(notif.id); }}
-                        className="w-5 h-5 flex items-center justify-center text-neutral-300 hover:text-neutral-900 transition-colors shrink-0"
-                        title="Прочитать"
+                        disabled={markAsReadMutation.isPending}
+                        className="inline-flex min-h-[32px] items-center gap-1 rounded-none border border-neutral-300 bg-white px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-neutral-600 shadow-sm transition-colors hover:border-neutral-900 hover:bg-neutral-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 shrink-0 cursor-pointer"
+                        title="Отметить как прочитанное"
+                        aria-label="Отметить как прочитанное"
+                        type="button"
                       >
                         <Check size={14} />
+                        <span className="hidden sm:inline">Прочитано</span>
                       </button>
                     )}
                   </div>
@@ -213,7 +255,9 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
   );
 
   // ── Mobile: portal with AnimatePresence INSIDE ─────────────────────────────
-  const mobilePortal = mounted && isMobile
+  const canUsePortal = typeof document !== "undefined";
+
+  const mobilePortal = canUsePortal && isMobile
     ? createPortal(
         <AnimatePresence>
           {isOpen && (

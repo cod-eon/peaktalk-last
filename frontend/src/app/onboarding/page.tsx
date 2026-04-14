@@ -2,14 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2 } from 'lucide-react';
+import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2, Download, Monitor, Smartphone } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 type Segment = 'manager' | 'head' | 'founder' | 'customer_facing' | 'other';
 type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
+type InstallDevice = 'android' | 'ios' | 'desktop';
+
+type BeforeInstallPromptEvent = Event & {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
 
 const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
     { id: 'manager', label: 'Тимлид / Менеджер', desc: 'Защита решений, приоритизация, апдейты руководству', icon: <Users size={22} /> },
@@ -34,6 +41,10 @@ export default function OnboardingPage() {
     const [goal, setGoal] = useState<Goal | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
+    const [installDevice, setInstallDevice] = useState<InstallDevice>('desktop');
+    const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const [isInstallPromptAvailable, setIsInstallPromptAvailable] = useState(false);
+    const [isInstalling, setIsInstalling] = useState(false);
 
     // Scroll to top whenever step changes
     useEffect(() => {
@@ -57,6 +68,57 @@ export default function OnboardingPage() {
         checkProfile();
     }, [router]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isiPhone = /iphone|ipad|ipod/.test(userAgent);
+        const isAndroid = /android/.test(userAgent);
+        const isStandalone =
+            window.matchMedia('(display-mode: standalone)').matches ||
+            // iOS Safari standalone mode
+            ('standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
+
+        if (isStandalone) {
+            setIsInstallPromptAvailable(false);
+        }
+
+        if (isiPhone) {
+            setInstallDevice('ios');
+            return;
+        }
+
+        if (isAndroid) {
+            setInstallDevice('android');
+            return;
+        }
+
+        setInstallDevice('desktop');
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handleBeforeInstallPrompt = (event: Event) => {
+            event.preventDefault();
+            setDeferredInstallPrompt(event as BeforeInstallPromptEvent);
+            setIsInstallPromptAvailable(true);
+        };
+
+        const handleAppInstalled = () => {
+            setDeferredInstallPrompt(null);
+            setIsInstallPromptAvailable(false);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.addEventListener('appinstalled', handleAppInstalled);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+            window.removeEventListener('appinstalled', handleAppInstalled);
+        };
+    }, []);
+
     const handleSubmit = async () => {
         if (!segment || !goal) return;
         setIsSubmitting(true);
@@ -70,6 +132,57 @@ export default function OnboardingPage() {
             setIsSubmitting(false);
         }
     };
+
+    const handleInstallApp = async () => {
+        if (!deferredInstallPrompt) return;
+
+        setIsInstalling(true);
+        try {
+            await deferredInstallPrompt.prompt();
+            const choice = await deferredInstallPrompt.userChoice;
+            if (choice.outcome === 'accepted') {
+                toast.success('PeakTalk добавлен на устройство');
+                setDeferredInstallPrompt(null);
+                setIsInstallPromptAvailable(false);
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Не удалось открыть установку');
+        } finally {
+            setIsInstalling(false);
+        }
+    };
+
+    const installGuides: Record<InstallDevice, { title: string; hint: string; steps: string[] }> = {
+        android: {
+            title: 'Установите PeakTalk на Android',
+            hint: 'Откроется как отдельное приложение и будет быстрее возвращать к симуляциям и уведомлениям.',
+            steps: [
+                'Откройте меню браузера Chrome или Edge.',
+                'Нажмите «Установить приложение» или «Добавить на главный экран».',
+                'Подтвердите установку и запускайте PeakTalk с рабочего стола.',
+            ],
+        },
+        ios: {
+            title: 'Добавьте PeakTalk на экран iPhone / iPad',
+            hint: 'На iOS установка идёт через Safari, без отдельного popup-окна.',
+            steps: [
+                'Откройте сайт в Safari.',
+                'Нажмите кнопку «Поделиться».',
+                'Выберите «На экран Домой», затем подтвердите добавление.',
+            ],
+        },
+        desktop: {
+            title: 'Установите PeakTalk на компьютер',
+            hint: 'Так сервис открывается отдельно от вкладок и ведёт себя как приложение.',
+            steps: [
+                'Откройте меню браузера или иконку установки в адресной строке.',
+                'Нажмите «Установить PeakTalk» или «Install app».',
+                'Закрепите приложение в dock / панели задач для быстрого запуска.',
+            ],
+        },
+    };
+
+    const currentInstallGuide = installGuides[installDevice];
 
     if (isChecking) {
         return (
@@ -91,10 +204,10 @@ export default function OnboardingPage() {
                 {/* Logo / Brand */}
                 {step !== 3 && (
                     <div className="text-center mb-6 sm:mb-8">
-                        <a href="/" className="flex flex-col items-center gap-1 mb-4 sm:mb-5 hover:opacity-80 transition-opacity">
+                        <Link href="/" className="flex flex-col items-center gap-1 mb-4 sm:mb-5 hover:opacity-80 transition-opacity">
                             <Image src="/logo_svg.svg" alt="PeakTalk" width={32} height={32} className="block sm:w-9 sm:h-9" />
                             <span className="brand-wordmark text-[17px] sm:text-[18px] text-neutral-900">PeakTalk</span>
-                        </a>
+                        </Link>
                         <div className="font-mono text-[10px] sm:text-[11px] text-neutral-900 tracking-[0.15em] uppercase mb-2">
                             Onboarding
                         </div>
@@ -281,6 +394,90 @@ export default function OnboardingPage() {
                                     <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Симуляция Q&A</h3>
                                     <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Отвечайте на сложные и провокационные вопросы в реальном времени.</p>
                                 </button>
+                            </div>
+
+                            <div className="mt-6 sm:mt-8 border border-neutral-200 bg-white p-4 sm:p-5 text-left">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="max-w-xl">
+                                        <div className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400 mb-2">
+                                            <Download size={14} />
+                                            Приложение PeakTalk
+                                        </div>
+                                        <h3 className="font-inter text-lg sm:text-xl font-semibold text-neutral-900 mb-2">
+                                            {currentInstallGuide.title}
+                                        </h3>
+                                        <p className="text-sm text-neutral-500 leading-relaxed">
+                                            {currentInstallGuide.hint}
+                                        </p>
+                                    </div>
+
+                                    <div className="inline-flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setInstallDevice('android')}
+                                            className={`min-h-[40px] px-3 inline-flex items-center gap-2 border text-xs font-semibold transition-colors ${
+                                                installDevice === 'android'
+                                                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                                                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400'
+                                            }`}
+                                        >
+                                            <Smartphone size={14} />
+                                            Android
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setInstallDevice('ios')}
+                                            className={`min-h-[40px] px-3 inline-flex items-center gap-2 border text-xs font-semibold transition-colors ${
+                                                installDevice === 'ios'
+                                                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                                                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400'
+                                            }`}
+                                        >
+                                            <Smartphone size={14} />
+                                            iPhone / iPad
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setInstallDevice('desktop')}
+                                            className={`min-h-[40px] px-3 inline-flex items-center gap-2 border text-xs font-semibold transition-colors ${
+                                                installDevice === 'desktop'
+                                                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                                                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400'
+                                            }`}
+                                        >
+                                            <Monitor size={14} />
+                                            ПК
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                                    {currentInstallGuide.steps.map((item, index) => (
+                                        <div key={item} className="border border-neutral-200 bg-neutral-50 px-3 py-3">
+                                            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-2">
+                                                Шаг {index + 1}
+                                            </div>
+                                            <div className="text-sm text-neutral-800 leading-relaxed">{item}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {isInstallPromptAvailable && installDevice !== 'ios' && (
+                                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border border-neutral-200 bg-neutral-50 px-4 py-3">
+                                        <p className="text-sm text-neutral-600 leading-relaxed">
+                                            Браузер уже позволяет установить приложение прямо сейчас.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => void handleInstallApp()}
+                                            disabled={isInstalling}
+                                            className="min-h-[44px] px-4 inline-flex items-center justify-center gap-2 bg-neutral-900 text-white font-semibold text-sm transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <Download size={16} />
+                                            {isInstalling ? 'Открываем...' : 'Установить PeakTalk'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             
                             <button 
