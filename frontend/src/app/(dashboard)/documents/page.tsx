@@ -21,7 +21,7 @@ type Doc = {
 
 type DocListResponse = { items: Doc[]; total: number };
 
-const FILTERS = ['Все', 'Файлы', 'Тексты', 'Черновики'] as const;
+const FILTERS = ['Все', 'Файлы', 'Тексты'] as const;
 type Filter = (typeof FILTERS)[number];
 
 function getExtBadgeClass(doc: Doc): string {
@@ -77,7 +77,6 @@ export default function DocumentsPage() {
             const matchFilter =
                 activeFilter === 'Все' ? true :
                 activeFilter === 'Файлы' ? doc.source === 'upload' :
-                activeFilter === 'Черновики' ? doc.source === 'draft' :
                 doc.source === 'text';
             return matchSearch && matchFilter;
         });
@@ -178,8 +177,17 @@ export default function DocumentsPage() {
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <p className="text-sm text-neutral-400">Ничего не найдено по «{search}»</p>
-                    <button onClick={() => setSearch('')} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Сбросить</button>
+                    {search ? (
+                        <>
+                            <p className="text-sm text-neutral-400">Ничего не найдено по «{search}»</p>
+                            <button onClick={() => setSearch('')} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Сбросить поиск</button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-neutral-400">В этой категории нет документов</p>
+                            <button onClick={() => setActiveFilter('Все')} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Показать все</button>
+                        </>
+                    )}
                 </div>
             ) : (
                 <>
@@ -209,29 +217,29 @@ export default function DocumentsPage() {
                                             <DocIcon doc={doc} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0 mb-1">
                                                 <div className="text-sm font-medium text-neutral-900 truncate" title={doc.name}>
                                                     {doc.name}
                                                 </div>
-                                                {doc.draft_id && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none shrink-0">
-                                                        Разобран
-                                                    </span>
-                                                )}
                                             </div>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-none ${getExtBadgeClass(doc)}`}>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-none ${getExtBadgeClass(doc)}`}>
                                                     {ext}
                                                 </span>
                                                 <span className="text-[11px] text-neutral-400">
                                                     {format(new Date(doc.created_at), 'dd.MM.yyyy')}
                                                 </span>
+                                                {doc.draft_id && (
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none">
+                                                        Разобран
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-center gap-1 shrink-0">
                                             <Link
                                                 href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
-                                                className="text-xs font-medium text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors min-h-[44px] px-2"
+                                                className="text-xs font-medium text-neutral-500 hover:text-neutral-900 flex items-center gap-1 transition-colors min-h-[44px] px-2"
                                             >
                                                 Разбор <ArrowRight size={12} />
                                             </Link>

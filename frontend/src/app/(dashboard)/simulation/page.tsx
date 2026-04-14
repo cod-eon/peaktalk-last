@@ -707,6 +707,7 @@ function SimulationPageContent() {
                         { step: 1, label: 'Персонаж' },
                         { step: 2, label: 'Индустрия' },
                         { step: 3, label: 'Контекст' },
+                        { step: 4, label: 'Сложность' },
                     ].map(({ step, label }, i) => {
                         const isDone = currentStep > step;
                         const isActive = currentStep === step;
@@ -728,7 +729,7 @@ function SimulationPageContent() {
                                         {label}
                                     </span>
                                 </div>
-                                {i < 2 && (
+                                {i < 3 && (
                                     <div className={`flex-1 h-px max-w-[40px] transition-colors ${isDone ? 'bg-emerald-500' : 'bg-neutral-200'}`} />
                                 )}
                             </React.Fragment>
@@ -1008,6 +1009,65 @@ function SimulationPageContent() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+                </section>
+
+                {/* 4. DIFFICULTY SELECTION */}
+                <section>
+                    <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+                        <span className="text-neutral-500">Шаг 4:</span> Уровень давления
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                            {
+                                value: 2,
+                                label: 'Мягкий',
+                                range: '1–3',
+                                desc: 'Собеседник задаёт вопросы и дождётся ответа. Подходит для первой проработки материала.',
+                            },
+                            {
+                                value: 5,
+                                label: 'Стандарт',
+                                range: '4–6',
+                                desc: 'Реальная рабочая встреча — логика, факты, уточняющие вопросы без снисхождения.',
+                            },
+                            {
+                                value: 8,
+                                label: 'Жёсткий',
+                                range: '7–10',
+                                desc: 'Давление, сомнения, встречные аргументы. Стресс-тест перед самой важной встречей.',
+                            },
+                        ].map((opt) => {
+                            const isSelected = difficulty === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => { setDifficulty(opt.value); setDifficultyManuallySet(true); }}
+                                    className={`text-left p-4 border transition-all duration-200 ${
+                                        isSelected
+                                            ? 'bg-neutral-50 border-2 border-neutral-900'
+                                            : 'bg-white border border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-inter font-semibold text-sm text-neutral-900">{opt.label}</span>
+                                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none ${
+                                            isSelected
+                                                ? 'bg-neutral-900 text-white'
+                                                : 'bg-neutral-100 text-neutral-500'
+                                        }`}>{opt.range}</span>
+                                    </div>
+                                    <p className="font-inter text-xs text-neutral-500 leading-relaxed">{opt.desc}</p>
+                                    {isSelected && (
+                                        <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-neutral-900">
+                                            <CheckCircle2 size={12} />
+                                            Выбрано
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </section>
 

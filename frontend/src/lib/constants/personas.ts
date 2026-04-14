@@ -75,9 +75,9 @@ export function formatDate(iso: string): string {
 export function getInsightTag(session: SessionItem): string | null {
   if (session.avg_score == null) return null;
   const score = Math.round(session.avg_score * 10);
-  if (score >= 9) return '🔥 Отличное выступление';
-  if (score >= 7) return '✅ Уверенная аргументация';
-  if (score >= 5) return '⚠️ Слабая структура';
-  if (score >= 3) return '📌 Нужна работа над логикой';
-  return '🚨 Критические пробелы';
+  if (score >= 9) return 'Отличное выступление';
+  if (score >= 7) return 'Уверенная аргументация';
+  if (score >= 5) return 'Слабая структура';
+  if (score >= 3) return 'Нужна работа над логикой';
+  return 'Критические пробелы';
 }

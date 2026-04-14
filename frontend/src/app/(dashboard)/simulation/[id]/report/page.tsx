@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { PERSONA_LABELS } from '@/lib/constants/personas';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -48,23 +49,6 @@ type PopoverState = {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const PERSONA_LABELS: Record<string, string> = {
-    supervisor: 'Научный руководитель',
-    reviewer: 'Придирчивый рецензент',
-    peer: 'Однокурсник-скептик',
-    tech_lead: 'Тимлид / Principal Engineer',
-    hr: 'HR-менеджер',
-    senior_dev: 'Старший разработчик',
-    investor: 'Венчурный инвестор',
-    partner: 'Корпоративный партнёр',
-    customer: 'Потенциальный клиент',
-    board: 'Совет директоров',
-    subordinate: 'Скептичный подчинённый',
-    journalist: 'Журналист',
-    audience: 'Общая аудитория',
-    moderator: 'Модератор дискуссии',
-    listener: 'Скептик из зала',
-};
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -592,11 +576,11 @@ export default function SimulationReportPage() {
                         {/* Actions */}
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 mb-20 border-t border-gray-100 pt-10">
                             <button
-                                onClick={() => router.push('/upload')}
+                                onClick={() => router.push('/simulation')}
                                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-none border border-gray-200 transition-all shadow-sm h-12"
                             >
                                 <RefreshCw size={18} />
-                                Пройти еще раз (Сложнее)
+                                Пройти ещё раз (Выбрать уровень сложности)
                             </button>
                             {avgScore10 >= 7 && (
                                 <button
