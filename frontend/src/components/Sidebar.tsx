@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import { useBillingStore } from '@/store/billingStore';
 import { PlanBadge } from '@/components/PlanBadge';
+import { NotificationsPopover } from '@/components/NotificationsPopover';
 
 const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
@@ -158,6 +159,23 @@ export function Sidebar() {
                         </AnimatePresence>
                     </div>
                 </Link>
+
+                <div className="flex items-center w-full px-1 py-1">
+                    <NotificationsPopover />
+                    <AnimatePresence>
+                        {isExpanded && (
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.12 }}
+                                className="text-[13px] font-inter font-medium text-neutral-400 ml-2"
+                            >
+                                Уведомления
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 <button
                     onClick={handleLogout}

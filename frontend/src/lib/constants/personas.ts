@@ -25,6 +25,8 @@ export const PERSONA_LABELS: Record<string, string> = {
   investor: 'Венчурный инвестор',
   partner: 'Корпоративный партнёр',
   customer: 'Потенциальный клиент',
+  demanding_client: 'Требовательный клиент',
+  procurement: 'Менеджер по закупкам',
   board: 'Совет директоров',
   subordinate: 'Скептичный подчинённый',
   journalist: 'Журналист',
@@ -39,6 +41,8 @@ export const ROLE_VISUALS: Record<string, RoleVisual> = {
   investor:   { icon: TrendingUp,    iconColor: 'text-amber-600',  iconBg: 'bg-amber-50' },
   partner:    { icon: Users,         iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
   customer:   { icon: MessageSquare, iconColor: 'text-green-600',  iconBg: 'bg-green-50' },
+  demanding_client: { icon: MessageSquare, iconColor: 'text-red-600', iconBg: 'bg-red-50' },
+  procurement:      { icon: Briefcase,     iconColor: 'text-indigo-600', iconBg: 'bg-indigo-50' },
   tech_lead:  { icon: Briefcase,     iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
   hr:         { icon: Users,         iconColor: 'text-pink-600',   iconBg: 'bg-pink-50' },
   senior_dev: { icon: Zap,           iconColor: 'text-cyan-600',   iconBg: 'bg-cyan-50' },
@@ -57,6 +61,7 @@ export const DEFAULT_VISUAL: RoleVisual = { icon: Bot, iconColor: 'text-neutral-
 
 export const SHORT_PERSONA: Record<string, string> = {
   investor: 'Инвестор', partner: 'Партнёр', customer: 'Клиент',
+  demanding_client: 'Сл. клиент', procurement: 'Закупки',
   tech_lead: 'Тимлид', hr: 'HR', senior_dev: 'Dev',
   supervisor: 'Науч. рук.', reviewer: 'Рецензент', peer: 'Коллега',
   board: 'Совет', subordinate: 'Подчин.', journalist: 'Журналист',

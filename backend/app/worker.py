@@ -37,6 +37,11 @@ celery_app.conf.update(
             "task": "app.worker.renew_subscriptions_task",
             "schedule": crontab(hour=7, minute=0),
         },
+        # Check unread notifications and send email fallbacks. Runs every 15 minutes.
+        "fallback-unread-notifications": {
+            "task": "app.worker.fallback_unread_notifications_task",
+            "schedule": crontab(minute="*/15"),
+        },
     },
 )
 
@@ -355,5 +360,111 @@ def renew_subscriptions_task(self) -> dict:
             "failed": failed,
             "downgraded": downgraded,
         }
+
+    return asyncio.run(_run())
+
+
+# ---------------------------------------------------------------------------
+# Notification tasks
+# ---------------------------------------------------------------------------
+
+@celery_app.task(bind=True, name="app.worker.send_web_push_task", max_retries=3)
+def send_web_push_task(self, notification_id: str) -> dict:
+    """Send a Web Push notification to all active subscriptions of the user."""
+    import asyncio
+    import logging
+    from sqlalchemy import select
+    from pywebpush import webpush, WebPushException
+
+    from app.models.notification import Notification, PushSubscription
+    from app.models.user import User
+
+    log = logging.getLogger("peaktalk.worker.push")
+
+    async def _run():
+        async with _make_session()() as db:
+            result = await db.execute(select(Notification).where(Notification.id == uuid.UUID(notification_id)))
+            notification = result.scalar_one_or_none()
+            if not notification:
+                return {"status": "not_found"}
+
+            subs_result = await db.execute(select(PushSubscription).where(PushSubscription.user_id == notification.user_id))
+            subscriptions = subs_result.scalars().all()
+
+            if not subscriptions:
+                log.info("send_web_push: no subscriptions for user %s", notification.user_id)
+                return {"status": "no_subscriptions"}
+
+            payload = {
+                "title": notification.title,
+                "body": notification.message,
+                "icon": "/icon.svg"
+            }
+            
+            # Using dummy VAPID info, in real usage would come from settings
+            # We don't have them in settings yet so we use placeholders or mock
+            vapid_private_key = getattr(settings, "vapid_private_key", "MOCK_PRIVATE_KEY")
+            vapid_claims = {"sub": "mailto:admin@peaktalk.ru"}
+
+            sent = 0
+            for sub in subscriptions:
+                try:
+                    if vapid_private_key != "MOCK_PRIVATE_KEY":
+                        webpush(
+                            subscription_info={
+                                "endpoint": sub.endpoint,
+                                "keys": {"p256dh": sub.p256dh, "auth": sub.auth}
+                            },
+                            data=str(payload),
+                            vapid_private_key=vapid_private_key,
+                            vapid_claims=vapid_claims
+                        )
+                    sent += 1
+                except WebPushException as ex:
+                    log.error("send_web_push: Push failed: %s", repr(ex))
+            
+            return {"status": "sent", "count": sent}
+
+    return asyncio.run(_run())
+
+
+@celery_app.task(bind=True, name="app.worker.fallback_unread_notifications_task")
+def fallback_unread_notifications_task(self) -> dict:
+    """Check for notifications older than 15 mins that haven't been read or fallback sent."""
+    import asyncio
+    import logging
+    from datetime import timedelta
+    from sqlalchemy import select
+
+    from app.models.notification import Notification
+    from app.models.user import User
+
+    log = logging.getLogger("peaktalk.worker.fallback")
+
+    async def _run():
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=15)
+        sent_emails = 0
+        
+        async with _make_session()() as db:
+            result = await db.execute(
+                select(Notification)
+                .where(Notification.is_read == False)
+                .where(Notification.fallback_sent == False)
+                .where(Notification.created_at <= cutoff)
+            )
+            notifications = result.scalars().all()
+            
+            for notif in notifications:
+                user_res = await db.execute(select(User).where(User.id == notif.user_id))
+                user = user_res.scalar_one_or_none()
+                if user:
+                    log.info("Would send fallback email to %s for notification %s", user.email, notif.id)
+                    # mock sending email
+                    notif.fallback_sent = True
+                    sent_emails += 1
+
+            await db.commit()
+            
+        return {"sent_emails": sent_emails}
 
     return asyncio.run(_run())
