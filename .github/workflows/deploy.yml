@@ -133,7 +133,29 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci
+        shell: bash
+        run: |
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          npm config set network-timeout 300000
+
+          for attempt in 1 2 3; do
+            echo "npm ci attempt ${attempt}/3"
+            if npm ci --no-audit --no-fund; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 3 ]; then
+              echo "npm ci failed after 3 attempts"
+              exit 1
+            fi
+
+            echo "Transient npm failure detected. Cleaning cache and retrying..."
+            npm cache verify || true
+            sleep 15
+          done
 
       - name: Detect changed frontend source files
         id: changed-frontend
