@@ -69,7 +69,11 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) setDisplayName(user.user_metadata?.display_name || '');
     api.get('/me')
-      .then((me: any) => {
+      .then((me: { 
+        onboarding_profile: OnboardingProfile | null, 
+        notification_email_enabled: boolean, 
+        notification_push_enabled: boolean 
+      }) => {
         setOnboardingProfile(me.onboarding_profile);
         setEmailNotifications(me.notification_email_enabled ?? true);
         setPushNotifications(me.notification_push_enabled ?? true);
