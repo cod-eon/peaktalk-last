@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CheckCircle2 } from "lucide-react";
+import { translateAuthError } from "@/lib/authErrors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(false);
 
     if (resetError) {
-      setError(resetError.message);
+      setError(translateAuthError(resetError.message));
       return;
     }
 

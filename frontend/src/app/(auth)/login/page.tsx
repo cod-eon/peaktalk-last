@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { translateAuthError } from "@/lib/authErrors";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,7 +33,7 @@ export default function LoginPage() {
     setCaptchaToken(undefined);
 
     if (signInError) {
-      setError(signInError.message);
+      setError(translateAuthError(signInError.message));
       setIsLoading(false);
       return;
     }

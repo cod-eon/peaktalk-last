@@ -26,121 +26,68 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
   const [mounted, setMounted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [desktopPanelPosition, setDesktopPanelPosition] = useState<{ left: number; bottom: number } | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   const queryClient = useQueryClient();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    setMounted(true);
+  }, []);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
 
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      const clickedTrigger = triggerRef.current?.contains(target);
-      const clickedPanel = panelRef.current?.contains(target);
-
-      if (!clickedTrigger && !clickedPanel) {
+      if (!triggerRef.current?.contains(target) && !panelRef.current?.contains(target)) {
         setIsOpen(false);
       }
     };
-
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
+      if (event.key === "Escape") setIsOpen(false);
     };
 
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
 
+  // Scroll lock on mobile when open
   useEffect(() => {
-    if (!isMobile || !isOpen) {
-      return;
-    }
-
-    const originalOverflow = document.body.style.overflow;
+    if (!isMobile || !isOpen) return;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [isMobile, isOpen]);
-
-  useEffect(() => {
-    if (isMobile || !isOpen || !triggerRef.current || typeof window === "undefined") {
-      return;
-    }
-
-    const updateDesktopPosition = () => {
-      if (!triggerRef.current) {
-        return;
-      }
-
-      const rect = triggerRef.current.getBoundingClientRect();
-      const viewportPadding = 16;
-      const panelWidth = 320;
-      const desiredLeft = rect.right + 12;
-      const left = Math.min(desiredLeft, window.innerWidth - panelWidth - viewportPadding);
-      const bottom = Math.max(viewportPadding, window.innerHeight - rect.bottom);
-
-      setDesktopPanelPosition({ left, bottom });
-    };
-
-    updateDesktopPosition();
-    window.addEventListener("resize", updateDesktopPosition);
-    window.addEventListener("scroll", updateDesktopPosition, true);
-
-    return () => {
-      window.removeEventListener("resize", updateDesktopPosition);
-      window.removeEventListener("scroll", updateDesktopPosition, true);
-    };
-  }, [isMobile, isOpen, isExpanded]);
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
     queryFn: () => api.get("/api/notifications/"),
-    refetchInterval: 60000, // Reduced to 60s since WS handles real-time
+    refetchInterval: 60000,
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => api.post(`/api/notifications/${id}/read`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: () => api.post("/api/notifications/read-all"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const handleNotificationClick = async (notification: NotificationItem) => {
     if (!notification.is_read) {
       await markAsReadMutation.mutateAsync(notification.id);
     }
-
     setIsOpen(false);
     router.push(notification.target_url || "/dashboard");
-  };
-
-  const handleMarkAllAsRead = async () => {
-    await markAllAsReadMutation.mutateAsync();
   };
 
   const renderNotificationsList = () => (
@@ -151,22 +98,22 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
             Сигналы системы
           </h3>
           {unreadCount > 0 && (
-            <span className="text-[10px] font-mono bg-neutral-900 text-white px-1.5 py-0.5 rounded-sm shadow-sm opacity-90">
+            <span className="text-[10px] font-mono bg-neutral-900 text-white px-1.5 py-0.5 rounded-sm">
               {unreadCount} НОВЫХ
             </span>
           )}
         </div>
         <button
           type="button"
-          onClick={() => void handleMarkAllAsRead()}
+          onClick={() => void markAllAsReadMutation.mutateAsync()}
           disabled={unreadCount === 0 || markAllAsReadMutation.isPending}
-          className="h-8 px-3 border border-neutral-200 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-700 rounded-none transition-colors"
+          className="h-8 px-3 border border-neutral-200 bg-white hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-700 transition-colors"
         >
           Прочитать все
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide py-2 max-h-[400px] sm:max-h-[500px]">
+      <div className="flex-1 overflow-y-auto py-2" style={{ maxHeight: isMobile ? '60vh' : '400px' }}>
         {isLoading ? (
           <div className="p-12 flex justify-center">
             <div className="w-5 h-5 border-2 border-neutral-200 border-t-neutral-800 rounded-full animate-spin" />
@@ -182,23 +129,14 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
               <div
                 key={notif.id}
                 onClick={() => void handleNotificationClick(notif)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    void handleNotificationClick(notif);
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void handleNotificationClick(notif); } }}
                 role="button"
                 tabIndex={0}
-                className={`
-                  group relative p-3 rounded-lg hover:bg-neutral-50 transition-colors border border-transparent text-left w-full cursor-pointer
-                  ${!notif.is_read ? "bg-white border-neutral-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]" : "opacity-75"}
-                `}
+                className={`group relative p-3 rounded-lg hover:bg-neutral-50 transition-colors border border-transparent text-left w-full cursor-pointer ${!notif.is_read ? "bg-white border-neutral-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]" : "opacity-75"}`}
               >
                 {!notif.is_read && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-neutral-900 rounded-r-full" />
                 )}
-                
                 <div className="flex flex-col gap-[2px] pl-2">
                   <div className="flex justify-between items-start">
                     <span className={`text-[13px] leading-tight ${!notif.is_read ? "font-bold text-neutral-900" : "font-medium text-neutral-600"}`}>
@@ -206,10 +144,7 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
                     </span>
                     {!notif.is_read && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void markAsReadMutation.mutateAsync(notif.id);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); void markAsReadMutation.mutateAsync(notif.id); }}
                         className="w-5 h-5 flex items-center justify-center text-neutral-300 hover:text-neutral-900 transition-colors rounded-full hover:bg-neutral-100"
                         title="Пометить как прочитанное"
                       >
@@ -217,9 +152,7 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
                       </button>
                     )}
                   </div>
-                  <p className="text-[12px] text-neutral-500 leading-relaxed max-w-[90%]">
-                    {notif.message}
-                  </p>
+                  <p className="text-[12px] text-neutral-500 leading-relaxed max-w-[90%]">{notif.message}</p>
                   <span className="text-[10px] font-mono text-neutral-300 mt-1 uppercase tracking-tight">
                     {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ru })}
                   </span>
@@ -229,20 +162,22 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
           </div>
         )}
       </div>
-      
-      <Link 
-        href="/settings" 
+
+      <Link
+        href="/settings"
         onClick={() => setIsOpen(false)}
-        className="p-3 bg-neutral-50/50 backdrop-blur-sm border-t border-neutral-100 text-center text-[10px] font-bold text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-all uppercase tracking-widest shrink-0"
+        className="p-3 bg-neutral-50/50 border-t border-neutral-100 text-center text-[10px] font-bold text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-all uppercase tracking-widest shrink-0"
       >
         Настройки уведомлений
       </Link>
     </div>
   );
 
+  // ── Mobile: bottom sheet via portal ─────────────────────────────────────────
   const mobileSheet = mounted ? createPortal(
     <>
       <motion.div
+        key="overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -251,11 +186,12 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
         onClick={() => setIsOpen(false)}
       />
       <motion.div
+        key="sheet"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="fixed inset-x-0 bottom-0 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-2xl flex flex-col overflow-hidden safe-bottom"
+        className="fixed inset-x-0 bottom-0 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-2xl flex flex-col overflow-hidden"
         style={{ zIndex: 100, maxHeight: "min(85vh, 720px)" }}
         ref={panelRef}
       >
@@ -268,20 +204,26 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
     document.body
   ) : null;
 
-  const desktopPanel = mounted && desktopPanelPosition ? createPortal(
+  // ── Desktop: fixed panel anchored to sidebar ─────────────────────────────────
+  const desktopPanel = (
     <motion.div
+      key="desktop-panel"
       ref={panelRef}
-      initial={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(4px)" }}
-      animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-      exit={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(4px)" }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="fixed w-80 bg-white/95 backdrop-blur-xl border border-neutral-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl z-[100] overflow-hidden flex flex-col ring-1 ring-black/5"
-      style={{ left: desktopPanelPosition.left, bottom: desktopPanelPosition.bottom, maxHeight: "min(520px, calc(100vh - 32px))" }}
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="fixed w-80 bg-white border border-neutral-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[100] overflow-hidden flex flex-col"
+      style={{
+        left: isExpanded ? 252 : 84,
+        bottom: 64,
+        maxHeight: "min(520px, calc(100vh - 80px))",
+        transition: "left 0.22s ease-in-out",
+      }}
     >
       {renderNotificationsList()}
-    </motion.div>,
-    document.body
-  ) : null;
+    </motion.div>
+  );
 
   return (
     <div className={`relative ${isMobile ? '' : 'w-[216px]'}`}>
@@ -291,10 +233,12 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
         onClick={() => setIsOpen(!isOpen)}
         className={`
           flex items-center transition-all duration-150 relative group
-          ${isMobile ? "h-9 w-9 justify-center border border-transparent hover:border-neutral-200 hover:bg-neutral-50 rounded-none" : "gap-3 px-2.5 h-9 w-full"}
+          ${isMobile
+            ? "h-9 w-9 justify-center border border-transparent hover:border-neutral-200 hover:bg-neutral-50"
+            : "gap-3 px-2.5 h-9 w-full"}
           ${isMobile
             ? (isOpen ? "bg-neutral-100 border-neutral-200 text-neutral-900" : "text-neutral-400 hover:text-neutral-600")
-            : (!isMobile && isOpen ? "bg-neutral-100 text-neutral-900" : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50")}
+            : (isOpen ? "bg-neutral-100 text-neutral-900" : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50")}
         `}
         aria-expanded={isOpen}
         aria-label="Открыть уведомления"
@@ -311,8 +255,7 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
             </span>
           )}
         </div>
-        
-        {/* Only PC sidebar expansion text */}
+
         <AnimatePresence>
           {!isMobile && isExpanded && (
             <motion.span
@@ -329,13 +272,7 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
       </button>
 
       <AnimatePresence>
-        {isOpen && (
-          isMobile ? (
-            mobileSheet
-          ) : (
-            desktopPanel
-          )
-        )}
+        {isOpen && (isMobile ? mobileSheet : desktopPanel)}
       </AnimatePresence>
     </div>
   );

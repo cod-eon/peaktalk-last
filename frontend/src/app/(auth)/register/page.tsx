@@ -6,8 +6,8 @@ import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
-import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
+import { translateAuthError } from "@/lib/authErrors";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -40,7 +40,7 @@ export default function RegisterPage() {
     setCaptchaToken(undefined);
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(translateAuthError(signUpError.message));
       setIsLoading(false);
       return;
     }
