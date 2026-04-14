@@ -6,7 +6,8 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.api.dependencies import get_current_user, get_db
+from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.notification import Notification, PushSubscription
 from app.models.user import User
 
