@@ -347,7 +347,21 @@ export default function SettingsPage() {
                   </button>
                 </div>
 
-                <div className="pt-6 border-t border-neutral-200 flex justify-end">
+                <div className="pt-6 border-t border-neutral-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.post('/api/notifications/test');
+                        toast.success('Тестовый сигнал отправлен!');
+                      } catch (err) {
+                        toast.error('Ошибка отправки теста');
+                      }
+                    }}
+                    className="text-[10px] font-bold text-neutral-400 hover:text-neutral-900 uppercase tracking-widest border border-neutral-200 px-4 py-2 hover:bg-neutral-50 transition-all flex items-center gap-2"
+                  >
+                    <Clock className="w-3 h-3" />
+                    Отправить тест
+                  </button>
                   <button
                     onClick={handleSaveNotifications}
                     disabled={isSavingNotifications}

@@ -91,3 +91,21 @@ async def mark_notification_read(
     notification.is_read = True
     await db.commit()
     return {"message": "Marked as read"}
+
+
+@router.post("/test")
+async def send_test_notification(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Debug endpoint to send a test notification to yourself."""
+    notif = Notification(
+        user_id=current_user.id,
+        title="Тестовый сигнал",
+        message="Поздравляем! Система уведомлений PeakTalk работает корректно.",
+        type="success",
+    )
+    db.add(notif)
+    await db.flush()
+    return {"status": "ok", "id": str(notif.id)}
+
