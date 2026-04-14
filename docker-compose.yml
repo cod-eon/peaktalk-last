@@ -115,6 +115,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
+    image: peaktalk-worker:latest
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
@@ -140,9 +141,7 @@ services:
   # ── Celery Beat scheduler ────────────────────────────────────────────────────
   # Sends periodic tasks (e.g. expire abandoned sessions every 30 min).
   beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.worker
+    image: peaktalk-worker:latest
     restart: unless-stopped
     env_file: ./backend/.env
     environment:

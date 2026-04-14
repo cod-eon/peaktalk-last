@@ -17,6 +17,9 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 echo ""
 echo "=============================================="
 echo "  PeakTalk Deploy  —  $(date '+%Y-%m-%d %H:%M:%S')"
@@ -26,28 +29,102 @@ echo "=============================================="
 echo ""
 echo "[1/4] Pulling latest code from main..."
 git fetch origin main
-git reset --hard origin/main
+
+CURRENT_HEAD="$(git rev-parse HEAD)"
+REMOTE_HEAD="$(git rev-parse origin/main)"
+CHANGED_FILES="$(git diff --name-only "$CURRENT_HEAD" "$REMOTE_HEAD" || true)"
+
+if [ -z "$CHANGED_FILES" ]; then
+    echo "  Already up to date. Nothing to deploy."
+    exit 0
+fi
+
+echo "  Changed files:"
+printf '    - %s\n' $CHANGED_FILES
+
+need_backend=false
+need_frontend=false
+need_nginx=false
+full_deploy=false
+
+while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    case "$file" in
+        backend/tests/*|docs/*|walkthrough.md)
+            ;;
+        backend/*)
+            need_backend=true
+            ;;
+        frontend/*)
+            need_frontend=true
+            ;;
+        nginx/*)
+            need_nginx=true
+            ;;
+        docker-compose.yml|deploy.sh|.github/workflows/*)
+            full_deploy=true
+            ;;
+        *)
+            ;;
+    esac
+done <<< "$CHANGED_FILES"
+
+if [ "$full_deploy" = true ]; then
+    need_backend=true
+    need_frontend=true
+    need_nginx=true
+fi
+
+git reset --hard "$REMOTE_HEAD"
 
 # ── Step 2: Build Docker images ───────────────────────────────────────────────
 echo ""
 echo "[2/4] Building Docker images..."
-docker compose build api worker
-docker compose build --no-cache frontend
+if [ "$need_backend" = true ]; then
+    echo "  Backend changed -> rebuilding api + worker images"
+    docker compose up -d postgres redis
+    docker compose build api worker
+    echo "  Running migrations"
+    docker compose run --rm migrate
+else
+    echo "  Backend unchanged -> skipping backend rebuild"
+fi
+
+if [ "$need_frontend" = true ]; then
+    echo "  Frontend changed -> rebuilding frontend image with cache"
+    docker compose build frontend
+else
+    echo "  Frontend unchanged -> skipping frontend rebuild"
+fi
 
 # ── Step 3: Start / update services ───────────────────────────────────────────
 echo ""
 echo "[3/4] Starting services..."
+services_to_up=()
 
-# Полностью останавливаем и удаляем compose-контейнеры проекта, но сохраняем
-# именованные volumes с данными Postgres/Redis. Это надежнее, чем ручной rm -f,
-# который иногда оставляет контейнеры в состоянии "marked for removal" и ломает
-# следующий docker compose up.
-docker compose down --remove-orphans
+if [ "$need_backend" = true ]; then
+    services_to_up+=(api worker beat)
+fi
 
-docker compose up -d
+if [ "$need_frontend" = true ]; then
+    services_to_up+=(frontend)
+fi
 
-# Restart nginx to force DNS re-resolution of upstream IPs after recreation
-docker compose restart nginx
+if [ "$need_nginx" = true ] || [ "$need_backend" = true ] || [ "$need_frontend" = true ]; then
+    services_to_up+=(nginx)
+fi
+
+if [ "${#services_to_up[@]}" -eq 0 ]; then
+    echo "  No runtime-impacting changes detected. Code synced only."
+else
+    echo "  Updating services: ${services_to_up[*]}"
+    docker compose up -d --remove-orphans "${services_to_up[@]}"
+
+    # Force nginx to reconnect to recreated upstream containers.
+    if printf '%s\n' "${services_to_up[@]}" | grep -qx 'nginx'; then
+        docker compose restart nginx
+    fi
+fi
 
 # ── Step 4: Health check ───────────────────────────────────────────────────────
 echo ""

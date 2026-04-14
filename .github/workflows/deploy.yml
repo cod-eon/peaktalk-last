@@ -32,11 +32,44 @@ on:
   # Allow manual trigger from GitHub Actions UI
   workflow_dispatch:
 
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      deploy: ${{ steps.filter.outputs.deploy }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/deploy.yml'
+            deploy:
+              - 'backend/**'
+              - 'frontend/**'
+              - 'nginx/**'
+              - 'docker-compose.yml'
+              - 'deploy.sh'
+              - '.github/workflows/deploy.yml'
+
   # ── Job 1: Run Tests ────────────────────────────────────────────────────────
   test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true'
 
     steps:
       - name: Checkout code
@@ -73,13 +106,19 @@ jobs:
   deploy:
     name: Deploy to VDS
     runs-on: ubuntu-latest
-    needs: test          # Only deploy if tests pass
-    if: github.ref == 'refs/heads/main'
+    needs: [changes, test]
+    if: >
+      github.ref == 'refs/heads/main' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        needs.changes.outputs.deploy == 'true'
+      ) &&
+      (
+        needs.test.result == 'success' ||
+        needs.test.result == 'skipped'
+      )
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       # Install the SSH key from GitHub Secrets so we can connect to the VDS
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -104,11 +143,16 @@ jobs:
       # (optional — only works if your VDS is publicly accessible)
       - name: Verify deployment
         run: |
-          echo "Waiting 15s for services to stabilize..."
-          sleep 15
-          echo "Checking health endpoint..."
           if [ -n "${{ secrets.VDS_DOMAIN }}" ]; then
-            curl -ksf "https://${{ secrets.VDS_DOMAIN }}/health"
+            for i in $(seq 1 10); do
+              if curl -ksf "https://${{ secrets.VDS_DOMAIN }}/health"; then
+                exit 0
+              fi
+              echo "Health check retry $i/10..."
+              sleep 3
+            done
+            echo "Health check failed."
+            exit 1
           else
             echo "Health check skipped: VDS_DOMAIN secret is not set."
           fi
