@@ -388,6 +388,13 @@ def send_web_push_task(self, notification_id: str) -> dict:
             if not notification:
                 return {"status": "not_found"}
 
+            user_result = await db.execute(select(User).where(User.id == notification.user_id))
+            user = user_result.scalar_one_or_none()
+            
+            if not user or not getattr(user, 'notification_push_enabled', True):
+                log.info("send_web_push: notifications disabled for user %s", notification.user_id)
+                return {"status": "disabled_by_user"}
+
             subs_result = await db.execute(select(PushSubscription).where(PushSubscription.user_id == notification.user_id))
             subscriptions = subs_result.scalars().all()
 
@@ -458,10 +465,11 @@ def fallback_unread_notifications_task(self) -> dict:
                 user_res = await db.execute(select(User).where(User.id == notif.user_id))
                 user = user_res.scalar_one_or_none()
                 if user:
-                    log.info("Would send fallback email to %s for notification %s", user.email, notif.id)
-                    # mock sending email
+                    if getattr(user, 'notification_email_enabled', True):
+                        log.info("Would send fallback email to %s for notification %s", user.email, notif.id)
+                        # mock sending email
+                        sent_emails += 1
                     notif.fallback_sent = True
-                    sent_emails += 1
 
             await db.commit()
             

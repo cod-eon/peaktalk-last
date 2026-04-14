@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.dependencies import _get_supabase, get_current_user
 from app.models.user import OnboardingProfile, User
-from app.schemas.user import OnboardingProfileCreate, UserResponse
+from app.schemas.user import OnboardingProfileCreate, UserResponse, UserUpdate
 
 logger = logging.getLogger("peaktalk.users")
 
@@ -80,3 +80,26 @@ async def delete_me(
     await db.delete(current_user)
     await db.flush()
     logger.info("delete_me: local user deleted user_id=%s", user_id)
+
+
+@router.patch("", response_model=UserResponse)
+async def update_me(
+    body: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    if body.notification_email_enabled is not None:
+        current_user.notification_email_enabled = body.notification_email_enabled
+    if body.notification_push_enabled is not None:
+        current_user.notification_push_enabled = body.notification_push_enabled
+
+    await db.flush()
+    
+    # Reload with onboarding profile
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.onboarding_profile))
+        .where(User.id == current_user.id)
+    )
+    return result.scalar_one()
+

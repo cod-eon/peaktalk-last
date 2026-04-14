@@ -18,6 +18,8 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
     created_at: datetime
+    notification_email_enabled: bool
+    notification_push_enabled: bool
     onboarding_profile: OnboardingProfileResponse | None = None
 
     model_config = {"from_attributes": True}
@@ -26,3 +28,8 @@ class UserResponse(BaseModel):
 class OnboardingProfileCreate(BaseModel):
     segment: UserSegment
     primary_goal: UserGoal
+
+
+class UserUpdate(BaseModel):
+    notification_email_enabled: bool | None = None
+    notification_push_enabled: bool | None = None

@@ -62,12 +62,35 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+
   useEffect(() => {
     if (user) setDisplayName(user.user_metadata?.display_name || '');
     api.get('/me')
-      .then((me: { onboarding_profile: OnboardingProfile | null }) => setOnboardingProfile(me.onboarding_profile))
+      .then((me: any) => {
+        setOnboardingProfile(me.onboarding_profile);
+        setEmailNotifications(me.notification_email_enabled ?? true);
+        setPushNotifications(me.notification_push_enabled ?? true);
+      })
       .catch(() => {});
   }, [user]);
+
+  const handleSaveNotifications = async () => {
+    setIsSavingNotifications(true);
+    try {
+      await api.patch('/me', {
+        notification_email_enabled: emailNotifications,
+        notification_push_enabled: pushNotifications,
+      });
+      toast.success('Настройки уведомлений обновлены');
+    } catch (err: unknown) {
+      toast.error('Не удалось обновить настройки');
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     const trimmed = displayName.trim();
@@ -287,7 +310,51 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'notifications' && (
-            <ComingSoonTab label="СИГНАЛЫ" icon={Bell} />
+            <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
+              <div>
+                <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Уведомления</h2>
+                <p className="text-xs text-neutral-400">Управляйте тем, как мы отправляем вам обновления.</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between py-4 border-b border-neutral-100">
+                  <div>
+                    <h3 className="text-sm font-semibold text-neutral-900">Email-уведомления</h3>
+                    <p className="text-xs text-neutral-500 mt-1">Оповещения о симуляциях на вашу электронную почту.</p>
+                  </div>
+                  <button 
+                    onClick={() => setEmailNotifications(!emailNotifications)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${emailNotifications ? 'bg-neutral-900' : 'bg-neutral-200'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${emailNotifications ? 'translate-x-2' : '-translate-x-2'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between py-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-neutral-900">Push-уведомления</h3>
+                    <p className="text-xs text-neutral-500 mt-1">Мгновенные уведомления в браузере о важных событиях.</p>
+                  </div>
+                  <button 
+                    onClick={() => setPushNotifications(!pushNotifications)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${pushNotifications ? 'bg-neutral-900' : 'bg-neutral-200'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${pushNotifications ? 'translate-x-2' : '-translate-x-2'}`} />
+                  </button>
+                </div>
+
+                <div className="pt-6 border-t border-neutral-200 flex justify-end">
+                  <button
+                    onClick={handleSaveNotifications}
+                    disabled={isSavingNotifications}
+                    className="inline-flex items-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
+                  >
+                    {isSavingNotifications ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Сохранить изменения
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
         </div>

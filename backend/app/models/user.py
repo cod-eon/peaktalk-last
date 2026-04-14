@@ -45,6 +45,10 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    
+    # Notification preferences
+    notification_email_enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
+    notification_push_enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
 
     onboarding_profile: Mapped["OnboardingProfile | None"] = relationship(
         "OnboardingProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"

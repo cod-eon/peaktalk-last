@@ -30,7 +30,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export function NotificationsPopover() {
+export function NotificationsPopover({ isExpanded }: { isExpanded: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -50,7 +50,7 @@ export function NotificationsPopover() {
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["notifications"],
     queryFn: () => api.get("/api/notifications/"),
-    refetchInterval: 30000, // Poll every 30s
+    refetchInterval: 30000,
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -62,143 +62,127 @@ export function NotificationsPopover() {
     },
   });
 
-  const subscribePushMutation = useMutation({
-    mutationFn: (subscription: PushSubscriptionJSON) =>
-      api.post("/api/notifications/subscribe", subscription),
-    onSuccess: () => {
-      toast.success("Уведомления включены");
-    },
-  });
-
-  const handleSubscribePush = async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      toast.error("Ваш браузер не поддерживает push-уведомления.");
-      return;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        toast.error("Уведомления не разрешены пользователем.");
-        return;
-      }
-
-      // Register the service worker if not already registered
-      const registration = await navigator.serviceWorker.register("/worker-development.js");
-      await navigator.serviceWorker.ready;
-
-      // Ensure you replace this with your actual VAPID public key
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BIz_YOUR_DEFAULT_VAPID_PUBLIC_KEY_HERE";
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey,
-      });
-
-      subscribePushMutation.mutate(subscription.toJSON());
-    } catch (error) {
-      console.error("Error subscribing to push", error);
-      toast.error("Ошибка при подписке на уведомления.");
-    }
-  };
-
   return (
-    <div className="relative" ref={popoverRef}>
+    <div className="relative w-full" ref={popoverRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center w-9 h-9 rounded-md transition-colors hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600"
-        title="Уведомления"
+        className={`
+          flex items-center gap-3 px-2.5 h-9 transition-all duration-150 w-full relative group
+          ${isOpen ? "bg-neutral-100 text-neutral-900" : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50"}
+        `}
       >
-        <Bell size={18} strokeWidth={2} />
-        {unreadCount > 0 && (
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-        )}
+        <div className="relative shrink-0">
+          <Bell
+            size={17}
+            strokeWidth={isOpen ? 2.5 : 2}
+            className={`transition-colors ${isOpen ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-500"}`}
+          />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-neutral-900 text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className={`text-[13px] whitespace-nowrap font-inter ${isOpen ? "font-semibold text-neutral-900" : "font-medium"}`}
+            >
+              Уведомления
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            transition={{ duration: 0.15 }}
-            className="absolute left-full top-0 ml-4 w-80 bg-white border border-neutral-200 shadow-xl rounded-xl z-50 overflow-hidden flex flex-col"
+            initial={{ opacity: 0, x: -10, y: 0 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            className={`
+              fixed left-[72px] bottom-16 ml-3 w-80 bg-white border border-neutral-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none z-[100] overflow-hidden flex flex-col
+              ${isExpanded ? "left-[240px]" : "left-[72px]"}
+            `}
+            style={{ transition: "left 0.22s ease-in-out" }}
           >
-            <div className="flex items-center justify-between p-4 border-b border-neutral-100 bg-neutral-50/50">
-              <h3 className="font-semibold text-neutral-900 text-sm">Уведомления</h3>
-              {Notification.permission !== "granted" && (
-                <button
-                  onClick={handleSubscribePush}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  Включить push
-                </button>
+            <div className="p-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/30">
+              <h3 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">
+                Сигналы системы
+              </h3>
+              {unreadCount > 0 && (
+                <span className="text-[10px] font-mono bg-neutral-900 text-white px-1.5 py-0.5">
+                  {unreadCount} НОВЫХ
+                </span>
               )}
             </div>
 
-            <div className="max-h-[360px] overflow-y-auto w-full">
+            <div className="max-h-[400px] overflow-y-auto scrollbar-hide py-2">
               {isLoading ? (
-                <div className="p-8 flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-800 rounded-full animate-spin" />
+                <div className="p-12 flex justify-center">
+                  <div className="w-5 h-5 border-2 border-neutral-200 border-t-neutral-800 rounded-full animate-spin" />
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="p-8 flex flex-col items-center justify-center text-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 mb-1">
-                    <Bell size={18} />
-                  </div>
-                  <p className="text-sm font-medium text-neutral-600">Нет новых уведомлений</p>
-                  <p className="text-xs text-neutral-400">Здесь будут появляться важные обновления</p>
+                <div className="p-12 text-center">
+                  <Bell className="w-8 h-8 text-neutral-100 mx-auto mb-3" />
+                  <p className="text-xs font-medium text-neutral-400 uppercase tracking-tight">Пусто</p>
                 </div>
               ) : (
-                <ul className="flex flex-col">
+                <div className="flex flex-col">
                   {notifications.map((notif) => (
-                    <li
+                    <div
                       key={notif.id}
-                      className={`relative flex gap-3 p-4 border-b border-neutral-50 last:border-0 hover:bg-neutral-50/80 transition-colors ${
-                        !notif.is_read ? "bg-blue-50/30" : ""
-                      }`}
+                      className={`
+                        group relative p-4 hover:bg-neutral-50 transition-colors border-b border-neutral-50 last:border-0
+                        ${!notif.is_read ? "bg-white" : "opacity-60"}
+                      `}
                     >
-                      <div className="shrink-0 mt-0.5">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            !notif.is_read ? "bg-blue-100 text-blue-600" : "bg-neutral-100 text-neutral-500"
-                          }`}
-                        >
-                          {notif.type === "success" ? (
-                            <Check size={14} strokeWidth={2.5} />
-                          ) : (
-                            <Info size={14} strokeWidth={2.5} />
+                      {!notif.is_read && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-neutral-900" />
+                      )}
+                      
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-start">
+                          <span className={`text-[13px] leading-tight ${!notif.is_read ? "font-bold text-neutral-900" : "font-medium text-neutral-600"}`}>
+                            {notif.title}
+                          </span>
+                          {!notif.is_read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsReadMutation.mutate(notif.id);
+                              }}
+                              className="w-5 h-5 flex items-center justify-center text-neutral-300 hover:text-neutral-900 transition-colors"
+                            >
+                              <Check size={14} />
+                            </button>
                           )}
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0 pr-8">
-                        <p className={`text-sm mb-0.5 ${!notif.is_read ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-700'}`}>
-                          {notif.title}
-                        </p>
-                        <p className="text-[13px] text-neutral-500 leading-relaxed mb-1.5 break-words">
+                        <p className="text-[12px] text-neutral-500 leading-relaxed">
                           {notif.message}
                         </p>
-                        <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
+                        <span className="text-[10px] font-mono text-neutral-300 mt-1">
                           {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ru })}
                         </span>
                       </div>
-
-                      {!notif.is_read && (
-                        <button
-                          onClick={() => markAsReadMutation.mutate(notif.id)}
-                          disabled={markAsReadMutation.isPending}
-                          className="absolute right-4 top-4 w-6 h-6 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100 text-neutral-400 hover:text-neutral-700"
-                          title="Отметить как прочитанное"
-                        >
-                          <Check size={14} />
-                        </button>
-                      )}
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
+            
+            <Link 
+              href="/settings" 
+              onClick={() => setIsOpen(false)}
+              className="p-3 bg-neutral-50 border-t border-neutral-100 text-center text-[10px] font-bold text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all uppercase tracking-widest"
+            >
+              Настройки уведомлений
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
