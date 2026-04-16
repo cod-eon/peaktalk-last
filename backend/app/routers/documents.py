@@ -23,6 +23,7 @@ ALLOWED_CONTENT_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
     "application/msword": "doc",
     "text/plain": "txt",
+    "text/markdown": "md",
 }
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB hard limit
@@ -42,7 +43,7 @@ async def upload_document(
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=f"Unsupported file type: {file.content_type}. Allowed: PDF, DOCX, TXT",
+            detail="Неподдерживаемый тип файла. Разрешены PDF, DOC, DOCX, TXT и MD.",
         )
 
     file_bytes = await file.read()
@@ -50,7 +51,7 @@ async def upload_document(
     if len(file_bytes) > MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File exceeds 50 MB limit",
+            detail="Файл превышает лимит 50 МБ.",
         )
 
     document_id = uuid.uuid4()
@@ -89,7 +90,7 @@ async def upload_document(
         await storage.delete_file(storage_path)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save document record",
+            detail="Не удалось сохранить документ.",
         )
 
     await increment_document_counter(str(current_user.id), db)
@@ -192,7 +193,7 @@ async def delete_document(
     )
     doc = result.scalar_one_or_none()
     if doc is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Документ не найден.")
 
     if doc.storage_path:
         await storage.delete_file(doc.storage_path)

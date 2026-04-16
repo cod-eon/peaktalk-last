@@ -36,6 +36,12 @@ router = APIRouter(prefix="/simulation", tags=["simulation"])
 # Cache TTL for simulation list (seconds)
 _SIM_LIST_TTL = 60
 
+SESSION_STATUS_LABELS = {
+    "active": "активна",
+    "completed": "завершена",
+    "cancelled": "отменена",
+}
+
 
 def _sim_cache_prefix(user_id: uuid.UUID) -> str:
     return f"sim_list:{user_id}"
@@ -43,6 +49,10 @@ def _sim_cache_prefix(user_id: uuid.UUID) -> str:
 
 def _sim_cache_key(user_id: uuid.UUID, limit: int, offset: int) -> str:
     return f"sim_list:{user_id}:{limit}:{offset}"
+
+
+def _status_label(status_value: str) -> str:
+    return SESSION_STATUS_LABELS.get(status_value, status_value)
 
 MAX_TURNS = 10  # Maximum AI questions per session
 
@@ -92,7 +102,7 @@ async def _load_session(
     result = await db.execute(stmt)
     session = result.scalar_one_or_none()
     if session is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сессия не найдена.")
     return session
 
 
@@ -273,7 +283,7 @@ async def send_message(
     if session.status != SessionStatus.active:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Session is {session.status.value}, not active",
+            detail=f"Сессия находится в статусе «{_status_label(session.status.value)}», а не активна.",
         )
 
     # AI-generated content detection — fail open (never blocks on error)
@@ -384,14 +394,14 @@ async def complete_session(
     if session.status != SessionStatus.active:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Session already {session.status.value}",
+            detail=f"Сессия уже находится в статусе «{_status_label(session.status.value)}».",
         )
 
     user_messages = [m for m in session.messages if m.role == MessageRole.user]
     if not user_messages:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cannot complete session with no answers from user",
+            detail="Нельзя завершить сессию без ответов пользователя.",
         )
 
     try:
@@ -415,7 +425,7 @@ async def get_report(
     if session.status != SessionStatus.completed:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Report is only available after session is completed",
+            detail="Отчет доступен только после завершения сессии.",
         )
     # Resolve context title from document or draft
     context_title: str | None = None

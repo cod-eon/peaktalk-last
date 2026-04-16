@@ -80,7 +80,7 @@ async def analyze_draft_endpoint(
     draft = result.scalar_one_or_none()
 
     if draft is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Draft not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Черновик не найден.")
 
     if draft.analysis_result is not None:
         logger.info("Returning cached analysis draft=%s", draft_id)
@@ -95,7 +95,7 @@ async def analyze_draft_endpoint(
         logger.error("Gemini analysis failed draft=%s error=%s", draft_id, exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"AI analysis failed: {exc}",
+            detail=f"Не удалось выполнить AI-анализ: {exc}",
         ) from exc
 
     analysis = AIAnalysisResult(
@@ -124,7 +124,7 @@ async def get_draft(
     )
     draft = result.scalar_one_or_none()
     if draft is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Draft not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Черновик не найден.")
     return draft
 
 
@@ -142,10 +142,10 @@ async def get_analysis(
     )
     draft = result.scalar_one_or_none()
     if draft is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Draft not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Черновик не найден.")
     if draft.analysis_result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not yet available. Call POST /drafts/{id}/analyze first.",
+            detail="Анализ пока недоступен. Сначала запустите POST /drafts/{id}/analyze.",
         )
     return draft.analysis_result

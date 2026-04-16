@@ -21,6 +21,7 @@ class Notification(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=True) # e.g. "simulation_ready"
+    target_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     fallback_sent: Mapped[bool] = mapped_column(

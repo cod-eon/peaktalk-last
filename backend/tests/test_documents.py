@@ -51,6 +51,21 @@ async def test_upload_unsupported_type(client: AsyncClient) -> None:
         files={"file": ("script.exe", io.BytesIO(b"MZ..."), "application/x-msdownload")},
     )
     assert response.status_code == 415
+    assert response.json()["detail"] == "Неподдерживаемый тип файла. Разрешены PDF, DOC, DOCX, TXT и MD."
+
+
+@pytest.mark.asyncio
+async def test_upload_markdown_document(client: AsyncClient) -> None:
+    file_bytes = _make_txt_bytes("# PeakTalk\n\nMarkdown speech draft")
+    response = await client.post(
+        "/documents/upload",
+        files={"file": ("speech.md", io.BytesIO(file_bytes), "text/markdown")},
+        data={"file_type": "speech"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "speech.md"
+    assert data["extracted_text"] == "# PeakTalk\n\nMarkdown speech draft"
 
 
 @pytest.mark.asyncio

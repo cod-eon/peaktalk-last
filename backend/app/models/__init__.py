@@ -1,6 +1,5 @@
 from app.models.document import Document
 from app.models.draft import SpeechDraft
-from app.models.project import Project
 from app.models.simulation import SimulationMessage, SimulationSession, SkillMetric
 from app.models.notification import Notification, PushSubscription
 from app.models.subscription import Payment, Subscription, UsageCounter
@@ -11,7 +10,6 @@ __all__ = [
     "OnboardingProfile",
     "Document",
     "SpeechDraft",
-    "Project",
     "SimulationSession",
     "SimulationMessage",
     "SkillMetric",

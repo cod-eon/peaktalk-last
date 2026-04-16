@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, FileText, Type, Terminal, Activity, Zap, CheckCircle2, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+
+const ALLOWED_FILE_EXTENSIONS = ['pdf', 'doc', 'docx', 'txt', 'md'] as const;
+const MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024;
 
 export default function UploadPage() {
     const router = useRouter();
@@ -41,14 +44,30 @@ export default function UploadPage() {
         e.preventDefault();
         setIsDragging(false);
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            setFile(e.dataTransfer.files[0]);
+            validateAndSetFile(e.dataTransfer.files[0]);
         }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            setFile(e.target.files[0]);
+            validateAndSetFile(e.target.files[0]);
         }
+    };
+
+    const validateAndSetFile = (selectedFile: File) => {
+        const extension = selectedFile.name.split('.').pop()?.toLowerCase() ?? '';
+
+        if (!ALLOWED_FILE_EXTENSIONS.includes(extension as typeof ALLOWED_FILE_EXTENSIONS[number])) {
+            toast.error('Неподдерживаемый тип файла. Разрешены PDF, DOC, DOCX, TXT и MD.');
+            return;
+        }
+
+        if (selectedFile.size > MAX_UPLOAD_SIZE_BYTES) {
+            toast.error('Файл превышает лимит 50 МБ.');
+            return;
+        }
+
+        setFile(selectedFile);
     };
 
     const startAnalysis = async () => {
@@ -126,10 +145,11 @@ export default function UploadPage() {
                 router.push(`/analysis/${draftId}`);
             }, 1000);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Analysis error:', error);
-            setLogs(prev => [...prev, `> ОШИБКА: ${error.message || 'Внутренняя ошибка сервера'}`]);
-            toast.error(error.message || 'Ошибка обработки');
+            const message = error instanceof Error ? error.message : 'Ошибка обработки';
+            setLogs(prev => [...prev, `> ОШИБКА: ${message}`]);
+            toast.error(message);
             setTimeout(() => setIsProcessing(false), 3000);
         }
     };
@@ -169,7 +189,7 @@ export default function UploadPage() {
                                             : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
                                     }`}
                                 >
-                                    <FileText size={16} /> Документ (PDF, DOCX)
+                                    <FileText size={16} /> Документ (PDF, DOC, DOCX, TXT, MD)
                                 </button>
                                 <button
                                     onClick={() => setMode('text')}
@@ -205,7 +225,7 @@ export default function UploadPage() {
                                                 }`}
                                                 onClick={() => !file && fileInputRef.current?.click()}
                                             >
-                                                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".txt,.pdf,.docx,.md" />
+                                                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".txt,.pdf,.doc,.docx,.md" />
                                                 
                                                 {file ? (
                                                     <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">

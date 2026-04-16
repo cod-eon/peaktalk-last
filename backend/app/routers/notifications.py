@@ -1,15 +1,18 @@
 import uuid
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, _get_supabase
 from app.models.notification import Notification, PushSubscription
 from app.models.user import User
+from app.services.notification_payloads import serialize_notification
+from app.ws_manager import manager
+from app.config import settings
 
 router = APIRouter()
 
@@ -22,8 +25,16 @@ class NotificationResponse(BaseModel):
     title: str
     message: str
     type: str | None
+    target_url: str | None
     is_read: bool
     created_at: Any
+
+@router.get("/vapid", status_code=200)
+async def get_vapid_key():
+    """Return the VAPID public key for frontend subscription."""
+    if not settings.vapid_public_key:
+        raise HTTPException(status_code=503, detail="Публичный VAPID-ключ не настроен.")
+    return {"public_key": settings.vapid_public_key}
 
 @router.post("/subscribe", status_code=201)
 async def subscribe_push(
@@ -53,7 +64,7 @@ async def subscribe_push(
         db.add(new_sub)
         
     await db.commit()
-    return {"message": "Subscription saved"}
+    return {"message": "Подписка сохранена."}
 
 
 @router.get("/", response_model=List[NotificationResponse])
@@ -86,11 +97,26 @@ async def mark_notification_read(
     notification = result.scalars().first()
     
     if not notification:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Уведомление не найдено.")
         
     notification.is_read = True
     await db.commit()
-    return {"message": "Marked as read"}
+    return {"message": "Уведомление отмечено как прочитанное."}
+
+
+@router.post("/read-all")
+async def mark_all_notifications_read(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """Mark all user's notifications as read."""
+    result = await db.execute(
+        update(Notification)
+        .where(Notification.user_id == current_user.id, Notification.is_read == False)
+        .values(is_read=True)
+    )
+    await db.commit()
+    return {"message": "Все уведомления отмечены как прочитанные.", "updated": result.rowcount or 0}
 
 
 @router.post("/test")
@@ -104,8 +130,44 @@ async def send_test_notification(
         title="Тестовый сигнал",
         message="Поздравляем! Система уведомлений PeakTalk работает корректно.",
         type="success",
+        target_url="/settings?tab=notifications",
     )
     db.add(notif)
-    await db.flush()
+    await db.commit()
+    await db.refresh(notif)
+
+    await manager.broadcast_to_user_across_workers(
+        user_id=current_user.id,
+        message=serialize_notification(notif)
+    )
+
+    from app.worker import send_web_push_task
+
+    send_web_push_task.delay(str(notif.id))
+    
     return {"status": "ok", "id": str(notif.id)}
 
+
+@router.websocket("/ws")
+async def websocket_endpoint(
+    websocket: WebSocket, 
+    token: str = Query(...)
+):
+    """WebSocket endpoint for real-time notifications."""
+    try:
+        response = _get_supabase().auth.get_user(token)
+        sb_user = response.user
+        if not sb_user:
+            await websocket.close(code=1008)
+            return
+        user_id = uuid.UUID(sb_user.id)
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            _ = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)

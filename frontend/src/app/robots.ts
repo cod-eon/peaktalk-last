@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
     },
     sitemap: "https://peaktalk.ru/sitemap.xml",
-    host: "https://peaktalk.ru",
+    host: "peaktalk.ru",
   };
 }

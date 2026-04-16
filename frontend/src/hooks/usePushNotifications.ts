@@ -30,7 +30,7 @@ const subscribeBrowserToPush = async () => {
 
   const vapidRes = await api.get('/api/notifications/vapid');
   if (!vapidRes?.public_key) {
-    throw new Error('VAPID public key is missing');
+    throw new Error('Публичный ключ push-уведомлений не настроен.');
   }
 
   const applicationServerKey = urlBase64ToUint8Array(vapidRes.public_key);

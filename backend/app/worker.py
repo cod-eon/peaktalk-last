@@ -372,12 +372,14 @@ def renew_subscriptions_task(self) -> dict:
 def send_web_push_task(self, notification_id: str) -> dict:
     """Send a Web Push notification to all active subscriptions of the user."""
     import asyncio
+    import json
     import logging
-    from sqlalchemy import select
+    from sqlalchemy import delete, select
     from pywebpush import webpush, WebPushException
 
     from app.models.notification import Notification, PushSubscription
     from app.models.user import User
+    from app.services.notification_payloads import resolve_notification_target_url
 
     log = logging.getLogger("peaktalk.worker.push")
 
@@ -405,32 +407,41 @@ def send_web_push_task(self, notification_id: str) -> dict:
             payload = {
                 "title": notification.title,
                 "body": notification.message,
-                "icon": "/icon.svg"
+                "icon": "/icon.svg",
+                "url": resolve_notification_target_url(notification),
             }
-            
-            # Using dummy VAPID info, in real usage would come from settings
-            # We don't have them in settings yet so we use placeholders or mock
-            vapid_private_key = getattr(settings, "vapid_private_key", "MOCK_PRIVATE_KEY")
-            vapid_claims = {"sub": "mailto:admin@peaktalk.ru"}
+
+            if not settings.vapid_private_key or not settings.vapid_public_key:
+                log.warning("send_web_push: VAPID keys are not configured")
+                return {"status": "config_missing"}
+
+            vapid_claims = {"sub": settings.vapid_subject}
 
             sent = 0
+            deleted = 0
             for sub in subscriptions:
                 try:
-                    if vapid_private_key != "MOCK_PRIVATE_KEY":
-                        webpush(
-                            subscription_info={
-                                "endpoint": sub.endpoint,
-                                "keys": {"p256dh": sub.p256dh, "auth": sub.auth}
-                            },
-                            data=str(payload),
-                            vapid_private_key=vapid_private_key,
-                            vapid_claims=vapid_claims
-                        )
+                    webpush(
+                        subscription_info={
+                            "endpoint": sub.endpoint,
+                            "keys": {"p256dh": sub.p256dh, "auth": sub.auth}
+                        },
+                        data=json.dumps(payload),
+                        vapid_private_key=settings.vapid_private_key,
+                        vapid_claims=vapid_claims
+                    )
                     sent += 1
                 except WebPushException as ex:
                     log.error("send_web_push: Push failed: %s", repr(ex))
-            
-            return {"status": "sent", "count": sent}
+                    status_code = getattr(getattr(ex, "response", None), "status_code", None)
+                    if status_code in {404, 410}:
+                        await db.execute(delete(PushSubscription).where(PushSubscription.id == sub.id))
+                        deleted += 1
+
+            if deleted:
+                await db.commit()
+
+            return {"status": "sent", "count": sent, "deleted": deleted}
 
     return asyncio.run(_run())
 

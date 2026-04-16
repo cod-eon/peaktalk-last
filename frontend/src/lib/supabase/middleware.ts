@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   // All protected pages (route group `(dashboard)` strips the parens from URL)
-  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/projects', '/settings', '/analysis', '/onboarding']
+  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding']
   const isDashboardRoute = protectedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
 

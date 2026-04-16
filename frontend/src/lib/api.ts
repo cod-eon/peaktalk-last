@@ -2,6 +2,33 @@ import { createClient } from './supabase/client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+const getDefaultErrorMessage = (status: number) => {
+  switch (status) {
+    case 400:
+      return 'Некорректный запрос.'
+    case 401:
+      return 'Сессия истекла. Пожалуйста, войдите снова.'
+    case 403:
+      return 'Нет доступа к ресурсу.'
+    case 404:
+      return 'Запрошенный ресурс не найден.'
+    case 413:
+      return 'Файл слишком большой.'
+    case 415:
+      return 'Неподдерживаемый формат данных.'
+    case 429:
+      return 'Слишком много запросов. Попробуйте позже.'
+    case 500:
+      return 'Внутренняя ошибка сервера.'
+    case 502:
+    case 503:
+    case 504:
+      return 'Сервис временно недоступен. Попробуйте позже.'
+    default:
+      return 'Произошла ошибка'
+  }
+}
+
 export const api = {
   async get(endpoint: string, options: RequestInit = {}) {
     return this.request(endpoint, { ...options, method: 'GET' })
@@ -90,7 +117,7 @@ export const api = {
         throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
       }
 
-      let errorMessage = 'Произошла ошибка'
+      let errorMessage = getDefaultErrorMessage(response.status)
       try {
         const errorData = await response.json()
         if (typeof errorData.detail === 'string') {
@@ -102,11 +129,9 @@ export const api = {
             .join('; ')
         } else if (typeof errorData.message === 'string') {
           errorMessage = errorData.message
-        } else if (response.status === 403) {
-          errorMessage = 'Нет доступа к ресурсу.'
         }
       } catch {
-        errorMessage = response.statusText || errorMessage
+        errorMessage = getDefaultErrorMessage(response.status)
       }
       throw new Error(errorMessage)
     }

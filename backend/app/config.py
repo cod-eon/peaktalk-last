@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
+    # Push Notification (VAPID)
+    vapid_private_key: str = ""
+    vapid_public_key: str = ""
+    vapid_subject: str = "mailto:hello@peaktalk.ru"
+
     # App
     app_env: str = "development"
     debug: bool = False

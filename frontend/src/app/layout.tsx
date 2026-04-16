@@ -32,9 +32,6 @@ export const metadata: Metadata = {
   description:
     "Тренируйте защиту проектов, бюджетов, QBR и переговоров с жесткими стейкхолдерами. PeakTalk стресс-тестирует аргументацию перед реальной встречей.",
   applicationName: "PeakTalk",
-  alternates: {
-    canonical: "/",
-  },
   manifest: "/manifest.json",
   icons: {
     icon: [

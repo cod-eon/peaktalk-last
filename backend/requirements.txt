@@ -24,6 +24,8 @@ python-dotenv==1.0.1
 # Task queue
 celery[redis]==5.4.0
 redis==5.2.1
+pywebpush==2.0.3
+cryptography==45.0.4
 
 # Rate limiting
 slowapi==0.1.9
