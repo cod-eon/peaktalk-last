@@ -1,7 +1,7 @@
 import uuid
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.config import settings
 from app.models.notification import Notification, PushSubscription
@@ -92,6 +92,9 @@ async def test_mark_all_notifications_read_marks_only_current_user_notifications
         user = User(id=TEST_USER_ID, email=TEST_USER_EMAIL)
         db_session.add(user)
         await db_session.flush()
+
+    await db_session.execute(delete(Notification).where(Notification.user_id == user.id))
+    await db_session.commit()
 
     own_unread = Notification(
         user_id=user.id,
