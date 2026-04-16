@@ -5,6 +5,8 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.models.notification import Notification, PushSubscription
+from app.models.user import User
+from tests.conftest import TEST_USER_EMAIL, TEST_USER_ID
 
 
 @pytest.mark.asyncio
@@ -84,7 +86,13 @@ async def test_send_test_notification_persists_and_triggers_delivery(client, db_
 
 
 @pytest.mark.asyncio
-async def test_mark_all_notifications_read_marks_only_current_user_notifications(client, db_session, user):
+async def test_mark_all_notifications_read_marks_only_current_user_notifications(client, db_session):
+    user = await db_session.get(User, TEST_USER_ID)
+    if user is None:
+        user = User(id=TEST_USER_ID, email=TEST_USER_EMAIL)
+        db_session.add(user)
+        await db_session.flush()
+
     own_unread = Notification(
         user_id=user.id,
         title="Unread one",
