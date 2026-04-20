@@ -1,10 +1,11 @@
 import asyncio
 import json
 import re
+from collections.abc import Sequence
 from functools import partial
+from typing import Any
 
-from google import genai
-from google.genai import types
+from openai import OpenAI
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
@@ -85,22 +86,42 @@ class GeminiAnalysisResult:
         self.feedback = feedback
 
 
-def _build_http_options() -> types.HttpOptions | None:
-    proxy_url = settings.gemini_proxy_url.strip()
-    if not proxy_url:
-        return None
-
-    return types.HttpOptions(
-        client_args={"proxy": proxy_url, "trust_env": False},
-        async_client_args={"proxy": proxy_url, "trust_env": False},
-    )
+def create_gemini_client() -> OpenAI:
+    client_kwargs: dict[str, Any] = {
+        "api_key": settings.cloud_ru_api_key,
+        "base_url": settings.cloud_ru_base_url,
+    }
+    return OpenAI(**client_kwargs)
 
 
-def create_gemini_client() -> genai.Client:
-    http_options = _build_http_options()
-    if http_options is None:
-        return genai.Client(api_key=settings.gemini_api_key)
-    return genai.Client(api_key=settings.gemini_api_key, http_options=http_options)
+def extract_completion_text(response: Any) -> str:
+    if not getattr(response, "choices", None):
+        return ""
+
+    content = response.choices[0].message.content
+    if isinstance(content, str):
+        return content.strip()
+
+    if isinstance(content, Sequence):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+                continue
+            if isinstance(item, dict):
+                text = item.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+                continue
+            text = getattr(item, "text", None)
+            if isinstance(text, str):
+                parts.append(text)
+        return "".join(parts).strip()
+
+    text = getattr(content, "text", None)
+    if isinstance(text, str):
+        return text.strip()
+    return ""
 
 
 def _parse_gemini_json(raw: str) -> dict:
@@ -133,20 +154,25 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAn
         response = await loop.run_in_executor(
             None,
             partial(
-                client.models.generate_content,
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=_ANALYSIS_SYSTEM_PROMPT,
-                ),
+                client.chat.completions.create,
+                model=settings.cloud_ru_model,
+                messages=[
+                    {"role": "system", "content": _ANALYSIS_SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.2,
+                top_p=0.9,
+                presence_penalty=0,
+                frequency_penalty=0,
+                max_completion_tokens=3200,
             ),
         )
     except Exception as exc:
-        raise GeminiError(f"Gemini API call failed: {exc}") from exc
+        raise GeminiError(f"Cloud.ru API call failed: {exc}") from exc
 
-    raw = response.text
+    raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Gemini returned empty response")
+        raise GeminiError("Cloud.ru returned empty response")
 
     parsed = _parse_gemini_json(raw)
 
@@ -296,7 +322,7 @@ async def detect_ai_content(text: str) -> bool:
     if score <= 0.25:
         return False
 
-    # Uncertain zone (0.25 < score < 0.75): ask Gemini as arbiter
+    # Uncertain zone (0.25 < score < 0.75): ask Cloud.ru as arbiter
     client = create_gemini_client()
     prompt = (
         f"Этот ответ сгенерирован ИИ?\n---\n{text[:2000]}\n---\n"
@@ -308,17 +334,18 @@ async def detect_ai_content(text: str) -> bool:
         response = await loop.run_in_executor(
             None,
             partial(
-                client.models.generate_content,
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=_AI_DETECTION_SYSTEM,
-                    max_output_tokens=10,
-                    temperature=0.1,  # Low temp = more deterministic
-                ),
+                client.chat.completions.create,
+                model=settings.cloud_ru_model,
+                messages=[
+                    {"role": "system", "content": _AI_DETECTION_SYSTEM},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,
+                top_p=0.9,
+                max_completion_tokens=32,
             ),
         )
-        raw = response.text or ""
+        raw = extract_completion_text(response)
         parsed = _parse_gemini_json(raw)
         return bool(parsed.get("ai_generated", False))
     except Exception:

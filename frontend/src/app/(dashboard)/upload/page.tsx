@@ -133,7 +133,7 @@ export default function UploadPage() {
             const draftId = draftRes.id;
 
             // 3. Request Analysis
-            setLogs(prev => [...prev, '> Запуск глубокого семантического анализа (Gemini)...']);
+            setLogs(prev => [...prev, '> Запуск глубокого семантического анализа (Cloud.ru AI)...']);
             setLogs(prev => [...prev, '> Поиск стилистических и риторических уязвимостей...']);
             
             await api.post(`/drafts/${draftId}/analyze`);
