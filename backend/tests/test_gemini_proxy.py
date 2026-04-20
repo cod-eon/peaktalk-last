@@ -11,12 +11,14 @@ def test_create_gemini_client_without_proxy(monkeypatch) -> None:
     monkeypatch.setattr(gemini_service, "OpenAI", fake_openai)
     monkeypatch.setattr(gemini_service.settings, "cloud_ru_api_key", "test-key")
     monkeypatch.setattr(gemini_service.settings, "cloud_ru_base_url", "https://foundation-models.api.cloud.ru/v1")
+    monkeypatch.setattr(gemini_service.settings, "cloud_ru_timeout_seconds", 30.0)
 
     gemini_service.create_gemini_client()
 
     assert captured == {
         "api_key": "test-key",
         "base_url": "https://foundation-models.api.cloud.ru/v1",
+        "timeout": 30.0,
     }
 
 
