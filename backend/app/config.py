@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     supabase_storage_bucket: str = "peaktalk-dev-bucket"
 
     # AI
-    gemini_api_key: str
-    gemini_proxy_url: str = ""
+    cloud_ru_api_key: str
+    cloud_ru_base_url: str = "https://foundation-models.api.cloud.ru/v1"
+    cloud_ru_model: str = "Qwen/Qwen3-Coder-Next"
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

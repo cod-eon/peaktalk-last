@@ -1,17 +1,15 @@
-"""Gemini prompts and calls for the simulation feature."""
+"""LLM prompts and calls for the simulation feature."""
 import asyncio
 import json
 import re
 from functools import partial
 
-from google import genai
-from google.genai import types
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
-from app.services.gemini import GeminiError, create_gemini_client
+from app.services.gemini import GeminiError, create_gemini_client, extract_completion_text
 
-CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to Gemini
+CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to the model
 
 _SEGMENT_PERSONAS: dict[str, dict] = {
     "manager": {
@@ -573,20 +571,25 @@ async def generate_question(
         response = await loop.run_in_executor(
             None,
             partial(
-                client.models.generate_content,
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                ),
+                client.chat.completions.create,
+                model=settings.cloud_ru_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.55,
+                top_p=0.95,
+                presence_penalty=0.1,
+                frequency_penalty=0.0,
+                max_completion_tokens=650,
             ),
         )
     except Exception as exc:
-        raise GeminiError(f"Gemini simulation call failed: {exc}") from exc
+        raise GeminiError(f"Cloud.ru simulation call failed: {exc}") from exc
 
-    raw = response.text
+    raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Empty Gemini response")
+        raise GeminiError("Empty Cloud.ru response")
 
     parsed = _parse_json(raw)
     parsed_followup = bool(parsed.get("is_followup", is_followup))
@@ -625,15 +628,18 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
         response = await loop.run_in_executor(
             None,
             partial(
-                client.models.generate_content,
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
+                client.chat.completions.create,
+                model=settings.cloud_ru_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                top_p=0.9,
+                max_completion_tokens=2200,
             ),
         )
     except Exception as exc:
-        raise GeminiError(f"Gemini evaluation call failed: {exc}") from exc
+        raise GeminiError(f"Cloud.ru evaluation call failed: {exc}") from exc
 
-    parsed = _parse_json(response.text or "")
+    parsed = _parse_json(extract_completion_text(response))
 
     metrics = []
     for name, data in parsed.items():
@@ -723,20 +729,23 @@ async def generate_prep_card(
         response = await loop.run_in_executor(
             None,
             partial(
-                client.models.generate_content,
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=_PREP_CARD_SYSTEM_PROMPT,
-                ),
+                client.chat.completions.create,
+                model=settings.cloud_ru_model,
+                messages=[
+                    {"role": "system", "content": _PREP_CARD_SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.2,
+                top_p=0.9,
+                max_completion_tokens=1800,
             ),
         )
     except Exception as exc:
-        raise GeminiError(f"Gemini prep card call failed: {exc}") from exc
+        raise GeminiError(f"Cloud.ru prep card call failed: {exc}") from exc
 
-    raw = response.text
+    raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Empty Gemini response for prep card")
+        raise GeminiError("Empty Cloud.ru response for prep card")
 
     parsed = _parse_json(raw)
 
