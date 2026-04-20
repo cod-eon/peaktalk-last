@@ -173,11 +173,23 @@ jobs:
 
       - name: Lint changed frontend files
         if: steps.changed-frontend.outputs.any_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changed-frontend.outputs.all_changed_files }}
         run: |
-          echo "Linting changed files:"
-          printf '%s\n' "${{ steps.changed-frontend.outputs.all_changed_files }}"
-          FILES=$(echo "${{ steps.changed-frontend.outputs.all_changed_files }}" | sed 's|^frontend/||')
-          npx eslint $FILES
+          python - <<'PY'
+          import os
+          import shlex
+          import subprocess
+
+          raw = os.environ["CHANGED_FILES"]
+          files = [path.removeprefix("frontend/") for path in shlex.split(raw) if path]
+
+          print("Linting changed files:")
+          for path in files:
+              print(path)
+
+          subprocess.run(["npx", "eslint", "--", *files], check=True)
+          PY
 
       - name: Skip when no lintable frontend files changed
         if: steps.changed-frontend.outputs.any_changed != 'true'
