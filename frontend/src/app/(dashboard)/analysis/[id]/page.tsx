@@ -582,27 +582,8 @@ export default function AnalysisPage() {
         { id: 'improved' as MobileTab, label: 'AI версия', badge: null, icon: true },
     ];
 
-    // ── Desktop header: Back + Title + Simulation (score & toggle moved out) ──
-    const DesktopHeader = () => (
-        <header className="shrink-0 border-b border-neutral-200 bg-white z-10">
-            <div className="h-14 flex items-center gap-3 px-6">
-                <button onClick={() => router.back()}
-                    className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer group shrink-0">
-                    <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                    <span className="text-[13px] font-inter">Назад</span>
-                </button>
-                <h1 className="flex-1 min-w-0 font-inter text-[14px] font-semibold text-neutral-900 truncate">
-                    {draft.title}
-                </h1>
-                <Link href={`/simulation?draft=${draftId}`} className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white font-medium text-sm px-4 py-2 transition-colors shrink-0">
-                    <Zap size={13} /> Симуляция
-                </Link>
-            </div>
-        </header>
-    );
-
     // ── iOS segmented control (above text in left column) ─────────────────────
-    const TextAiToggle = () => (
+    const renderTextAiToggle = () => (
         <div className="inline-flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-none p-0.5">
             <button onClick={() => setDesktopView('text')}
                 className={`text-[11px] font-mono px-3 py-1.5 rounded-none transition-all cursor-pointer ${
@@ -621,6 +602,24 @@ export default function AnalysisPage() {
         </div>
     );
 
+    const renderDesktopHeader = () => (
+        <header className="shrink-0 border-b border-neutral-200 bg-white z-10">
+            <div className="h-14 flex items-center gap-3 px-6">
+                <button onClick={() => router.back()}
+                    className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors cursor-pointer group shrink-0">
+                    <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <span className="text-[13px] font-inter">Назад</span>
+                </button>
+                <h1 className="flex-1 min-w-0 font-inter text-[14px] font-semibold text-neutral-900 truncate">
+                    {draft.title}
+                </h1>
+                <Link href={`/simulation?draft=${draftId}`} className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white font-medium text-sm px-4 py-2 transition-colors shrink-0">
+                    <Zap size={13} /> Симуляция
+                </Link>
+            </div>
+        </header>
+    );
+
     return (
         <>
             {/* ══════════════════════════════════════════════════════════════
@@ -628,7 +627,7 @@ export default function AnalysisPage() {
             ══════════════════════════════════════════════════════════════ */}
             <div className="hidden lg:flex lg:flex-col h-screen overflow-hidden">
 
-                <DesktopHeader />
+                {renderDesktopHeader()}
 
                 <div className="flex-1 grid grid-cols-[1fr_400px] min-h-0 overflow-hidden">
 
@@ -638,7 +637,7 @@ export default function AnalysisPage() {
 
                             {/* Toggle + hint */}
                             <div className="flex items-center justify-between mb-6">
-                                <TextAiToggle />
+                                {renderTextAiToggle()}
                                 {annotations.length > 0 && desktopView === 'text' && (
                                     <p className="flex items-center gap-1.5 text-[12px] text-neutral-400 font-inter">
                                         <MessageSquare size={12} className="shrink-0" />

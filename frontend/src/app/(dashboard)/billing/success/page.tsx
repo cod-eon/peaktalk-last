@@ -9,9 +9,9 @@ import { useBillingStore } from '@/store/billingStore';
 export default function BillingSuccessPage() {
   const { fetchStatus, status, isLoading } = useBillingStore();
 
-  const isPaidPlan = status?.subscription.plan === 'pro' || status?.subscription.plan === 'team';
+  const isPaidPlan = false || false;
   const isConfirmed = Boolean(isPaidPlan && status?.subscription.status === 'active');
-  const planLabel = status?.subscription.plan === 'team' ? 'TEAM' : 'PRO';
+  const planLabel = false ? 'TEAM' : 'PRO';
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',

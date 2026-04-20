@@ -27,7 +27,7 @@ export function UpgradeBanner() {
   useEffect(() => {
     if (!status) return;
     const plan = status.subscription.plan;
-    if (plan !== 'starter') return;
+    if (plan !== 'free') return;
 
     const used = status.usage.simulations_used;
     const limit = status.limits.simulations_per_month;
@@ -48,7 +48,7 @@ export function UpgradeBanner() {
     openUpgradeModal('simulations');
   };
 
-  if (!status || status.subscription.plan !== 'starter') return null;
+  if (!status || status.subscription.plan !== 'free') return null;
 
   const used = status.usage.simulations_used;
   const limit = status.limits.simulations_per_month ?? 3;

@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { translateAuthError } from "@/lib/authErrors";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [captchaToken, setCaptchaToken] = useState<string | undefined>();
   const captchaRef = useRef<HCaptcha>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/dashboard');
+    const returnUrl = searchParams.get('return') || '/dashboard';
+    router.push(returnUrl);
     router.refresh();
   };
 
@@ -152,10 +154,18 @@ export default function LoginPage() {
 
       <div className="mt-8 text-center text-sm text-neutral-500">
         Нет аккаунта?{" "}
-        <Link href="/register" className="text-neutral-900 hover:text-black transition-colors font-medium">
+        <Link href={`/register${searchParams.get('return') ? `?return=${encodeURIComponent(searchParams.get('return')!)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
           Создать бесплатно
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

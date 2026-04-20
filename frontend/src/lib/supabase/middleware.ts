@@ -39,6 +39,11 @@ export async function updateSession(request: NextRequest) {
   const isDashboardRoute = protectedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
 
+  // Allow guest simulation without auth
+  if (pathname.startsWith('/simulation/guest')) {
+    return supabaseResponse
+  }
+
   if (!user && isDashboardRoute) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()

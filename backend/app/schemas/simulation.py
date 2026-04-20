@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
+from typing import Any
 from pydantic import BaseModel, Field
 
-from app.models.simulation import MessageRole, SessionStatus
+from app.models.simulation import ArtifactType, MessageRole, SessionStatus
 
 
 class PersonaConfig(BaseModel):
@@ -15,6 +16,15 @@ class SimulationStartRequest(BaseModel):
     persona_config: PersonaConfig
     document_id: uuid.UUID | None = None
     draft_id: uuid.UUID | None = None
+
+
+class StartFromScenarioRequest(BaseModel):
+    scenario_id: uuid.UUID
+    difficulty: int = Field(default=3, ge=1, le=10)
+
+
+class StartFromScenarioResponse(BaseModel):
+    id: uuid.UUID
 
 
 class SkillMetricResponse(BaseModel):
@@ -70,6 +80,52 @@ class SimulationSessionListResponse(BaseModel):
 class SimulationReportResponse(SimulationSessionResponse):
     """Report response — extends session with resolved document title."""
     document_title: str | None = None
+    pdf_available: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Artifact schemas
+# ---------------------------------------------------------------------------
+
+class TopArgument(BaseModel):
+    text: str
+    strength: str  # "high" | "medium"
+    anchor_phrase: str
+
+
+class DangerZone(BaseModel):
+    topic: str
+    risk: str
+    suggested_response: str
+
+
+class PrepCardContent(BaseModel):
+    top_arguments: list[TopArgument] = []
+    anchor_phrases: list[str] = []
+    danger_zones: list[DangerZone] = []
+    key_numbers: list[str] = []
+    opening_move: str = ""
+
+
+class ArtifactPaywallTeaser(BaseModel):
+    top_arguments_count: int
+    anchor_phrases_preview: list[str]
+    danger_zones_count: int
+
+
+class ArtifactPaywall(BaseModel):
+    message: str
+    cta: str
+    action: str
+
+
+class SessionArtifactResponse(BaseModel):
+    """Response from GET /simulation/{session_id}/artifact."""
+    available: bool
+    generating: bool = False
+    artifact: PrepCardContent | None = None
+    teaser: ArtifactPaywallTeaser | None = None
+    paywall: ArtifactPaywall | None = None
 
 
 class SendMessageRequest(BaseModel):
@@ -81,3 +137,10 @@ class SendMessageResponse(BaseModel):
     assistant_message: SimulationMessageResponse | None = None
     session_completed: bool = False
     ai_detected: bool = False
+
+class StartFromGuestRequest(BaseModel):
+    guest_session_id: uuid.UUID
+    difficulty: int = Field(default=3, ge=1, le=10)
+
+class StartFromGuestResponse(BaseModel):
+    id: uuid.UUID

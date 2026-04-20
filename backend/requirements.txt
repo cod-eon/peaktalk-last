@@ -30,6 +30,10 @@ cryptography==45.0.4
 # Rate limiting
 slowapi==0.1.9
 
+# Feature Flags
+openfeature-sdk>=0.8.0
+devcycle-python-server-sdk>=3.0.0
+
 # Document parsing
 pypdf==5.1.0
 python-docx==1.1.2
@@ -39,6 +43,10 @@ python-multipart==0.0.12
 
 # Payment processing
 yookassa==3.3.0
+
+# Email
+resend==2.4.0
+httpx>=0.27.0
 
 # Testing
 pytest==8.3.4

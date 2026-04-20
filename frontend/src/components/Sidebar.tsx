@@ -10,6 +10,9 @@ import {
     FileText,
     LogOut,
     CreditCard,
+    Calendar,
+    TrendingUp,
+    Users,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -23,6 +26,9 @@ const NAV_ITEMS = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Мои тексты', path: '/documents', icon: FileText },
     { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Встречи', path: '/meetings', icon: Calendar },
+    { name: 'Прогресс', path: '/progress', icon: TrendingUp },
+    { name: 'Персоны', path: '/personas', icon: Users },
     { name: 'Подписка', path: '/billing', icon: CreditCard },
 ];
 
@@ -41,7 +47,7 @@ export function Sidebar() {
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
     const billingStatus = useBillingStore((s) => s.status);
-    const currentPlan = billingStatus?.subscription.plan ?? 'starter';
+    const currentPlan = billingStatus?.subscription.plan ?? 'free';
 
     return (
         <motion.aside

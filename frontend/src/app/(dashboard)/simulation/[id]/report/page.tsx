@@ -8,6 +8,8 @@ import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { PERSONA_LABELS } from '@/lib/constants/personas';
+import { PrepCard } from '@/components/simulation/PrepCard';
+import { ShareCard } from '@/components/simulation/ShareCard';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -536,6 +538,11 @@ export default function SimulationReportPage() {
                             )}
                         </motion.div>
 
+                        {/* ── Prep Card ──────────────────────────────────────────────── */}
+                        <div className="my-10">
+                            <PrepCard sessionId={sessionId} />
+                        </div>
+
                         {/* ── Transcript (script format) ───────────────────── */}
                         <div>
                             <p className="text-[11px] font-mono text-gray-300 uppercase tracking-widest mb-10">
@@ -573,8 +580,18 @@ export default function SimulationReportPage() {
                             })()}
                         </div>
 
+                        {/* Share Card */}
+                        <div className="my-10 flex border-t border-gray-100 pt-10 justify-center">
+                            <ShareCard 
+                              score={avgScore10} 
+                              personaName={personaName} 
+                              summary={summaryLines[0] || 'Симуляция завершена'} 
+                              metrics={skill_metrics || []} 
+                            />
+                        </div>
+
                         {/* Actions */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 mb-20 border-t border-gray-100 pt-10">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 mb-20 border-t border-gray-100 pt-10">
                             <button
                                 onClick={() => router.push('/simulation')}
                                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-none border border-gray-200 transition-all shadow-sm h-12"
@@ -582,15 +599,6 @@ export default function SimulationReportPage() {
                                 <RefreshCw size={18} />
                                 Пройти ещё раз (Выбрать уровень сложности)
                             </button>
-                            {avgScore10 >= 7 && (
-                                <button
-                                    onClick={handleShare}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold px-6 py-3 rounded-none shadow-md transition-all h-12"
-                                >
-                                    <Share2 size={18} />
-                                    Поделиться результатом
-                                </button>
-                            )}
                         </div>
 
                         <div className="h-[10vh]" />

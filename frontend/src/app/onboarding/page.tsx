@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2, Download, Monitor, Smartphone } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -34,8 +34,11 @@ const GOALS: { id: Goal; label: string; icon: React.ReactNode }[] = [
     { id: 'other', label: 'Другое', icon: <Globe size={20} /> },
 ];
 
-export default function OnboardingPage() {
+function OnboardingForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnUrl = searchParams.get('return') || '/dashboard';
+    
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [segment, setSegment] = useState<Segment | null>(null);
     const [goal, setGoal] = useState<Goal | null>(null);
@@ -57,7 +60,7 @@ export default function OnboardingPage() {
             try {
                 const me = await api.get('/me');
                 if (me?.onboarding_profile) {
-                    router.replace('/dashboard');
+                    router.replace(returnUrl);
                 }
             } catch {
                 // Not logged in or error — stay on page (auth middleware will handle redirect)
@@ -481,7 +484,7 @@ export default function OnboardingPage() {
                             </div>
                             
                             <button 
-                                onClick={() => router.push('/dashboard')} 
+                                onClick={() => router.push(returnUrl)} 
                                 className="mt-6 sm:mt-8 font-mono text-[11px] sm:text-xs tracking-wider uppercase text-neutral-500 hover:text-neutral-900 transition-colors underline underline-offset-4 p-2 cursor-pointer min-h-[44px] inline-flex items-center justify-center"
                             >
                                 Перейти в дашборд
@@ -491,5 +494,13 @@ export default function OnboardingPage() {
                 </AnimatePresence>
             </div>
         </div>
+    );
+}
+
+export default function OnboardingPage() {
+    return (
+        <React.Suspense fallback={<div className="min-h-screen bg-neutral-50 flex items-center justify-center"><Loader2 className="animate-spin text-neutral-400" /></div>}>
+            <OnboardingForm />
+        </React.Suspense>
     );
 }

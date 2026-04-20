@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -12,26 +13,126 @@ from sqlalchemy.orm import selectinload
 
 from app.cache import cache_get, cache_set, cache_invalidate_prefix
 
-from app.database import get_db
+from app.database import get_db, AsyncSessionLocal
 from app.dependencies import get_current_user
 from app.models.document import Document
+from app.models.scenario import Scenario
+from app.models.guest import GuestSession
 from app.models.draft import SpeechDraft
-from app.models.simulation import MessageRole, SessionStatus, SimulationMessage, SimulationSession, SkillMetric
+from app.models.simulation import (
+    ArtifactType,
+    MessageRole,
+    SessionArtifact,
+    SessionStatus,
+    SimulationMessage,
+    SimulationSession,
+    SkillMetric,
+)
 from app.models.user import User
 from app.schemas.simulation import (
+    ArtifactPaywall,
+    ArtifactPaywallTeaser,
+    PrepCardContent,
     SendMessageRequest,
     SendMessageResponse,
+    SessionArtifactResponse,
     SimulationReportResponse,
     SimulationSessionListItem,
     SimulationSessionListResponse,
     SimulationSessionResponse,
+    StartFromScenarioRequest,
+    StartFromGuestRequest,
+    StartFromGuestResponse,
+    StartFromScenarioResponse,
     SimulationStartRequest,
 )
 from app.services.gemini import GeminiError, detect_ai_content
-from app.services.limits import check_simulation_limit, increment_simulation_counter
-from app.services.simulation_ai import evaluate_session, generate_question
+from app.services.limits import (
+    check_simulation_limit,
+    consume_session_credit,
+    get_can_use_pdf,
+    get_plan_limits_for_user,
+    get_user_subscription,
+    increment_simulation_counter,
+)
+from app.services.simulation_ai import evaluate_session, generate_prep_card, generate_question
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
+
+
+async def _generate_and_store_prep_card(session_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    """Fire-and-forget background task: generate prep card and persist as SessionArtifact.
+
+    Opens its own DB session so it does not race with the completing request's transaction.
+    Silently logs errors — the completion response is never blocked by this task.
+    """
+    try:
+        async with AsyncSessionLocal() as db:
+            # Load session with messages
+            stmt = (
+                select(SimulationSession)
+                .options(selectinload(SimulationSession.messages))
+                .where(
+                    SimulationSession.id == session_id,
+                    SimulationSession.user_id == user_id,
+                )
+            )
+            result = await db.execute(stmt)
+            session = result.scalar_one_or_none()
+            if session is None or session.status != SessionStatus.completed:
+                logger.warning(
+                    "prep_card: session not found or not completed session=%s", session_id
+                )
+                return
+
+            # Skip if already generated (idempotent)
+            existing = await db.execute(
+                select(SessionArtifact).where(
+                    SessionArtifact.session_id == session_id,
+                    SessionArtifact.artifact_type == ArtifactType.prep_card,
+                )
+            )
+            if existing.scalar_one_or_none() is not None:
+                logger.debug("prep_card: already exists session=%s", session_id)
+                return
+
+            doc_text = await _get_session_source_text(db, session)
+            messages = [{"role": m.role.value, "content": m.content} for m in session.messages]
+
+            content = await generate_prep_card(doc_text=doc_text, messages=messages)
+
+            artifact = SessionArtifact(
+                session_id=session_id,
+                artifact_type=ArtifactType.prep_card,
+                content=content,
+            )
+            db.add(artifact)
+            await db.commit()
+            logger.info("prep_card: stored artifact session=%s", session_id)
+    except Exception as exc:
+        logger.error("prep_card: generation failed session=%s error=%s", session_id, exc, exc_info=True)
+
+
+async def _user_has_artifact_access(user_id: uuid.UUID, db: AsyncSession) -> bool:
+    """Return True if the user has an active paid plan or session credits."""
+    subscription, counter, limits = await get_plan_limits_for_user(str(user_id), db)
+    if counter.session_credits > 0:
+        return True
+    # Any plan that is not free gives artifact access
+    from app.services.limits import _effective_plan  # local import — private helper
+    from app.models.subscription import PlanType
+    effective = _effective_plan(subscription)
+    return effective not in (PlanType.free,)
+
+
+async def _session_has_artifact_access(
+    session: SimulationSession,
+    user_id: uuid.UUID,
+    db: AsyncSession,
+) -> bool:
+    if bool((session.persona_config or {}).get("paid_access")):
+        return True
+    return await _user_has_artifact_access(user_id, db)
 
 # Cache TTL for simulation list (seconds)
 _SIM_LIST_TTL = 60
@@ -54,7 +155,31 @@ def _sim_cache_key(user_id: uuid.UUID, limit: int, offset: int) -> str:
 def _status_label(status_value: str) -> str:
     return SESSION_STATUS_LABELS.get(status_value, status_value)
 
-MAX_TURNS = 10  # Maximum AI questions per session
+_BASE_TURNS = 8
+_MAX_TURNS_CAP = 15
+
+
+def _calculate_max_turns(session: "SimulationSession", doc_text: str = "") -> int:
+    turns = _BASE_TURNS
+
+    word_count = len(doc_text.split()) if doc_text else 0
+    if word_count > 2000:
+        turns += 2
+
+    user_messages = [m for m in session.messages if m.role == MessageRole.user]
+    high_quality_answers = sum(
+        1
+        for m in user_messages
+        if len(m.content.split()) > 150 and any(c.isdigit() for c in m.content)
+    )
+    if high_quality_answers < 3:
+        turns += 2
+
+    difficulty = int((session.persona_config or {}).get("difficulty", 3))
+    if difficulty >= 4:
+        turns += 2
+
+    return min(turns, _MAX_TURNS_CAP)
 
 
 async def _get_doc_text(
@@ -81,6 +206,70 @@ async def _get_doc_text(
         if draft:
             return draft.raw_text
     return ""
+
+
+async def _get_scenario_source(
+    db: AsyncSession,
+    scenario_id: uuid.UUID | str | None,
+) -> tuple[str, str | None]:
+    if scenario_id is None:
+        return "", None
+
+    if not isinstance(scenario_id, uuid.UUID):
+        try:
+            scenario_id = uuid.UUID(str(scenario_id))
+        except (TypeError, ValueError):
+            return "", None
+
+    result = await db.execute(select(Scenario).where(Scenario.id == scenario_id))
+    scenario = result.scalar_one_or_none()
+    if scenario is None:
+        return "", None
+    return scenario.simulation_context, scenario.title
+
+
+async def _get_session_source_text(
+    db: AsyncSession,
+    session: SimulationSession,
+    user_id: uuid.UUID | None = None,
+) -> str:
+    doc_text = await _get_doc_text(
+        db,
+        session.document_id,
+        session.draft_id,
+        user_id,
+    )
+    if doc_text:
+        return doc_text
+
+    scenario_text, _ = await _get_scenario_source(
+        db,
+        (session.persona_config or {}).get("scenario_id"),
+    )
+    return scenario_text
+
+
+async def _get_session_context_title(
+    db: AsyncSession,
+    session: SimulationSession,
+) -> str | None:
+    if session.document_id:
+        doc_res = await db.execute(
+            select(Document.name).where(Document.id == session.document_id)
+        )
+        return doc_res.scalar_one_or_none()
+
+    if session.draft_id:
+        draft_res = await db.execute(
+            select(SpeechDraft.title).where(SpeechDraft.id == session.draft_id)
+        )
+        return draft_res.scalar_one_or_none()
+
+    _, scenario_title = await _get_scenario_source(
+        db,
+        (session.persona_config or {}).get("scenario_id"),
+    )
+    return scenario_title
 
 
 async def _load_session(
@@ -181,7 +370,7 @@ async def list_sessions(
         context_title = (
             doc_names.get(s.document_id) if s.document_id
             else draft_titles.get(s.draft_id) if s.draft_id
-            else None
+            else (s.persona_config or {}).get("scenario_title")
         )
         items.append(SimulationSessionListItem(
             id=s.id,
@@ -230,11 +419,26 @@ async def start_simulation(
 ) -> SimulationSession:
     doc_text = await _get_doc_text(db, body.document_id, body.draft_id, current_user.id) if (body.document_id or body.draft_id) else ""
 
+    persona_config_data = body.persona_config.model_dump()
+    persona_config_data["paid_access"] = await _user_has_artifact_access(current_user.id, db)
+
+    # Compute and persist max_turns before the session is used in _calculate_max_turns
+    base_word_count = len(doc_text.split()) if doc_text else 0
+    difficulty = int(persona_config_data.get("difficulty", 3))
+    initial_turns = _BASE_TURNS
+    if base_word_count > 2000:
+        initial_turns += 2
+    # New session has no user messages yet → high_quality < 3 branch always adds 2
+    initial_turns += 2
+    if difficulty >= 4:
+        initial_turns += 2
+    persona_config_data["max_turns"] = min(initial_turns, _MAX_TURNS_CAP)
+
     session = SimulationSession(
         user_id=current_user.id,
         document_id=body.document_id,
         draft_id=body.draft_id,
-        persona_config=body.persona_config.model_dump(),
+        persona_config=persona_config_data,
         status=SessionStatus.active,
     )
     db.add(session)
@@ -245,7 +449,7 @@ async def start_simulation(
 
     try:
         turn = await generate_question(
-            persona_config=body.persona_config.model_dump(),
+            persona_config=persona_config_data,
             doc_text=doc_text,
             history=[],
             user_context=user_context,
@@ -263,10 +467,96 @@ async def start_simulation(
     db.add(first_message)
     await db.flush()
 
+    await consume_session_credit(str(current_user.id), db)
     await increment_simulation_counter(str(current_user.id), db)
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
     return await _load_session(db, session.id, current_user.id)
+
+
+@router.post(
+    "/start-from-scenario",
+    response_model=StartFromScenarioResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+@limiter.limit("5/minute")
+async def start_simulation_from_scenario(
+    request: Request,
+    body: StartFromScenarioRequest,
+    _limit_check: None = Depends(check_simulation_limit),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> StartFromScenarioResponse:
+    scenario_res = await db.execute(
+        select(Scenario).where(
+            Scenario.id == body.scenario_id,
+            Scenario.is_active.is_(True),
+        )
+    )
+    scenario = scenario_res.scalar_one_or_none()
+    if scenario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Сценарий не найден.",
+        )
+
+    persona_config_data = {
+        "role": scenario.recommended_persona,
+        "industry": scenario.category.value,
+        "difficulty": body.difficulty,
+        "scenario_id": str(scenario.id),
+        "scenario_slug": scenario.slug,
+        "scenario_title": scenario.title,
+        "paid_access": await _user_has_artifact_access(current_user.id, db),
+    }
+
+    initial_turns = _BASE_TURNS + 2
+    if body.difficulty >= 4:
+        initial_turns += 2
+    persona_config_data["max_turns"] = min(initial_turns, _MAX_TURNS_CAP)
+
+    session = SimulationSession(
+        user_id=current_user.id,
+        persona_config=persona_config_data,
+        status=SessionStatus.active,
+    )
+    db.add(session)
+    await db.flush()
+
+    profile = current_user.onboarding_profile
+    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
+
+    try:
+        turn = await generate_question(
+            persona_config=persona_config_data,
+            doc_text=scenario.simulation_context,
+            history=[],
+            user_context=user_context,
+        )
+    except GeminiError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    db.add(
+        SimulationMessage(
+            session_id=session.id,
+            role=MessageRole.assistant,
+            content=turn.question,
+            internal_reasoning=turn.internal_reasoning,
+            turn_index=0,
+        )
+    )
+    await db.flush()
+
+    await consume_session_credit(str(current_user.id), db)
+    await increment_simulation_counter(str(current_user.id), db)
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
+    logger.info(
+        "Simulation started from scenario user=%s session=%s scenario=%s",
+        current_user.id,
+        session.id,
+        scenario.slug,
+    )
+    return StartFromScenarioResponse(id=session.id)
 
 
 @router.post("/{session_id}/message", response_model=SendMessageResponse)
@@ -302,7 +592,7 @@ async def send_message(
     db.add(user_msg)
     await db.flush()
 
-    doc_text = await _get_doc_text(db, session.document_id, session.draft_id)
+    doc_text = await _get_session_source_text(db, session)
 
     history = [
         {"role": msg.role.value, "content": msg.content}
@@ -312,15 +602,25 @@ async def send_message(
     # Count AI messages already asked (before this user answer)
     ai_turn_count = sum(1 for m in session.messages if m.role == MessageRole.assistant)
 
-    # Auto-complete when MAX_TURNS questions have been asked and answered
-    if ai_turn_count >= MAX_TURNS:
+    max_turns = int((session.persona_config or {}).get("max_turns", _BASE_TURNS))
+
+    # Auto-complete when the session-specific turn limit has been reached
+    if ai_turn_count >= max_turns:
         try:
             await _finalize_session(session, db)
         except GeminiError as exc:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
         await db.refresh(user_msg)
+
+        # Trigger prep card generation for eligible users
+        if await _session_has_artifact_access(session, current_user.id, db):
+            asyncio.create_task(
+                _generate_and_store_prep_card(session.id, current_user.id)
+            )
+            logger.debug("prep_card: task scheduled (auto-complete) session=%s", session.id)
+
         await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
-        logger.info("Session auto-completed at MAX_TURNS=%d session=%s", MAX_TURNS, session_id)
+        logger.info("Session auto-completed at max_turns=%d session=%s", max_turns, session_id)
         return SendMessageResponse(user_message=user_msg, assistant_message=None, session_completed=True)
 
     profile = current_user.onboarding_profile
@@ -366,7 +666,7 @@ async def get_history(
 
 async def _finalize_session(session: SimulationSession, db: AsyncSession) -> None:
     """Run evaluation and mark session as completed. Shared by endpoint and auto-complete."""
-    doc_text = await _get_doc_text(db, session.document_id, session.draft_id)
+    doc_text = await _get_session_source_text(db, session)
     history = [{"role": m.role.value, "content": m.content} for m in session.messages]
     evaluation = await evaluate_session(doc_text=doc_text, messages=history)
     for metric in evaluation.metrics:
@@ -409,6 +709,14 @@ async def complete_session(
     except GeminiError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
+    # Trigger prep card generation as a fire-and-forget background task
+    # for paid users (access check happens inside the task after commit)
+    if await _session_has_artifact_access(session, current_user.id, db):
+        asyncio.create_task(
+            _generate_and_store_prep_card(session.id, current_user.id)
+        )
+        logger.debug("prep_card: task scheduled session=%s", session.id)
+
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Session completed by user user=%s session=%s", current_user.id, session_id)
     return await _load_session(db, session.id, current_user.id, populate_existing=True)
@@ -427,22 +735,93 @@ async def get_report(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Отчет доступен только после завершения сессии.",
         )
-    # Resolve context title from document or draft
-    context_title: str | None = None
-    if session.document_id:
-        doc_res = await db.execute(
-            select(Document.name).where(Document.id == session.document_id)
-        )
-        context_title = doc_res.scalar_one_or_none()
-    elif session.draft_id:
-        from app.models.draft import SpeechDraft
-        draft_res = await db.execute(
-            select(SpeechDraft.title).where(SpeechDraft.id == session.draft_id)
-        )
-        context_title = draft_res.scalar_one_or_none()
+    context_title = await _get_session_context_title(db, session)
+
+    # Determine PDF availability based on user's current plan
+    subscription = await get_user_subscription(str(current_user.id), db)
+    pdf_available = bool(
+        (session.persona_config or {}).get("paid_access") or get_can_use_pdf(subscription)
+    )
 
     base = SimulationSessionResponse.model_validate(session)
-    return SimulationReportResponse(**base.model_dump(), document_title=context_title)
+    return SimulationReportResponse(
+        **base.model_dump(),
+        document_title=context_title,
+        pdf_available=pdf_available,
+    )
+
+
+@router.get("/{session_id}/artifact", response_model=SessionArtifactResponse)
+async def get_artifact(
+    request: Request,
+    session_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SessionArtifactResponse:
+    """Return the prep card artifact for a completed session.
+
+    - paid user + artifact ready    → available=True, full content
+    - paid user + still generating  → available=False, generating=True
+    - free user                     → available=False, teaser + paywall
+    - session not completed         → 422
+    """
+    session = await _load_session(db, session_id, current_user.id)
+    if session.status != SessionStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Шпаргалка доступна только после завершения сессии.",
+        )
+
+    has_access = await _session_has_artifact_access(session, current_user.id, db)
+
+    # Look up existing artifact
+    artifact_res = await db.execute(
+        select(SessionArtifact).where(
+            SessionArtifact.session_id == session_id,
+            SessionArtifact.artifact_type == ArtifactType.prep_card,
+        )
+    )
+    artifact = artifact_res.scalar_one_or_none()
+
+    if has_access:
+        if artifact is not None:
+            return SessionArtifactResponse(
+                available=True,
+                artifact=PrepCardContent.model_validate(artifact.content),
+            )
+        # Still generating — trigger if not already in progress
+        asyncio.create_task(
+            _generate_and_store_prep_card(session_id, current_user.id)
+        )
+        return SessionArtifactResponse(available=False, generating=True)
+
+    # Free user: return teaser with partial info
+    # If no artifact exists we can still build teaser from session data counts
+    if artifact is not None:
+        content = artifact.content
+        top_count = len(content.get("top_arguments", []))
+        danger_count = len(content.get("danger_zones", []))
+        all_phrases = content.get("anchor_phrases", [])
+        preview = all_phrases[:1]
+    else:
+        # No artifact generated for free user — use static placeholder counts
+        top_count = 3
+        danger_count = 2
+        preview = []
+
+    return SessionArtifactResponse(
+        available=False,
+        teaser=ArtifactPaywallTeaser(
+            top_arguments_count=top_count,
+            anchor_phrases_preview=preview,
+            danger_zones_count=danger_count,
+        ),
+        paywall=ArtifactPaywall(
+            message="Шпаргалка доступна в платной сессии",
+            cta="Получить шпаргалку — 299 ₽",
+            action="pay_per_session",
+        ),
+    )
 
 
 @router.post("/{session_id}/abandon", status_code=status.HTTP_204_NO_CONTENT)
@@ -487,3 +866,200 @@ async def abandon_session(
         "Session abandoned user=%s session=%s had_answers=%s final_status=%s",
         current_user.id, session_id, bool(user_messages), session.status.value,
     )
+
+@router.post("/from-guest", response_model=StartFromGuestResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
+async def start_from_guest(
+    request: Request,
+    body: StartFromGuestRequest,
+    _limit_check: None = Depends(check_simulation_limit),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> StartFromGuestResponse:
+    # Load guest session
+    guest_res = await db.execute(
+        select(GuestSession).where(GuestSession.id == body.guest_session_id)
+    )
+    guest = guest_res.scalar_one_or_none()
+    if not guest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Guest session not found",
+        )
+
+    # 1. Consume limits
+    await consume_session_credit(db, current_user.id)
+    await increment_simulation_counter(db, current_user.id)
+
+    # 2. Transfer session
+    persona_config = {
+        "role": guest.persona,
+        "industry": "general",
+        "difficulty": body.difficulty,
+    }
+
+    session = SimulationSession(
+        user_id=current_user.id,
+        persona_config=persona_config,
+        status=SessionStatus.IN_PROGRESS,
+    )
+    db.add(session)
+    await db.flush()
+
+    # 3. Create Draft linked to the simulation
+    # If the user has long text, save it as a draft so PrepCard works properly
+    draft = SpeechDraft(
+        user_id=current_user.id,
+        title="Guest Session Upload",
+        content=guest.text,
+    )
+    db.add(draft)
+    await db.flush()
+
+    session.draft_id = draft.id
+
+    # 4. Transfer messages
+    for idx, msg in enumerate(guest.messages):
+        # ensure mapped correctly to roles
+        # The GuestSession messages format is {"role": "system" | "user" | "assistant", "content": str}
+        role_str = msg.get("role", "system")
+        if role_str == "system":
+            mapped_role = MessageRole.system
+        elif role_str == "assistant":
+            mapped_role = MessageRole.assistant
+        elif role_str == "user":
+            mapped_role = MessageRole.user
+        else:
+            continue
+
+        sim_message = SimulationMessage(
+            session_id=session.id,
+            role=mapped_role,
+            content=msg.get("content", ""),
+            turn_index=idx,
+        )
+        db.add(sim_message)
+
+    await db.delete(guest) # Clean up guest session
+    await db.commit()
+
+    return StartFromGuestResponse(id=session.id)
+
+
+@router.get("/compare")
+async def compare_sessions(
+    request: Request,
+    ids: str = Query(..., description="Comma-separated session UUIDs"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    session_ids = [uuid.UUID(sid.strip()) for sid in ids.split(",") if sid.strip()]
+    if len(session_ids) < 2:
+        raise HTTPException(status_code=422, detail="Нужно минимум 2 сессии для сравнения")
+
+    result = await db.execute(
+        select(SimulationSession)
+        .options(selectinload(SimulationSession.skill_metrics))
+        .where(
+            SimulationSession.id.in_(session_ids),
+            SimulationSession.user_id == current_user.id,
+            SimulationSession.status == SessionStatus.completed,
+        )
+    )
+    sessions = result.scalars().all()
+
+    if len(sessions) < 2:
+        raise HTTPException(status_code=422, detail="Недостаточно завершённых сессий для сравнения")
+
+    comparison = []
+    all_metrics = set()
+    for s in sessions:
+        metrics_map = {}
+        for m in s.skill_metrics:
+            metrics_map[m.metric_name] = m.score
+            all_metrics.add(m.metric_name)
+        comparison.append({
+            "session_id": str(s.id),
+            "created_at": s.created_at.isoformat(),
+            "persona": (s.persona_config or {}).get("role", ""),
+            "metrics": metrics_map,
+        })
+
+    metric_names = sorted(all_metrics)
+    diffs = []
+    if len(comparison) >= 2:
+        latest = comparison[0]
+        previous = comparison[-1]
+        for metric in metric_names:
+            curr = latest["metrics"].get(metric)
+            prev = previous["metrics"].get(metric)
+            if curr is not None and prev is not None:
+                change = round(curr - prev, 3)
+                diffs.append({"metric": metric, "previous": round(prev, 2), "current": round(curr, 2), "change": change})
+
+    return {"sessions": comparison, "metric_names": metric_names, "diffs": diffs}
+
+
+@router.get("/progress/narrative")
+async def get_narrative_progress(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    result = await db.execute(
+        select(SimulationSession)
+        .options(selectinload(SimulationSession.skill_metrics))
+        .where(
+            SimulationSession.user_id == current_user.id,
+            SimulationSession.status == SessionStatus.completed,
+        )
+        .order_by(SimulationSession.created_at.asc())
+    )
+    sessions = result.scalars().all()
+
+    if not sessions:
+        return {"total_sessions": 0, "trajectory": [], "summary": None}
+
+    trajectory = []
+    all_metrics = {}
+    for s in sessions:
+        metrics = {}
+        for m in s.skill_metrics:
+            metrics[m.metric_name] = round(m.score, 2)
+            if m.metric_name not in all_metrics:
+                all_metrics[m.metric_name] = []
+            all_metrics[m.metric_name].append(m.score)
+
+        trajectory.append({
+            "session_id": str(s.id),
+            "created_at": s.created_at.isoformat(),
+            "metrics": metrics,
+        })
+
+    metric_trends = {}
+    for metric, scores in all_metrics.items():
+        if len(scores) >= 2:
+            trend = "up" if scores[-1] > scores[0] else ("down" if scores[-1] < scores[0] else "stable")
+        else:
+            trend = "baseline"
+        metric_trends[metric] = {
+            "latest": round(scores[-1], 2),
+            "average": round(sum(scores) / len(scores), 2),
+            "trend": trend,
+            "sessions_count": len(scores),
+        }
+
+    strongest = max(metric_trends.items(), key=lambda x: x[1]["latest"]) if metric_trends else (None, None)
+    weakest = min(metric_trends.items(), key=lambda x: x[1]["latest"]) if metric_trends else (None, None)
+
+    return {
+        "total_sessions": len(sessions),
+        "trajectory": trajectory,
+        "metric_trends": metric_trends,
+        "summary": {
+            "strongest_skill": strongest[0],
+            "strongest_score": strongest[1]["latest"] if strongest[1] else None,
+            "weakest_skill": weakest[0],
+            "weakest_score": weakest[1]["latest"] if weakest[1] else None,
+        },
+    }

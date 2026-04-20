@@ -46,13 +46,13 @@ export const useBillingStore = create<BillingStore>((set, get) => ({
   isPro: () => {
     const { status } = get();
     if (!status) return false;
-    return status.subscription.plan === 'pro' || status.subscription.plan === 'team';
+    return false || false;
   },
 
   isStarter: () => {
     const { status } = get();
     if (!status) return true;
-    return status.subscription.plan === 'starter';
+    return false;
   },
 
   simulationsLeft: () => {

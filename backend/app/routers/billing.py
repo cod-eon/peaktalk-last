@@ -33,6 +33,8 @@ from app.schemas.subscription import (
 from app.services.limits import (
     PLAN_LIMITS,
     _effective_plan,
+    _normalize_plan,
+    get_can_use_pdf,
     get_plan_limits_for_user,
     get_usage_counter,
     get_user_subscription,
@@ -50,22 +52,48 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 
 _PLAN_CATALOGUE: list[PlanInfo] = [
     PlanInfo(
-        plan=PlanType.starter,
-        name="Starter",
-        price_rub=0,
-        limits=PLAN_LIMITS[PlanType.starter],
+        id="free",
+        name="Бесплатно",
+        price=0,
+        billing="once",
+        simulations="1 сессия",
+        documents="1 документ",
+        features=["Все персоны", "3 вопроса в демо"],
     ),
     PlanInfo(
-        plan=PlanType.pro,
+        id="per_session",
+        name="За сессию",
+        price=299,
+        billing="once",
+        simulations="1 полная сессия",
+        documents="включено",
+        features=["PDF-отчёт", "Шпаргалка", "Все персоны"],
+        primary=True,
+    ),
+    PlanInfo(
+        id="personal",
+        name="Personal",
+        price=790,
+        billing="month",
+        simulations="10 сессий/мес",
+        features=["PDF + sharing", "История прогресса"],
+    ),
+    PlanInfo(
+        id="pro",
         name="PRO",
-        price_rub=990,
-        limits=PLAN_LIMITS[PlanType.pro],
+        price=1490,
+        billing="month",
+        simulations="безлимит",
+        features=["История", "Аналитика"],
     ),
     PlanInfo(
-        plan=PlanType.team,
+        id="team",
         name="Team",
-        price_rub=2490,
-        limits=PLAN_LIMITS[PlanType.team],
+        price=4990,
+        billing="month",
+        simulations="безлимит",
+        seats=5,
+        features=["5 мест", "Общая библиотека", "Командный dashboard"],
     ),
 ]
 
@@ -92,16 +120,22 @@ async def get_billing_status(
     )
 
     effective = _effective_plan(subscription)
-    eff_limits = PLAN_LIMITS[effective]
+    eff_limits = PLAN_LIMITS[_normalize_plan(effective)]
 
-    can_sim = (
+    # Can start simulation: session_credits bypass plan limits
+    has_credits = counter.session_credits > 0
+    plan_allows_sim = (
         eff_limits.simulations_per_month is None
         or counter.simulations_used < eff_limits.simulations_per_month
     )
+    can_sim = has_credits or plan_allows_sim
+
     can_doc = (
         eff_limits.documents_total is None
         or counter.documents_uploaded < eff_limits.documents_total
     )
+
+    can_pdf = get_can_use_pdf(subscription) or has_credits
 
     return BillingStatusResponse(
         subscription=SubscriptionResponse(
@@ -112,11 +146,13 @@ async def get_billing_status(
         usage=UsageStats(
             simulations_used=counter.simulations_used,
             documents_uploaded=counter.documents_uploaded,
+            session_credits=counter.session_credits,
             period_start=counter.period_start,
         ),
         limits=eff_limits,
         can_start_simulation=True if not settings.payments_enabled else can_sim,
         can_upload_document=True if not settings.payments_enabled else can_doc,
+        can_use_pdf=True if not settings.payments_enabled else can_pdf,
         payments_enabled=settings.payments_enabled,
     )
 
@@ -129,7 +165,8 @@ async def get_payment_method(
     """Return masked saved payment method info for the billing page."""
     subscription = await get_user_subscription(str(current_user.id), db)
 
-    is_paid_plan = subscription.plan in (PlanType.pro, PlanType.team)
+    paid_subscription_plans = (PlanType.personal, PlanType.pro, PlanType.team, PlanType.starter)
+    is_paid_plan = subscription.plan in paid_subscription_plans
     has_saved_method = bool(subscription.yookassa_payment_method_id)
     auto_renew_enabled = (
         is_paid_plan
@@ -195,9 +232,13 @@ async def create_subscription_payment(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> CreatePaymentResponse:
-    """Initiate a YooKassa payment to upgrade to PRO or TEAM plan.
+    """Initiate a YooKassa payment.
 
-    Returns a redirect URL that the frontend should open for the user to complete payment.
+    - plan == "per_session": one-time 299 RUB charge. On webhook success,
+      session_credits += 1 for the user. No subscription record is created/updated.
+    - Other paid plans: recurring monthly subscription flow (unchanged).
+
+    Returns a redirect URL for the frontend to send the user to YooKassa.
     """
     if not settings.payments_enabled:
         raise HTTPException(
@@ -205,10 +246,11 @@ async def create_subscription_payment(
             detail={"detail": "Платёжная система временно отключена. Скоро заработает.", "code": "payments_disabled"},
         )
 
-    if body.plan == PlanType.starter:
+    # Unpayable plans
+    if body.plan in (PlanType.free, PlanType.starter):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"detail": "Нельзя оплатить тариф Starter.", "code": "invalid_plan"},
+            detail={"detail": "Этот тариф нельзя оплатить.", "code": "invalid_plan"},
         )
 
     try:
@@ -218,7 +260,7 @@ async def create_subscription_payment(
             return_url=body.return_url,
             customer_email=current_user.email,
         )
-    except RuntimeError as exc:
+    except (ValueError, RuntimeError) as exc:
         logger.error("billing: YooKassa create_payment failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -249,10 +291,12 @@ async def cancel_subscription(
     """Cancel the active paid subscription.
 
     The plan stays active until period_end (or grace period expiry).
+    per_session credits are NOT affected by cancellation.
     """
     subscription = await get_user_subscription(str(current_user.id), db)
 
-    if subscription.plan == PlanType.starter:
+    non_cancellable = (PlanType.free, PlanType.per_session)
+    if subscription.plan in non_cancellable:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"detail": "Нет активной платной подписки для отмены.", "code": "no_paid_subscription"},
@@ -341,7 +385,8 @@ async def test_set_plan(
     subscription.status = SubscriptionStatus.active
     subscription.cancelled_at = None
 
-    if body.plan == PlanType.starter:
+    indefinite_plans = (PlanType.free, PlanType.starter, PlanType.per_session)
+    if body.plan in indefinite_plans:
         subscription.period_end = None
     else:
         days = body.period_days if body.period_days is not None else 30

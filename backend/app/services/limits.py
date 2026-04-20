@@ -2,6 +2,10 @@
 
 Functions here act as FastAPI dependencies injected into routers to gate
 feature access based on the user's active subscription plan.
+
+Priority order for simulation access:
+  1. session_credits > 0  →  consume one credit and allow (any plan)
+  2. Subscription plan limits  →  free/personal/pro/team rules
 """
 
 import logging
@@ -30,25 +34,49 @@ logger = logging.getLogger("peaktalk.limits")
 # Plan definitions
 # ---------------------------------------------------------------------------
 
-STARTER_PERSONAS = ["hr", "investor", "tech_lead"]
+# All plans now grant access to all personas.
+# Persona restriction was removed in M1.2 pricing update.
+ALL_PERSONAS: list[str] | None = None  # None = unrestricted
 
 PLAN_LIMITS: dict[PlanType, PlanLimits] = {
+    # Legacy alias — treated identically to personal for backward compat
     PlanType.starter: PlanLimits(
-        simulations_per_month=3,
-        documents_total=3,
-        personas_allowed=STARTER_PERSONAS,
+        simulations_per_month=10,
+        documents_total=None,
+        personas_allowed=ALL_PERSONAS,
+        pdf_reports=True,
+    ),
+    # New free tier: 1 lifetime simulation total (not monthly)
+    PlanType.free: PlanLimits(
+        simulations_per_month=1,   # enforced as lifetime via free-plan logic
+        documents_total=1,
+        personas_allowed=ALL_PERSONAS,
         pdf_reports=False,
+    ),
+    # per_session is not a subscription plan — credits are tracked on UsageCounter.
+    # This entry exists only so PLAN_LIMITS lookups never KeyError on this enum value.
+    PlanType.per_session: PlanLimits(
+        simulations_per_month=0,   # credits must be purchased; plan alone allows none
+        documents_total=None,
+        personas_allowed=ALL_PERSONAS,
+        pdf_reports=True,
+    ),
+    PlanType.personal: PlanLimits(
+        simulations_per_month=10,
+        documents_total=None,
+        personas_allowed=ALL_PERSONAS,
+        pdf_reports=True,
     ),
     PlanType.pro: PlanLimits(
         simulations_per_month=None,
         documents_total=None,
-        personas_allowed=None,
+        personas_allowed=ALL_PERSONAS,
         pdf_reports=True,
     ),
     PlanType.team: PlanLimits(
         simulations_per_month=None,
         documents_total=None,
-        personas_allowed=None,
+        personas_allowed=ALL_PERSONAS,
         pdf_reports=True,
     ),
 }
@@ -56,8 +84,14 @@ PLAN_LIMITS: dict[PlanType, PlanLimits] = {
 # Grace period: user stays on paid plan N days after period_end expires
 GRACE_PERIOD_DAYS = 3
 
-# Billing period length for counter resets
+# Billing period length for counter resets (subscription plans)
 BILLING_PERIOD_DAYS = 30
+
+# Plans that are subscription-based and have a monthly billing period
+_SUBSCRIPTION_PLANS = {PlanType.personal, PlanType.pro, PlanType.team, PlanType.starter}
+
+# Plans that do NOT expire / have no period_end (free + legacy starter with no period)
+_INDEFINITE_PLANS = {PlanType.free, PlanType.starter}
 
 
 # ---------------------------------------------------------------------------
@@ -65,13 +99,31 @@ BILLING_PERIOD_DAYS = 30
 # ---------------------------------------------------------------------------
 
 
-def _effective_plan(subscription: Subscription) -> PlanType:
-    """Return the plan the user effectively has, respecting grace period."""
-    if subscription.plan == PlanType.starter:
-        return PlanType.starter
+def _normalize_plan(plan: PlanType) -> PlanType:
+    """Normalize legacy plan aliases to their current equivalents."""
+    # starter maps to personal for all limit logic
+    if plan == PlanType.starter:
+        return PlanType.personal
+    return plan
 
+
+def _effective_plan(subscription: Subscription) -> PlanType:
+    """Return the plan the user effectively has, respecting grace period.
+
+    - free / per_session: always effective (no expiry concept)
+    - personal / pro / team: subject to period_end + grace
+    - starter (legacy): treated as personal for limits purposes
+    """
+    plan = subscription.plan
+
+    # Plans without expiry
+    if plan in (PlanType.free, PlanType.per_session):
+        return plan
+
+    # Subscription-based plans
     if subscription.period_end is None:
-        return subscription.plan
+        # No period_end set: still active (legacy starter rows or newly created)
+        return plan
 
     now = datetime.now(timezone.utc)
     period_end = subscription.period_end
@@ -81,10 +133,10 @@ def _effective_plan(subscription: Subscription) -> PlanType:
     grace_deadline = period_end + timedelta(days=GRACE_PERIOD_DAYS)
 
     if now > grace_deadline:
-        # Period ended and grace period passed — treat as starter
-        return PlanType.starter
+        # Subscription expired beyond grace period — fall back to free
+        return PlanType.free
 
-    return subscription.plan
+    return plan
 
 
 def _is_subscription_active(subscription: Subscription) -> bool:
@@ -92,7 +144,6 @@ def _is_subscription_active(subscription: Subscription) -> bool:
     if subscription.status in (SubscriptionStatus.active, SubscriptionStatus.trialing):
         return True
     if subscription.status == SubscriptionStatus.cancelled:
-        # Cancelled but paid period still valid
         if subscription.period_end is None:
             return True
         now = datetime.now(timezone.utc)
@@ -103,13 +154,22 @@ def _is_subscription_active(subscription: Subscription) -> bool:
     return False
 
 
+def get_can_use_pdf(subscription: Subscription) -> bool:
+    """Return whether the user's current plan includes PDF report generation."""
+    effective = _effective_plan(subscription)
+    limits = PLAN_LIMITS.get(effective)
+    if limits is None:
+        return False
+    return limits.pdf_reports
+
+
 # ---------------------------------------------------------------------------
 # Public service functions
 # ---------------------------------------------------------------------------
 
 
 async def get_user_subscription(user_id: str, db: AsyncSession) -> Subscription:
-    """Get or auto-create a Subscription for the user (default: starter)."""
+    """Get or auto-create a Subscription for the user (default: free)."""
     uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
     result = await db.execute(
         select(Subscription).where(Subscription.user_id == uid)
@@ -120,14 +180,14 @@ async def get_user_subscription(user_id: str, db: AsyncSession) -> Subscription:
         now = datetime.now(timezone.utc)
         subscription = Subscription(
             user_id=uid,
-            plan=PlanType.starter,
+            plan=PlanType.free,
             status=SubscriptionStatus.active,
             period_start=now,
             period_end=None,
         )
         db.add(subscription)
         await db.flush()
-        logger.info("limits: auto-created starter subscription user_id=%s", user_id)
+        logger.info("limits: auto-created free subscription user_id=%s", user_id)
 
     return subscription
 
@@ -147,6 +207,7 @@ async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
             user_id=uid,
             simulations_used=0,
             documents_uploaded=0,
+            session_credits=0,
             period_start=now,
         )
         db.add(counter)
@@ -154,7 +215,8 @@ async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
         logger.info("limits: auto-created usage counter user_id=%s", user_id)
         return counter
 
-    # Reset simulation counter if billing period has rolled over
+    # Reset simulation counter if billing period has rolled over.
+    # Only applies to subscription-based plans; free plan is lifetime.
     period_start = counter.period_start
     if period_start.tzinfo is None:
         period_start = period_start.replace(tzinfo=timezone.utc)
@@ -172,12 +234,16 @@ async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
     return counter
 
 
-async def get_plan_limits_for_user(user_id: str, db: AsyncSession) -> tuple[Subscription, UsageCounter, PlanLimits]:
+async def get_plan_limits_for_user(
+    user_id: str, db: AsyncSession
+) -> tuple[Subscription, UsageCounter, PlanLimits]:
     """Convenience: fetch subscription + counter + effective limits in one call."""
     subscription = await get_user_subscription(user_id, db)
     counter = await get_usage_counter(user_id, db)
     effective_plan = _effective_plan(subscription)
-    limits = PLAN_LIMITS[effective_plan]
+    # Normalize legacy starter to personal for limits lookup
+    lookup_plan = _normalize_plan(effective_plan)
+    limits = PLAN_LIMITS[lookup_plan]
     return subscription, counter, limits
 
 
@@ -190,24 +256,44 @@ async def check_simulation_limit(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """FastAPI Dependency. Raises HTTP 402 if monthly simulation limit is exceeded."""
+    """FastAPI Dependency. Raises HTTP 402 if the user cannot start a simulation.
+
+    Priority:
+      1. session_credits > 0  →  consume one credit, allow regardless of plan
+      2. pro / team plan      →  unlimited, allow
+      3. personal / starter   →  monthly counter check
+      4. free plan            →  lifetime counter check (simulations_used >= 1)
+      5. per_session plan     →  no credits and no subscription → deny
+    """
     if not settings.payments_enabled:
         return  # Payments disabled — no limits enforced
 
-    subscription, counter, limits = await get_plan_limits_for_user(str(current_user.id), db)
+    subscription, counter, limits = await get_plan_limits_for_user(
+        str(current_user.id), db
+    )
 
+    # Priority 1: session_credits override everything
+    if counter.session_credits > 0:
+        # Credit will be consumed by consume_session_credit() after session starts
+        return
+
+    effective_plan = _effective_plan(subscription)
+
+    # Priority 2: unlimited plans
     if limits.simulations_per_month is None:
-        return  # Unlimited
+        return
 
+    # Priority 3/4: counter-based limit
     if counter.simulations_used >= limits.simulations_per_month:
-        effective_plan = _effective_plan(subscription)
+        plan_label = _normalize_plan(effective_plan).value.capitalize()
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 "detail": (
-                    f"Достигнут лимит симуляций на тарифе "
-                    f"{effective_plan.value.capitalize()} "
-                    f"({limits.simulations_per_month}/мес). Перейдите на PRO."
+                    f"Достигнут лимит симуляций на тарифе {plan_label} "
+                    f"({limits.simulations_per_month}"
+                    + ("/мес" if effective_plan != PlanType.free else " всего")
+                    + f"). Пополните баланс или перейдите на Personal."
                 ),
                 "code": "simulation_limit_exceeded",
                 "limit_type": "simulations",
@@ -226,7 +312,9 @@ async def check_document_limit(
     if not settings.payments_enabled:
         return  # Payments disabled — no limits enforced
 
-    subscription, counter, limits = await get_plan_limits_for_user(str(current_user.id), db)
+    subscription, counter, limits = await get_plan_limits_for_user(
+        str(current_user.id), db
+    )
 
     if limits.documents_total is None:
         return  # Unlimited
@@ -238,8 +326,8 @@ async def check_document_limit(
             detail={
                 "detail": (
                     f"Достигнут лимит документов на тарифе "
-                    f"{effective_plan.value.capitalize()} "
-                    f"({limits.documents_total} всего). Перейдите на PRO."
+                    f"{_normalize_plan(effective_plan).value.capitalize()} "
+                    f"({limits.documents_total} всего). Перейдите на Personal."
                 ),
                 "code": "document_limit_exceeded",
                 "limit_type": "documents",
@@ -255,41 +343,50 @@ async def check_persona_access(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Raises HTTP 402 if the requested persona is not available on the user's plan."""
-    subscription, _, limits = await get_plan_limits_for_user(str(current_user.id), db)
+    """Raises HTTP 402 if the requested persona is not available on the user's plan.
 
-    if limits.personas_allowed is None:
-        return  # All personas allowed
-
-    if persona not in limits.personas_allowed:
-        effective_plan = _effective_plan(subscription)
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail={
-                "detail": (
-                    f"Персона '{persona}' недоступна на тарифе "
-                    f"{effective_plan.value.capitalize()}. Перейдите на PRO."
-                ),
-                "code": "persona_not_available",
-                "limit_type": "personas",
-                "plan": effective_plan.value,
-                "persona": persona,
-                "allowed": limits.personas_allowed,
-            },
-        )
+    Under M1.2 all plans allow all personas, so this is a no-op.
+    Kept for API compatibility.
+    """
+    # All personas are available on all plans — no check needed.
+    return
 
 
 # ---------------------------------------------------------------------------
-# Counter increment helpers (called after successful operations)
+# Counter increment / credit helpers (called after successful operations)
 # ---------------------------------------------------------------------------
 
 
 async def increment_simulation_counter(user_id: str, db: AsyncSession) -> None:
-    """Increment simulation usage counter for the user."""
+    """Increment simulation usage counter for the user.
+
+    Does NOT consume session_credits — call consume_session_credit() for that.
+    """
     counter = await get_usage_counter(user_id, db)
     counter.simulations_used += 1
     await db.flush()
-    logger.debug("limits: simulation counter incremented user_id=%s total=%d", user_id, counter.simulations_used)
+    logger.debug(
+        "limits: simulation counter incremented user_id=%s total=%d",
+        user_id, counter.simulations_used,
+    )
+
+
+async def consume_session_credit(user_id: str, db: AsyncSession) -> bool:
+    """Consume one session credit if available.
+
+    Returns True if a credit was consumed, False if none were available.
+    Should be called at simulation start when the user has session_credits > 0.
+    """
+    counter = await get_usage_counter(user_id, db)
+    if counter.session_credits <= 0:
+        return False
+    counter.session_credits -= 1
+    await db.flush()
+    logger.info(
+        "limits: session credit consumed user_id=%s remaining=%d",
+        user_id, counter.session_credits,
+    )
+    return True
 
 
 async def increment_document_counter(user_id: str, db: AsyncSession) -> None:
@@ -297,4 +394,7 @@ async def increment_document_counter(user_id: str, db: AsyncSession) -> None:
     counter = await get_usage_counter(user_id, db)
     counter.documents_uploaded += 1
     await db.flush()
-    logger.debug("limits: document counter incremented user_id=%s total=%d", user_id, counter.documents_uploaded)
+    logger.debug(
+        "limits: document counter incremented user_id=%s total=%d",
+        user_id, counter.documents_uploaded,
+    )

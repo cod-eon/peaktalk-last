@@ -2,6 +2,7 @@ import logging
 import logging.config
 import time
 import uuid as uuid_lib
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,8 +11,9 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
+from app.features import init_feature_flags, close_feature_flags
 from app.limiter import limiter
-from app.routers import admin, billing, documents, drafts, simulation, users, webhooks, notifications
+from app.routers import admin, billing, documents, drafts, email_campaigns, feedback, guest_simulation, meetings, notifications, personas, scenarios, simulation, users, webhooks
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +48,12 @@ logger = logging.getLogger("peaktalk")
 
 _is_dev = settings.app_env == "development"
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_feature_flags()
+    yield
+    close_feature_flags()
+
 app = FastAPI(
     title="PeakTalk API",
     description="AI-тренер для подготовки к публичным выступлениям",
@@ -53,6 +61,7 @@ app = FastAPI(
     docs_url="/docs" if _is_dev else None,
     redoc_url="/redoc" if _is_dev else None,
     openapi_url="/openapi.json" if _is_dev else None,
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
@@ -104,10 +113,16 @@ app.include_router(users.router)
 app.include_router(documents.router)
 app.include_router(drafts.router)
 app.include_router(simulation.router)
+app.include_router(guest_simulation.router)
+app.include_router(scenarios.router)
 app.include_router(billing.router)
 app.include_router(webhooks.router)
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(admin.router)
+app.include_router(meetings.router)
+app.include_router(feedback.router)
+app.include_router(personas.router)
+app.include_router(email_campaigns.router)
 
 
 @app.get("/health", tags=["system"])

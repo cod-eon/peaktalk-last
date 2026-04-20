@@ -122,7 +122,13 @@ def _extract_plan_from_payment(payment_obj: dict) -> PlanType:
 
 
 async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None:
-    """Process a payment.succeeded event from YooKassa."""
+    """Process a payment.succeeded event from YooKassa.
+
+    Routing logic:
+    - metadata.plan == "per_session"  →  increment session_credits by 1
+                                          (do NOT touch subscription record)
+    - all other plans                 →  activate/update subscription as before
+    """
     yk_payment_id: str = payment_obj.get("id", "")
     if not yk_payment_id:
         logger.warning("webhooks/yookassa: payment.succeeded missing payment id")
@@ -145,7 +151,7 @@ async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None
         logger.error("webhooks/yookassa: invalid user_id in metadata: %s", raw_user_id)
         return
 
-    # Resolve plan
+    # Resolve plan from metadata
     plan = _extract_plan_from_payment(payment_obj)
 
     # Extract payment amount
@@ -155,12 +161,40 @@ async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None
     except Exception:
         amount = Decimal("0")
 
+    now = datetime.now(timezone.utc)
+
+    # ── per_session: credit-based one-time payment ───────────────────────────
+    if plan == PlanType.per_session:
+        payment_record = Payment(
+            user_id=user_id,
+            amount=amount,
+            currency=(amount_obj.get("currency") or "RUB"),
+            status=PaymentStatus.succeeded,
+            yookassa_payment_id=yk_payment_id,
+            description=payment_obj.get("description"),
+            subscription_id=None,  # No subscription linked for one-time payments
+        )
+        db.add(payment_record)
+
+        # Increment session_credits on UsageCounter
+        counter = await get_usage_counter(str(user_id), db)
+        counter.session_credits += 1
+        await db.flush()
+
+        logger.info(
+            "webhooks/yookassa: per_session payment.succeeded "
+            "payment_id=%s user_id=%s session_credits=%d",
+            yk_payment_id, user_id, counter.session_credits,
+        )
+        return
+
+    # ── Subscription-based plans ─────────────────────────────────────────────
+
     # Extract saved payment method id for future recurrent charges
     pm_obj = payment_obj.get("payment_method") or {}
     payment_method_id: str | None = pm_obj.get("id") if pm_obj.get("saved") else None
 
-    # Persist Payment record
-    now = datetime.now(timezone.utc)
+    # Persist Payment record (subscription_id linked below)
     payment_record = Payment(
         user_id=user_id,
         amount=amount,

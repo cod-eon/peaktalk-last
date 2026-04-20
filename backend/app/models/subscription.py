@@ -21,9 +21,13 @@ from app.database import Base
 
 
 class PlanType(str, enum.Enum):
-    starter = "starter"
+    free = "free"
+    per_session = "per_session"  # One-time credit, not a subscription
+    personal = "personal"        # Was "starter" — 10 sims/month
     pro = "pro"
     team = "team"
+    # Legacy alias kept for backward compatibility with existing DB rows
+    starter = "starter"
 
 
 class SubscriptionStatus(str, enum.Enum):
@@ -192,6 +196,13 @@ class UsageCounter(Base):
         default=0,
     )
     documents_uploaded: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    # Per-session credits purchased via one-time payments (per_session plan).
+    # Each credit allows one full simulation, regardless of subscription plan.
+    session_credits: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         default=0,

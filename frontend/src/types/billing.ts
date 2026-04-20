@@ -1,4 +1,4 @@
-export type PlanId = 'starter' | 'pro' | 'team';
+export type PlanId = 'free' | 'per_session';
 
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing' | 'incomplete';
 
@@ -46,6 +46,7 @@ export interface BillingStatus {
   can_start_simulation: boolean;
   can_upload_document: boolean;
   payments_enabled: boolean;
+  session_credits?: number;
 }
 
 export interface PaymentMethodSummary {

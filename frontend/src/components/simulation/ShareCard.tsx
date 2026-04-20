@@ -1,0 +1,166 @@
+import React, { useRef, useState } from 'react';
+import { Download, Share2, Loader2, Sparkles } from 'lucide-react';
+import html2canvas from 'html2canvas';
+
+export interface ShareCardProps {
+  score: number;
+  personaName: string;
+  summary: string;
+  metrics: { metric_name: string; score: number }[];
+}
+
+export function ShareCard({ score, personaName, summary, metrics }: ShareCardProps) {
+  const maxMetrics = metrics.slice(0, 3);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  function getScoreOpacity(s: number): number {
+    if (s >= 0.7) return 1;
+    if (s >= 0.5) return 0.6;
+    return 0.3;
+  }
+
+  function getScoreText(s: number): string {
+    if (s >= 8) return 'Высокая';
+    if (s >= 6) return 'Выше среднего';
+    if (s >= 4) return 'Средняя';
+    return 'Требует доработки';
+  }
+
+  const exportAsImage = async (action: 'download' | 'share') => {
+    if (!cardRef.current || isExporting) return;
+    
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+      
+      const blob = await new Promise<Blob | null>((resolve) => 
+        canvas.toBlob(resolve, 'image/png')
+      );
+      
+      if (!blob) throw new Error('Blob is null');
+
+      if (action === 'download') {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `peaktalk-score-${score}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else if (action === 'share') {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'score.png', { type: 'image/png' })] })) {
+          const file = new File([blob], 'score.png', { type: 'image/png' });
+          await navigator.share({
+            files: [file],
+            title: 'Мой результат в PeakTalk',
+            text: `Я прошел стресс-тест в PeakTalk на ${score}/10! А ты сможешь?`
+          });
+        } else {
+          // Fallback share logic if file sharing is not supported
+          const text = `Я прошел стресс-тест в PeakTalk на ${score}/10! А ты сможешь? https://peaktalk.ru`;
+          navigator.clipboard.writeText(text);
+          alert('Текст скопирован: ' + text);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to export card', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <div className="my-8 flex flex-col items-center">
+      {/* This is the card that we will capture with html2canvas. 
+          We render it visibly but style it so it looks good embedded too. */}
+      
+      <div 
+        ref={cardRef}
+        className="w-full max-w-md rounded-none overflow-hidden border border-neutral-200 bg-white shadow-sm"
+        style={{ minHeight: 280 }}
+      >
+        <div className="px-6 pt-8 pb-6 border-b border-gray-100 bg-gradient-to-b from-neutral-50 to-white relative">
+          {/* Subtle watermark/decoration */}
+          <div className="absolute top-4 right-4 text-neutral-100 rotate-12 pointer-events-none">
+            <Sparkles size={64} />
+          </div>
+
+          <div className="relative z-10">
+            <div className="mb-4 border-b border-neutral-200 pb-4">
+              <div className="font-inter text-neutral-500 font-medium text-xs mb-1 tracking-widest uppercase flex items-center gap-1">
+                PEAKTALK <span className="opacity-50">/</span> СТРЕСС-ТЕСТ
+              </div>
+              <div className="flex items-baseline gap-2">
+                <div className="font-inter font-extrabold text-neutral-900 leading-none" style={{ fontSize: '42px' }}>
+                  {score}<span className="text-xl text-neutral-400 font-medium">/10</span>
+                </div>
+              </div>
+              <div className="font-mono text-neutral-500" style={{ fontSize: 13, marginTop: '8px' }}>
+                Готовность: {getScoreText(score)}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[#E8600A] text-sm">✦</span>
+              <p className="text-gray-800 font-semibold text-sm">Противник: {personaName}</p>
+            </div>
+            
+            <p className="text-gray-600 text-sm leading-relaxed mb-5 italic line-clamp-3">
+              «{summary}»
+            </p>
+            
+            <div className="flex flex-wrap gap-2">
+              {maxMetrics.map((m) => {
+                 // The backend gives us 0-1, visual expects 0-10 or just a visual block
+                 const s10 = Math.round(m.score * 10);
+                 return (
+                  <span
+                    key={m.metric_name}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white shrink-0 font-mono"
+                    style={{ backgroundColor: '#E8600A', opacity: getScoreOpacity(m.score) }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+                    {m.metric_name} {s10}/10
+                  </span>
+                 );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer of the card */}
+        <div className="bg-neutral-900 px-6 py-4 flex justify-between items-center text-white">
+          <div className="font-bold text-sm tracking-tight">PeakTalk</div>
+          <div className="text-xs text-neutral-400 font-mono">peaktalk.ru</div>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex flex-wrap gap-3 mt-6 w-full max-w-md">
+        <button 
+          onClick={() => exportAsImage('download')}
+          disabled={isExporting}
+          className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-neutral-50 text-neutral-700 font-semibold px-4 py-3 border border-neutral-200 transition-all font-mono text-sm disabled:opacity-50"
+        >
+          {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+          Сохранить PNG
+        </button>
+        
+        <button 
+          onClick={() => exportAsImage('share')}
+          disabled={isExporting}
+          className="flex-1 flex items-center justify-center gap-2 bg-accent-500 hover:bg-accent-600 text-white font-semibold px-4 py-3 transition-colors text-sm disabled:opacity-50"
+        >
+          {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
+          Поделиться
+        </button>
+      </div>
+    </div>
+  );
+}

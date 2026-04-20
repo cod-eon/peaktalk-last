@@ -2,14 +2,14 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { Suspense, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CheckCircle2 } from "lucide-react";
 import { translateAuthError } from "@/lib/authErrors";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,11 +19,15 @@ export default function RegisterPage() {
   const [captchaToken, setCaptchaToken] = useState<string | undefined>();
   const captchaRef = useRef<HCaptcha>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    const returnUrl = searchParams.get('return');
+    const nextUrl = returnUrl ? `/onboarding?return=${encodeURIComponent(returnUrl)}` : '/onboarding';
 
     const supabase = createClient();
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -32,7 +36,7 @@ export default function RegisterPage() {
       options: {
         data: { display_name: name },
         captchaToken,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
       },
     });
 
@@ -52,7 +56,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push('/onboarding');
+router.push(nextUrl);
   };
 
   if (isSuccess) {
@@ -203,10 +207,18 @@ export default function RegisterPage() {
 
       <div className="mt-8 text-center text-sm text-neutral-500 border-t border-neutral-200 pt-8">
         Уже есть аккаунт?{" "}
-        <Link href="/login" className="text-neutral-900 hover:text-black transition-colors font-medium">
+        <Link href={`/login${searchParams.get('return') ? `?return=${encodeURIComponent(searchParams.get('return')!)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
           Войти
         </Link>
       </div>
     </motion.div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

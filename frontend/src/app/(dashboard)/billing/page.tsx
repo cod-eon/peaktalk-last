@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   CreditCard,
@@ -15,51 +15,71 @@ import {
   X,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
+import { PerSessionCard } from '@/components/billing/PerSessionCard';
+import { SessionCreditsDisplay } from '@/components/billing/SessionCreditsDisplay';
 import type { Payment, PaymentMethodSummary } from '@/types/billing';
 import { toast } from 'sonner';
 
 // ─── Plan comparison data ──────────────────────────────────────────────────────
 
 const PLAN_DISPLAY: Array<{
-  id: 'starter' | 'pro' | 'team';
+  id: 'per_session' | 'personal' | 'pro' | 'team';
   name: string;
   price: string;
+  badge?: string;
   features: string[];
 }> = [
   {
-    id: 'starter',
-    name: 'STARTER',
-    price: 'Бесплатно',
+    id: 'per_session',
+    name: 'РАЗОВАЯ СЕССИЯ',
+    price: '299 ₽',
+    badge: 'без подписки',
     features: [
-      '3 симуляции в месяц',
-      '3 документа',
-      '3 базовые персоны',
-      'Без PDF отчётов',
+      '1 полноценная сессия',
+      'Выбор любой персоны',
+      'PDF-отчёт',
+      'Шпаргалка',
+    ],
+  },
+  {
+    id: 'personal',
+    name: 'PERSONAL',
+    price: '790 ₽/мес',
+    badge: 'популярный',
+    features: [
+      '10 сессий в месяц',
+      'Все персоны',
+      'PDF-отчёты',
+      'Шпаргалка к каждой сессии',
     ],
   },
   {
     id: 'pro',
     name: 'PRO',
-    price: '990 ₽/мес',
+    price: '1 490 ₽/мес',
+    badge: 'рекомендуемый',
     features: [
-      'Безлимитные симуляции',
-      'Безлимитные документы',
-      'Все 15+ персон',
-      'PDF отчёты',
+      'Безлимитные сессии',
+      'Все персоны',
+      'PDF-отчёты',
+      'Шпаргалки',
+      'Расширенная аналитика',
       'Приоритетная поддержка',
     ],
   },
   {
     id: 'team',
     name: 'TEAM',
-    price: '2 490 ₽/мес',
+    price: '4 990 ₽/мес',
+    badge: 'для команд',
     features: [
+      '5 мест',
       'Всё из PRO',
-      'До 10 участников',
-      'Командная аналитика',
+      'Командный dashboard',
       'Общая библиотека документов',
       'Выделенная поддержка',
     ],
@@ -131,14 +151,32 @@ function UsageBar({ used, limit, label, icon }: { used: number; limit: number | 
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
+import { Suspense } from 'react';
+
 export default function BillingPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>}>
+      <BillingContent />
+    </Suspense>
+  );
+}
+
+function BillingContent() {
   const { status, isLoading, isPro } = useBillingStore();
   const { refetch } = useBilling();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const planParam = searchParams.get('plan');
+  const returnPath = searchParams.get('return') ?? undefined;
+
+  const highlightPerSession = planParam === 'per_session';
 
   const paymentsEnabled = status?.payments_enabled ?? true;
+  const sessionCredits = status?.session_credits ?? 0;
 
   const handleTestSetPlan = useCallback(
-    async (plan: 'starter' | 'pro' | 'team', periodDays?: number) => {
+    async (plan: 'free' | 'personal' | 'pro' | 'team', periodDays?: number) => {
       try {
         await api.post('/billing/test/set-plan', { plan, period_days: periodDays ?? 30 });
         toast.success(`Тест: план изменён на ${plan.toUpperCase()}`);
@@ -171,9 +209,10 @@ export default function BillingPage() {
   });
 
   const handleUpgrade = useCallback(
-    async (plan: 'pro' | 'team') => {
+    async (plan: string) => {
       try {
-        const returnUrl = `${window.location.origin}/billing/success`;
+        const successPath = returnPath ?? '/billing/success';
+        const returnUrl = `${window.location.origin}${successPath}`;
         const res = await api.post('/billing/payment', { plan, return_url: returnUrl });
         if (res?.payment_url) {
           window.location.href = res.payment_url;
@@ -183,7 +222,7 @@ export default function BillingPage() {
         toast.error(message);
       }
     },
-    [],
+    [returnPath],
   );
 
   const handleCancel = useCallback(async () => {
@@ -199,8 +238,8 @@ export default function BillingPage() {
     }
   }, [refetch, refetchPaymentMethod]);
 
-  const plan = status?.subscription.plan ?? 'starter';
-  const isPaidPlan = plan === 'pro' || plan === 'team';
+  const plan = status?.subscription.plan ?? 'free';
+  const isPaidPlan = false;
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',
@@ -213,7 +252,22 @@ export default function BillingPage() {
   const autoRenewEnabled = paymentMethod?.auto_renew_enabled ?? false;
   const paymentMethodLabel = paymentMethod?.display_label ?? (paymentMethod?.is_bound ? 'Привязанный способ оплаты' : null);
 
-  const PLAN_NAMES: Record<string, string> = { starter: 'Starter', pro: 'Pro', team: 'Team' };
+  const PLAN_NAMES: Record<string, string> = {
+    free: 'Free',
+    starter: 'Starter',
+    per_session: 'За сессию',
+    personal: 'Personal',
+    pro: 'Pro',
+    team: 'Team',
+  };
+
+  // Handle ?return param — redirect after successful payment
+  useEffect(() => {
+    if (returnPath && typeof window !== 'undefined') {
+      // Store for post-payment redirect (consumed by /billing/success)
+      sessionStorage.setItem('billing_return_path', returnPath);
+    }
+  }, [returnPath]);
 
   return (
     <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
@@ -263,10 +317,10 @@ export default function BillingPage() {
             Платёжная система отключена. Переключайте план вручную, чтобы тестировать лимиты и интерфейс.
           </p>
           <div className="flex flex-wrap gap-2">
-            {(['starter', 'pro', 'team'] as const).map((p) => (
+            {(['free', 'personal', 'pro', 'team'] as const).map((p) => (
               <button
                 key={p}
-                onClick={() => handleTestSetPlan(p, p === 'starter' ? undefined : 30)}
+                onClick={() => handleTestSetPlan(p, p === 'free' ? undefined : 30)}
                 className={`px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded-none border ${
                   plan === p
                     ? 'bg-neutral-900 text-white border-neutral-900'
@@ -302,17 +356,22 @@ export default function BillingPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                  {plan === 'team' ? (
+                  {false ? (
                     <Users size={22} className="text-neutral-700" />
-                  ) : plan === 'pro' ? (
+                  ) : false || false ? (
                     <Zap size={22} className="text-neutral-700" />
                   ) : (
                     <CreditCard size={22} className="text-neutral-400" />
                   )}
                 </div>
                 <div>
-                  <div className="text-xl font-bold text-neutral-900 tracking-tight">
-                    {PLAN_NAMES[plan] ?? plan}
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-bold text-neutral-900 tracking-tight">
+                      {PLAN_NAMES[plan] ?? plan}
+                    </div>
+                    {sessionCredits > 0 && (
+                      <SessionCreditsDisplay credits={sessionCredits} />
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     {subStatus === 'active' && (
@@ -335,13 +394,13 @@ export default function BillingPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {paymentsEnabled && plan === 'starter' && (
+                {paymentsEnabled && !isPaidPlan && (
                   <button
-                    onClick={() => handleUpgrade('pro')}
+                    onClick={() => router.push('/billing?plan=per_session')}
                     className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
                   >
                     <Zap size={14} />
-                    Перейти на PRO
+                    Начать сессию за 299 ₽
                   </button>
                 )}
                 {!paymentsEnabled && (
@@ -350,16 +409,23 @@ export default function BillingPage() {
                     Скоро
                   </span>
                 )}
-                {paymentsEnabled && plan === 'pro' && (
-                  <>
-                    <button
-                      onClick={() => handleUpgrade('team')}
-                      className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
-                    >
-                      <Users size={14} />
-                      Апгрейд до TEAM
-                    </button>
-                  </>
+                {paymentsEnabled && false && (
+                  <button
+                    onClick={() => handleUpgrade('pro')}
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                  >
+                    <Zap size={14} />
+                    Апгрейд до PRO
+                  </button>
+                )}
+                {paymentsEnabled && false && (
+                  <button
+                    onClick={() => handleUpgrade('team')}
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                  >
+                    <Users size={14} />
+                    Апгрейд до TEAM
+                  </button>
                 )}
                 {paymentsEnabled && isPaidPlan && subStatus === 'active' && (
                   <button
@@ -433,9 +499,14 @@ export default function BillingPage() {
             transition={{ duration: 0.3, delay: 0.05 }}
             className="bg-white rounded-none border border-neutral-200 p-6"
           >
-            <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
-              Использование в этом месяце
-            </h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
+                Использование в этом месяце
+              </h2>
+              {sessionCredits > 0 && (
+                <SessionCreditsDisplay credits={sessionCredits} />
+              )}
+            </div>
             {status ? (
               <div className="flex flex-col gap-5">
                 <UsageBar
@@ -456,42 +527,67 @@ export default function BillingPage() {
             )}
           </motion.div>
 
-          {/* ─── Plan comparison ─── */}
+          {/* ─── Per-session spotlight ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.08 }}
+          >
+            <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />
+          </motion.div>
+
+          {/* ─── Subscription plans ─── */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
             className="bg-white rounded-none border border-neutral-200 p-6"
           >
-            <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
-              Сравнение планов
-            </h2>
+            <p className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">
+              Или выберите подписку для регулярной подготовки
+            </p>
+            <p className="text-sm text-neutral-500 mb-6">
+              Ежемесячный доступ — выгоднее при частых защитах и переговорах.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PLAN_DISPLAY.map((p) => {
                 const isCurrent = p.id === plan;
-                const isDowngrade = plan === 'team' && p.id === 'pro';
+                const isDowngrade = false && p.id !== 'team';
                 const canUpgradeToPlan =
                   paymentsEnabled &&
                   !isCurrent &&
-                  p.id !== 'starter' &&
                   !isDowngrade &&
-                  ((plan === 'starter' && (p.id === 'pro' || p.id === 'team')) ||
-                    (plan === 'pro' && p.id === 'team'));
+                  (
+                    (plan === 'free' || false || plan === 'per_session') ||
+                    (false && (false || false)) ||
+                    (false && false)
+                  );
+
                 return (
                   <div
                     key={p.id}
                     className={`relative rounded-none border p-4 transition-all ${
                       isCurrent
                         ? 'border-neutral-900 bg-neutral-50'
-                        : 'border-neutral-200 bg-white hover:border-neutral-400'
+                        : false
+                          ? 'border-neutral-400 bg-white hover:border-neutral-600'
+                          : 'border-neutral-200 bg-white hover:border-neutral-400'
                     }`}
                   >
-                    {isCurrent && (
-                      <span className="absolute top-3 right-3 text-[9px] font-bold tracking-widest text-neutral-500 bg-white rounded-none px-2 py-1 border border-neutral-200 uppercase">
-                        {plan === 'starter' ? 'Текущий' : 'Активирован'}
+                    {/* Badge */}
+                    {p.badge && (
+                      <span className={`absolute top-3 right-3 text-[9px] font-bold tracking-widest rounded-none px-2 py-1 border uppercase ${
+                        isCurrent
+                          ? 'text-neutral-500 bg-white border-neutral-200'
+                          : false
+                            ? 'text-neutral-900 bg-neutral-100 border-neutral-300'
+                            : 'text-neutral-400 bg-white border-neutral-200'
+                      }`}>
+                        {isCurrent ? 'Активирован' : p.badge}
                       </span>
                     )}
-                    <div className="mb-4">
+
+                    <div className="mb-4 mt-1">
                       <div className="text-sm font-bold tracking-wider text-neutral-900">
                         {p.name}
                       </div>
@@ -509,25 +605,25 @@ export default function BillingPage() {
                     </ul>
                     {canUpgradeToPlan && (
                       <button
-                        onClick={() => handleUpgrade(p.id as 'pro' | 'team')}
+                        onClick={() => handleUpgrade(p.id)}
                         className="w-full py-2 rounded-none text-[12px] font-semibold bg-[#171717] hover:bg-black text-white transition-all cursor-pointer"
                       >
                         Выбрать {p.name}
                       </button>
                     )}
-                    {!isCurrent && p.id !== 'starter' && !paymentsEnabled && (
+                    {!isCurrent && !paymentsEnabled && (
                       <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
                         Скоро
                       </div>
                     )}
-                    {isDowngrade && (
+                    {isDowngrade && !isCurrent && (
                       <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
                         Ваш тариф выше
                       </div>
                     )}
                     {isCurrent && (
                       <div className="text-[11px] text-neutral-500 text-center pt-1">
-                        {plan === 'starter' ? 'Текущий бесплатный план' : 'Уже активирован'}
+                        Уже активирован
                       </div>
                     )}
                   </div>
@@ -613,10 +709,17 @@ export default function BillingPage() {
                 Вы используете бесплатный план. При достижении лимитов симуляции и загрузка документов будут
                 заблокированы.{' '}
                 <button
-                  onClick={() => handleUpgrade('pro')}
+                  onClick={() => router.push('/billing?plan=per_session')}
                   className="underline font-medium cursor-pointer hover:text-amber-900"
                 >
-                  Перейти на PRO
+                  Продолжить сессию — 299 ₽
+                </button>
+                {' или '}
+                <button
+                  onClick={() => handleUpgrade('personal')}
+                  className="underline font-medium cursor-pointer hover:text-amber-900"
+                >
+                  подписка от 790 ₽/мес
                 </button>
               </p>
             </motion.div>

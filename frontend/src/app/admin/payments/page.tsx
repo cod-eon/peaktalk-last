@@ -264,9 +264,9 @@ export default function AdminPaymentsPage() {
                             {payment.plan ? (
                               <span
                                 className={`text-[12px] font-semibold ${
-                                  payment.plan === 'pro'
+                                  false
                                     ? 'text-accent-600'
-                                    : payment.plan === 'team'
+                                    : false
                                       ? 'text-violet-600'
                                       : 'text-neutral-400'
                                 }`}

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -16,10 +17,17 @@ class PlanLimits(BaseModel):
 
 
 class PlanInfo(BaseModel):
-    plan: PlanType
+    """Rich plan catalogue entry returned by GET /billing/plans."""
+
+    id: str
     name: str
-    price_rub: int
-    limits: PlanLimits
+    price: int                          # Price in RUB (0 for free)
+    billing: str                        # "once" | "month"
+    simulations: str                    # Human-readable sim description
+    documents: str | None = None        # Human-readable doc description
+    features: list[str] = Field(default_factory=list)
+    seats: int | None = None            # Team plan: number of seats
+    primary: bool = False               # Mark the recommended plan
 
 
 class SubscriptionResponse(BaseModel):
@@ -33,6 +41,7 @@ class SubscriptionResponse(BaseModel):
 class UsageStats(BaseModel):
     simulations_used: int
     documents_uploaded: int
+    session_credits: int = 0
     period_start: datetime
 
 
@@ -42,6 +51,7 @@ class BillingStatusResponse(BaseModel):
     limits: PlanLimits
     can_start_simulation: bool
     can_upload_document: bool
+    can_use_pdf: bool = False
     payments_enabled: bool = True
 
 
@@ -53,7 +63,7 @@ class PaymentMethodSummaryResponse(BaseModel):
 
 
 class CreatePaymentRequest(BaseModel):
-    plan: PlanType = Field(..., description="Target plan: pro or team")
+    plan: PlanType = Field(..., description="Target plan: per_session, personal, pro, or team")
     return_url: str = Field(..., description="URL to redirect after payment")
 
 
@@ -74,12 +84,12 @@ class PaymentResponse(BaseModel):
 
 
 class TestSetPlanRequest(BaseModel):
-    plan: PlanType = Field(..., description="Plan to set: starter, pro, or team")
+    plan: PlanType = Field(..., description="Plan to set: free, personal, pro, team, or starter (legacy)")
     period_days: int | None = Field(
         None,
         description=(
-            "Days until period_end (pro/team). Defaults to 30. Ignored for starter. "
-            "Negative value = already expired by that many days ago."
+            "Days until period_end (personal/pro/team). Defaults to 30. "
+            "Ignored for free/starter. Negative value = already expired."
         ),
         ge=-365,
         le=365,

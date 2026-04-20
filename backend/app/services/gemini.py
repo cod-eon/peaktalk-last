@@ -25,50 +25,50 @@ _GOAL_LABELS: dict[str, str] = {
 }
 
 _ANALYSIS_SYSTEM_PROMPT = """
-You are an expert speech coach and communication trainer specializing in Russian business communication.
-Your task is to analyze a speech, presentation, or document and provide structured feedback with fragment-level annotations.
+Ты — экспертный speech coach и тренер по коммуникации, специализирующийся на русскоязычной деловой речи.
+Твоя задача — проанализировать речь, презентацию или документ и дать структурированную обратную связь с аннотациями на уровне фрагментов.
 
-Always respond in the SAME LANGUAGE as the input text.
-Return ONLY valid JSON — no markdown, no backticks, no extra text outside the JSON object.
+Всегда отвечай НА ТОМ ЖЕ ЯЗЫКЕ, что и входной текст.
+Верни ТОЛЬКО валидный JSON: без markdown, без обратных кавычек, без любого текста вне JSON-объекта.
 """.strip()
 
 _ANALYSIS_USER_TEMPLATE = """
-Analyze the following text and return JSON with this exact structure:
+Проанализируй следующий текст и верни JSON ровно с такой структурой:
 {{
-  "improved_text": "<rewritten version of the text>",
+  "improved_text": "<переписанная версия текста>",
   "feedback": {{
-    "logic": "<assessment of logical flow and argument structure — 2-3 sentences>",
-    "style": "<assessment of style, tone, and professionalism — 2-3 sentences>",
-    "clarity": "<assessment of clarity, conciseness, and impact — 2-3 sentences>",
-    "grammar": "<assessment of grammar, punctuation, and language correctness — 2-3 sentences>",
+    "logic": "<оценка логики и структуры аргументации — 2-3 предложения>",
+    "style": "<оценка стиля, тона и профессиональности — 2-3 предложения>",
+    "clarity": "<оценка ясности, лаконичности и убедительности — 2-3 предложения>",
+    "grammar": "<оценка грамматики, пунктуации и языковой корректности — 2-3 предложения>",
     "overall_score": <integer 1-10>,
     "annotations": [
       {{
-        "text": "<EXACT verbatim substring from the original text below, max 200 chars>",
+        "text": "<ТОЧНАЯ дословная подстрока из исходного текста ниже, максимум 200 символов>",
         "issue_type": "<logic|style|clarity|grammar>",
-        "comment": "<specific, actionable recommendation for this exact fragment>",
+        "comment": "<конкретная, применимая рекомендация именно для этого фрагмента>",
         "severity": "<high|medium|low>"
       }}
     ]
   }}
 }}
 
-STRICT RULES FOR improved_text:
-- Write in plain prose paragraphs ONLY.
-- ABSOLUTELY NO markdown: no **, no *, no #, no -, no numbered lists, no headers, no bold, no italic.
-- Do NOT use bullet points or any list formatting.
-- Preserve the original genre: if it was a speech — write a speech; if a report — write a report.
-- Use natural, human language. Avoid generic AI-sounding corporate phrases.
-- Keep the author's voice and tone — just improve structure, argumentation, and clarity.
+СТРОГИЕ ПРАВИЛА ДЛЯ improved_text:
+- Пиши ТОЛЬКО обычными абзацами прозы.
+- АБСОЛЮТНО НИКАКОГО markdown: без **, без *, без #, без -, без нумерованных списков, без заголовков, без bold, без italic.
+- Не используй буллеты и никакое оформление списков.
+- Сохрани исходный жанр: если это была речь — верни речь; если отчёт — верни отчёт.
+- Используй естественный, человеческий язык. Избегай безликих корпоративных формулировок в стиле AI.
+- Сохрани голос и тон автора — улучши только структуру, аргументацию и ясность.
 
-STRICT RULES FOR annotations:
-- Include 4 to 8 annotations covering the most impactful issues.
-- The "text" field MUST be an exact verbatim substring copied from the original text. Do not paraphrase.
-- "comment" MUST include a concrete before/after rewrite example. Format: first explain the problem in 1 sentence, then provide: "Например: «[original fragment]» → «[improved version]»". Never write generic advice like "improve clarity here" or "rewrite this sentence" without showing the actual rewrite.
-- Each annotation must reference a DIFFERENT text fragment.
-- Focus on the most important problems, not trivial ones.
+СТРОГИЕ ПРАВИЛА ДЛЯ annotations:
+- Добавь от 4 до 8 аннотаций, покрывающих самые важные проблемы.
+- Поле "text" ОБЯЗАНО быть точной дословной подстрокой из исходного текста. Не перефразируй.
+- Поле "comment" ОБЯЗАНО включать конкретный пример переписывания до/после. Формат: сначала 1 предложение с объяснением проблемы, затем: "Например: «[исходный фрагмент]» → «[улучшенная версия]»". Никогда не пиши общий совет вроде "улучши ясность" или "перепиши предложение" без явного варианта переписывания.
+- Каждая аннотация должна ссылаться на ДРУГОЙ фрагмент текста.
+- Фокусируйся на самых важных проблемах, а не на мелочах.
 
-TEXT TO ANALYZE:
+ТЕКСТ ДЛЯ АНАЛИЗА:
 ---
 {text}
 ---
@@ -122,7 +122,10 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAn
         seg = _SEGMENT_LABELS.get(user_context.get("segment", ""), "")
         goal = _GOAL_LABELS.get(user_context.get("goal", ""), "")
         if seg or goal:
-            context_block = f"SPEAKER PROFILE:\n- Role: {seg}\n- Goal: {goal}\nTailor feedback tone, examples, and recommendations to this person's background and objective.\n\n"
+            context_block = (
+                f"ПРОФИЛЬ СПИКЕРА:\n- Роль: {seg}\n- Цель: {goal}\n"
+                "Подстрой тон обратной связи, примеры и рекомендации под бэкграунд и задачу этого человека.\n\n"
+            )
     prompt = context_block + _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
@@ -259,16 +262,16 @@ def _heuristic_score(text: str) -> float:
     return min(score, 1.0), signals
 
 
-_AI_DETECTION_SYSTEM = """You are an AI-content detector. Decide if the text was written by a human or generated by AI.
+_AI_DETECTION_SYSTEM = """Ты — детектор AI-контента. Определи, написан ли текст человеком или сгенерирован ИИ.
 
-Focus on these signals:
-1. STRUCTURE — unnatural markdown, numbered lists in a spoken answer
-2. STYLE — formal AI-speak patterns: "безусловно", "следует отметить", "certainly", "in conclusion"
-3. CONTENT — hollow, generic, no personal anecdotes or concrete numbers
-4. NATURALNESS — does it sound like a real spoken answer with natural imperfections?
+Смотри на следующие сигналы:
+1. СТРУКТУРА — неестественный markdown, нумерованные списки в устном ответе
+2. СТИЛЬ — формальные AI-паттерны: "безусловно", "следует отметить", "certainly", "in conclusion"
+3. СОДЕРЖАНИЕ — пустой, общий текст без личных деталей и конкретных чисел
+4. ЕСТЕСТВЕННОСТЬ — звучит ли это как реальный устный ответ с нормальными человеческими шероховатостями?
 
-Bias toward FALSE: if you're unsure, answer false. Only answer true when the text is unmistakably AI.
-Return ONLY: {"ai_generated": true} or {"ai_generated": false}"""
+Смещай решение к FALSE: если не уверен, отвечай false. Отвечай true только когда текст явно сгенерирован ИИ.
+Верни ТОЛЬКО: {"ai_generated": true} или {"ai_generated": false}"""
 
 
 async def detect_ai_content(text: str) -> bool:
@@ -295,7 +298,10 @@ async def detect_ai_content(text: str) -> bool:
 
     # Uncertain zone (0.25 < score < 0.75): ask Gemini as arbiter
     client = create_gemini_client()
-    prompt = f"Is this answer AI-generated?\n---\n{text[:2000]}\n---\nJSON: {{\"ai_generated\": true}} or {{\"ai_generated\": false}}"
+    prompt = (
+        f"Этот ответ сгенерирован ИИ?\n---\n{text[:2000]}\n---\n"
+        "JSON: {\"ai_generated\": true} или {\"ai_generated\": false}"
+    )
 
     try:
         loop = asyncio.get_event_loop()

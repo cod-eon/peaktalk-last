@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, distinct, and_
+from sqlalchemy import delete, func, select, distinct, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -30,6 +30,7 @@ from app.models.subscription import (
     SubscriptionStatus,
     UsageCounter,
 )
+from app.models.guest import GuestSession
 from app.models.simulation import SimulationSession
 from app.models.user import User
 from app.schemas.admin import (
@@ -661,3 +662,38 @@ async def list_subscriptions(
     return AdminSubscriptionsResponse(
         items=items, total=total, page=page, per_page=per_page
     )
+
+
+# ---------------------------------------------------------------------------
+# DELETE /admin/guest-sessions/expired
+# ---------------------------------------------------------------------------
+
+
+@router.delete(
+    "/guest-sessions/expired",
+    status_code=status.HTTP_200_OK,
+)
+async def delete_expired_guest_sessions(
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Delete all guest sessions whose expires_at is in the past.
+
+    Safe to call repeatedly — idempotent. Returns the number of rows deleted.
+    """
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        delete(GuestSession)
+        .where(GuestSession.expires_at < now)
+        .returning(GuestSession.id)
+    )
+    deleted_ids = result.fetchall()
+    deleted_count = len(deleted_ids)
+    await db.flush()
+
+    logger.info(
+        "admin: deleted %d expired guest sessions by admin=%s",
+        deleted_count,
+        _admin.email,
+    )
+    return {"deleted": deleted_count}

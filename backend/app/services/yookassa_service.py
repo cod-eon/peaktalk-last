@@ -28,11 +28,15 @@ logger = logging.getLogger("peaktalk.yookassa")
 
 # Amounts in kopecks (1 RUB = 100 kopecks)
 PLAN_PRICES: dict[PlanType, int] = {
-    PlanType.pro: 99000,    # 990 RUB
-    PlanType.team: 249000,  # 2490 RUB
+    PlanType.per_session: 29900,   # 299 RUB — one-time credit
+    PlanType.personal: 79000,      # 790 RUB/month
+    PlanType.pro: 149000,          # 1490 RUB/month
+    PlanType.team: 499000,         # 4990 RUB/month
 }
 
 PLAN_DESCRIPTIONS: dict[PlanType, str] = {
+    PlanType.per_session: "PeakTalk — одна полная сессия",
+    PlanType.personal: "PeakTalk Personal — месячная подписка",
     PlanType.pro: "PeakTalk PRO — месячная подписка",
     PlanType.team: "PeakTalk TEAM — месячная подписка",
 }
@@ -189,6 +193,10 @@ async def create_payment(
     amount_str = _kopecks_to_rub(PLAN_PRICES[plan])
     description = PLAN_DESCRIPTIONS[plan]
 
+    # per_session is a one-time payment: do not save the payment method for
+    # recurrent billing; all other plans are monthly subscriptions.
+    save_method = plan != PlanType.per_session
+
     payment_data = {
         "amount": {
             "value": amount_str,
@@ -199,7 +207,7 @@ async def create_payment(
             "return_url": return_url,
         },
         "capture": True,
-        "save_payment_method": True,  # Required for recurrent billing
+        "save_payment_method": save_method,
         "description": description,
         "metadata": {
             "user_id": user_id,

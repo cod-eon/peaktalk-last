@@ -11,25 +11,20 @@ const PLAN_CONFIG: Record<
   PlanId,
   { label: string; className: string }
 > = {
-  starter: {
-    label: 'STARTER',
+  free: {
+    label: 'FREE',
     className:
       'bg-neutral-100 text-neutral-500 border border-neutral-200',
   },
-  pro: {
-    label: 'PRO',
+  per_session: {
+    label: '1 СЕССИЯ',
     className:
-      'bg-neutral-900 text-white border-0',
-  },
-  team: {
-    label: 'TEAM',
-    className:
-      'bg-neutral-700 text-white border-0',
+      'bg-neutral-100 text-neutral-500 border border-neutral-200',
   },
 };
 
 export function PlanBadge({ plan }: PlanBadgeProps) {
-  const cfg = PLAN_CONFIG[plan] ?? PLAN_CONFIG.starter;
+  const cfg = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free;
 
   return (
     <span

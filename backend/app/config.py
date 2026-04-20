@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     yookassa_send_receipt: bool = False
     # tax_system_code: 1=ОСН, 2=УСН доход, 3=УСН доход-расход, 6=ПСН
     yookassa_tax_system_code: int = 2
+
+    # Feature Flags (DevCycle)
+    devcycle_server_sdk_key: str = ""
     # vat_code per item: 1=без НДС, 3=10%, 4=20%
     yookassa_vat_code: int = 1
 

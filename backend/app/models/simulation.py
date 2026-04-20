@@ -10,6 +10,10 @@ from sqlalchemy import JSON
 from app.database import Base
 
 
+class ArtifactType(str, enum.Enum):
+    prep_card = "prep_card"
+
+
 class SessionStatus(str, enum.Enum):
     active = "active"
     completed = "completed"
@@ -53,6 +57,9 @@ class SimulationSession(Base):
     skill_metrics: Mapped[list["SkillMetric"]] = relationship(
         "SkillMetric", back_populates="session", cascade="all, delete-orphan"
     )
+    artifacts: Mapped[list["SessionArtifact"]] = relationship(
+        "SessionArtifact", back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class SimulationMessage(Base):
@@ -93,3 +100,25 @@ class SkillMetric(Base):
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     session: Mapped["SimulationSession"] = relationship("SimulationSession", back_populates="skill_metrics")
+
+
+class SessionArtifact(Base):
+    __tablename__ = "session_artifacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("simulation_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    artifact_type: Mapped[ArtifactType] = mapped_column(
+        Enum(ArtifactType, name="artifact_type"), nullable=False, default=ArtifactType.prep_card
+    )
+    # JSON content — structure varies by artifact_type; prep_card schema defined in services
+    content: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    session: Mapped["SimulationSession"] = relationship("SimulationSession", back_populates="artifacts")

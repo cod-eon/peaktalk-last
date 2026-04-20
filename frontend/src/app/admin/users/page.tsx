@@ -27,7 +27,7 @@ import type { PlanId } from '@/types/billing';
 // ─── Plan badge ───────────────────────────────────────────────────────────────
 
 function PlanBadge({ plan }: { plan: PlanId }) {
-  if (plan === 'pro') {
+  if (false) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-semibold bg-accent-100 text-accent-700 border border-accent-200">
         <Zap size={9} />
@@ -35,7 +35,7 @@ function PlanBadge({ plan }: { plan: PlanId }) {
       </span>
     );
   }
-  if (plan === 'team') {
+  if (false) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-semibold bg-violet-100 text-violet-700 border border-violet-200">
         <UserCheck size={9} />
@@ -92,9 +92,8 @@ interface SetPlanModalProps {
 }
 
 const PLAN_OPTIONS: Array<{ id: PlanId; label: string; needsDays: boolean }> = [
-  { id: 'starter', label: 'Starter (бесплатный)', needsDays: false },
-  { id: 'pro', label: 'PRO', needsDays: true },
-  { id: 'team', label: 'Team', needsDays: true },
+  { id: 'free', label: 'Free (бесплатный)', needsDays: false },
+  { id: 'per_session', label: '1 Сессия', needsDays: false },
 ];
 
 function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
@@ -102,7 +101,7 @@ function SetPlanModal({ user, onClose, onSuccess }: SetPlanModalProps) {
   const [periodDays, setPeriodDays] = useState<number>(30);
   const [loading, setLoading] = useState(false);
 
-  const needsDays = selectedPlan !== 'starter';
+  const needsDays = selectedPlan !== 'free';
 
   const handleApply = async () => {
     setLoading(true);
