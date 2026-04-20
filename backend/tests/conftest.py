@@ -54,7 +54,12 @@ async def override_get_current_user() -> User:
             user = User(id=TEST_USER_ID, email=TEST_USER_EMAIL)
             session.add(user)
             await session.commit()
-            await session.refresh(user)
+            result = await session.execute(
+                select(User)
+                .options(selectinload(User.onboarding_profile))
+                .where(User.id == TEST_USER_ID)
+            )
+            user = result.scalar_one_or_none()
         return user
 
 

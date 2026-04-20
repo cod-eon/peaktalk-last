@@ -53,7 +53,7 @@ async def test_list_scenarios(client: AsyncClient, scenario_data: dict[str, str]
     assert data["total"] >= 1
     slugs = {item["slug"] for item in data["items"]}
     assert scenario_data["slug"] in slugs
-    assert any(item["persona"] == "cfo" for item in data["items"])
+    assert any(item["persona"] == "CFO" for item in data["items"])
 
 
 @pytest.mark.asyncio
