@@ -67,7 +67,7 @@ const MEETING_STATUS_CONFIG: Record<
 > = {
   upcoming: {
     label: "Предстоит",
-    cls: "bg-blue-50 text-blue-700 border border-blue-200",
+    cls: "bg-[#FEF3E8] text-[#B04A08] border border-[#F9BD8E]",
   },
   completed: {
     label: "Завершена",
@@ -336,7 +336,7 @@ function MeetingCard({
       urgencyCls = "text-amber-600 bg-amber-50 border border-amber-200";
     } else if (days > 0 && days <= 3) {
       urgencyLabel = `Через ${days} дн.`;
-      urgencyCls = "text-blue-600 bg-blue-50 border border-blue-200";
+      urgencyCls = "text-[#D4570A] bg-[#FEF3E8] border border-[#F9BD8E]";
     }
   }
 
@@ -634,10 +634,10 @@ export default function MeetingsPage() {
               </div>
               {upcomingCount > 0 && (
                 <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-inter">
-                  <Clock size={13} className="text-blue-400" />
+                  <Clock size={13} className="text-[#F29555]" />
                   <span>
                     Предстоит:{" "}
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-[#D4570A]">
                       {upcomingCount}
                     </span>
                   </span>

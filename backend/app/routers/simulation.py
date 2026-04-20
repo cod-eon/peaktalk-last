@@ -19,6 +19,7 @@ from app.models.document import Document
 from app.models.scenario import Scenario
 from app.models.guest import GuestSession
 from app.models.draft import SpeechDraft
+from app.models.meeting import MeetingStatus, UpcomingMeeting
 from app.models.simulation import (
     ArtifactType,
     MessageRole,
@@ -396,15 +397,38 @@ async def list_sessions(
 async def get_personas(
     request: Request,
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     from app.services.simulation_ai import get_available_personas, get_default_difficulty, get_industries_for_segment
+    from app.models.personalized_persona import PersonalizedPersona
+
     profile = current_user.onboarding_profile
     segment = profile.segment.value if profile else None
+
+    # Fetch user's personalized personas
+    personas_result = await db.execute(
+        select(PersonalizedPersona)
+        .where(PersonalizedPersona.user_id == current_user.id)
+        .order_by(PersonalizedPersona.usage_count.desc(), PersonalizedPersona.created_at.desc())
+    )
+    user_personas = [
+        {
+            "id": str(p.id),
+            "name": p.name,
+            "role": p.role,
+            "communication_style": p.communication_style,
+            "difficulty_hint": p.difficulty_hint,
+            "usage_count": p.usage_count,
+        }
+        for p in personas_result.scalars().all()
+    ]
+
     return {
         "segment": segment or "other",
         "default_difficulty": get_default_difficulty(segment),
         "personas": get_available_personas(segment),
         "industries": get_industries_for_segment(segment),
+        "user_personas": user_personas,
     }
 
 
@@ -469,6 +493,22 @@ async def start_simulation(
 
     await consume_session_credit(str(current_user.id), db)
     await increment_simulation_counter(str(current_user.id), db)
+
+    # Link session to meeting if meeting_id provided
+    if body.meeting_id:
+        meeting_res = await db.execute(
+            select(UpcomingMeeting).where(
+                UpcomingMeeting.id == body.meeting_id,
+                UpcomingMeeting.user_id == current_user.id,
+            )
+        )
+        meeting = meeting_res.scalar_one_or_none()
+        if meeting:
+            meeting.simulation_session_id = session.id
+            meeting.status = MeetingStatus.prepared
+            await db.flush()
+            logger.info("Simulation linked to meeting user=%s session=%s meeting=%s", current_user.id, session.id, body.meeting_id)
+
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
     return await _load_session(db, session.id, current_user.id)

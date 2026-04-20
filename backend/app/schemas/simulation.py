@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from app.models.simulation import ArtifactType, MessageRole, SessionStatus
@@ -16,6 +16,7 @@ class SimulationStartRequest(BaseModel):
     persona_config: PersonaConfig
     document_id: uuid.UUID | None = None
     draft_id: uuid.UUID | None = None
+    meeting_id: Optional[uuid.UUID] = None
 
 
 class StartFromScenarioRequest(BaseModel):

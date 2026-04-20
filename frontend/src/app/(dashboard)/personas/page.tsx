@@ -12,11 +12,13 @@ import {
   Zap,
   Bot,
   Check,
+  Play,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useRouter } from 'next/navigation';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -286,6 +288,7 @@ function PersonaCard({
   onEdit: (p: Persona) => void;
   onDelete: (p: Persona) => void;
 }) {
+  const router = useRouter();
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -344,11 +347,14 @@ function PersonaCard({
           </span>
         )}
 
-        {/* Hint badge */}
-        <span className="inline-flex items-center gap-1 text-[10px] text-neutral-500 bg-neutral-50 border border-neutral-100 px-2 py-0.5 rounded-none ml-auto">
-          <Users size={9} />
+        {/* Use in simulation button */}
+        <button
+          onClick={() => router.push(`/simulation?persona=${persona.id}`)}
+          className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#D4570A] bg-[#FEF3E8] border border-[#F9BD8E] px-2.5 py-1 rounded-none ml-auto hover:bg-[#FDDEC4] transition-colors cursor-pointer"
+        >
+          <Play size={9} />
           Использовать в симуляции
-        </span>
+        </button>
       </div>
 
       {/* Tags */}

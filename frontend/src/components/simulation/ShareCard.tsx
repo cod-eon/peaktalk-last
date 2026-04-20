@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Download, Share2, Loader2, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
 
 export interface ShareCardProps {
   score: number;
@@ -69,7 +70,7 @@ export function ShareCard({ score, personaName, summary, metrics }: ShareCardPro
         }
       }
     } catch (err) {
-      console.error('Failed to export card', err);
+      toast.error('Не удалось экспортировать изображение');
     } finally {
       setIsExporting(false);
     }

@@ -140,7 +140,7 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
       desc: "Для точной симуляции нужен контекст.",
       action: "Перейти к загрузке",
       href: "/upload",
-      icon: <Upload size={24} className="text-blue-500" />
+      icon: <Upload size={24} className="text-[#E8600A]" />
     };
   } else if (completedSessions.length === 0) {
     tip = {
@@ -197,7 +197,7 @@ function DashboardDocuments({ documents }: { documents: any[] }) {
         {recentDocs.map(doc => (
           <div key={doc.id} className="flex items-center justify-between p-4 px-6 border-b border-neutral-100 hover:bg-neutral-50 transition-colors group last:border-b-0">
              <div className="flex items-center gap-3">
-               <div className="w-8 h-8 bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+               <div className="w-8 h-8 bg-[#FEF3E8] text-[#E8600A] flex items-center justify-center shrink-0">
                  <FileText size={16} />
                </div>
                <div>

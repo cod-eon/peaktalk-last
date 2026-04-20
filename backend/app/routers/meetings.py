@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.meeting import MeetingStatus, UpcomingMeeting
 from app.models.scenario import Scenario
+from app.models.simulation import SimulationSession, SessionStatus
 from app.models.user import User
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])
@@ -144,6 +145,62 @@ async def delete_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Встреча не найдена")
     await db.delete(meeting)
+
+
+# Mapping from meeting_type to suggested system persona role
+_MEETING_TYPE_TO_PERSONA: dict[str, str] = {
+    "budget_defense": "investor",
+    "qbr": "client_meeting",
+    "pitch": "investor",
+    "client_meeting": "client_meeting",
+    "roadmap_review": "tech_lead",
+    "other": "audience",
+}
+
+
+@router.post("/{meeting_id}/prepare-simulation")
+async def prepare_simulation_from_meeting(
+    request: Request,
+    meeting_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Prepare a simulation suggestion based on an upcoming meeting.
+
+    Returns the existing session if it is still active, otherwise returns a
+    suggested persona role mapped from the meeting type.
+    """
+    result = await db.execute(
+        select(UpcomingMeeting).where(
+            UpcomingMeeting.id == meeting_id,
+            UpcomingMeeting.user_id == current_user.id,
+        )
+    )
+    meeting = result.scalar_one_or_none()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Встреча не найдена")
+
+    # If a simulation session is already linked, check its status
+    if meeting.simulation_session_id:
+        session_res = await db.execute(
+            select(SimulationSession).where(SimulationSession.id == meeting.simulation_session_id)
+        )
+        linked_session = session_res.scalar_one_or_none()
+        if linked_session and linked_session.status == SessionStatus.active:
+            return {
+                "existing_session_id": str(linked_session.id),
+                "status": "active",
+            }
+
+    # Map meeting_type to a suggested persona role
+    suggested_role = _MEETING_TYPE_TO_PERSONA.get(meeting.meeting_type, "audience")
+
+    return {
+        "suggested_role": suggested_role,
+        "meeting_title": meeting.title,
+        "meeting_id": str(meeting.id),
+        "status": "ready",
+    }
 
 
 @router.get("/upcoming/reminders")

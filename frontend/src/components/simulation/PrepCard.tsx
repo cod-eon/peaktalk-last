@@ -102,6 +102,23 @@ export function PrepCard({ sessionId }: PrepCardProps) {
   const { artifact } = data;
   if (!artifact) return null;
 
+  const handlePrintPdf = () => {
+    const existing = document.getElementById('_prep_print_style');
+    if (existing) existing.remove();
+    const style = document.createElement('style');
+    style.id = '_prep_print_style';
+    style.textContent = `
+      @media print {
+        body * { visibility: hidden !important; }
+        #prep-card-ui { visibility: visible !important; display: block !important; position: fixed !important; inset: 0 !important; background: white !important; padding: 24px !important; z-index: 99999 !important; overflow: visible !important; }
+        #prep-card-ui * { visibility: visible !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    window.print();
+    window.addEventListener('afterprint', () => document.getElementById('_prep_print_style')?.remove(), { once: true });
+  };
+
   return (
     <div className="bg-white border border-neutral-200" id="prep-card-ui">
       <div className="bg-neutral-900 text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -113,7 +130,7 @@ export function PrepCard({ sessionId }: PrepCardProps) {
           <p className="text-neutral-400 text-sm">Сформирована на базе вашей симуляции</p>
         </div>
         <button
-          onClick={() => window.print()}
+          onClick={handlePrintPdf}
           className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 text-sm transition-colors cursor-pointer"
         >
           <Download size={16} />

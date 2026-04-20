@@ -31,6 +31,7 @@ type PersonasData = {
     default_difficulty: number;
     personas: Record<string, PersonaInfo>;
     industries: string[];
+    user_personas?: { id: string; name: string; role: string; communication_style: string; difficulty_hint: number; usage_count: number }[];
 };
 
 import {
@@ -94,7 +95,7 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : isCancelled
                             ? 'bg-gray-100 text-gray-400'
-                            : 'bg-blue-50 text-blue-700 border border-blue-100'
+                            : 'bg-[#FEF3E8] text-[#B04A08] border border-[#F9BD8E]'
                 }`}>
                     {isActive && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />}
                     {isActive ? 'Активна' : isCancelled ? 'Прервана' : 'Завершена'}
@@ -175,6 +176,8 @@ function SimulationPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const draftFromUrl = searchParams.get('draft') ?? searchParams.get('doc');
+    const meetingFromUrl = searchParams.get('meeting');
+    const personaFromUrl = searchParams.get('persona');
 
     // Billing
     const { canStartSimulation, simulationsLeft, openUpgrade } = useBilling();
@@ -194,6 +197,8 @@ function SimulationPageContent() {
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState<number>(3);
     const [difficultyManuallySet, setDifficultyManuallySet] = useState(false);
+    const [selectedUserPersonaId, setSelectedUserPersonaId] = useState<string | null>(null);
+    const [linkedMeetingId, setLinkedMeetingId] = useState<string | null>(null);
 
     // Personas from API
     const [personasData, setPersonasData] = useState<PersonasData | null>(null);
@@ -251,6 +256,15 @@ function SimulationPageContent() {
             }
             setPersonasLoading(false);
 
+            // If navigated from personas page, pre-select the user persona
+            if (personaFromUrl && personasRes.status === 'fulfilled' && personasRes.value?.user_personas) {
+                const found = personasRes.value.user_personas.find((p: any) => p.id === personaFromUrl);
+                if (found) {
+                    setSelectedUserPersonaId(found.id);
+                    setView('setup');
+                }
+            }
+
             // Documents
             let docsItems: { id: string; name: string; source?: string; created_at?: string }[] = [];
             if (docsRes.status === 'fulfilled' && docsRes.value?.items) {
@@ -275,6 +289,24 @@ function SimulationPageContent() {
                 }
                 setSelectedDoc(draftFromUrl);
                 setView('setup');
+            }
+
+            // If navigated from meetings page, prepare simulation from meeting
+            if (meetingFromUrl) {
+                try {
+                    const meetingData = await api.get(`/meetings/${meetingFromUrl}/prepare-simulation`);
+                    if (meetingData?.status === 'active' && meetingData.existing_session_id) {
+                        router.replace(`/simulation/${meetingData.existing_session_id}`);
+                        return;
+                    }
+                    if (meetingData?.status === 'ready') {
+                        setSelectedRole(meetingData.suggested_role);
+                        setLinkedMeetingId(meetingData.meeting_id);
+                        setView('setup');
+                    }
+                } catch {
+                    toast.error('Не удалось загрузить данные встречи');
+                }
             }
             setDocuments(docsItems);
         }
@@ -309,7 +341,7 @@ function SimulationPageContent() {
 
     const fallbackRoles = [
         { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций.', icon: TrendingUp, iconColor: 'text-amber-600', iconBg: 'bg-amber-50' },
-        { id: 'tech_lead', name: 'Тимлид / Principal Engineer', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-blue-600', iconBg: 'bg-blue-50' },
+        { id: 'tech_lead', name: 'Тимлид / Principal Engineer', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-[#E8600A]', iconBg: 'bg-[#FEF3E8]' },
         { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и soft skills.', icon: Users, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
         { id: 'audience', name: 'Общая аудитория', desc: 'Провокационный. Задаёт каверзные вопросы, ищет слабые места.', icon: Mic, iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     ];
@@ -321,14 +353,16 @@ function SimulationPageContent() {
         { id: 'custom', name: 'Своя сфера...' },
     ];
 
-    const isReady = selectedRole && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0) && selectedDoc !== null;
-    const currentStep = !selectedRole ? 1
+    const isReady = (selectedRole || selectedUserPersonaId) && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0) && selectedDoc !== null;
+    const currentStep = !selectedRole && !selectedUserPersonaId ? 1
         : !selectedDomain || (selectedDomain === 'custom' && !customDomain.trim()) ? 2
         : selectedDoc === null ? 3
         : 4;
-    const selectedRoleName = personasData
-        ? (personasData.personas[selectedRole ?? '']?.title ?? null)
-        : (fallbackRoles.find(r => r.id === selectedRole)?.name ?? null);
+    const selectedRoleName = selectedUserPersonaId
+        ? personasData?.user_personas?.find(p => p.id === selectedUserPersonaId)?.name ?? null
+        : personasData
+            ? (personasData.personas[selectedRole ?? '']?.title ?? null)
+            : (fallbackRoles.find(r => r.id === selectedRole)?.name ?? null);
 
     const handleStart = async () => {
         if (!isReady) return;
@@ -342,11 +376,17 @@ function SimulationPageContent() {
             const selectedDocItem = documents.find(d => d.id === selectedDoc);
             const isDraft = selectedDocItem?.source === 'draft';
             const hasDoc = selectedDoc !== null && selectedDoc !== 'none';
-            const payload = {
-                persona_config: { role: selectedRole, industry: domainName, difficulty },
+            const payload: Record<string, unknown> = {
+                persona_config: {
+                    role: selectedRole || 'custom',
+                    industry: domainName,
+                    difficulty,
+                },
                 document_id: (hasDoc && !isDraft) ? selectedDoc : null,
                 draft_id: (hasDoc && isDraft) ? selectedDoc : null,
             };
+            if (selectedUserPersonaId) payload.persona_id = selectedUserPersonaId;
+            if (linkedMeetingId) payload.meeting_id = linkedMeetingId;
             const res = await api.post('/simulation/start', payload);
             if (res?.id) {
                 router.push(`/simulation/${res.id}`);
@@ -409,7 +449,7 @@ function SimulationPageContent() {
                                     </span>
                                 )}
                                 {completedSessions.length > 0 && (
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-none font-medium">
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-[#B04A08] bg-[#FEF3E8] border border-[#F9BD8E] px-2 py-0.5 rounded-none font-medium">
                                         {completedSessions.length} завершено
                                     </span>
                                 )}
@@ -826,6 +866,61 @@ function SimulationPageContent() {
                         )}
                     </AnimatePresence>
                 </section>
+
+                {/* 1.5. USER PERSONAS */}
+                {personasData?.user_personas && personasData.user_personas.length > 0 && (
+                    <section>
+                        <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
+                            <span className="text-neutral-500">Ваши персоны</span>
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {personasData.user_personas.map((up) => {
+                                const isSelected = selectedUserPersonaId === up.id;
+                                return (
+                                    <button
+                                        key={up.id}
+                                        onClick={() => { setSelectedUserPersonaId(up.id); setSelectedRole(null); scrollToStep(step2Ref); }}
+                                        className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
+                                            isSelected
+                                                ? 'bg-[#FEF3E8] border-[#E8600A]'
+                                                : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
+                                        }`}
+                                    >
+                                        {isSelected && (
+                                            <div className="absolute top-4 right-4 text-[#E8600A]">
+                                                <CheckCircle2 size={18} />
+                                            </div>
+                                        )}
+                                        <div className="w-10 h-10 flex items-center justify-center mb-4 transition-colors border border-neutral-200 bg-[#FEF3E8] text-[#E8600A]">
+                                            <Bot size={20} />
+                                        </div>
+                                        <div className="font-inter text-lg font-semibold text-neutral-900 mb-1">
+                                            {up.name}
+                                        </div>
+                                        <div className="font-inter text-xs text-neutral-500 mb-2">{up.role}</div>
+                                        <div className="font-inter text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                                            {up.communication_style}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-3">
+                                            <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 border ${
+                                                up.difficulty_hint <= 2 ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+                                                : up.difficulty_hint === 3 ? 'text-amber-600 bg-amber-50 border-amber-200'
+                                                : 'text-red-600 bg-red-50 border-red-200'
+                                            }`}>
+                                                {up.difficulty_hint <= 2 ? 'Лёгкий' : up.difficulty_hint === 3 ? 'Средний' : 'Сложный'}
+                                            </span>
+                                            {up.usage_count > 0 && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-400 bg-neutral-50 border border-neutral-100 px-2 py-0.5">
+                                                    <Zap size={9} /> {up.usage_count} {up.usage_count === 1 ? 'раз' : up.usage_count < 5 ? 'раза' : 'раз'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 {/* 2. DOMAIN SELECTION */}
                 <section ref={step2Ref}>

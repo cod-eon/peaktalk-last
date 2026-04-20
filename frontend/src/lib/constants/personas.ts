@@ -39,11 +39,11 @@ export type RoleVisual = { icon: LucideIcon; iconColor: string; iconBg: string }
 
 export const ROLE_VISUALS: Record<string, RoleVisual> = {
   investor:   { icon: TrendingUp,    iconColor: 'text-amber-600',  iconBg: 'bg-amber-50' },
-  partner:    { icon: Users,         iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
+  partner:    { icon: Users,         iconColor: 'text-[#E8600A]',   iconBg: 'bg-[#FEF3E8]' },
   customer:   { icon: MessageSquare, iconColor: 'text-green-600',  iconBg: 'bg-green-50' },
   demanding_client: { icon: MessageSquare, iconColor: 'text-red-600', iconBg: 'bg-red-50' },
   procurement:      { icon: Briefcase,     iconColor: 'text-indigo-600', iconBg: 'bg-indigo-50' },
-  tech_lead:  { icon: Briefcase,     iconColor: 'text-blue-600',   iconBg: 'bg-blue-50' },
+  tech_lead:  { icon: Briefcase,     iconColor: 'text-[#E8600A]',   iconBg: 'bg-[#FEF3E8]' },
   hr:         { icon: Users,         iconColor: 'text-pink-600',   iconBg: 'bg-pink-50' },
   senior_dev: { icon: Zap,           iconColor: 'text-cyan-600',   iconBg: 'bg-cyan-50' },
   supervisor: { icon: Bot,           iconColor: 'text-purple-600', iconBg: 'bg-purple-50' },
