@@ -6,22 +6,17 @@ import {
   Users,
   Zap,
   Activity,
-  RussianRuble,
   TrendingUp,
   TrendingDown,
-  CreditCard,
-  CalendarDays,
   BarChart2,
   Loader2,
   AlertCircle,
   RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,7 +29,7 @@ import {
 import { format, parseISO, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { api } from '@/lib/api';
-import type { AdminStats, AdminChartsData, DayPoint } from '@/types/admin';
+import type { AdminStats, AdminChartsData, DayPoint, MaintenanceStatus } from '@/types/admin';
 
 // ─── Fill missing days with 0 ─────────────────────────────────────────────────
 
@@ -53,6 +48,12 @@ function fillDays(points: DayPoint[], days: number): { date: string; label: stri
 
 // ─── Custom tooltip ───────────────────────────────────────────────────────────
 
+interface TooltipEntry {
+  color?: string;
+  name?: string;
+  value?: string | number;
+}
+
 function ChartTooltip({
   active,
   payload,
@@ -60,7 +61,7 @@ function ChartTooltip({
   suffix = '',
 }: {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipEntry[];
   label?: string;
   suffix?: string;
 }) {
@@ -68,7 +69,7 @@ function ChartTooltip({
   return (
     <div className="bg-black border border-neutral-800 rounded-none px-3 py-2 shadow-lg text-sm font-inter text-white min-w-[120px]">
       <p className="text-neutral-400 mb-2 text-xs">{label}</p>
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry, index: number) => (
         <div key={index} className="flex flex-row items-center justify-between gap-3 mb-1 last:mb-0 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -202,6 +203,74 @@ function shortDate(label: string) {
   try { return format(parseISO(label), 'd MMM', { locale: ru }); } catch { return label; }
 }
 
+function MaintenanceCard() {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery<MaintenanceStatus>({
+    queryKey: ['admin-maintenance'],
+    queryFn: () => api.get('/admin/maintenance'),
+    staleTime: 10_000,
+    retry: 1,
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async (enabled: boolean) => api.post('/admin/maintenance', { enabled }),
+    onSuccess: (next) => {
+      queryClient.setQueryData(['admin-maintenance'], next);
+      queryClient.setQueryData(['maintenance-status'], next);
+    },
+  });
+
+  const enabled = Boolean(data?.enabled);
+  const isBusy = isLoading || toggleMutation.isPending;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="relative overflow-hidden border border-black/8 bg-[linear-gradient(135deg,#111827_0%,#1f2937_55%,#111827_100%)] p-5 text-white shadow-sm"
+    >
+      <div className="absolute inset-y-0 right-0 w-48 bg-[radial-gradient(circle_at_center,rgba(232,96,10,0.24),transparent_68%)]" />
+      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-2xl">
+          <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+            {enabled ? <ShieldAlert size={14} className="text-[#f59e0b]" /> : <ShieldCheck size={14} className="text-[#86efac]" />}
+            Runtime Control
+          </div>
+          <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-white">
+            Технические работы для дашборда
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-white/72">
+            Когда режим включен, все страницы пользовательского дашборда заменяются на maintenance-screen с кнопкой возврата на главную.
+          </p>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-start gap-3 sm:items-end">
+          <div className={`inline-flex items-center gap-2 px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] ${
+            enabled ? 'bg-[#f59e0b]/18 text-[#fcd34d]' : 'bg-emerald-400/10 text-emerald-200'
+          }`}>
+            <span className={`h-2 w-2 rounded-full ${enabled ? 'bg-[#f59e0b]' : 'bg-emerald-300'}`} />
+            {enabled ? 'Режим активен' : 'Режим выключен'}
+          </div>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => toggleMutation.mutate(!enabled)}
+            className={`inline-flex min-w-[220px] items-center justify-center gap-2 px-5 py-3 text-sm font-semibold transition-colors ${
+              enabled
+                ? 'bg-white text-neutral-950 hover:bg-neutral-100'
+                : 'bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)]'
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {isBusy && <Loader2 size={16} className="animate-spin" />}
+            {enabled ? 'Выключить техработы' : 'Включить техработы'}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminStatsPage() {
@@ -222,14 +291,11 @@ export default function AdminStatsPage() {
   const activityData = useMemo(
     () => fillDays(charts?.simulations_by_day ?? [], 14).map((d) => ({
       ...d,
-      load: d.value * 12 + Math.floor(Math.random() * 20),
-      idle: Math.floor(d.value * 2 + Math.random() * 5),
+      load: d.value * 12 + ((d.label.length % 5) * 4),
+      idle: Math.max(0, Math.floor(d.value * 0.18) + (d.label.length % 3)),
     })),
     [charts?.simulations_by_day]
   );
-
-  const totalRevenueMonth = stats ? Number(stats.payments_this_month_rub) : 0;
-  const proRatio = stats ? Math.round((stats.users_pro / (stats.users_total || 1)) * 100) : 0;
 
   const isLoading = statsLoading;
 
@@ -255,6 +321,8 @@ export default function AdminStatsPage() {
           Обновить
         </button>
       </div>
+
+      <MaintenanceCard />
 
       {/* ── Loading ── */}
       {isLoading && (

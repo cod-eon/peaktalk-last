@@ -108,3 +108,8 @@ export interface AdminSubscriptionsResponse {
   per_page: number;
   pages: number;
 }
+
+export interface MaintenanceStatus {
+  enabled: boolean;
+  updated_at?: string | null;
+}

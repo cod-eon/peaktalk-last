@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.features import init_feature_flags, close_feature_flags
 from app.limiter import limiter
-from app.routers import admin, billing, documents, drafts, email_campaigns, feedback, guest_simulation, meetings, notifications, personas, scenarios, simulation, users, webhooks
+from app.routers import admin, billing, documents, drafts, email_campaigns, feedback, guest_simulation, meetings, notifications, personas, scenarios, simulation, system, users, webhooks
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +123,7 @@ app.include_router(meetings.router)
 app.include_router(feedback.router)
 app.include_router(personas.router)
 app.include_router(email_campaigns.router)
+app.include_router(system.router)
 
 
 @app.get("/health", tags=["system"])

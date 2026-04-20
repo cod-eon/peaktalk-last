@@ -1,14 +1,17 @@
 import asyncio
 import json
+import logging
 import re
 from collections.abc import Sequence
-from functools import partial
+from functools import lru_cache, partial
 from typing import Any
 
 from openai import OpenAI
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
+
+logger = logging.getLogger("peaktalk.ai")
 
 _SEGMENT_LABELS: dict[str, str] = {
     "manager": "Тимлид / Менеджер",
@@ -86,6 +89,11 @@ class GeminiAnalysisResult:
         self.feedback = feedback
 
 
+@lru_cache(maxsize=1)
+def _build_openai_client(api_key: str, base_url: str, timeout: float) -> OpenAI:
+    return OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
+
+
 def create_gemini_client() -> OpenAI:
     api_key = settings.cloud_ru_api_key.strip()
     if not api_key:
@@ -93,12 +101,11 @@ def create_gemini_client() -> OpenAI:
             "Cloud.ru API key is not configured. Set CLOUD_RU_API_KEY "
             "(or legacy GEMINI_API_KEY during rollout)."
         )
-
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-        "base_url": settings.cloud_ru_base_url,
-    }
-    return OpenAI(**client_kwargs)
+    return _build_openai_client(
+        api_key=api_key,
+        base_url=settings.cloud_ru_base_url,
+        timeout=settings.cloud_ru_timeout_seconds,
+    )
 
 
 def extract_completion_text(response: Any) -> str:
@@ -158,6 +165,7 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAn
 
     try:
         loop = asyncio.get_event_loop()
+        started = loop.time()
         response = await loop.run_in_executor(
             None,
             partial(
@@ -173,6 +181,12 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAn
                 frequency_penalty=0,
                 max_completion_tokens=3200,
             ),
+        )
+        logger.info(
+            "ai.analyze_draft model=%s chars=%d elapsed_ms=%.1f",
+            settings.cloud_ru_model,
+            len(text),
+            (loop.time() - started) * 1000,
         )
     except Exception as exc:
         raise GeminiError(f"Cloud.ru API call failed: {exc}") from exc
@@ -329,6 +343,9 @@ async def detect_ai_content(text: str) -> bool:
     if score <= 0.25:
         return False
 
+    if not settings.ai_detection_llm_enabled:
+        return score >= 0.65
+
     # Uncertain zone (0.25 < score < 0.75): ask Cloud.ru as arbiter
     client = create_gemini_client()
     prompt = (
@@ -338,6 +355,7 @@ async def detect_ai_content(text: str) -> bool:
 
     try:
         loop = asyncio.get_event_loop()
+        started = loop.time()
         response = await loop.run_in_executor(
             None,
             partial(
@@ -351,6 +369,12 @@ async def detect_ai_content(text: str) -> bool:
                 top_p=0.9,
                 max_completion_tokens=32,
             ),
+        )
+        logger.info(
+            "ai.detect_content llm_arbiter model=%s chars=%d elapsed_ms=%.1f",
+            settings.cloud_ru_model,
+            len(text),
+            (loop.time() - started) * 1000,
         )
         raw = extract_completion_text(response)
         parsed = _parse_gemini_json(raw)

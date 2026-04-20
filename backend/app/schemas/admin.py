@@ -178,3 +178,17 @@ class AdminSubscriptionsResponse(BaseModel):
     total: int
     page: int
     per_page: int
+
+
+# ---------------------------------------------------------------------------
+# Maintenance mode
+# ---------------------------------------------------------------------------
+
+
+class MaintenanceStatusResponse(BaseModel):
+    enabled: bool
+    updated_at: datetime | None = None
+
+
+class MaintenanceUpdateRequest(BaseModel):
+    enabled: bool

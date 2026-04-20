@@ -1,3 +1,4 @@
+from app.models.app_setting import AppSetting
 from app.models.document import Document
 from app.models.draft import SpeechDraft
 from app.models.feedback import PostMeetingFeedback
@@ -19,6 +20,7 @@ from app.models.user import OnboardingProfile, User
 __all__ = [
     "User",
     "OnboardingProfile",
+    "AppSetting",
     "Document",
     "SpeechDraft",
     "GuestSession",

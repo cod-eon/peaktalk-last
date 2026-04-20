@@ -31,6 +31,7 @@ from app.models.subscription import (
     UsageCounter,
 )
 from app.models.guest import GuestSession
+from app.models.app_setting import AppSetting
 from app.models.simulation import SimulationSession
 from app.models.user import User
 from app.schemas.admin import (
@@ -44,9 +45,12 @@ from app.schemas.admin import (
     AdminUserItem,
     AdminUsersResponse,
     DayPoint,
+    MaintenanceStatusResponse,
+    MaintenanceUpdateRequest,
     SetPlanRequest,
     SetPlanResponse,
 )
+from app.services.app_settings import MAINTENANCE_MODE_KEY, get_maintenance_mode, set_maintenance_mode
 
 logger = logging.getLogger("peaktalk.admin")
 
@@ -213,6 +217,31 @@ async def get_stats(
         payments_count_total=payments_count_total,
         active_subs_count=active_subs_count,
     )
+
+
+@router.get("/maintenance", response_model=MaintenanceStatusResponse)
+async def get_maintenance(
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> MaintenanceStatusResponse:
+    enabled = await get_maintenance_mode(db)
+    result = await db.execute(select(AppSetting).where(AppSetting.key == MAINTENANCE_MODE_KEY))
+    setting = result.scalar_one_or_none()
+    return MaintenanceStatusResponse(
+        enabled=enabled,
+        updated_at=setting.updated_at if setting is not None else None,
+    )
+
+
+@router.post("/maintenance", response_model=MaintenanceStatusResponse)
+async def update_maintenance(
+    body: MaintenanceUpdateRequest,
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> MaintenanceStatusResponse:
+    setting = await set_maintenance_mode(db, body.enabled)
+    logger.warning("admin: maintenance mode changed enabled=%s by=%s", body.enabled, _admin.email)
+    return MaintenanceStatusResponse(enabled=body.enabled, updated_at=setting.updated_at)
 
 
 # ---------------------------------------------------------------------------

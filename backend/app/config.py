@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     )
     cloud_ru_base_url: str = "https://foundation-models.api.cloud.ru/v1"
     cloud_ru_model: str = "Qwen/Qwen3-Coder-Next"
+    cloud_ru_timeout_seconds: float = 30.0
+    ai_detection_llm_enabled: bool = False
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

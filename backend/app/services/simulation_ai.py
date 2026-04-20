@@ -1,6 +1,7 @@
 """LLM prompts and calls for the simulation feature."""
 import asyncio
 import json
+import logging
 import re
 from functools import partial
 
@@ -9,7 +10,10 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 from app.config import settings
 from app.services.gemini import GeminiError, create_gemini_client, extract_completion_text
 
-CONTEXT_WINDOW_MESSAGES = 10  # last N messages sent to the model
+logger = logging.getLogger("peaktalk.ai")
+
+CONTEXT_WINDOW_MESSAGES = 6
+DOC_CONTEXT_MAX_CHARS = 3500
 
 _SEGMENT_PERSONAS: dict[str, dict] = {
     "manager": {
@@ -510,7 +514,7 @@ def _build_user_prompt(doc_text: str, history: list[dict]) -> str:
 
     parts = []
     if doc_text:
-        parts.append(f"СОДЕРЖАНИЕ ПРЕЗЕНТАЦИИ:\n---\n{doc_text[:8000]}\n---")
+        parts.append(f"СОДЕРЖАНИЕ ПРЕЗЕНТАЦИИ:\n---\n{doc_text[:DOC_CONTEXT_MAX_CHARS]}\n---")
     if history_text:
         parts.append(f"ДИАЛОГ НА ДАННЫЙ МОМЕНТ:\n{history_text}")
 
@@ -568,6 +572,7 @@ async def generate_question(
 
     try:
         loop = asyncio.get_event_loop()
+        started = loop.time()
         response = await loop.run_in_executor(
             None,
             partial(
@@ -577,12 +582,19 @@ async def generate_question(
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.55,
+                temperature=0.45,
                 top_p=0.95,
                 presence_penalty=0.1,
                 frequency_penalty=0.0,
-                max_completion_tokens=650,
+                max_completion_tokens=420,
             ),
+        )
+        logger.info(
+            "ai.generate_question model=%s history=%d doc_chars=%d elapsed_ms=%.1f",
+            settings.cloud_ru_model,
+            len(history),
+            len(doc_text),
+            (loop.time() - started) * 1000,
         )
     except Exception as exc:
         raise GeminiError(f"Cloud.ru simulation call failed: {exc}") from exc
@@ -625,6 +637,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
     client = create_gemini_client()
     try:
         loop = asyncio.get_event_loop()
+        started = loop.time()
         response = await loop.run_in_executor(
             None,
             partial(
@@ -635,6 +648,12 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
                 top_p=0.9,
                 max_completion_tokens=2200,
             ),
+        )
+        logger.info(
+            "ai.evaluate_session model=%s messages=%d elapsed_ms=%.1f",
+            settings.cloud_ru_model,
+            len(messages),
+            (loop.time() - started) * 1000,
         )
     except Exception as exc:
         raise GeminiError(f"Cloud.ru evaluation call failed: {exc}") from exc
@@ -726,6 +745,7 @@ async def generate_prep_card(
     client = create_gemini_client()
     try:
         loop = asyncio.get_event_loop()
+        started = loop.time()
         response = await loop.run_in_executor(
             None,
             partial(
@@ -739,6 +759,12 @@ async def generate_prep_card(
                 top_p=0.9,
                 max_completion_tokens=1800,
             ),
+        )
+        logger.info(
+            "ai.generate_prep_card model=%s messages=%d elapsed_ms=%.1f",
+            settings.cloud_ru_model,
+            len(messages),
+            (loop.time() - started) * 1000,
         )
     except Exception as exc:
         raise GeminiError(f"Cloud.ru prep card call failed: {exc}") from exc
