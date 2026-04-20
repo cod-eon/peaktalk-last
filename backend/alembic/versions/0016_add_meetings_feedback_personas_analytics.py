@@ -18,12 +18,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ── meeting_status enum ──
-    op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE meeting_status AS ENUM ('upcoming', 'prepared', 'completed', 'cancelled');
-        EXCEPTION WHEN duplicate_object THEN null;
-        END $$;
-    """)
+    meeting_status_enum = sa.Enum("upcoming", "prepared", "completed", "cancelled", name="meeting_status")
+    meeting_status_enum.create(op.get_bind(), checkfirst=True)
 
     # ── upcoming_meetings ──
     op.create_table(
@@ -36,7 +32,7 @@ def upgrade() -> None:
         sa.Column("meeting_type", sa.String(64), nullable=False, server_default="other"),
         sa.Column("scenario_id", sa.UUID(), nullable=True),
         sa.Column("simulation_session_id", sa.UUID(), nullable=True),
-        sa.Column("status", sa.Enum("upcoming", "prepared", "completed", "cancelled", name="meeting_status", create_type=False), nullable=False, server_default="upcoming"),
+        sa.Column("status", meeting_status_enum, nullable=False, server_default="upcoming"),
         sa.Column("reminder_sent", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -48,12 +44,8 @@ def upgrade() -> None:
     op.create_index("ix_upcoming_meetings_user_id", "upcoming_meetings", ["user_id"])
 
     # ── meeting_outcome enum ──
-    op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE meeting_outcome AS ENUM ('great', 'okay', 'poor', 'postponed');
-        EXCEPTION WHEN duplicate_object THEN null;
-        END $$;
-    """)
+    meeting_outcome_enum = sa.Enum("great", "okay", "poor", "postponed", name="meeting_outcome")
+    meeting_outcome_enum.create(op.get_bind(), checkfirst=True)
 
     # ── post_meeting_feedback ──
     op.create_table(
@@ -61,7 +53,7 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("session_id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("outcome", sa.Enum("great", "okay", "poor", "postponed", name="meeting_outcome", create_type=False), nullable=False),
+        sa.Column("outcome", meeting_outcome_enum, nullable=False),
         sa.Column("what_helped", sa.Text(), nullable=True),
         sa.Column("what_didnt", sa.Text(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),

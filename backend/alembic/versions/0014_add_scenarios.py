@@ -18,28 +18,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE scenario_category AS ENUM (
-                'budget', 'roadmap', 'investors', 'clients', 'people', 'crisis'
-            );
-        EXCEPTION WHEN duplicate_object THEN null;
-        END $$;
-    """)
+    category_enum = sa.Enum(
+        "budget", "roadmap", "investors", "clients", "people", "crisis",
+        name="scenario_category"
+    )
+    category_enum.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "scenarios",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
         sa.Column("slug", sa.String(128), nullable=False),
-        sa.Column(
-            "category",
-            sa.Enum(
-                "budget", "roadmap", "investors", "clients", "people", "crisis",
-                name="scenario_category",
-                create_type=False,
-            ),
-            nullable=False,
-        ),
+        sa.Column("category", category_enum, nullable=False),
         sa.Column("title", sa.String(256), nullable=False),
         sa.Column("subtitle", sa.String(512), nullable=False),
         sa.Column("situation", sa.Text(), nullable=False),

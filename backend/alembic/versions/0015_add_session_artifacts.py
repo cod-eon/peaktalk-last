@@ -23,12 +23,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Create artifact_type enum
-    op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE artifact_type AS ENUM ('prep_card');
-        EXCEPTION WHEN duplicate_object THEN null;
-        END $$;
-    """)
+    artifact_type_enum = sa.Enum("prep_card", name="artifact_type")
+    artifact_type_enum.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "session_artifacts",
@@ -36,7 +32,7 @@ def upgrade() -> None:
         sa.Column("session_id", sa.UUID(), nullable=False),
         sa.Column(
             "artifact_type",
-            sa.Enum("prep_card", name="artifact_type", create_type=False),
+            artifact_type_enum,
             nullable=False,
             server_default="prep_card",
         ),
