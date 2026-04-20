@@ -213,10 +213,21 @@ function MaintenanceCard() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (enabled: boolean) => api.post('/admin/maintenance', { enabled }),
+    mutationFn: async (enabled: boolean) => {
+      const res = await api.post('/admin/maintenance', { enabled });
+      return res as MaintenanceStatus;
+    },
     onSuccess: (next) => {
       queryClient.setQueryData(['admin-maintenance'], next);
       queryClient.setQueryData(['maintenance-status'], next);
+    },
+    onError: (err) => {
+      console.error('maintenance toggle failed:', err);
+      queryClient.invalidateQueries({ queryKey: ['admin-maintenance'] });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-maintenance'] });
+      queryClient.invalidateQueries({ queryKey: ['maintenance-status'] });
     },
   });
 

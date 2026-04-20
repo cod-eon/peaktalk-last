@@ -43,19 +43,9 @@ export function MaintenanceScreen() {
               чинится инфраструктура и полируется основной сценарий.
             </p>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <div className="border border-black/8 bg-[#faf7f2] p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Статус</div>
-                <div className="mt-2 text-sm font-medium text-neutral-900">Работы активны</div>
-              </div>
-              <div className="border border-black/8 bg-white p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Доступ</div>
-                <div className="mt-2 text-sm font-medium text-neutral-900">Страницы дашборда скрыты</div>
-              </div>
-              <div className="border border-black/8 bg-white p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Действие</div>
-                <div className="mt-2 text-sm font-medium text-neutral-900">Вернись на главный экран</div>
-              </div>
+            <div className="mt-8 inline-flex items-center gap-2.5 border border-black/8 bg-[#faf7f2] px-4 py-3">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent-primary)]" />
+              <span className="text-[13px] font-medium text-neutral-800">Работы активны</span>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -66,9 +56,9 @@ export function MaintenanceScreen() {
                 <ArrowLeft size={16} />
                 На главный экран
               </Link>
-              <div className="border border-black/10 bg-white px-4 py-3 text-sm text-neutral-500">
+              <span className="text-[13px] text-neutral-400">
                 Администратор может выключить режим в панели управления.
-              </div>
+              </span>
             </div>
           </motion.div>
 
@@ -76,21 +66,16 @@ export function MaintenanceScreen() {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.55, delay: 0.12, ease: 'easeOut' }}
-            className="relative mx-auto max-w-[340px] overflow-hidden border border-black/10 bg-[#171717] p-3 shadow-[0_30px_80px_rgba(23,23,23,0.25)]"
+            className="relative mx-auto w-full max-w-[320px]"
           >
-            <div className="absolute inset-x-3 top-3 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-white/70">
-              <span>Maintenance Loop</span>
-              <span>PeakTalk</span>
-            </div>
             <video
-              className="aspect-[4/5] w-full object-cover"
+              className="w-full rounded-lg shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
               src="/maintenance/patience-clock.mp4"
               autoPlay
               loop
               muted
               playsInline
             />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 to-transparent" />
           </motion.div>
         </div>
       </div>
