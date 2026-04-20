@@ -13,6 +13,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import JSONB
 
 revision: str = "0015_session_artifacts"
@@ -23,8 +24,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Create artifact_type enum
-    artifact_type_enum = sa.Enum("prep_card", name="artifact_type")
-    artifact_type_enum.create(op.get_bind(), checkfirst=True)
+    artifact_type_enum = postgresql.ENUM("prep_card", name="artifact_type", create_type=False)
+    bind = op.get_bind()
+    exists = bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'artifact_type'")).scalar()
+    if not exists:
+        artifact_type_enum.create(bind)
 
     op.create_table(
         "session_artifacts",

@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 
 revision: str = "0014_scenarios"
@@ -18,11 +19,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    category_enum = sa.Enum(
+    category_enum = postgresql.ENUM(
         "budget", "roadmap", "investors", "clients", "people", "crisis",
-        name="scenario_category"
+        name="scenario_category", create_type=False
     )
-    category_enum.create(op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    exists = bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'scenario_category'")).scalar()
+    if not exists:
+        category_enum.create(bind)
 
     op.create_table(
         "scenarios",

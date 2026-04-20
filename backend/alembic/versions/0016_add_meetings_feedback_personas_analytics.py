@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "0016_roadmap_features"
 down_revision: Union[str, None] = "0015_session_artifacts"
@@ -18,8 +19,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ── meeting_status enum ──
-    meeting_status_enum = sa.Enum("upcoming", "prepared", "completed", "cancelled", name="meeting_status")
-    meeting_status_enum.create(op.get_bind(), checkfirst=True)
+    meeting_status_enum = postgresql.ENUM("upcoming", "prepared", "completed", "cancelled", name="meeting_status", create_type=False)
+    bind = op.get_bind()
+    if not bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'meeting_status'")).scalar():
+        meeting_status_enum.create(bind)
 
     # ── upcoming_meetings ──
     op.create_table(
@@ -44,8 +47,10 @@ def upgrade() -> None:
     op.create_index("ix_upcoming_meetings_user_id", "upcoming_meetings", ["user_id"])
 
     # ── meeting_outcome enum ──
-    meeting_outcome_enum = sa.Enum("great", "okay", "poor", "postponed", name="meeting_outcome")
-    meeting_outcome_enum.create(op.get_bind(), checkfirst=True)
+    meeting_outcome_enum = postgresql.ENUM("great", "okay", "poor", "postponed", name="meeting_outcome", create_type=False)
+    bind = op.get_bind()
+    if not bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'meeting_outcome'")).scalar():
+        meeting_outcome_enum.create(bind)
 
     # ── post_meeting_feedback ──
     op.create_table(
