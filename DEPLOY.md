@@ -148,7 +148,7 @@ Fill in these values (replace the `CHANGE_ME` and `YOUR_*` placeholders):
 | `SUPABASE_URL` | Your Supabase project URL (from Supabase Dashboard → Settings → API) |
 | `SUPABASE_KEY` | Your Supabase **service_role** key (from same page) |
 | `SUPABASE_STORAGE_BUCKET` | Name of your storage bucket (create it in Supabase → Storage) |
-| `GEMINI_API_KEY` | Your Google AI Studio API key |
+| `CLOUD_RU_API_KEY` | Your Cloud.ru Foundation Models API key |
 | `ALLOWED_ORIGINS` | `https://yourdomain.com` (your actual domain, no trailing slash) |
 | `SUPABASE_WEBHOOK_SECRET` | A random string: run `openssl rand -hex 32` |
 
