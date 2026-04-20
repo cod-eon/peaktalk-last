@@ -87,8 +87,15 @@ class GeminiAnalysisResult:
 
 
 def create_gemini_client() -> OpenAI:
+    api_key = settings.cloud_ru_api_key.strip()
+    if not api_key:
+        raise GeminiError(
+            "Cloud.ru API key is not configured. Set CLOUD_RU_API_KEY "
+            "(or legacy GEMINI_API_KEY during rollout)."
+        )
+
     client_kwargs: dict[str, Any] = {
-        "api_key": settings.cloud_ru_api_key,
+        "api_key": api_key,
         "base_url": settings.cloud_ru_base_url,
     }
     return OpenAI(**client_kwargs)
