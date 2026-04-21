@@ -1,17 +1,18 @@
-import type { PlanId, PaymentStatus } from './billing';
+import type { PaymentStatus } from './billing';
 
 // ─── Admin Stats ──────────────────────────────────────────────────────────────
 
+export type AdminPlanId = 'free' | 'per_session' | 'personal' | 'pro' | 'team' | 'starter';
+
 export interface AdminStats {
-  users_total: number;
-  users_pro: number;
-  users_starter: number;
-  simulations_total: number;
+  total_users: number;
+  paying_users: number;
+  free_users: number;
+  total_simulations: number;
   simulations_today: number;
-  payments_total_rub: number;
-  payments_this_month_rub: number;
-  payments_count_total: number;
-  active_subs_count: number;
+  revenue_total_rub: number;
+  revenue_this_month_rub: number;
+  successful_payments_count: number;
 }
 
 // ─── Admin Charts ─────────────────────────────────────────────────────────────
@@ -32,20 +33,21 @@ export interface AdminChartsData {
 export interface AdminUser {
   id: string;
   email: string;
-  plan: PlanId;
+  plan: AdminPlanId;
   subscription_status: string;
   period_end: string | null;
   simulations_used: number;
   documents_uploaded: number;
+  simulations_total: number;
   created_at: string;
-  is_active: boolean;
 }
 
 export interface AdminUserDetail extends AdminUser {
-  full_name: string | null;
-  last_login: string | null;
-  total_simulations: number;
-  total_documents: number;
+  period_start: string | null;
+  subscription_created_at: string | null;
+  cancelled_at: string | null;
+  payments_count: number;
+  payments_total_rub: number;
 }
 
 export interface AdminUsersResponse {
@@ -59,13 +61,16 @@ export interface AdminUsersResponse {
 // ─── Set Plan ─────────────────────────────────────────────────────────────────
 
 export interface SetPlanPayload {
-  plan: PlanId;
+  plan: AdminPlanId;
   period_days: number;
 }
 
 export interface SetPlanResponse {
-  success: boolean;
-  message: string;
+  user_id: string;
+  plan: AdminPlanId;
+  status: string;
+  period_start: string;
+  period_end: string | null;
 }
 
 // ─── Admin Payments ───────────────────────────────────────────────────────────
@@ -77,8 +82,8 @@ export interface AdminPayment {
   amount: number;
   currency: string;
   status: PaymentStatus;
-  yookassa_id: string | null;
-  plan: PlanId | null;
+  description: string | null;
+  yookassa_payment_id: string;
 }
 
 export interface AdminPaymentsResponse {
@@ -94,7 +99,7 @@ export interface AdminPaymentsResponse {
 export interface AdminSubscription {
   id: string;
   user_email: string;
-  plan: PlanId;
+  plan: AdminPlanId;
   status: string;
   period_start: string;
   period_end: string | null;

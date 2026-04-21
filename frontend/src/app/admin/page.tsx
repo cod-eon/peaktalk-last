@@ -1,57 +1,45 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useMemo } from 'react';
 import {
-  Users,
-  Zap,
   Activity,
-  TrendingUp,
-  TrendingDown,
-  BarChart2,
-  Loader2,
   AlertCircle,
+  BarChart3,
+  CreditCard,
+  Loader2,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
-} from 'recharts';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { format, parseISO, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import type { AdminStats, AdminChartsData, DayPoint, MaintenanceStatus } from '@/types/admin';
+import { formatAdminCurrency, formatAdminDateTime } from '@/lib/admin';
+import {
+  AdminMetricCard,
+  AdminPageHeader,
+  AdminPanel,
+} from '@/components/admin/AdminPrimitives';
+import type { AdminChartsData, AdminStats, DayPoint, MaintenanceStatus } from '@/types/admin';
 
-// ─── Fill missing days with 0 ─────────────────────────────────────────────────
+function fillDays(points: DayPoint[], days: number) {
+  const map = new Map(points.map((point) => [point.date, point.value]));
 
-function fillDays(points: DayPoint[], days: number): { date: string; label: string; value: number }[] {
-  const map = new Map(points.map((p) => [p.date, p.value]));
-  return Array.from({ length: days }, (_, i) => {
-    const d = subDays(new Date(), days - 1 - i);
-    const key = format(d, 'yyyy-MM-dd');
+  return Array.from({ length: days }, (_, index) => {
+    const day = subDays(new Date(), days - 1 - index);
+    const key = format(day, 'yyyy-MM-dd');
+
     return {
       date: key,
-      label: format(d, 'd MMM', { locale: ru }),
+      shortLabel: format(day, 'd MMM', { locale: ru }),
       value: map.get(key) ?? 0,
     };
   });
-}
-
-// ─── Custom tooltip ───────────────────────────────────────────────────────────
-
-interface TooltipEntry {
-  color?: string;
-  name?: string;
-  value?: string | number;
 }
 
 function ChartTooltip({
@@ -61,150 +49,93 @@ function ChartTooltip({
   suffix = '',
 }: {
   active?: boolean;
-  payload?: TooltipEntry[];
+  payload?: Array<{ value?: number | string; color?: string }>;
   label?: string;
   suffix?: string;
 }) {
   if (!active || !payload?.length) return null;
+
   return (
-    <div className="bg-black border border-neutral-800 rounded-none px-3 py-2 shadow-lg text-sm font-inter text-white min-w-[120px]">
-      <p className="text-neutral-400 mb-2 text-xs">{label}</p>
-      {payload.map((entry, index: number) => (
-        <div key={index} className="flex flex-row items-center justify-between gap-3 mb-1 last:mb-0 text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-neutral-300">{entry.name}</span>
-          </div>
-          <span className="font-semibold">
-            {typeof entry.value === 'number' ? entry.value.toLocaleString('ru-RU') : entry.value}{suffix}
-          </span>
-        </div>
-      ))}
+    <div className="border border-black/10 bg-white px-3 py-2 shadow-[0_20px_40px_rgba(17,24,39,0.08)]">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-neutral-950">
+        {typeof payload[0]?.value === 'number'
+          ? payload[0].value.toLocaleString('ru-RU')
+          : payload[0]?.value}
+        {suffix}
+      </p>
     </div>
   );
 }
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ReactNode;
-  delay?: number;
-  trend?: 'up' | 'down' | null;
-}
-
-function StatCard({ label, value, sub, icon, delay = 0, trend }: StatCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-      className="bg-white border border-black/5 rounded-none p-8 shadow-sm relative overflow-hidden flex flex-col justify-between hover:border-black/10 transition-colors"
-    >
-      <div className="flex items-start justify-between mb-6">
-        <p className="font-inter text-sm md:text-base font-semibold text-neutral-800 leading-tight">
-          {label}
-        </p>
-        <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-neutral-50 text-neutral-700 ml-2">
-          {icon}
-        </div>
-      </div>
-      <div>
-        <div className="text-3xl md:text-4xl font-semibold text-black font-inter tracking-tight">
-          {typeof value === 'number' ? value.toLocaleString('ru-RU') : value}
-        </div>
-        {sub && (
-          <div className="mt-2 flex items-center gap-1.5">
-            {trend === 'up' && <TrendingUp size={14} className="text-neutral-500 shrink-0" />}
-            {trend === 'down' && <TrendingDown size={14} className="text-neutral-500 shrink-0" />}
-            <p className="font-inter text-sm text-neutral-600">{sub}</p>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
 
 function ChartCard({
   title,
-  sub,
-  children,
-  delay = 0,
-  className = '',
+  subtitle,
+  data,
+  color,
+  suffix,
 }: {
   title: string;
-  sub?: string;
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
+  subtitle: string;
+  data: Array<{ date: string; shortLabel: string; value: number }>;
+  color: string;
+  suffix?: string;
 }) {
+  const chartId = title.toLowerCase().replace(/\s+/g, '-');
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay, ease: 'easeOut' }}
-      className={`bg-white border border-black/5 rounded-none p-6 shadow-sm flex flex-col ${className}`}
-    >
-      <div className="mb-6 shrink-0">
-        <p className="font-inter text-base font-semibold text-neutral-800">{title}</p>
-        {sub && <p className="font-inter text-sm text-neutral-500 mt-1">{sub}</p>}
+    <AdminPanel title={title} subtitle={subtitle} className="h-full">
+      <div className="h-[290px] px-2 pb-4 pt-3 sm:px-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 12, right: 12, left: -18, bottom: 8 }}>
+            <defs>
+              <linearGradient id={`gradient-${chartId}`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(17,24,39,0.08)" vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) => {
+                try {
+                  return format(parseISO(value), 'd MMM', { locale: ru });
+                } catch {
+                  return value;
+                }
+              }}
+              tick={{ fill: '#737373', fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              interval={2}
+            />
+            <YAxis
+              tick={{ fill: '#737373', fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) =>
+                value >= 1000 ? `${(value / 1000).toFixed(value >= 10_000 ? 0 : 1)}k` : String(value)
+              }
+            />
+            <Tooltip content={<ChartTooltip suffix={suffix} />} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={color}
+              strokeWidth={2}
+              fill={`url(#gradient-${chartId})`}
+              activeDot={{ r: 4, fill: color }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
-      <div className="flex-1 bg-neutral-50/50 border border-black/[0.03] rounded-none p-4 relative overflow-hidden flex flex-col justify-center">
-         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wNCkiLz48L3N2Zz4=')] opacity-50 pointer-events-none" />
-         <div className="relative z-10 w-full h-full min-h-[220px] flex items-center">
-           {children}
-         </div>
-      </div>
-    </motion.div>
+    </AdminPanel>
   );
 }
 
-// ─── Plan distribution donut ──────────────────────────────────────────────────
-
-function TranscriptionList() {
-  const items = [
-    { title: 'Собеседование (Middle)', lang: '🇷🇺 RUS', status: 'Завершено', acc: 99, color: 'bg-neutral-800' },
-    { title: 'Pitch Deck Review', lang: '🇬🇧 ENG', status: 'В процессе', acc: 94, color: 'bg-neutral-400' },
-    { title: 'Публичное выступление', lang: '🇷🇺 RUS', status: 'Анализ', acc: 88, color: 'bg-neutral-300' },
-    { title: 'Sales Demo (B2B SaaS)', lang: '🇬🇧 ENG', status: 'Завершено', acc: 97, color: 'bg-neutral-800' },
-    { title: 'Выступление инвесторам', lang: '🇷🇺 RUS', status: 'Анализ', acc: 91, color: 'bg-neutral-500' },
-  ];
-
-  return (
-    <div className="flex flex-col gap-[22px] w-full">
-      {items.map((it, i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={`w-1.5 h-4 rounded-none ${it.color} shrink-0`} />
-              <span className="font-inter text-sm font-medium text-neutral-700 truncate max-w-[140px] md:max-w-[200px]">{it.title}</span>
-              <span className="text-[10px] bg-white border border-neutral-200 text-neutral-500 px-1.5 py-0.5 rounded-none font-semibold uppercase">{it.lang}</span>
-            </div>
-            <span className="font-inter text-sm font-semibold text-neutral-900">
-              {it.acc}%
-            </span>
-          </div>
-          <div className="h-1.5 w-full bg-white border border-neutral-100 rounded-none overflow-hidden">
-            <div className={`h-full ${it.color} rounded-none`} style={{ width: `${it.acc}%` }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Tick formatters ──────────────────────────────────────────────────────────
-
-function shortDate(label: string) {
-  try { return format(parseISO(label), 'd MMM', { locale: ru }); } catch { return label; }
-}
-
-function MaintenanceCard() {
+function MaintenanceControl() {
   const queryClient = useQueryClient();
+
   const { data, isLoading } = useQuery<MaintenanceStatus>({
     queryKey: ['admin-maintenance'],
     queryFn: () => api.get('/admin/maintenance'),
@@ -213,17 +144,15 @@ function MaintenanceCard() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      const res = await api.post('/admin/maintenance', { enabled });
-      return res as MaintenanceStatus;
-    },
+    mutationFn: async (enabled: boolean) => api.post('/admin/maintenance', { enabled }) as Promise<MaintenanceStatus>,
     onSuccess: (next) => {
       queryClient.setQueryData(['admin-maintenance'], next);
       queryClient.setQueryData(['maintenance-status'], next);
+      toast.success(next.enabled ? 'Техработы включены.' : 'Техработы выключены.');
     },
-    onError: (err) => {
-      console.error('maintenance toggle failed:', err);
-      queryClient.invalidateQueries({ queryKey: ['admin-maintenance'] });
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Не удалось изменить режим техработ.';
+      toast.error(message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-maintenance'] });
@@ -232,60 +161,67 @@ function MaintenanceCard() {
   });
 
   const enabled = Boolean(data?.enabled);
-  const isBusy = isLoading || toggleMutation.isPending;
+  const updated = formatAdminDateTime(data?.updated_at ?? null);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="relative overflow-hidden border border-black/8 bg-[linear-gradient(135deg,#111827_0%,#1f2937_55%,#111827_100%)] p-5 text-white shadow-sm"
-    >
-      <div className="absolute inset-y-0 right-0 w-48 bg-[radial-gradient(circle_at_center,rgba(232,96,10,0.24),transparent_68%)]" />
-      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="relative overflow-hidden border border-black/10 bg-[linear-gradient(135deg,#111827_0%,#191f2d_56%,#111827_100%)] text-white shadow-[0_30px_80px_rgba(17,24,39,0.22)]">
+      <div className="absolute inset-y-0 right-0 w-56 bg-[radial-gradient(circle_at_center,rgba(232,96,10,0.34),transparent_68%)]" />
+      <div className="relative grid gap-6 px-5 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="max-w-2xl">
-          <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
-            {enabled ? <ShieldAlert size={14} className="text-[#f59e0b]" /> : <ShieldCheck size={14} className="text-[#86efac]" />}
+          <div className="inline-flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
+            {enabled ? <ShieldAlert size={14} className="text-[#f6b153]" /> : <ShieldCheck size={14} className="text-[#86efac]" />}
             Runtime Control
           </div>
-          <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-white">
-            Технические работы для дашборда
+          <h2 className="mt-4 font-syne text-[30px] leading-[0.95] tracking-[-0.05em] text-white sm:text-[36px]">
+            Технические работы для пользовательского дашборда
           </h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-white/72">
-            Когда режим включен, все страницы пользовательского дашборда заменяются на maintenance-screen с кнопкой возврата на главную.
+          <p className="mt-3 max-w-xl text-[15px] leading-7 text-white/74">
+            Режим перекрывает маршруты рабочего кабинета maintenance-экраном. Админка остаётся доступной, а maintenance-screen теперь даёт быстрый выход из аккаунта и вход в панель для админа.
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-col items-start gap-3 sm:items-end">
-          <div className={`inline-flex items-center gap-2 px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] ${
-            enabled ? 'bg-[#f59e0b]/18 text-[#fcd34d]' : 'bg-emerald-400/10 text-emerald-200'
+        <div className="relative flex min-w-[260px] flex-col gap-3">
+          <div className={`inline-flex items-center gap-2 self-start border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] ${
+            enabled
+              ? 'border-amber-300/25 bg-amber-400/10 text-amber-200'
+              : 'border-emerald-300/20 bg-emerald-400/10 text-emerald-100'
           }`}>
-            <span className={`h-2 w-2 rounded-full ${enabled ? 'bg-[#f59e0b]' : 'bg-emerald-300'}`} />
-            {enabled ? 'Режим активен' : 'Режим выключен'}
+            <span className={`h-2 w-2 rounded-full ${enabled ? 'bg-amber-300' : 'bg-emerald-300'}`} />
+            {enabled ? 'Режим включён' : 'Режим выключен'}
+          </div>
+          <div className="border border-white/10 bg-white/5 px-4 py-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/50">Последнее изменение</p>
+            <div className="mt-2 text-sm text-white/82">
+              {updated.date} <span className="text-white/45">·</span> {updated.time}
+            </div>
           </div>
           <button
             type="button"
-            disabled={isBusy}
+            disabled={isLoading || toggleMutation.isPending}
             onClick={() => toggleMutation.mutate(!enabled)}
-            className={`inline-flex min-w-[220px] items-center justify-center gap-2 px-5 py-3 text-sm font-semibold transition-colors ${
+            className={`inline-flex min-h-12 items-center justify-center gap-2 px-4 text-sm font-semibold transition-colors ${
               enabled
                 ? 'bg-white text-neutral-950 hover:bg-neutral-100'
                 : 'bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)]'
             } disabled:cursor-not-allowed disabled:opacity-60`}
           >
-            {isBusy && <Loader2 size={16} className="animate-spin" />}
+            {(isLoading || toggleMutation.isPending) ? <Loader2 size={16} className="animate-spin" /> : null}
             {enabled ? 'Выключить техработы' : 'Включить техработы'}
           </button>
         </div>
       </div>
-    </motion.div>
+    </section>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-export default function AdminStatsPage() {
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErr, refetch } = useQuery<AdminStats>({
+export default function AdminOverviewPage() {
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    error: statsErrorValue,
+    refetch,
+  } = useQuery<AdminStats>({
     queryKey: ['admin-stats'],
     queryFn: () => api.get('/admin/stats'),
     staleTime: 30_000,
@@ -299,174 +235,155 @@ export default function AdminStatsPage() {
     retry: 1,
   });
 
-  const activityData = useMemo(
-    () => fillDays(charts?.simulations_by_day ?? [], 14).map((d) => ({
-      ...d,
-      load: d.value * 12 + ((d.label.length % 5) * 4),
-      idle: Math.max(0, Math.floor(d.value * 0.18) + (d.label.length % 3)),
-    })),
-    [charts?.simulations_by_day]
-  );
+  const revenueData = useMemo(() => fillDays(charts?.revenue_by_day ?? [], 30), [charts?.revenue_by_day]);
+  const simulationData = useMemo(() => fillDays(charts?.simulations_by_day ?? [], 30), [charts?.simulations_by_day]);
+  const usersData = useMemo(() => fillDays(charts?.users_by_day ?? [], 30), [charts?.users_by_day]);
 
-  const isLoading = statsLoading;
+  const monthRevenue = stats ? formatAdminCurrency(stats.revenue_this_month_rub) : '—';
+  const totalRevenue = stats ? formatAdminCurrency(stats.revenue_total_rub) : '—';
 
   return (
-    <div className="pb-12 space-y-6">
-      {/* ── Header ── */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="font-inter text-sm text-neutral-500 font-semibold uppercase tracking-widest mb-1.5">
-            Панель администратора
-          </p>
-          <h1
-            className="font-inter text-[28px] sm:text-[32px] font-bold text-neutral-900 leading-tight tracking-tight"
+    <div className="space-y-6 pb-10">
+      <AdminPageHeader
+        eyebrow="Operations / Analytics"
+        title="Контур управления без вымышленных метрик."
+        description="Админка теперь показывает только реальные показатели продукта: пользователей, симуляции, оплату и состояние runtime. Никаких декоративных “латентностей” и фиктивных транскрипций."
+        index="01"
+        actions={
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex min-h-11 items-center gap-2 border border-black/10 bg-white px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-neutral-700 transition-colors hover:bg-neutral-100"
           >
-            Статистика
-          </h1>
+            <RefreshCw size={14} />
+            Обновить
+          </button>
+        }
+      />
+
+      {statsError ? (
+        <div className="flex items-start gap-3 border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <p>{statsErrorValue instanceof Error ? statsErrorValue.message : 'Не удалось загрузить статистику.'}</p>
         </div>
-        <button
-          onClick={() => refetch()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-neutral-400 border border-neutral-200 rounded-none hover:bg-neutral-100 transition-colors cursor-pointer"
-        >
-          <RefreshCw size={12} />
-          Обновить
-        </button>
-      </div>
+      ) : null}
 
-      <MaintenanceCard />
-
-      {/* ── Loading ── */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-24">
-          <Loader2 size={28} className="animate-spin text-neutral-900" />
+      {statsLoading ? (
+        <div className="flex items-center justify-center py-28">
+          <Loader2 size={28} className="animate-spin text-neutral-950" />
         </div>
-      )}
+      ) : null}
 
-      {/* ── Error ── */}
-      {statsError && (
-        <div className="flex items-start gap-3 p-4 rounded-none border border-red-200 bg-red-50 text-sm text-red-700">
-          <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
-          <p>
-            <span className="font-semibold">Ошибка:</span>{' '}
-            {statsErr instanceof Error ? statsErr.message : 'Не удалось загрузить статистику.'}
-          </p>
-        </div>
-      )}
-
-      {stats && (
+      {stats ? (
         <>
-          {/* ── Top Row: Metrics ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <StatCard
-              label="Активные ИИ-персоны"
-              value={stats.active_subs_count || 124}
-              sub="Всего сессий: 1.2k"
-              icon={<Users size={18} />}
-              delay={0}
-              trend="up"
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <AdminMetricCard
+              label="Пользователи"
+              value={stats.total_users.toLocaleString('ru-RU')}
+              helper={`${stats.free_users.toLocaleString('ru-RU')} на free/разовых сценариях`}
+              icon={Users}
             />
-            <StatCard
-              label="Обработанные минуты"
-              value={(stats.simulations_total * 4) || 3420}
-              sub="В этом месяце"
-              icon={<Activity size={18} />}
-              delay={0.07}
-              trend="up"
+            <AdminMetricCard
+              label="Платящие аккаунты"
+              value={stats.paying_users.toLocaleString('ru-RU')}
+              helper="Активные платные подписки и legacy starter."
+              icon={CreditCard}
             />
-            <StatCard
-              label="Точность транскрипции"
-              value="98.4%"
-              sub="Whisper-V3"
-              icon={<BarChart2 size={18} />}
-              delay={0.14}
-              trend={null}
+            <AdminMetricCard
+              label="Все симуляции"
+              value={stats.total_simulations.toLocaleString('ru-RU')}
+              helper={`${stats.simulations_today.toLocaleString('ru-RU')} запусков сегодня`}
+              icon={Activity}
             />
-            <StatCard
-              label="Латентность ответа"
-              value="240 ms"
-              sub="p95 percentile"
-              icon={<Zap size={18} />}
-              delay={0.21}
-              trend="down"
+            <AdminMetricCard
+              label="Выручка / месяц"
+              value={monthRevenue}
+              helper="Сумма успешных платежей с начала календарного месяца."
+              icon={TrendingUp}
             />
-            <StatCard
-              label="Крит. ошибки ИИ"
-              value="0"
-              sub="За последние 24ч"
-              icon={<AlertCircle size={18} />}
-              delay={0.28}
-              trend="down"
+            <AdminMetricCard
+              label="Выручка / всё время"
+              value={totalRevenue}
+              helper="Накопленная сумма только по успешным платежам."
+              icon={BarChart3}
+            />
+            <AdminMetricCard
+              label="Успешные оплаты"
+              value={stats.successful_payments_count.toLocaleString('ru-RU')}
+              helper="Количество оплаченных транзакций без pending и failed."
+              icon={ShieldCheck}
             />
           </div>
 
-          {/* ── Second Row: Activity/Deep Dive ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4">
-            <ChartCard
-              title="Активность обработки (мин.)"
-              sub="Нагрузка на голосовые модели и время простоя"
-              delay={0.35}
+          <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+            <MaintenanceControl />
+
+            <AdminPanel
+              title="Snapshot"
+              subtitle="Короткий срез по текущему состоянию продукта без вторичного шума."
+              className="h-full"
             >
-              {chartsLoading ? (
-                <Loader2 size={20} className="animate-spin text-neutral-400 mx-auto" />
-              ) : (
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={shortDate}
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={2}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: '#737373', fontFamily: 'Inter' }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
-                    />
-                    <Tooltip content={<ChartTooltip suffix=" м." />} cursor={{ stroke: 'rgba(0,0,0,0.05)', strokeWidth: 20 }} />
-                    <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter', color: '#737373', paddingTop: 10 }} />
-                    <Line
-                      name="Загрузка"
-                      type="linear"
-                      dataKey="load"
-                      stroke="#171717"
-                      strokeWidth={1.5}
-                      dot={false}
-                      activeDot={{ r: 4, fill: '#171717', strokeWidth: 0 }}
-                    />
-                    <Line
-                      name="Простой"
-                      type="linear"
-                      dataKey="idle"
-                      stroke="#a3a3a3"
-                      strokeWidth={1.5}
-                      dot={false}
-                      activeDot={{ r: 4, fill: '#a3a3a3', strokeWidth: 0 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-
-            <ChartCard title="Последние транскрипции // Статус" sub="Анализ сессий и язык" delay={0.4}>
-              <TranscriptionList />
-            </ChartCard>
+              <div className="grid gap-4 px-5 py-5 sm:px-6">
+                {[
+                  {
+                    label: 'Платящая доля',
+                    value: stats.total_users > 0 ? `${Math.round((stats.paying_users / stats.total_users) * 100)}%` : '0%',
+                    helper: 'Доля активных платных пользователей от общей базы.',
+                  },
+                  {
+                    label: 'Средний чек',
+                    value: stats.successful_payments_count > 0
+                      ? formatAdminCurrency(Math.round(stats.revenue_total_rub / stats.successful_payments_count))
+                      : '—',
+                    helper: 'Считает только successful payments.',
+                  },
+                  {
+                    label: 'Нагрузка сегодня',
+                    value: stats.total_simulations > 0
+                      ? `${Math.round((stats.simulations_today / Math.max(stats.total_simulations, 1)) * 1000) / 10}%`
+                      : '0%',
+                    helper: 'Доля сегодняшних симуляций от накопленного объёма.',
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="border border-black/8 bg-[rgba(17,24,39,0.02)] px-4 py-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500">{item.label}</p>
+                    <div className="mt-2 text-[28px] font-semibold tracking-[-0.04em] text-neutral-950">{item.value}</div>
+                    <p className="mt-2 text-sm leading-6 text-neutral-600">{item.helper}</p>
+                  </div>
+                ))}
+              </div>
+            </AdminPanel>
           </div>
 
-          {/* ── Footer ── */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-[11px] text-neutral-400 text-right"
-          >
-            Данные обновляются каждые 30 сек · Графики за последние 30 / 14 дней
-          </motion.p>
+          <div className="grid gap-4 xl:grid-cols-3">
+            <ChartCard
+              title="Revenue"
+              subtitle="Последние 30 дней, успешные оплаты."
+              data={revenueData}
+              color="#E8600A"
+              suffix=" ₽"
+            />
+            <ChartCard
+              title="Simulations"
+              subtitle="Запуски по дням за тот же период."
+              data={simulationData}
+              color="#111827"
+            />
+            <ChartCard
+              title="New Users"
+              subtitle="Новые регистрации по дням."
+              data={usersData}
+              color="#2563eb"
+            />
+          </div>
+
+          {chartsLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 size={20} className="animate-spin text-neutral-700" />
+            </div>
+          ) : null}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

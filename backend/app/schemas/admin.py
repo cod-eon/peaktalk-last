@@ -17,15 +17,14 @@ from app.models.subscription import PlanType, SubscriptionStatus, PaymentStatus
 
 
 class AdminStatsResponse(BaseModel):
-    users_total: int
-    users_pro: int
-    users_starter: int
-    simulations_total: int
+    total_users: int
+    paying_users: int
+    free_users: int
+    total_simulations: int
     simulations_today: int
-    payments_total_rub: Decimal
-    payments_this_month_rub: Decimal
-    payments_count_total: int
-    active_subs_count: int
+    revenue_total_rub: Decimal
+    revenue_this_month_rub: Decimal
+    successful_payments_count: int
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +69,7 @@ class AdminUsersResponse(BaseModel):
     total: int
     page: int
     per_page: int
+    pages: int
 
 
 # ---------------------------------------------------------------------------
@@ -110,7 +110,10 @@ class AdminUserDetail(BaseModel):
 
 
 class SetPlanRequest(BaseModel):
-    plan: PlanType = Field(..., description="Target plan: starter, pro, or team")
+    plan: PlanType = Field(
+        ...,
+        description="Target plan: free, personal, pro, team, or starter (legacy).",
+    )
     period_days: int | None = Field(
         30,
         ge=1,
@@ -138,7 +141,7 @@ class AdminPaymentItem(BaseModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
-    user_email: str
+    user_email: str | None = None
     amount: Decimal
     currency: str
     status: PaymentStatus
@@ -152,6 +155,7 @@ class AdminPaymentsResponse(BaseModel):
     total: int
     page: int
     per_page: int
+    pages: int
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +182,7 @@ class AdminSubscriptionsResponse(BaseModel):
     total: int
     page: int
     per_page: int
+    pages: int
 
 
 # ---------------------------------------------------------------------------
