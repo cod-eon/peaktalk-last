@@ -19,10 +19,12 @@ async def set_setting(db: AsyncSession, key: str, value: str) -> AppSetting:
         item = AppSetting(key=key, value=value)
         db.add(item)
         await db.flush()
+        await db.refresh(item)
         return item
 
     item.value = value
     await db.flush()
+    await db.refresh(item)
     return item
 
 
