@@ -12,6 +12,7 @@ bypass billing in live traffic.
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
@@ -55,6 +56,8 @@ from app.services.app_settings import MAINTENANCE_MODE_KEY, get_maintenance_mode
 logger = logging.getLogger("peaktalk.admin")
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+_PAID_PLANS = (PlanType.personal, PlanType.pro, PlanType.team, PlanType.starter)
 
 
 # ---------------------------------------------------------------------------
@@ -141,21 +144,21 @@ async def get_stats(
     users_total_row = await db.execute(select(func.count(User.id)))
     users_total: int = users_total_row.scalar_one() or 0
 
-    # PRO / Team users = subscriptions where plan != starter AND status = active
-    users_pro_row = await db.execute(
-        select(func.count(Subscription.id)).where(
+    # Paid users = active subscription rows with a real paid plan.
+    paying_users_row = await db.execute(
+        select(func.count(distinct(Subscription.user_id))).where(
             and_(
-                Subscription.plan != PlanType.starter,
+                Subscription.plan.in_(_PAID_PLANS),
                 Subscription.status == SubscriptionStatus.active,
             )
         )
     )
-    users_pro: int = users_pro_row.scalar_one() or 0
-    users_starter: int = users_total - users_pro
+    paying_users: int = paying_users_row.scalar_one() or 0
+    free_users: int = max(users_total - paying_users, 0)
 
     # Total simulations
     sims_total_row = await db.execute(select(func.count(SimulationSession.id)))
-    simulations_total: int = sims_total_row.scalar_one() or 0
+    total_simulations: int = sims_total_row.scalar_one() or 0
 
     # Simulations started today (UTC)
     today_start = datetime.now(timezone.utc).replace(
@@ -174,7 +177,7 @@ async def get_stats(
             Payment.status == PaymentStatus.succeeded
         )
     )
-    payments_total_rub: Decimal = Decimal(str(pay_total_row.scalar_one() or 0))
+    revenue_total_rub: Decimal = Decimal(str(pay_total_row.scalar_one() or 0))
 
     # Payments this calendar month
     month_start = datetime.now(timezone.utc).replace(
@@ -188,7 +191,7 @@ async def get_stats(
             )
         )
     )
-    payments_this_month_rub: Decimal = Decimal(str(pay_month_row.scalar_one() or 0))
+    revenue_this_month_rub: Decimal = Decimal(str(pay_month_row.scalar_one() or 0))
 
     # Payments count (succeeded)
     pay_count_row = await db.execute(
@@ -196,26 +199,17 @@ async def get_stats(
             Payment.status == PaymentStatus.succeeded
         )
     )
-    payments_count_total: int = pay_count_row.scalar_one() or 0
-
-    # Active subscriptions
-    active_subs_row = await db.execute(
-        select(func.count(Subscription.id)).where(
-            Subscription.status == SubscriptionStatus.active
-        )
-    )
-    active_subs_count: int = active_subs_row.scalar_one() or 0
+    successful_payments_count: int = pay_count_row.scalar_one() or 0
 
     return AdminStatsResponse(
-        users_total=users_total,
-        users_pro=users_pro,
-        users_starter=users_starter,
-        simulations_total=simulations_total,
+        total_users=users_total,
+        paying_users=paying_users,
+        free_users=free_users,
+        total_simulations=total_simulations,
         simulations_today=simulations_today,
-        payments_total_rub=payments_total_rub,
-        payments_this_month_rub=payments_this_month_rub,
-        payments_count_total=payments_count_total,
-        active_subs_count=active_subs_count,
+        revenue_total_rub=revenue_total_rub,
+        revenue_this_month_rub=revenue_this_month_rub,
+        successful_payments_count=successful_payments_count,
     )
 
 
@@ -315,28 +309,35 @@ async def get_charts(
 async def list_users(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
+    search: str | None = Query(None, min_length=1, description="Filter by email substring"),
     _admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> AdminUsersResponse:
     """Paginated list of all users with subscription and usage data."""
 
     offset = (page - 1) * per_page
+    normalized_search = (search or "").strip().lower()
+    filters = []
+    if normalized_search:
+        filters.append(func.lower(User.email).like(f"%{normalized_search}%"))
 
     # Total count
-    total_row = await db.execute(select(func.count(User.id)))
+    total_query = select(func.count(User.id))
+    if filters:
+        total_query = total_query.where(*filters)
+    total_row = await db.execute(total_query)
     total: int = total_row.scalar_one() or 0
+    pages = max(math.ceil(total / per_page), 1)
 
     # Fetch users with LEFT JOINs to subscription and usage_counter
-    users_result = await db.execute(
-        select(User)
-        .order_by(User.created_at.desc())
-        .offset(offset)
-        .limit(per_page)
-    )
+    users_query = select(User).order_by(User.created_at.desc()).offset(offset).limit(per_page)
+    if filters:
+        users_query = users_query.where(*filters)
+    users_result = await db.execute(users_query)
     users = list(users_result.scalars().all())
 
     if not users:
-        return AdminUsersResponse(items=[], total=total, page=page, per_page=per_page)
+        return AdminUsersResponse(items=[], total=total, page=page, per_page=per_page, pages=pages)
 
     user_ids = [u.id for u in users]
 
@@ -386,7 +387,7 @@ async def list_users(
             )
         )
 
-    return AdminUsersResponse(items=items, total=total, page=page, per_page=per_page)
+    return AdminUsersResponse(items=items, total=total, page=page, per_page=per_page, pages=pages)
 
 
 # ---------------------------------------------------------------------------
@@ -531,20 +532,28 @@ async def set_user_plan(
     sub = await _ensure_subscription(user_id, db)
     now = datetime.now(timezone.utc)
 
+    if body.plan == PlanType.per_session:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "detail": (
+                    "Разовые сессии не назначаются через смену подписки. "
+                    "Для них используется отдельная покупка и session credits."
+                ),
+                "code": "unsupported_plan_for_admin_set_plan",
+            },
+        )
+
     sub.plan = body.plan
     sub.period_start = now
     sub.cancelled_at = None
 
-    if body.plan == PlanType.starter:
-        # Starter is free and indefinite
+    if body.plan in (PlanType.free, PlanType.starter):
+        # Free and legacy starter are indefinite.
         sub.period_end = None
         sub.status = SubscriptionStatus.active
     else:
-        # Paid plan: set expiry
-        if body.period_days is not None:
-            sub.period_end = now + timedelta(days=body.period_days)
-        else:
-            sub.period_end = None  # indefinite PRO/Team (for testing)
+        sub.period_end = now + timedelta(days=body.period_days or 30)
         sub.status = SubscriptionStatus.active
 
     await db.flush()
@@ -596,12 +605,13 @@ async def list_payments(
         count_q = count_q.where(*base_where)
     total_row = await db.execute(count_q)
     total: int = total_row.scalar_one() or 0
+    pages = max(math.ceil(total / per_page), 1)
 
     # Rows with joined user email
     offset = (page - 1) * per_page
     data_q = (
         select(Payment, User.email)
-        .join(User, User.id == Payment.user_id)
+        .outerjoin(User, User.id == Payment.user_id)
         .order_by(Payment.created_at.desc())
         .offset(offset)
         .limit(per_page)
@@ -627,7 +637,7 @@ async def list_payments(
             )
         )
 
-    return AdminPaymentsResponse(items=items, total=total, page=page, per_page=per_page)
+    return AdminPaymentsResponse(items=items, total=total, page=page, per_page=per_page, pages=pages)
 
 
 # ---------------------------------------------------------------------------
@@ -658,6 +668,7 @@ async def list_subscriptions(
         count_q = count_q.where(*base_where)
     total_row = await db.execute(count_q)
     total: int = total_row.scalar_one() or 0
+    pages = max(math.ceil(total / per_page), 1)
 
     offset = (page - 1) * per_page
     data_q = (
@@ -689,7 +700,7 @@ async def list_subscriptions(
         )
 
     return AdminSubscriptionsResponse(
-        items=items, total=total, page=page, per_page=per_page
+        items=items, total=total, page=page, per_page=per_page, pages=pages
     )
 
 
