@@ -4,28 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   LogOut,
-  Settings2,
   ShieldCheck,
   TimerReset,
   Wrench,
 } from 'lucide-react';
-import { api } from '@/lib/api';
 import { createClient } from '@/lib/supabase/client';
 
 export function MaintenanceScreen() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-
-  const { isSuccess: hasAdminAccess } = useQuery({
-    queryKey: ['maintenance-admin-access'],
-    queryFn: () => api.get('/admin/maintenance'),
-    retry: false,
-    staleTime: 30_000,
-  });
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -87,16 +77,6 @@ export function MaintenanceScreen() {
                 <LogOut size={16} />
                 {loggingOut ? 'Выходим…' : 'Выйти из аккаунта'}
               </button>
-
-              {hasAdminAccess ? (
-                <Link
-                  href="/admin"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-[rgba(232,96,10,0.18)] bg-[rgba(232,96,10,0.08)] px-5 text-sm font-semibold text-[#9a4307] transition-colors hover:bg-[rgba(232,96,10,0.14)]"
-                >
-                  <Settings2 size={16} />
-                  В админку
-                </Link>
-              ) : null}
             </div>
           </div>
 
@@ -135,11 +115,9 @@ export function MaintenanceScreen() {
               description: 'Так мы не показываем частично сломанную логику и не портим данные в момент обновления продукта.',
             },
             {
-              icon: Settings2,
-              title: 'Для администраторов',
-              description: hasAdminAccess
-                ? 'Доступ в control room подтверждён. Кнопка "В админку" открывает панель, где можно выключить режим.'
-                : 'Если у аккаунта есть права администратора, здесь появится прямой вход в control room.',
+              icon: ShieldCheck,
+              title: 'Что доступно сейчас',
+              description: 'Публичные страницы, логин и выход из аккаунта продолжают работать. Перекрыт только пользовательский кабинет.',
             },
           ].map((item) => {
             const Icon = item.icon;

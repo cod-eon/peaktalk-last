@@ -36,12 +36,13 @@ import type {
 } from '@/types/admin';
 
 const PLAN_OPTIONS: Array<{
-  id: Exclude<AdminPlanId, 'per_session' | 'starter'>;
+  id: Exclude<AdminPlanId, 'per_session'>;
   label: string;
   description: string;
   needsDays: boolean;
 }> = [
   { id: 'free', label: 'Free', description: 'Базовый бесплатный доступ.', needsDays: false },
+  { id: 'starter', label: 'Starter', description: 'Legacy-план. Сохраняем его явно, чтобы не даунгрейдить старых пользователей в free.', needsDays: false },
   { id: 'personal', label: 'Personal', description: '10 сессий в месяц и PDF.', needsDays: true },
   { id: 'pro', label: 'Pro', description: 'Безлимит, аналитика, приоритет.', needsDays: true },
   { id: 'team', label: 'Team', description: 'Командный тариф и общий контур.', needsDays: true },
@@ -57,7 +58,7 @@ function SetPlanModal({
   onSuccess: () => void;
 }) {
   const initialPlan = PLAN_OPTIONS.some((option) => option.id === user.plan)
-    ? (user.plan as Exclude<AdminPlanId, 'per_session' | 'starter'>)
+    ? (user.plan as Exclude<AdminPlanId, 'per_session'>)
     : 'free';
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [periodDays, setPeriodDays] = useState(30);

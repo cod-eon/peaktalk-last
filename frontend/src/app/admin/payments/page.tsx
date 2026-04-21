@@ -27,13 +27,14 @@ import {
 import type { AdminPaymentsResponse } from '@/types/admin';
 import type { PaymentStatus } from '@/types/billing';
 
-const STATUS_FILTERS: Array<{ id: 'all' | PaymentStatus; label: string }> = [
+type AdminPaymentsFilter = 'all' | Extract<PaymentStatus, 'pending' | 'succeeded' | 'failed' | 'refunded'>;
+
+const STATUS_FILTERS: Array<{ id: AdminPaymentsFilter; label: string }> = [
   { id: 'all', label: 'Все' },
   { id: 'succeeded', label: 'Оплачено' },
   { id: 'pending', label: 'Ожидание' },
   { id: 'failed', label: 'Ошибка' },
   { id: 'refunded', label: 'Возврат' },
-  { id: 'cancelled', label: 'Отменено' },
 ];
 
 function TransactionIdCell({ id }: { id: string }) {
@@ -65,7 +66,7 @@ function TransactionIdCell({ id }: { id: string }) {
 
 export default function AdminPaymentsPage() {
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<'all' | PaymentStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<AdminPaymentsFilter>('all');
 
   const { data, isLoading, isError, error } = useQuery<AdminPaymentsResponse>({
     queryKey: ['admin-payments', page, statusFilter],

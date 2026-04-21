@@ -95,8 +95,20 @@ export function formatAdminDate(value: string | null, options?: Intl.DateTimeFor
 }
 
 export function formatAdminDateTime(value: string | null) {
-  if (!value) return '—';
+  if (!value) {
+    return {
+      date: '—',
+      time: '—',
+    };
+  }
+
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return {
+      date: '—',
+      time: '—',
+    };
+  }
 
   return {
     date: date.toLocaleDateString('ru-RU', {
