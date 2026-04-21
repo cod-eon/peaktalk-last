@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 
 function FromGuestBridgeInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,10 +36,11 @@ function FromGuestBridgeInner() {
         
         toast.success('Контекст сессии успешно перенесён!');
         if (mounted) router.replace(`/simulation/${res.session_id}`);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!mounted) return;
+        const apiError = err as Error & { code?: string };
         // If limit exceeded 402 error, we send to billing
-        if (err?.code === 'simulation_limit_exceeded') {
+        if (apiError.code === 'simulation_limit_exceeded') {
            router.replace('/billing?plan=per_session&return=/simulation/from-guest');
            return;
         }

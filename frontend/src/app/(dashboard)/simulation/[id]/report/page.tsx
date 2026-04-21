@@ -359,6 +359,8 @@ export default function SimulationReportPage() {
         return skill_metrics[Math.min(i, skill_metrics.length - 1)] ?? null;
     }
 
+    return (
+        <>
             <div id="print-report" style={{ display: 'none' }} className="font-inter text-black bg-white">
                 <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Отчёт по симуляции PeakTalk</h1>
                 <p style={{ fontSize: 13, color: '#555', marginBottom: 24 }}>
@@ -543,6 +545,7 @@ export default function SimulationReportPage() {
                                         );
                                     } else {
                                         const metric = getMetricForUserMsg(userIdx);
+                                        userIdx++;
                                         return (
                                             <UserLine
                                                 key={idx}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
 import { useBillingStore } from '@/store/billingStore';
@@ -22,26 +22,13 @@ function isDismissed(): boolean {
 
 export function UpgradeBanner() {
   const { status, openUpgradeModal } = useBillingStore();
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (!status) return;
-    const plan = status.subscription.plan;
-    if (plan !== 'free') return;
-
-    const used = status.usage.simulations_used;
-    const limit = status.limits.simulations_per_month;
-    if (limit === null) return;
-
-    const shouldShow = used >= 2 && !isDismissed();
-    setVisible(shouldShow);
-  }, [status]);
+  const [isDismissedNow, setIsDismissedNow] = useState(() => isDismissed());
 
   const handleDismiss = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     }
-    setVisible(false);
+    setIsDismissedNow(true);
   };
 
   const handleUpgrade = () => {
@@ -53,6 +40,7 @@ export function UpgradeBanner() {
   const used = status.usage.simulations_used;
   const limit = status.limits.simulations_per_month ?? 3;
   const left = Math.max(0, limit - used);
+  const visible = used >= 2 && !isDismissedNow;
 
   const bannerText =
     left === 0

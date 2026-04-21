@@ -54,6 +54,21 @@ export default function SimulationPage() {
   const authTokenRef = useRef<string | null>(null);
   const isFinishedRef = useRef(false);
 
+  const PERSONA_LABELS: Record<string, string> = {
+    supervisor: 'Научный руководитель',
+    reviewer: 'Придирчивый рецензент',
+    peer: 'Однокурсник-скептик',
+    tech_lead: 'Тимлид / Principal Engineer',
+    hr: 'HR-менеджер',
+    senior_dev: 'Старший разработчик',
+    investor: 'Венчурный инвестор',
+    partner: 'Корпоративный партнёр',
+    customer: 'Потенциальный клиент',
+    board: 'Совет директоров',
+    subordinate: 'Скептичный подчинённый',
+    journalist: 'Журналист',
+    audience: 'Общая аудитория',
+    moderator: 'Модератор дискуссии',
     listener: 'Скептик из зала',
   };
 
@@ -255,7 +270,7 @@ export default function SimulationPage() {
 
   const personaLabel = personaConfig
     ? getPersonaDisplayLabel({ ...personaConfig, difficulty: personaConfig.difficulty ?? 3 })
-    : 'Тренер';
+    : PERSONA_LABELS.audience;
   const personaDative = PERSONA_DATIVE[personaConfig?.role ?? ''] ?? personaLabel.toLowerCase();
 
   if (isFinished) {

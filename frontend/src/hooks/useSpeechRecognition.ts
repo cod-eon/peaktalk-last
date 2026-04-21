@@ -2,20 +2,62 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  0: {
+    transcript: string;
+  };
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionErrorEventLike = {
+  error: string;
+};
+
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+type BrowserWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  webkitAudioContext?: typeof AudioContext;
+};
+
+function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const browserWindow = window as BrowserWindow;
+  return browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
+}
+
 export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean) => void) => {
   const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isSupported] = useState(() => Boolean(getSpeechRecognitionCtor()));
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognitionCtor();
 
     if (!SpeechRecognition) {
-      setIsSupported(false);
       return;
     }
 
@@ -29,7 +71,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
       setError(null);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
       let currentFinal = '';
       let currentInterim = '';
 
@@ -51,7 +93,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
       console.error("Speech recognition error", event.error);
       if (event.error !== 'no-speech') {
         setError(event.error);
@@ -84,9 +126,10 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
 
     // 2. Audio feedback for Safari/Desktop (via Web Audio API)
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioContext) {
-        const ctx = new AudioContext();
+      const browserWindow = window as BrowserWindow;
+      const AudioContextCtor = typeof AudioContext !== 'undefined' ? AudioContext : browserWindow.webkitAudioContext;
+      if (AudioContextCtor) {
+        const ctx = new AudioContextCtor();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         

@@ -1,19 +1,23 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Play, Target, AlertTriangle, ArrowRight, Upload, Activity, Loader2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import type { DocumentItem, UserProfile } from '@/hooks/useDashboardData';
 import { PlanBadge } from '@/components/PlanBadge';
 import { formatDate, getPersonaDisplayLabel, getPersonaVisual } from '@/lib/constants/personas';
 import type { SessionItem } from '@/lib/constants/personas';
+import type { BillingStatus, PlanId } from '@/types/billing';
 
 // ── Components ─────────────────────────────────────────────────────────────
 
 function MetricPod({
   label, value, subtitle, icon
 }: {
+  label: string;
+  value: React.ReactNode;
   subtitle?: string;
   icon: React.ReactNode;
 }) {
@@ -217,7 +221,7 @@ function DashboardDocuments({ documents }: { documents: Array<{ id: string; name
 
 // ── Sub-pages ────────────────────────────────────────────────────────────────
 
-function DashboardNewUser({ profile, billing }: { profile: { segment?: string; primary_goal?: string } | null, user_metadata?: { display_name?: string } } | null, billing: { status?: { plan?: string }; simulationsLeft?: number } | null }) {
+function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing: { status: BillingStatus | null; simulationsLeft: number | null } }) {
   const segment = profile?.segment || 'other';
   let title = "Начните первую симуляцию";
   
@@ -236,8 +240,8 @@ function DashboardNewUser({ profile, billing }: { profile: { segment?: string; p
       break;
   }
 
-  const simulationsLeft = billing.simulationsLeft ?? 0;
-  const plan = billing.status?.plan ?? 'starter';
+  const simulationsLeft = billing?.simulationsLeft ?? 0;
+  const plan: PlanId = billing?.status?.subscription.plan === 'per_session' ? 'per_session' : 'free';
 
   return (
     <motion.div 
@@ -294,11 +298,15 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 };
 
-function DashboardActive({ sessions, documents, profile }: { sessions: any[], documents: any[], profile: any }) {
+function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; documents: DocumentItem[] }) {
   // Compute metrics
+  const completedSessions = sessions.filter(s => s.status === 'completed');
+  const validScores = completedSessions
+    .map(s => s.avg_score)
+    .filter((score): score is number => score !== null);
   
-  let indexMarkup: React.ReactNode = <span>0<span className="text-neutral-400 text-xl">/10</span></span>;
-  let indexSubtitle = "Пройдите первую симуляцию";
+  let indexMarkup: React.ReactNode = "--";
+  let indexSubtitle = "Завершите симуляцию для расчёта";
   
   if (validScores.length > 0) {
     const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
@@ -448,7 +456,7 @@ export default function DashboardPage() {
       ) : userState === 'new' ? (
         <DashboardNewUser profile={profile} billing={billing} />
       ) : (
-        <DashboardActive profile={profile} sessions={sessions} documents={documents} />
+        <DashboardActive sessions={sessions} documents={documents} />
       )}
     </div>
   );

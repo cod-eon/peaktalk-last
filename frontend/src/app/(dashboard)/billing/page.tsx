@@ -11,6 +11,8 @@ import {
   Loader2,
   Users,
   FileText,
+  TrendingUp,
+  X,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';

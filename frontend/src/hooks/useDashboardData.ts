@@ -7,14 +7,22 @@ import type { SessionItem } from '@/lib/constants/personas';
 
 export type UserState = 'loading' | 'new' | 'active';
 
-type DocumentItem = {
+export type DocumentItem = {
   id: string;
   name: string;
   created_at: string;
 };
 
+export type UserProfile = {
+  segment?: string;
+  primary_goal?: string;
+  user_metadata?: {
+    display_name?: string;
+  };
+} | null;
+
 export function useDashboardData() {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile>(null);
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);

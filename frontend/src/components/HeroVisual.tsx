@@ -55,7 +55,7 @@ export default function HeroVisual() {
                   [ ИНВЕСТОР ]
                 </div>
                 <p className="font-inter text-base leading-relaxed text-black break-words whitespace-normal font-medium">
-                  "Вы закладываете 300% роста в первый год. Но стоимость привлечения клиента (CAC) в этой нише обычно растет нелинейно. За счет чего вы планируете ее удерживать?"
+                  &quot;Вы закладываете 300% роста в первый год. Но стоимость привлечения клиента (CAC) в этой нише обычно растет нелинейно. За счет чего вы планируете ее удерживать?&quot;
                 </p>
               </div>
             </div>

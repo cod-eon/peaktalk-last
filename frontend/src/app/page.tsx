@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Download, Share2 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
@@ -63,15 +64,15 @@ function useRevealTrigger<T extends HTMLElement>(margin: RevealMargin = '-64px 0
 }
 
 function useIsIOSSafari() {
-  const [isIOSSafari, setIsIOSSafari] = useState(false);
-  useEffect(() => {
+  const [isIOSSafari] = useState(() => {
+    if (typeof window === 'undefined') return false;
     const userAgent = window.navigator.userAgent;
     const isIOS = /iP(hone|ad|od)/.test(userAgent);
     const isWebKit = /WebKit/i.test(userAgent);
     const isCriOS = /CriOS/i.test(userAgent);
     const isFxiOS = /FxiOS/i.test(userAgent);
-    setIsIOSSafari(isIOS && isWebKit && !isCriOS && !isFxiOS);
-  }, []);
+    return isIOS && isWebKit && !isCriOS && !isFxiOS;
+  });
   return isIOSSafari;
 }
 
@@ -237,17 +238,17 @@ function Nav() {
 
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center' }}>
-              <a href="/login" className="font-mono text-neutral-900" style={{
+              <Link href="/login" className="font-mono text-neutral-900" style={{
                 fontSize: 11,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
                 opacity: 0.72
-              }}>Вход</a>
+              }}>Вход</Link>
               <div style={{ width: 1, height: 16, backgroundColor: '#e5e7eb' }} />
-              <a href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-5 py-2.5 text-sm flex items-center transition-all">
+              <Link href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-5 py-2.5 text-sm flex items-center transition-all">
                 Попробовать бесплатно
-              </a>
+              </Link>
             </div>
 
             <div className="lg:hidden flex items-center gap-4">
@@ -339,14 +340,14 @@ function Nav() {
                 </button>
               ))}
               <div style={{ width: '100%', height: 1, backgroundColor: '#e5e7eb', margin: '16px 0' }} />
-              <a href="/login" className="font-inter font-semibold text-neutral-400" style={{
+              <Link href="/login" className="font-inter font-semibold text-neutral-400" style={{
                 fontSize: 18,
                 textDecoration: 'none',
                 padding: '8px 0',
-              }}>Личный кабинет</a>
-              <a href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-3.5 text-sm flex items-center justify-center w-full transition-all">
+              }}>Личный кабинет</Link>
+              <Link href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-3.5 text-sm flex items-center justify-center w-full transition-all">
                 Попробовать бесплатно
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -436,12 +437,12 @@ function Hero() {
                 className="flex flex-col items-start sm:items-center lg:items-start gap-3 w-full max-w-[520px]"
               >
                 <div className="flex flex-col sm:flex-row w-full gap-3">
-                  <a
+                  <Link
                     href="/simulation/guest"
                     className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 text-sm transition-all"
                   >
                     Попробовать 3 вопроса бесплатно →
-                  </a>
+                  </Link>
                   <button
                     className="hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all rounded-none border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50"
                     onClick={() => smoothScroll('#scenarios')}
@@ -549,12 +550,12 @@ function UseCases() {
               <h3 className="font-inter font-bold text-neutral-900 text-lg mb-2 leading-snug">{c.title}</h3>
               <p className="font-inter text-neutral-500 text-sm leading-relaxed flex-1">{c.desc}</p>
               <div className="mt-5 pt-4 border-t border-neutral-100">
-                <a
+                <Link
                   href="/simulation/guest"
                   className="font-mono text-xs uppercase tracking-widest text-neutral-400 hover:text-neutral-900 transition-colors flex items-center gap-1.5"
                 >
                   Запустить <ArrowRight size={11} />
-                </a>
+                </Link>
               </div>
               <div
                 className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-150 ease-out"
@@ -867,9 +868,9 @@ function PricingBlock() {
               ))}
             </div>
 
-            <a href="/simulation/guest" className="w-full py-4 text-center border border-white/20 rounded-none bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
+            <Link href="/simulation/guest" className="w-full py-4 text-center border border-white/20 rounded-none bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
               Начать бесплатно
-            </a>
+            </Link>
           </RevealDiv>
 
           <RevealDiv
@@ -900,9 +901,9 @@ function PricingBlock() {
               ))}
             </div>
 
-            <a href="/billing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-none w-full mt-auto block text-center py-3 text-sm transition-all">
+            <Link href="/billing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-none w-full mt-auto block text-center py-3 text-sm transition-all">
               Посмотреть все тарифы
-            </a>
+            </Link>
           </RevealDiv>
         </div>
 
@@ -948,13 +949,13 @@ function FooterCTA() {
         </h2>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
-          <a
+          <Link
             href="/simulation/guest"
             className="px-6 py-3 rounded-none border border-white/30 text-white bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all duration-150 flex items-center justify-center gap-3 font-inter font-semibold text-base group"
           >
             <span className="relative z-10">Начать стресс-тест</span>
             <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform duration-150" />
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -975,9 +976,9 @@ function Footer() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-8 font-mono text-xs opacity-75 tracking-widest uppercase text-white/40">
-          <a href="/contacts" className="hover:text-white transition-colors">Контакты</a>
-          <a href="/personal-data" className="hover:text-white transition-colors">Оферта</a>
-          <a href="/privacy" className="hover:text-white transition-colors">Конфиденциальность</a>
+          <Link href="/contacts" className="hover:text-white transition-colors">Контакты</Link>
+          <Link href="/personal-data" className="hover:text-white transition-colors">Оферта</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">Конфиденциальность</Link>
         </div>
       </div>
     </footer>
