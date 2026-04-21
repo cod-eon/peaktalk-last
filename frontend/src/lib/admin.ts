@@ -103,6 +103,12 @@ export function formatAdminDateTime(value: string | null) {
   }
 
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return {
+      date: '—',
+      time: '—',
+    };
+  }
 
   return {
     date: date.toLocaleDateString('ru-RU', {

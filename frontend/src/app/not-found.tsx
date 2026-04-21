@@ -14,7 +14,7 @@ export default function NotFound() {
           <h1 className="mt-5 font-syne text-[42px] leading-[0.92] tracking-[-0.06em] text-neutral-950 sm:text-[58px]">
             Маршрут исчез,
             <br />
-            смысл нет.
+            смысла нет.
           </h1>
           <p className="mt-5 max-w-xl text-[16px] leading-8 text-neutral-700">
             Такой страницы здесь нет. Возможно, ссылка устарела, путь изменился или вы ушли в несуществующую ветку интерфейса.
