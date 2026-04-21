@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
+    Clock, Trophy, Plus, TrendingUp, TrendingDown, Mic, Target, ArrowLeft,
+    Loader2, Zap, Ban, FileText, ChevronDown, Search,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -200,6 +202,9 @@ function SimulationPageContent() {
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState<number>(3);
     const [difficultyManuallySet, setDifficultyManuallySet] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<string | null>(null);
+    const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+    const [customDomain, setCustomDomain] = useState<string>('');
     const [selectedUserPersonaId, setSelectedUserPersonaId] = useState<string | null>(null);
     const [linkedMeetingId, setLinkedMeetingId] = useState<string | null>(null);
     const [personaTab, setPersonaTab] = useState<'system' | 'custom'>('system');
@@ -558,6 +563,10 @@ function SimulationPageContent() {
                     const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
                     const trendIconBg = progressDelta == null ? 'bg-gray-50'
                         : progressDelta > 0 ? 'bg-emerald-50'
+                        : progressDelta < 0 ? 'bg-rose-50'
+                        : 'bg-gray-50';
+                    const trendSub = progressDelta == null
+                        ? 'Пройди ещё один тест, чтобы увидеть динамику'
                         : progressDelta > 0 ? 'Ты растёшь!'
                         : progressDelta < 0 ? 'Бывает — встряхнись'
                         : 'Нет изменений';
@@ -571,6 +580,12 @@ function SimulationPageContent() {
                     const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
                     const sparkPoints = sparkScores.length >= 2
                         ? sparkScores.map((s, i) => {
+                            const x = (i / (sparkScores.length - 1)) * 80;
+                            const y = sparkY(s);
+                            return `${x},${y}`;
+                        }).join(' ')
+                        : null;
+
                     const hardestVisual = hardestRole
                         ? getPersonaVisual(
                             hardestRole.role.startsWith('custom:')
@@ -701,22 +716,13 @@ function SimulationPageContent() {
                                 </div>
                                 <div className="text-sm sm:text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
                                     {hardestRole
-                                        ? getPersonaDisplayLabel(
-                                            hardestRole.role.startsWith('custom:')
-                                                ? {
-                                                    source_type: 'custom',
-                                                    role: hardestRole.role.replace(/^custom:/, ''),
-                                                    persona_name: hardestRole.role.replace(/^custom:/, ''),
-                                                    industry: 'general',
-                                                    difficulty: 3,
-                                                }
-                                                : {
-                                                    source_type: 'system',
-                                                    role: hardestRole.role,
-                                                    industry: 'general',
-                                                    difficulty: 3,
-                                                }
-                                        )
+                                        ? getPersonaDisplayLabel({
+                                              source_type: hardestRole.role.startsWith('custom:') ? 'custom' : 'system',
+                                              role: hardestRole.role.replace(/^custom:/, ''),
+                                              persona_name: hardestRole.role.replace(/^custom:/, ''),
+                                              industry: 'general',
+                                              difficulty: 3,
+                                          })
                                         : '—'}
                                 </div>
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
@@ -738,6 +744,8 @@ function SimulationPageContent() {
                 })()}
 
                 {/* Active sessions */}
+                {activeSessions.length > 0 && (
+                    <div className="mb-8">
                         <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3 flex items-center gap-2">
                             <span className="w-2 h-2 bg-neutral-900 rounded-full animate-pulse" />
                             Активные
