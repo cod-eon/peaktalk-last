@@ -2,7 +2,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks
 from app.limiter import limiter
 
 logger = logging.getLogger("peaktalk.simulation")
@@ -60,6 +60,22 @@ from app.services.simulation_ai import evaluate_session, generate_prep_card, gen
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 
+
+async def _background_generate_prep_card(session_id: uuid.UUID) -> None:
+    # Get a fresh DB session for the background task
+    from app.database import async_session_maker
+    async with async_session_maker() as db:
+        # Load the session with messages
+        stmt = select(SimulationSession).options(selectinload(SimulationSession.messages)).where(SimulationSession.id == session_id)
+        result = await db.execute(stmt)
+        session = result.scalar_one_or_none()
+
+        if not session:
+            logger.error("prep_card_bg: session not found session=%s", session_id)
+            return
+
+        await _ensure_prep_card_artifact(session, db)
+        await db.commit()
 
 async def _ensure_prep_card_artifact(session: SimulationSession, db: AsyncSession) -> None:
     existing = await db.execute(
@@ -639,6 +655,7 @@ async def send_message(
     request: Request,
     session_id: uuid.UUID,
     body: SendMessageRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SendMessageResponse:
@@ -682,7 +699,7 @@ async def send_message(
     if ai_turn_count >= max_turns:
         try:
             await _finalize_session(session, db)
-            await _ensure_prep_card_artifact(session, db)
+            background_tasks.add_task(_background_generate_prep_card, session.id)
         except CloudRuAIError as exc:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
         await db.refresh(user_msg)
@@ -755,6 +772,7 @@ async def _finalize_session(session: SimulationSession, db: AsyncSession) -> Non
 async def complete_session(
     request: Request,
     session_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
@@ -775,7 +793,7 @@ async def complete_session(
 
     try:
         await _finalize_session(session, db)
-        await _ensure_prep_card_artifact(session, db)
+        background_tasks.add_task(_background_generate_prep_card, session.id)
     except CloudRuAIError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
@@ -884,10 +902,27 @@ async def get_artifact(
     )
 
 
+async def _background_finalize_and_prep_card(session_id: uuid.UUID) -> None:
+    from app.database import async_session_maker
+    async with async_session_maker() as db:
+        stmt = select(SimulationSession).options(selectinload(SimulationSession.messages)).where(SimulationSession.id == session_id)
+        result = await db.execute(stmt)
+        session = result.scalar_one_or_none()
+        if not session:
+            return
+
+        try:
+            await _finalize_session(session, db)
+            await _ensure_prep_card_artifact(session, db)
+            await db.commit()
+        except Exception as exc:
+            logger.error("background_finalize failed session=%s error=%s", session_id, exc)
+
 @router.post("/{session_id}/abandon", status_code=status.HTTP_204_NO_CONTENT)
 async def abandon_session(
     request: Request,
     session_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
@@ -907,18 +942,13 @@ async def abandon_session(
 
     user_messages = [m for m in session.messages if m.role == MessageRole.user]
 
+    session.completed_at = datetime.now(timezone.utc)
     if user_messages:
-        try:
-            await _finalize_session(session, db)
-            await _ensure_prep_card_artifact(session, db)
-        except CloudRuAIError:
-            # Evaluation failed — at least mark cancelled to avoid orphan active session
-            session.status = SessionStatus.cancelled
-            session.completed_at = datetime.now(timezone.utc)
-            await db.flush()
+        session.status = SessionStatus.completed
+        await db.flush()
+        background_tasks.add_task(_background_finalize_and_prep_card, session.id)
     else:
         session.status = SessionStatus.cancelled
-        session.completed_at = datetime.now(timezone.utc)
         await db.flush()
 
     await db.commit()
@@ -1001,7 +1031,6 @@ async def start_from_guest(
         )
         db.add(sim_message)
 
-    await db.delete(guest) # Clean up guest session
     await db.commit()
 
     return StartFromGuestResponse(id=session.id)

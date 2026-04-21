@@ -306,9 +306,10 @@ export default function SimulationReportPage() {
                 body * { visibility: hidden !important; }
                 #print-report {
                     visibility: visible !important; display: block !important;
-                    position: fixed !important; inset: 0 !important;
-                    background: white !important; padding: 48px !important;
+                    position: absolute !important; left: 0 !important; top: 0 !important; right: 0 !important;
+                    background: white !important; padding: 48px !important; margin: 0 !important;
                     z-index: 99999 !important; overflow: visible !important;
+                    min-height: 100vh !important;
                 }
                 #print-report * { visibility: visible !important; }
             }
@@ -521,7 +522,7 @@ export default function SimulationReportPage() {
                         </motion.div>
 
                         {/* ── Prep Card ──────────────────────────────────────────────── */}
-                        <div className="my-10">
+                        <div className="my-10 relative z-0">
                             <PrepCard sessionId={sessionId} />
                         </div>
 

@@ -171,27 +171,41 @@ export default function GuestSimulationPage() {
   // ── Render: Input step ───────────────────────────────────────────────────
   if (step === 'input') {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
-        {/* Minimal header */}
-        <header className="h-14 border-b border-neutral-200 flex items-center px-5 shrink-0">
+      <div className="min-h-screen bg-neutral-900 flex flex-col relative overflow-hidden">
+        {/* Background Video Layer */}
+        <div className="absolute inset-0 z-0 opacity-40 mix-blend-luminosity">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="/people-chatting-in-messenger-app-team-collaboration-and-remote-work-workplace-decision-and-feedback.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-neutral-900/60" />
+        </div>
+
+        {/* Header */}
+        <header className="h-14 border-b border-white/10 flex items-center px-5 shrink-0 relative z-10">
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-            <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
+            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} className="brightness-0 invert" />
+            <span className="brand-wordmark text-white text-[15px]">PeakTalk</span>
           </Link>
         </header>
 
-        <main className="flex-1 flex items-start justify-center px-4 py-8 sm:py-12">
-          <div className="w-full max-w-2xl">
+        <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12 relative z-10">
+          <div className="w-full max-w-2xl bg-white border border-neutral-200 shadow-2xl p-6 sm:p-8 rounded-none">
             {/* Title block */}
-            <div className="mb-8">
-              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 px-3 py-1.5 inline-block mb-4">
+            <div className="mb-8 text-center sm:text-left">
+              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#E8600A] bg-[#E8600A]/10 px-3 py-1.5 inline-block mb-4 font-bold">
                 Стресс-тест без регистрации
               </div>
               <h1 className="font-inter font-bold text-2xl sm:text-3xl text-neutral-900 leading-tight tracking-tight mb-2">
-                Проверьте аргументацию прямо сейчас
+                Подготовьтесь к жестким вопросам
               </h1>
               <p className="font-inter text-neutral-500 text-sm">
-                Вставьте текст вашего документа, презентации или тезисов — получите 3 жёстких вопроса от выбранного собеседника.
+                Вставьте черновик презентации, финмодели или PnL — получите 3 критических вопроса от выбранного стейкхолдера.
               </p>
             </div>
 
@@ -199,7 +213,7 @@ export default function GuestSimulationPage() {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[11px] font-bold tracking-widest uppercase text-neutral-500">
-                  Ваш текст
+                  Текст вашего выступления
                 </label>
                 <span
                   className={`font-mono text-[11px] ${
@@ -212,8 +226,8 @@ export default function GuestSimulationPage() {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
-                placeholder="Вставьте текст вашего документа, презентации или тезисов..."
-                className="w-full bg-neutral-50 border border-neutral-200 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all resize-none rounded-none p-4 text-neutral-900 placeholder:text-neutral-400 min-h-[160px] font-inter text-sm"
+                placeholder="Вставьте тезисы вашего проекта или скопируйте текст со слайдов..."
+                className="w-full bg-neutral-50 border border-neutral-200 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition-all resize-none rounded-none p-4 text-neutral-900 placeholder:text-neutral-400 min-h-[160px] font-inter text-sm shadow-inner"
                 style={{ fontSize: '16px' }}
               />
             </div>
@@ -221,9 +235,9 @@ export default function GuestSimulationPage() {
             {/* Step 2: Persona selector */}
             <div className="mb-6">
               <div className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3">
-                Кто задаёт вопросы
+                Кто ваш оппонент
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {PERSONAS.map((persona) => {
                   const Icon = persona.icon
                   const isSelected = selectedPersona === persona.id
@@ -232,29 +246,31 @@ export default function GuestSimulationPage() {
                       key={persona.id}
                       type="button"
                       onClick={() => setSelectedPersona(persona.id)}
-                      className={`text-left p-4 border-2 transition-all duration-150 relative ${
+                      className={`text-left p-4 border transition-all duration-150 relative flex items-start gap-3 ${
                         isSelected
-                          ? 'border-neutral-900 bg-neutral-50'
-                          : 'border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
+                          ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
+                          : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                       }`}
                     >
                       {isSelected && (
                         <div className="absolute top-3 right-3 text-neutral-900">
-                          <CheckCircle2 size={14} />
+                          <CheckCircle2 size={16} />
                         </div>
                       )}
                       <div
-                        className={`w-8 h-8 flex items-center justify-center mb-3 border border-neutral-200 ${
-                          isSelected ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500'
+                        className={`w-10 h-10 flex items-center justify-center shrink-0 border ${
+                          isSelected ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
                         }`}
                       >
-                        <Icon size={16} />
+                        <Icon size={18} />
                       </div>
-                      <div className="font-inter font-semibold text-sm text-neutral-900 mb-1 leading-snug">
-                        {persona.label}
-                      </div>
-                      <div className="font-inter text-xs text-neutral-400 leading-relaxed">
-                        {persona.description}
+                      <div className="flex-1 pr-6">
+                        <div className="font-inter font-bold text-[13px] text-neutral-900 mb-0.5 leading-snug">
+                          {persona.label}
+                        </div>
+                        <div className="font-inter text-xs text-neutral-500 leading-relaxed">
+                          {persona.description}
+                        </div>
                       </div>
                     </button>
                   )
@@ -276,7 +292,7 @@ export default function GuestSimulationPage() {
                     className={`flex-1 px-4 py-2.5 border text-sm font-inter transition-all ${
                       selectedDifficulty === d.value
                         ? 'bg-neutral-900 border-neutral-900 text-white font-semibold'
-                        : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400'
+                        : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:bg-neutral-50'
                     }`}
                   >
                     {d.label}
@@ -290,20 +306,20 @@ export default function GuestSimulationPage() {
               type="button"
               onClick={handleStart}
               disabled={!isReady || isLoading}
-              className="w-full bg-[#171717] hover:bg-black text-white font-inter font-semibold text-base h-14 flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#E8600A] hover:bg-[#c95207] text-white font-inter font-bold text-base h-14 flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
             >
               {isLoading ? (
                 <Loader2 size={20} className="animate-spin" />
               ) : (
                 <>
-                  Начать стресс-тест
+                  Начать симуляцию
                   <ArrowRight size={20} />
                 </>
               )}
             </button>
 
-            <p className="text-center font-mono text-xs text-neutral-400 mt-3 uppercase tracking-wider">
-              Без регистрации · 3 вопроса бесплатно
+            <p className="text-center font-mono text-[10px] text-neutral-400 mt-4 uppercase tracking-wider">
+              Без регистрации · 3 вопроса бесплатно · Данные удаляются после сессии
             </p>
           </div>
         </main>

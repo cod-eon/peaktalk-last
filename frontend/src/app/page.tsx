@@ -381,18 +381,18 @@ function Hero() {
                 transition={{ duration: 0.5, delay: 0 }}
                 className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 rounded-none px-4 py-1.5 mb-5 bg-white/80 shadow-[0_8px_24px_rgba(0,0,0,0.03)]"
               >
-                AI-стресс-тест по вашему реальному документу
+                Тренажер для защиты проектов, бюджетов и QBR
               </motion.div>
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="font-inter font-bold text-[34px] sm:text-5xl lg:text-[64px] text-neutral-900 tracking-tight leading-[0.92] mb-5 max-w-[13.5ch] sm:max-w-[15.5ch] lg:max-w-[14ch]"
+                className="font-inter font-bold text-[34px] sm:text-5xl lg:text-[64px] text-neutral-900 tracking-tight leading-[0.92] mb-5 max-w-[13.5ch] sm:max-w-[15.5ch] lg:max-w-[16ch]"
               >
-                <span className="block">Проверь аргументы</span>
-                <span className="block">до того, как их</span>
-                <span className="block">проверят <span className="text-[#E8600A] relative">за тебя</span>.</span>
+                <span className="block">Стресс-тест</span>
+                <span className="block">аргументов перед</span>
+                <span className="block">жёсткой <span className="text-[#E8600A] relative">защитой</span>.</span>
               </motion.h1>
 
               <motion.p
@@ -407,7 +407,7 @@ function Hero() {
                   maxWidth: 580,
                 }}
               >
-                Загрузи свой документ — CFO, инвестор или совет директоров начнёт жёсткий Q&A. Найди слабые места до реальной встречи.
+                Пройдите жесткий Q&amp;A с AI-стейкхолдером по вашему документу. Найдите уязвимости в презентации, PnL или финмодели до того, как их найдет бизнес.
               </motion.p>
 
               {/* Stats strip */}
@@ -419,9 +419,9 @@ function Hero() {
                 className="grid grid-cols-3 w-full max-w-[520px] mb-6 overflow-hidden rounded-none border border-neutral-200 bg-white/85 shadow-[0_18px_40px_rgba(0,0,0,0.04)]"
               >
                 {[
-                  { value: '500+', label: 'сессий' },
-                  { value: '5', label: 'персон' },
-                  { value: '3', label: 'вопроса бесплатно' },
+                  { value: '4', label: 'типа оппонентов' },
+                  { value: '5', label: 'навыков в оценке' },
+                  { value: '100%', label: 'конфиденциально' },
                 ].map((m, i) => (
                   <div key={i} className={`flex flex-col gap-1 px-4 py-3 sm:px-5 sm:py-4 ${i !== 2 ? 'border-r border-neutral-200' : ''}`}>
                     <span className="font-inter font-bold text-[22px] sm:text-2xl text-neutral-900 leading-none">{m.value}</span>
@@ -688,56 +688,53 @@ function MockupSession() {
 
   return (
     <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 260 }}>
-      <div className="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-gray-100 bg-gray-50">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-none flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.10)' }}>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-white">
             <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#8B5CF6' }}>CFO</span>
           </div>
-          <div className="flex flex-col leading-none gap-0.5">
-            <span className="font-semibold text-gray-800" style={{ fontSize: '12px' }}>Финансовый директор</span>
-            <span className="text-gray-500 font-mono" style={{ fontSize: 12, opacity: 0.75 }}>Сложность 4/5</span>
+          <div className="flex flex-col leading-none gap-1">
+            <span className="font-semibold text-gray-900" style={{ fontSize: '13px' }}>Финансовый директор</span>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 font-mono" style={{ fontSize: 10 }}>Жёстко</span>
+              <span className="text-gray-400 font-mono" style={{ fontSize: 10 }}>Вопрос 3 из 10</span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Timer size={11} style={{ color: '#E8600A' }} />
-            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#E8600A' }}>1:23</span>
+      </div>
+
+      <div className="flex-1 px-4 sm:px-6 py-5 flex flex-col gap-4 bg-white relative">
+        {/* Assistant Message */}
+        <div className="flex justify-start">
+          <div className="max-w-[85%] px-4 py-3 bg-neutral-50 border border-neutral-200 text-neutral-900 font-inter text-sm leading-relaxed">
+            Вы просите $500k на новую инициативу, но в финмодели я не вижу четкого обоснования возврата инвестиций. Каков ROI на горизонте 12 месяцев?
           </div>
-          <span className="text-gray-400 text-xs opacity-75 font-mono">Q 3/10</span>
         </div>
-      </div>
 
-      <div className="h-1 bg-gray-100" ref={progressBarRef}>
-        <div
-          className="h-full rounded-none origin-left"
-          style={{
-            background: '#E8600A',
-            ...safariMotionStyle,
-            transformOrigin: 'left center',
-            transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-            WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-            transitionProperty: 'transform',
-            transitionDuration: '1.2s',
-            transitionDelay: '0.3s',
-            transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
-        />
-      </div>
-
-      <div className="mx-4 sm:mx-8 mt-6 mb-3">
-        <p className="font-mono" style={{ fontSize: 12, color: '#E8600A', opacity: 0.7, marginBottom: '6px' }}>
-          ↻ Давит на слабое место
-        </p>
-        <div className="p-3.5 rounded-none bg-gray-50 border border-gray-100">
-          <p className="text-gray-800 text-sm leading-relaxed font-medium">
-            Каков ROI этой инициативы на горизонте 12 месяцев? Конкретные цифры.
-          </p>
+        {/* User Message (typing or sent) */}
+        <div className="flex justify-end">
+          <div className="max-w-[85%] px-4 py-3 bg-neutral-900 text-white font-inter text-sm leading-relaxed relative">
+            <span className="opacity-50 absolute -left-10 top-3 text-[10px] text-neutral-400 font-mono">Вы</span>
+            Мы ожидаем рост LTV на 15%, что перекроет затраты уже в Q3...
+            <span className="inline-block w-1 h-3 ml-1 bg-white animate-pulse" />
+          </div>
         </div>
-      </div>
 
-      <div className="bg-neutral-100 border-l-2 border-[#8B5CF6] p-4 mx-4 sm:mx-8 my-3 mb-8">
-        <div className="font-mono text-xs text-[#8B5CF6]">
-          ✦ PeakTalk думает: слабая точка — нет конкретики по ROI
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100" ref={progressBarRef}>
+          <div
+            className="h-full rounded-none origin-left"
+            style={{
+              background: '#E8600A',
+              ...safariMotionStyle,
+              transformOrigin: 'left center',
+              transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+              WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+              transitionProperty: 'transform',
+              transitionDuration: '1.2s',
+              transitionDelay: '0.3s',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          />
         </div>
       </div>
     </div>
@@ -747,7 +744,7 @@ function MockupSession() {
 function MockupReport() {
   const metrics = [
     { label: 'Аргументация', score: 8 },
-    { label: 'Устойчивость', score: 6 },
+    { label: 'Устойчивость', score: 4 },
     { label: 'Структура', score: 7 },
   ];
 
@@ -757,41 +754,53 @@ function MockupReport() {
     return 0.3;
   }
 
+  function getScoreColor(score: number): string {
+    if (score >= 7) return '#10b981';
+    if (score >= 5) return '#f59e0b';
+    return '#e11d48';
+  }
+
   return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md" style={{ minHeight: 280 }}>
-      <div className="px-4 sm:px-8 pt-6 pb-4 border-b border-gray-100">
-        <div className="mb-3 border-b border-neutral-200 pb-3">
-          <div className="font-inter font-extrabold text-neutral-900" style={{ fontSize: '28px', lineHeight: 1 }}>72%</div>
-          <div className="font-mono text-neutral-400" style={{ fontSize: 12, opacity: 0.75, marginTop: '4px' }}>Готовность: выше среднего</div>
+    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 280 }}>
+      <div className="px-5 sm:px-6 py-5 border-b border-gray-100 bg-gradient-to-b from-neutral-50 to-white">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+             <div className="font-inter text-neutral-500 font-medium text-[10px] mb-1 tracking-widest uppercase">Разбор завершён</div>
+             <div className="font-inter font-extrabold text-neutral-900 leading-none" style={{ fontSize: '32px' }}>
+               6<span className="text-lg text-neutral-400 font-medium">/10</span>
+             </div>
+          </div>
+          <div className="text-right">
+             <div className="font-mono text-neutral-500" style={{ fontSize: 11 }}>CFO</div>
+             <div className="font-mono text-neutral-900 font-bold" style={{ fontSize: 11 }}>Средняя готовность</div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-[#E8600A] text-sm">✦</span>
-          <p className="text-gray-800 font-semibold text-sm">Разбор завершён</p>
-        </div>
-        <p className="text-gray-500 text-xs opacity-75 leading-relaxed mb-3">
-          Структура сильная, но цифровое обоснование требует доработки.
+
+        <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">
+          «Хорошая попытка, оппонент увидел потенциал. Но местами ты плавал в цифрах — фундамент пошатнулся.»
         </p>
+
         <div className="flex flex-wrap gap-1.5">
-          {metrics.map((m) => (
+          {metrics.map((m) => {
+            const color = getScoreColor(m.score);
+            return (
             <span
               key={m.label}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-none text-xs font-bold text-white shrink-0 font-mono"
-              style={{ backgroundColor: '#E8600A', opacity: getScoreOpacity(m.score) }}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-none text-xs font-bold font-mono border"
+              style={{ color, backgroundColor: `${color}12`, borderColor: `${color}30` }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
               {m.label} {m.score}/10
             </span>
-          ))}
+          )})}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 px-4 sm:px-8 py-4">
-        <button className="flex items-center justify-center flex-1 gap-1.5 px-2 py-2 rounded-none border border-neutral-200 text-gray-600 text-xs opacity-75 hover:bg-gray-50 transition-colors font-mono">
-          <Download size={12} /> Скачать PDF
-        </button>
-        <button className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none flex items-center justify-center flex-1 gap-1.5 px-2 py-2 text-xs transition-all">
-          <Share2 size={12} /> Поделиться
-        </button>
+      <div className="flex-1 p-5 bg-white">
+        <div className="border-l-2 border-amber-200 pl-3 mb-4">
+          <p className="text-xs font-bold text-neutral-900 mb-1">Слабое место: Обоснование ROI</p>
+          <p className="text-[13px] text-neutral-600">На 3-м вопросе вы ушли от ответа про конкретные сроки окупаемости. Рекомендуем подготовить расчет...</p>
+        </div>
       </div>
     </div>
   );
@@ -804,9 +813,9 @@ function SocialProof() {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-white/10 p-[1px]">
           {[
-            { value: '500+', label: 'сессий пройдено', sub: 'менеджеры, фаундеры, продакты, консультанты' },
-            { value: '5', label: 'ключевых персон', sub: 'CFO · Инвестор · Совет директоров · Клиент · HR' },
-            { value: '3', label: 'вопроса бесплатно', sub: 'без регистрации, без банковской карты' },
+            { value: 'QBR', label: 'Защиты и бюджеты', sub: 'Для high-stakes бесед' },
+            { value: '4', label: 'ключевых персоны', sub: 'CFO · Инвестор · Совет директоров · Клиент' },
+            { value: '5', label: 'критических навыков', sub: 'аргументация, структура, устойчивость' },
           ].map((item, i) => (
             <RevealDiv
               key={i}

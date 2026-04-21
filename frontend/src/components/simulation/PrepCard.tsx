@@ -36,11 +36,27 @@ export function PrepCard({ sessionId }: PrepCardProps) {
     const fetchArtifact = async () => {
       try {
         const res = await api.get(`/simulation/${sessionId}/artifact`);
+        if (res.status === 202 || res.status === 404 || res.status === 409) {
+          // If the backend returns a specific status indicating it's still processing
+          // or if it returns 409 (Conflict - not generated yet) we poll
+          if (!mounted) return;
+          if (res.status === 409 || res.status === 404) {
+             // We'll retry after a delay
+             setTimeout(fetchArtifact, 2000);
+             return;
+          }
+        }
         if (!mounted) return;
         setData(res);
         setLoading(false);
       } catch (err: unknown) {
         if (!mounted) return;
+        // If it's a 404 or 409 from axios/fetch wrapper
+        const status = (err as any)?.response?.status;
+        if (status === 404 || status === 409) {
+          setTimeout(fetchArtifact, 2000);
+          return;
+        }
         setError(err instanceof Error ? err.message : 'Ошибка загрузки артефакта');
         setLoading(false);
       }
@@ -126,7 +142,17 @@ export function PrepCard({ sessionId }: PrepCardProps) {
     style.textContent = `
       @media print {
         body * { visibility: hidden !important; }
-        #prep-card-ui { visibility: visible !important; display: block !important; position: fixed !important; inset: 0 !important; background: white !important; padding: 24px !important; z-index: 99999 !important; overflow: visible !important; }
+        #prep-card-ui {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important; top: 0 !important; right: 0 !important;
+            background: white !important;
+            padding: 24px !important;
+            z-index: 99999 !important;
+            overflow: visible !important;
+            min-height: 100vh !important;
+        }
         #prep-card-ui * { visibility: visible !important; }
       }
     `;
@@ -154,15 +180,15 @@ export function PrepCard({ sessionId }: PrepCardProps) {
         </button>
       </div>
 
-      <div className="p-6 sm:p-8 space-y-8">
+      <div className="p-4 sm:p-6 space-y-6">
         {/* Opening move */}
         {artifact.opening_move && (
-          <div className="bg-accent-50 border border-accent-100 p-5">
-            <h3 className="text-accent-800 font-bold text-sm tracking-widest uppercase mb-3 flex items-center gap-2">
-              <Crosshair size={16} />
+          <div className="bg-accent-50 border border-accent-100 p-4">
+            <h3 className="text-accent-800 font-bold text-xs tracking-widest uppercase mb-2 flex items-center gap-2">
+              <Crosshair size={14} />
               Рекомендуемый старт
             </h3>
-            <p className="text-neutral-800 leading-relaxed font-medium">
+            <p className="text-neutral-800 leading-relaxed font-medium text-sm">
               {artifact.opening_move}
             </p>
           </div>
@@ -171,18 +197,18 @@ export function PrepCard({ sessionId }: PrepCardProps) {
         {/* Top arguments */}
         {artifact.top_arguments && artifact.top_arguments.length > 0 && (
           <div>
-            <h3 className="text-neutral-900 font-bold mb-4 flex items-center gap-2">
-              <Zap size={18} className="text-amber-500" />
+            <h3 className="text-neutral-900 font-bold mb-3 flex items-center gap-2 text-sm">
+              <Zap size={16} className="text-amber-500" />
               Ключевые тезисы
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {artifact.top_arguments.map((arg, i: number) => (
-                <div key={i} className="border border-neutral-200 p-4 bg-neutral-50 flex flex-col h-full">
-                  <h4 className="font-bold text-sm text-neutral-900 mb-2">{arg.text}</h4>
-                  <p className="text-sm text-neutral-600 mb-3 flex-1">
+                <div key={i} className="border border-neutral-200 p-3 bg-neutral-50 flex flex-col h-full">
+                  <h4 className="font-bold text-xs text-neutral-900 mb-1">{arg.text}</h4>
+                  <p className="text-xs text-neutral-600 mb-2 flex-1">
                     {arg.strength === 'high' ? 'Сильный аргумент, который выдержал давление.' : 'Рабочий аргумент, который стоит усилить формулировкой.'}
                   </p>
-                  <div className="bg-amber-100/50 text-amber-900 text-xs px-3 py-2 border border-amber-200 font-medium">
+                  <div className="bg-amber-100/50 text-amber-900 text-xs px-2 py-1.5 border border-amber-200 font-medium leading-tight">
                     «{arg.anchor_phrase}»
                   </div>
                 </div>
@@ -194,21 +220,21 @@ export function PrepCard({ sessionId }: PrepCardProps) {
         {/* Danger Zones */}
         {artifact.danger_zones && artifact.danger_zones.length > 0 && (
           <div>
-            <h3 className="text-neutral-900 font-bold mb-4 flex items-center gap-2">
-              <ShieldAlert size={18} className="text-red-500" />
+            <h3 className="text-neutral-900 font-bold mb-3 flex items-center gap-2 text-sm">
+              <ShieldAlert size={16} className="text-red-500" />
               Зоны риска и возражения
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {artifact.danger_zones.map((zone, i: number) => (
-                <div key={i} className="border border-red-100 p-4 bg-red-50/30 flex gap-4">
-                  <div className="hidden sm:flex shrink-0 w-8 h-8 rounded-full bg-red-100 items-center justify-center text-red-600 font-bold text-xs mt-1">
+                <div key={i} className="border border-red-100 p-3 bg-red-50/30 flex gap-3">
+                  <div className="hidden sm:flex shrink-0 w-6 h-6 rounded-full bg-red-100 items-center justify-center text-red-600 font-bold text-xs mt-0.5">
                     {i + 1}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-neutral-900 mb-1">{zone.topic}</h4>
-                    <p className="text-sm text-red-800 mb-2">{zone.risk}</p>
-                    <div className="text-sm text-neutral-700">
-                      <span className="font-semibold mr-1">Как отвечать:</span> 
+                    <h4 className="font-bold text-xs text-neutral-900 mb-1">{zone.topic}</h4>
+                    <p className="text-xs text-red-800 mb-1.5">{zone.risk}</p>
+                    <div className="text-xs text-neutral-700">
+                      <span className="font-semibold mr-1">Как отвечать:</span>
                       {zone.suggested_response}
                     </div>
                   </div>
@@ -221,13 +247,13 @@ export function PrepCard({ sessionId }: PrepCardProps) {
         {/* Key Numbers / Stats */}
         {artifact.key_numbers && artifact.key_numbers.length > 0 && (
           <div>
-            <h3 className="text-neutral-900 font-bold mb-4 flex items-center gap-2">
-              <MapPin size={18} className="text-indigo-500" />
+            <h3 className="text-neutral-900 font-bold mb-3 flex items-center gap-2 text-sm">
+              <MapPin size={16} className="text-indigo-500" />
               Цифры, которые нужно запомнить
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {artifact.key_numbers.map((num: string, i: number) => (
-                <span key={i} className="inline-flex bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 text-sm font-medium">
+                <span key={i} className="inline-flex bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-1 text-xs font-medium">
                   {num}
                 </span>
               ))}

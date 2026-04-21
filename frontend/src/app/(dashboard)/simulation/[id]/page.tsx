@@ -205,11 +205,11 @@ export default function SimulationPage() {
       const lowerMessage = message.toLowerCase();
       // Detect 402-style limit errors and show upgrade modal
       // Removed generic 'симуляц' to avoid false positives!
-      const isLimitError = 
+        const isLimitError =
         lowerMessage.includes('лимит исчерпан') ||
         lowerMessage.includes('exceeded quota') ||
         lowerMessage.includes('402');
-        
+
       if (isLimitError) {
         openUpgradeModal('simulations');
       } else {
