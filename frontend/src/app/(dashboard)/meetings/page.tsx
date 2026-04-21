@@ -330,9 +330,6 @@ function MeetingCard({
   const statusCfg = MEETING_STATUS_CONFIG[meeting.status];
   const hasActivePreparation = Boolean(meeting.has_active_preparation);
   const days = daysUntil(meeting.meeting_date);
-  const isPast = days < 0;
-  const isToday = days === 0;
-
   let urgencyLabel: string | null = null;
   let urgencyCls = "";
   if (meeting.status === "upcoming") {

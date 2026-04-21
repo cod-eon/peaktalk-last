@@ -14,8 +14,6 @@ import type { SessionItem } from '@/lib/constants/personas';
 function MetricPod({
   label, value, subtitle, icon
 }: {
-  label: string;
-  value: React.ReactNode;
   subtitle?: string;
   icon: React.ReactNode;
 }) {
@@ -86,7 +84,7 @@ function DashboardSessionCard({ session }: { session: SessionItem }) {
   );
 }
 
-function SimpleChart({ sessions }: { sessions: any[] }) {
+function SimpleChart({ sessions }: { sessions: Array<{ avg_score: number | null; created_at: string; completed_at: string | null }> }) {
   const scores = sessions.map(s => Math.round((s.avg_score ?? 0) * 10));
   const minScore = 0;
   const maxScore = 10;
@@ -127,7 +125,7 @@ function SimpleChart({ sessions }: { sessions: any[] }) {
   );
 }
 
-function NextStepsPanel({ documents, completedSessions, sessions }: { documents: any[], completedSessions: any[], sessions: any[] }) {
+function NextStepsPanel({ documents, completedSessions, sessions }: { documents: Array<{ id: string; name: string; created_at: string }>, completedSessions: Array<{ status: string; avg_score: number | null; created_at: string }>, sessions: Array<{ status: string; created_at: string }> }) {
   let tip;
   
   const lastSessionDate = sessions.length > 0 ? new Date(sessions[0].created_at).getTime() : 0;
@@ -181,7 +179,7 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
   );
 }
 
-function DashboardDocuments({ documents }: { documents: any[] }) {
+function DashboardDocuments({ documents }: { documents: Array<{ id: string; name: string; created_at: string }> }) {
   if (!documents || documents.length === 0) return null;
   const recentDocs = documents.slice(0, 3);
   
@@ -219,7 +217,7 @@ function DashboardDocuments({ documents }: { documents: any[] }) {
 
 // ── Sub-pages ────────────────────────────────────────────────────────────────
 
-function DashboardNewUser({ profile, billing }: { profile: any, billing: any }) {
+function DashboardNewUser({ profile, billing }: { profile: { segment?: string; primary_goal?: string } | null, user_metadata?: { display_name?: string } } | null, billing: { status?: { plan?: string }; simulationsLeft?: number } | null }) {
   const segment = profile?.segment || 'other';
   let title = "Начните первую симуляцию";
   
@@ -298,9 +296,6 @@ const itemVariants = {
 
 function DashboardActive({ sessions, documents, profile }: { sessions: any[], documents: any[], profile: any }) {
   // Compute metrics
-  const completedSessions = sessions.filter(s => s.status === 'completed');
-  
-  const validScores = completedSessions.filter(s => s.avg_score !== null).map(s => s.avg_score);
   
   let indexMarkup: React.ReactNode = <span>0<span className="text-neutral-400 text-xl">/10</span></span>;
   let indexSubtitle = "Пройдите первую симуляцию";

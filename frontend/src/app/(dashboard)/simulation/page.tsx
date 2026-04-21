@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
-    Loader2, Plus, ArrowLeft, Clock, Trophy, Zap, BarChart2,
-    TrendingUp, TrendingDown, Flame, Target, Mic, Search, ChevronDown, Ban, FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -199,10 +197,6 @@ function SimulationPageContent() {
     const [sessions, setSessions] = useState<SessionItem[]>([]);
     const [sessionsLoading, setSessionsLoading] = useState(true);
 
-    // Setup form state
-    const [selectedRole, setSelectedRole] = useState<string | null>(null);
-    const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-    const [customDomain, setCustomDomain] = useState('');
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState<number>(3);
     const [difficultyManuallySet, setDifficultyManuallySet] = useState(false);
@@ -564,11 +558,6 @@ function SimulationPageContent() {
                     const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
                     const trendIconBg = progressDelta == null ? 'bg-gray-50'
                         : progressDelta > 0 ? 'bg-emerald-50'
-                        : progressDelta < 0 ? 'bg-rose-50' : 'bg-gray-50';
-                    const trendIconColor = progressDelta == null ? 'text-gray-400'
-                        : progressDelta > 0 ? 'text-emerald-500'
-                        : progressDelta < 0 ? 'text-rose-500' : 'text-gray-400';
-                    const trendSub = progressDelta == null ? 'Нужно 2+ сессий'
                         : progressDelta > 0 ? 'Ты растёшь!'
                         : progressDelta < 0 ? 'Бывает — встряхнись'
                         : 'Нет изменений';
@@ -582,12 +571,6 @@ function SimulationPageContent() {
                     const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
                     const sparkPoints = sparkScores.length >= 2
                         ? sparkScores.map((s, i) => {
-                            const x = (i / (sparkScores.length - 1)) * 80;
-                            return `${x},${sparkY(s)}`;
-                        }).join(' ')
-                        : null;
-
-                    // Persona icon for "Сложнее всего"
                     const hardestVisual = hardestRole
                         ? getPersonaVisual(
                             hardestRole.role.startsWith('custom:')

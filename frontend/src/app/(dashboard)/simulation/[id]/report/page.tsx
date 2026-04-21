@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, Zap, FileText, Sparkles, X, Share2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Download, Zap, FileText, Sparkles, X, RefreshCw } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
@@ -359,29 +359,6 @@ export default function SimulationReportPage() {
         return skill_metrics[Math.min(i, skill_metrics.length - 1)] ?? null;
     }
 
-    const handleShare = async () => {
-        const text = `Я прошел стресс-тест в PeakTalk на ${avgScore10}/10! А ты сможешь?`;
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Мой результат в PeakTalk',
-                    text: text,
-                    url: window.location.origin
-                });
-            } catch (err) {
-                // Ignore abort errors
-            }
-        } else {
-            navigator.clipboard.writeText(`${text} ${window.location.origin}`);
-            toast.success("Результат скопирован в буфер обмена!");
-        }
-    };
-
-    // ── Render ────────────────────────────────────────────────────────────────
-
-    return (
-        <>
-            {/* ── Printable ─────────────────────────────────────────────────── */}
             <div id="print-report" style={{ display: 'none' }} className="font-inter text-black bg-white">
                 <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Отчёт по симуляции PeakTalk</h1>
                 <p style={{ fontSize: 13, color: '#555', marginBottom: 24 }}>
@@ -566,8 +543,6 @@ export default function SimulationReportPage() {
                                         );
                                     } else {
                                         const metric = getMetricForUserMsg(userIdx);
-                                        const thisUserIdx = userIdx;
-                                        userIdx++;
                                         return (
                                             <UserLine
                                                 key={idx}
