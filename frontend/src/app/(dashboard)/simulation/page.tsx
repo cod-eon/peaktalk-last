@@ -738,8 +738,6 @@ function SimulationPageContent() {
                 })()}
 
                 {/* Active sessions */}
-                {activeSessions.length > 0 && (
-                    <div className="mb-8">
                         <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3 flex items-center gap-2">
                             <span className="w-2 h-2 bg-neutral-900 rounded-full animate-pulse" />
                             Активные
