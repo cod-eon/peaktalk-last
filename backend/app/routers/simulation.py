@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -13,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.cache import cache_get, cache_set, cache_invalidate_prefix
 
-from app.database import get_db, AsyncSessionLocal
+from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.document import Document
 from app.models.scenario import Scenario
@@ -29,6 +28,7 @@ from app.models.simulation import (
     SimulationSession,
     SkillMetric,
 )
+from app.models.personalized_persona import PersonalizedPersona
 from app.models.user import User
 from app.schemas.simulation import (
     ArtifactPaywall,
@@ -47,7 +47,7 @@ from app.schemas.simulation import (
     StartFromScenarioResponse,
     SimulationStartRequest,
 )
-from app.services.gemini import GeminiError, detect_ai_content
+from app.services.cloud_ru_ai import CloudRuAIError, detect_ai_content
 from app.services.limits import (
     check_simulation_limit,
     consume_session_credit,
@@ -61,57 +61,29 @@ from app.services.simulation_ai import evaluate_session, generate_prep_card, gen
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 
 
-async def _generate_and_store_prep_card(session_id: uuid.UUID, user_id: uuid.UUID) -> None:
-    """Fire-and-forget background task: generate prep card and persist as SessionArtifact.
+async def _ensure_prep_card_artifact(session: SimulationSession, db: AsyncSession) -> None:
+    existing = await db.execute(
+        select(SessionArtifact).where(
+            SessionArtifact.session_id == session.id,
+            SessionArtifact.artifact_type == ArtifactType.prep_card,
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        logger.debug("prep_card: already exists session=%s", session.id)
+        return
 
-    Opens its own DB session so it does not race with the completing request's transaction.
-    Silently logs errors — the completion response is never blocked by this task.
-    """
-    try:
-        async with AsyncSessionLocal() as db:
-            # Load session with messages
-            stmt = (
-                select(SimulationSession)
-                .options(selectinload(SimulationSession.messages))
-                .where(
-                    SimulationSession.id == session_id,
-                    SimulationSession.user_id == user_id,
-                )
-            )
-            result = await db.execute(stmt)
-            session = result.scalar_one_or_none()
-            if session is None or session.status != SessionStatus.completed:
-                logger.warning(
-                    "prep_card: session not found or not completed session=%s", session_id
-                )
-                return
+    doc_text = await _get_session_source_text(db, session)
+    messages = [{"role": m.role.value, "content": m.content} for m in session.messages]
+    content = await generate_prep_card(doc_text=doc_text, messages=messages)
 
-            # Skip if already generated (idempotent)
-            existing = await db.execute(
-                select(SessionArtifact).where(
-                    SessionArtifact.session_id == session_id,
-                    SessionArtifact.artifact_type == ArtifactType.prep_card,
-                )
-            )
-            if existing.scalar_one_or_none() is not None:
-                logger.debug("prep_card: already exists session=%s", session_id)
-                return
-
-            doc_text = await _get_session_source_text(db, session)
-            messages = [{"role": m.role.value, "content": m.content} for m in session.messages]
-
-            content = await generate_prep_card(doc_text=doc_text, messages=messages)
-
-            artifact = SessionArtifact(
-                session_id=session_id,
-                artifact_type=ArtifactType.prep_card,
-                content=content,
-            )
-            db.add(artifact)
-            await db.commit()
-            logger.info("prep_card: stored artifact session=%s", session_id)
-    except Exception as exc:
-        logger.error("prep_card: generation failed session=%s error=%s", session_id, exc, exc_info=True)
+    artifact = SessionArtifact(
+        session_id=session.id,
+        artifact_type=ArtifactType.prep_card,
+        content=content,
+    )
+    db.add(artifact)
+    await db.flush()
+    logger.info("prep_card: stored artifact session=%s", session.id)
 
 
 async def _user_has_artifact_access(user_id: uuid.UUID, db: AsyncSession) -> bool:
@@ -158,6 +130,15 @@ def _status_label(status_value: str) -> str:
 
 _BASE_TURNS = 8
 _MAX_TURNS_CAP = 15
+
+
+def _build_initial_max_turns(difficulty: int, doc_text: str = "") -> int:
+    turns = _BASE_TURNS + 2
+    if doc_text and len(doc_text.split()) > 2000:
+        turns += 2
+    if difficulty >= 4:
+        turns += 2
+    return min(turns, _MAX_TURNS_CAP)
 
 
 def _calculate_max_turns(session: "SimulationSession", doc_text: str = "") -> int:
@@ -442,21 +423,54 @@ async def start_simulation(
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
     doc_text = await _get_doc_text(db, body.document_id, body.draft_id, current_user.id) if (body.document_id or body.draft_id) else ""
+    has_paid_access = await _user_has_artifact_access(current_user.id, db)
 
-    persona_config_data = body.persona_config.model_dump()
-    persona_config_data["paid_access"] = await _user_has_artifact_access(current_user.id, db)
+    custom_persona_payload: dict | None = None
+    if body.source_type == "custom":
+        persona_res = await db.execute(
+            select(PersonalizedPersona).where(PersonalizedPersona.id == body.persona_id)
+        )
+        persona = persona_res.scalar_one_or_none()
+        if persona is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Персона не найдена.")
+        if persona.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа к этой персоне.")
 
-    # Compute and persist max_turns before the session is used in _calculate_max_turns
-    base_word_count = len(doc_text.split()) if doc_text else 0
-    difficulty = int(persona_config_data.get("difficulty", 3))
-    initial_turns = _BASE_TURNS
-    if base_word_count > 2000:
-        initial_turns += 2
-    # New session has no user messages yet → high_quality < 3 branch always adds 2
-    initial_turns += 2
-    if difficulty >= 4:
-        initial_turns += 2
-    persona_config_data["max_turns"] = min(initial_turns, _MAX_TURNS_CAP)
+        difficulty = int(persona.difficulty_hint)
+        persona_config_data = {
+            "source_type": "custom",
+            "role": persona.role,
+            "persona_id": str(persona.id),
+            "persona_name": persona.name,
+            "persona_role_label": persona.role,
+            "industry": body.industry,
+            "difficulty": difficulty,
+            "background": persona.background,
+            "communication_style": persona.communication_style,
+            "focus_areas": persona.focus_areas or [],
+            "catch_phrases": persona.catch_phrases or [],
+            "age": persona.age,
+            "paid_access": has_paid_access,
+        }
+        persona_config_data["max_turns"] = _build_initial_max_turns(difficulty, doc_text)
+        custom_persona_payload = {
+            "name": persona.name,
+            "communication_style": persona.communication_style,
+            "focus_areas": persona.focus_areas or [],
+            "background": persona.background,
+            "age": persona.age,
+            "catch_phrases": persona.catch_phrases or [],
+        }
+    else:
+        difficulty = int(body.difficulty or 3)
+        persona_config_data = {
+            "source_type": "system",
+            "role": body.persona_config.role if body.persona_config else None,
+            "industry": body.industry,
+            "difficulty": difficulty,
+            "paid_access": has_paid_access,
+        }
+        persona_config_data["max_turns"] = _build_initial_max_turns(difficulty, doc_text)
 
     session = SimulationSession(
         user_id=current_user.id,
@@ -477,8 +491,9 @@ async def start_simulation(
             doc_text=doc_text,
             history=[],
             user_context=user_context,
+            custom_persona=custom_persona_payload,
         )
-    except GeminiError as exc:
+    except CloudRuAIError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     first_message = SimulationMessage(
@@ -490,6 +505,18 @@ async def start_simulation(
     )
     db.add(first_message)
     await db.flush()
+
+    if body.source_type == "custom":
+        persona_res = await db.execute(
+            select(PersonalizedPersona).where(
+                PersonalizedPersona.id == body.persona_id,
+                PersonalizedPersona.user_id == current_user.id,
+            )
+        )
+        started_persona = persona_res.scalar_one_or_none()
+        if started_persona is not None:
+            started_persona.usage_count += 1
+            await db.flush()
 
     await consume_session_credit(str(current_user.id), db)
     await increment_simulation_counter(str(current_user.id), db)
@@ -510,7 +537,13 @@ async def start_simulation(
             logger.info("Simulation linked to meeting user=%s session=%s meeting=%s", current_user.id, session.id, body.meeting_id)
 
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
-    logger.info("Simulation started user=%s session=%s persona=%s", current_user.id, session.id, body.persona_config.role)
+    logger.info(
+        "Simulation started user=%s session=%s source=%s persona=%s",
+        current_user.id,
+        session.id,
+        body.source_type,
+        persona_config_data.get("role"),
+    )
     return await _load_session(db, session.id, current_user.id)
 
 
@@ -541,6 +574,7 @@ async def start_simulation_from_scenario(
         )
 
     persona_config_data = {
+        "source_type": "scenario",
         "role": scenario.recommended_persona,
         "industry": scenario.category.value,
         "difficulty": body.difficulty,
@@ -573,7 +607,7 @@ async def start_simulation_from_scenario(
             history=[],
             user_context=user_context,
         )
-    except GeminiError as exc:
+    except CloudRuAIError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     db.add(
@@ -648,16 +682,10 @@ async def send_message(
     if ai_turn_count >= max_turns:
         try:
             await _finalize_session(session, db)
-        except GeminiError as exc:
+            await _ensure_prep_card_artifact(session, db)
+        except CloudRuAIError as exc:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
         await db.refresh(user_msg)
-
-        # Trigger prep card generation for eligible users
-        if await _session_has_artifact_access(session, current_user.id, db):
-            asyncio.create_task(
-                _generate_and_store_prep_card(session.id, current_user.id)
-            )
-            logger.debug("prep_card: task scheduled (auto-complete) session=%s", session.id)
 
         await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
         logger.info("Session auto-completed at max_turns=%d session=%s", max_turns, session_id)
@@ -672,8 +700,9 @@ async def send_message(
             doc_text=doc_text,
             history=history,
             user_context=user_context,
+            custom_persona=session.persona_config if (session.persona_config or {}).get("source_type") == "custom" else None,
         )
-    except GeminiError as exc:
+    except CloudRuAIError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     assistant_msg = SimulationMessage(
@@ -746,16 +775,9 @@ async def complete_session(
 
     try:
         await _finalize_session(session, db)
-    except GeminiError as exc:
+        await _ensure_prep_card_artifact(session, db)
+    except CloudRuAIError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
-
-    # Trigger prep card generation as a fire-and-forget background task
-    # for paid users (access check happens inside the task after commit)
-    if await _session_has_artifact_access(session, current_user.id, db):
-        asyncio.create_task(
-            _generate_and_store_prep_card(session.id, current_user.id)
-        )
-        logger.debug("prep_card: task scheduled session=%s", session.id)
 
     await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
     logger.info("Session completed by user user=%s session=%s", current_user.id, session_id)
@@ -801,7 +823,6 @@ async def get_artifact(
     """Return the prep card artifact for a completed session.
 
     - paid user + artifact ready    → available=True, full content
-    - paid user + still generating  → available=False, generating=True
     - free user                     → available=False, teaser + paywall
     - session not completed         → 422
     """
@@ -829,11 +850,10 @@ async def get_artifact(
                 available=True,
                 artifact=PrepCardContent.model_validate(artifact.content),
             )
-        # Still generating — trigger if not already in progress
-        asyncio.create_task(
-            _generate_and_store_prep_card(session_id, current_user.id)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Шпаргалка отсутствует в сохраненных артефактах сессии.",
         )
-        return SessionArtifactResponse(available=False, generating=True)
 
     # Free user: return teaser with partial info
     # If no artifact exists we can still build teaser from session data counts
@@ -844,10 +864,10 @@ async def get_artifact(
         all_phrases = content.get("anchor_phrases", [])
         preview = all_phrases[:1]
     else:
-        # No artifact generated for free user — use static placeholder counts
-        top_count = 3
-        danger_count = 2
-        preview = []
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Шпаргалка отсутствует в сохраненных артефактах сессии.",
+        )
 
     return SessionArtifactResponse(
         available=False,
@@ -890,7 +910,8 @@ async def abandon_session(
     if user_messages:
         try:
             await _finalize_session(session, db)
-        except GeminiError:
+            await _ensure_prep_card_artifact(session, db)
+        except CloudRuAIError:
             # Evaluation failed — at least mark cancelled to avoid orphan active session
             session.status = SessionStatus.cancelled
             session.completed_at = datetime.now(timezone.utc)

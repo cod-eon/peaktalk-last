@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { PERSONA_LABELS } from '@/lib/constants/personas';
+import { getPersonaDisplayLabel } from '@/lib/constants/personas';
 import { PrepCard } from '@/components/simulation/PrepCard';
 import { ShareCard } from '@/components/simulation/ShareCard';
 
@@ -26,9 +26,12 @@ type Message = {
 };
 
 type PersonaConfig = {
-    role: string;
+    source_type?: 'system' | 'custom' | 'scenario' | 'guest';
+    role?: string | null;
     industry: string;
     difficulty: number;
+    persona_name?: string | null;
+    persona_role_label?: string | null;
 };
 
 type ReportData = {
@@ -339,7 +342,7 @@ export default function SimulationReportPage() {
     // ── Derived ──────────────────────────────────────────────────────────────
 
     const { persona_config, messages, skill_metrics, document_title } = report;
-    const personaName = PERSONA_LABELS[persona_config?.role] || persona_config?.role || 'Тренер';
+    const personaName = getPersonaDisplayLabel(persona_config);
 
     const overallScoreFloat = skill_metrics?.length
         ? skill_metrics.reduce((acc, m) => acc + m.score, 0) / skill_metrics.length

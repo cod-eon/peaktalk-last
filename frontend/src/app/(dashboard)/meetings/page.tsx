@@ -15,6 +15,7 @@ import {
   Link2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -28,7 +29,7 @@ type MeetingType =
   | "roadmap_review"
   | "other";
 
-type MeetingStatus = "upcoming" | "completed" | "cancelled";
+type MeetingStatus = "upcoming" | "prepared" | "completed" | "cancelled";
 
 type Meeting = {
   id: string;
@@ -38,6 +39,8 @@ type Meeting = {
   meeting_type: MeetingType;
   status: MeetingStatus;
   scenario_id: string | null;
+  simulation_session_id?: string | null;
+  has_active_preparation?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -68,6 +71,10 @@ const MEETING_STATUS_CONFIG: Record<
   upcoming: {
     label: "Предстоит",
     cls: "bg-[#FEF3E8] text-[#B04A08] border border-[#F9BD8E]",
+  },
+  prepared: {
+    label: "Подготовка идет",
+    cls: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   },
   completed: {
     label: "Завершена",
@@ -321,6 +328,7 @@ function MeetingCard({
   onStartSimulation: (id: string) => void;
 }) {
   const statusCfg = MEETING_STATUS_CONFIG[meeting.status];
+  const hasActivePreparation = Boolean(meeting.has_active_preparation);
   const days = daysUntil(meeting.meeting_date);
   const isPast = days < 0;
   const isToday = days === 0;
@@ -419,13 +427,14 @@ function MeetingCard({
 
       {/* Actions column */}
       <div className="flex sm:flex-col items-center sm:items-end gap-2 shrink-0">
-        {meeting.status === "upcoming" && (
+        {(meeting.status === "upcoming" || meeting.status === "prepared") && (
           <button
             onClick={() => onStartSimulation(meeting.id)}
             className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white text-[12px] font-semibold px-4 py-2 transition-colors cursor-pointer"
           >
             <Zap size={12} />
-            <span className="hidden sm:inline">Начать</span>
+            <span className="hidden sm:inline">{hasActivePreparation ? "Продолжить подготовку" : "Подготовиться"}</span>
+            <span className="sm:hidden">{hasActivePreparation ? "Продолжить" : "Подготовиться"}</span>
           </button>
         )}
         <div className="flex items-center gap-1">
@@ -452,6 +461,7 @@ function MeetingCard({
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function MeetingsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
@@ -538,8 +548,8 @@ export default function MeetingsPage() {
   );
 
   const handleStartSimulation = useCallback((id: string) => {
-    window.location.href = `/simulation?meeting=${id}`;
-  }, []);
+    router.push(`/simulation?meeting=${id}`);
+  }, [router]);
 
   const isSubmitting =
     createMutation.isPending || updateMutation.isPending;
@@ -552,8 +562,9 @@ export default function MeetingsPage() {
       // Upcoming first, then completed, then cancelled
       const statusOrder: Record<MeetingStatus, number> = {
         upcoming: 0,
-        completed: 1,
-        cancelled: 2,
+        prepared: 1,
+        completed: 2,
+        cancelled: 3,
       };
       const statusDiff = statusOrder[a.status] - statusOrder[b.status];
       if (statusDiff !== 0) return statusDiff;
@@ -562,7 +573,7 @@ export default function MeetingsPage() {
     });
   }, [meetings]);
 
-  const upcomingCount = meetings?.filter((m) => m.status === "upcoming").length ?? 0;
+  const upcomingCount = meetings?.filter((m) => m.status === "upcoming" || m.status === "prepared").length ?? 0;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

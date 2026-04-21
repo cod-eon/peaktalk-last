@@ -3,8 +3,11 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
-from app.services.gemini import GeminiError
+from app.models.personalized_persona import PersonalizedPersona
+from app.models.simulation import ArtifactType, SessionArtifact, SimulationSession
+from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import SimulationTurn, SkillEvaluation
+from .conftest import TEST_USER_ID
 
 MOCK_TURN = SimulationTurn(
     internal_reasoning="The presenter mentioned AI — let me probe the business model.",
@@ -20,8 +23,25 @@ MOCK_EVALUATION = SkillEvaluation(metrics=[
     {"name": "conciseness", "score": 0.9, "comment": "Very concise responses."},
 ])
 
+MOCK_PREP_CARD = {
+    "top_arguments": [
+        {"text": "Мы растем 20% MoM", "strength": "high", "anchor_phrase": "Рост стабилен и подтвержден данными"},
+        {"text": "CAC под контролем", "strength": "medium", "anchor_phrase": "Экономика канала прозрачна"},
+        {"text": "Retention высокий", "strength": "high", "anchor_phrase": "Retention доказывает ценность"},
+    ],
+    "anchor_phrases": ["Рост стабилен и подтвержден данными"],
+    "danger_zones": [
+        {"topic": "Юнит-экономика", "risk": "Ответ был слишком общим", "suggested_response": "Назовите CAC, LTV и payback."},
+    ],
+    "key_numbers": ["20% MoM", "CAC $15"],
+    "opening_move": "Начну с главной метрики роста.",
+}
+
 START_PAYLOAD = {
-    "persona_config": {"role": "investor", "industry": "edtech", "difficulty": 3},
+    "source_type": "system",
+    "persona_config": {"role": "investor"},
+    "industry": "edtech",
+    "difficulty": 3,
     "draft_id": None,
 }
 
@@ -34,14 +54,19 @@ async def _mock_evaluate_session(**kw) -> SkillEvaluation:
     return MOCK_EVALUATION
 
 
+async def _mock_generate_prep_card(**kw) -> dict:
+    return MOCK_PREP_CARD
+
+
 async def _mock_generate_question_error(**kw) -> SimulationTurn:
-    raise GeminiError("timeout")
+    raise CloudRuAIError("timeout")
 
 
 @pytest.fixture(autouse=True)
 def mock_ai(monkeypatch):
     monkeypatch.setattr("app.routers.simulation.generate_question", _mock_generate_question)
     monkeypatch.setattr("app.routers.simulation.evaluate_session", _mock_evaluate_session)
+    monkeypatch.setattr("app.routers.simulation.generate_prep_card", _mock_generate_prep_card)
 
 
 @pytest.fixture
@@ -78,10 +103,125 @@ async def test_start_simulation(client: AsyncClient, draft_id: str) -> None:
 async def test_start_without_source_succeeds(client: AsyncClient) -> None:
     """Starting simulation without a document is valid — AI uses general questions."""
     resp = await client.post("/simulation/start", json={
-        "persona_config": {"role": "hr", "industry": "general", "difficulty": 2},
+        "source_type": "system",
+        "persona_config": {"role": "hr"},
+        "industry": "general",
+        "difficulty": 2,
     })
     assert resp.status_code == 201
     assert resp.json()["status"] == "active"
+
+
+@pytest.fixture
+async def custom_persona_id(db_session) -> str:
+    persona = PersonalizedPersona(
+        user_id=TEST_USER_ID,
+        name="Строгий CTO",
+        role="CTO",
+        background="15 лет строит B2B SaaS",
+        communication_style="Режет воду, требует факты",
+        catch_phrases=["Где доказательства?"],
+        focus_areas=["риски", "архитектура"],
+        difficulty_hint=5,
+        usage_count=0,
+    )
+    db_session.add(persona)
+    await db_session.commit()
+    return str(persona.id)
+
+
+@pytest.mark.asyncio
+async def test_start_custom_simulation_creates_snapshot(
+    client: AsyncClient,
+    db_session,
+    custom_persona_id: str,
+) -> None:
+    resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "persona_id": custom_persona_id,
+        "industry": "fintech",
+    })
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["persona_config"]["source_type"] == "custom"
+    assert data["persona_config"]["persona_id"] == custom_persona_id
+    assert data["persona_config"]["persona_name"] == "Строгий CTO"
+    assert data["persona_config"]["role"] == "CTO"
+    assert data["persona_config"]["difficulty"] == 5
+    assert data["messages"][0]["content"] == MOCK_TURN.question
+
+    persona = await db_session.get(PersonalizedPersona, uuid.UUID(custom_persona_id))
+    assert persona is not None
+    assert persona.usage_count == 1
+
+
+@pytest.mark.asyncio
+async def test_custom_simulation_snapshot_does_not_mutate_after_persona_update(
+    client: AsyncClient,
+    db_session,
+    custom_persona_id: str,
+) -> None:
+    start_resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "persona_id": custom_persona_id,
+        "industry": "fintech",
+    })
+    assert start_resp.status_code == 201
+    session_id = start_resp.json()["id"]
+
+    persona = await db_session.get(PersonalizedPersona, uuid.UUID(custom_persona_id))
+    assert persona is not None
+    persona.name = "Обновленный CTO"
+    persona.communication_style = "Теперь мягче"
+    await db_session.commit()
+
+    session = await db_session.get(SimulationSession, uuid.UUID(session_id))
+    assert session is not None
+    assert session.persona_config["persona_name"] == "Строгий CTO"
+    assert session.persona_config["communication_style"] == "Режет воду, требует факты"
+
+
+@pytest.mark.asyncio
+async def test_custom_simulation_rejects_missing_persona_id(client: AsyncClient) -> None:
+    resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "industry": "fintech",
+    })
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_start_rejects_hybrid_payload(
+    client: AsyncClient,
+    custom_persona_id: str,
+) -> None:
+    resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "persona_id": custom_persona_id,
+        "persona_config": {"role": "investor"},
+        "industry": "fintech",
+    })
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_start_custom_simulation_rejects_foreign_persona(client: AsyncClient, db_session) -> None:
+    foreign_persona = PersonalizedPersona(
+        user_id=uuid.uuid4(),
+        name="Чужой инвестор",
+        role="Investor",
+        communication_style="Холодный",
+        difficulty_hint=4,
+    )
+    db_session.add(foreign_persona)
+    await db_session.commit()
+
+    resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "persona_id": str(foreign_persona.id),
+        "industry": "fintech",
+    })
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -144,6 +284,30 @@ async def test_get_report(client: AsyncClient, session_id: str) -> None:
 
 
 @pytest.mark.asyncio
+async def test_complete_session_creates_prep_card_artifact(client: AsyncClient, session_id: str) -> None:
+    await client.post(f"/simulation/{session_id}/message", json={"content": "Answer."})
+    complete_resp = await client.post(f"/simulation/{session_id}/complete")
+    assert complete_resp.status_code == 200
+
+    session_resp = await client.get(f"/simulation/{session_id}/history")
+    assert session_resp.status_code == 200
+
+    from .conftest import TestSessionLocal
+    async with TestSessionLocal() as db:
+        from sqlalchemy import select
+        artifact_res = await db.execute(
+            select(SessionArtifact).where(
+                SessionArtifact.session_id == uuid.UUID(session_id),
+                SessionArtifact.artifact_type == ArtifactType.prep_card,
+            )
+        )
+        artifact = artifact_res.scalar_one_or_none()
+        assert artifact is not None
+        assert artifact.content["opening_move"] == MOCK_PREP_CARD["opening_move"]
+        assert artifact.content["top_arguments"][0]["text"] == MOCK_PREP_CARD["top_arguments"][0]["text"]
+
+
+@pytest.mark.asyncio
 async def test_report_on_active_session_fails(client: AsyncClient, session_id: str) -> None:
     resp = await client.get(f"/simulation/{session_id}/report")
     assert resp.status_code == 422
@@ -165,7 +329,7 @@ async def test_session_not_found(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_gemini_error_on_start(client: AsyncClient, draft_id: str, monkeypatch) -> None:
+async def test_cloud_ru_error_on_start(client: AsyncClient, draft_id: str, monkeypatch) -> None:
     monkeypatch.setattr("app.routers.simulation.generate_question", _mock_generate_question_error)
     resp = await client.post("/simulation/start", json={**START_PAYLOAD, "draft_id": draft_id})
     assert resp.status_code == 502

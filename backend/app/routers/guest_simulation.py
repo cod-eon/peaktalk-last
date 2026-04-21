@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.limiter import limiter
 from app.models.guest import GuestSession
-from app.services.gemini import GeminiError
+from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import generate_question
 
 logger = logging.getLogger("peaktalk.guest_simulation")
@@ -156,8 +156,8 @@ async def guest_start(
             history=[],
             user_context=None,
         )
-    except GeminiError as exc:
-        logger.error("guest_start: Gemini error: %s", exc)
+    except CloudRuAIError as exc:
+        logger.error("guest_start: Cloud.ru error: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"detail": str(exc), "code": "ai_error"},
@@ -214,7 +214,7 @@ async def guest_message(
     current_turn = session.turn_count  # number of AI questions already asked
 
     # If the limit was already hit on a previous call, return paywall immediately
-    # without burning another Gemini call.
+    # without burning another Cloud.ru call.
     if current_turn >= GUEST_MAX_TURNS:
         return GuestMessageResponse(
             question=None,
@@ -264,8 +264,8 @@ async def guest_message(
             history=updated_messages,
             user_context=None,
         )
-    except GeminiError as exc:
-        logger.error("guest_message: Gemini error session_token=%s: %s", body.guest_session_id, exc)
+    except CloudRuAIError as exc:
+        logger.error("guest_message: Cloud.ru error session_token=%s: %s", body.guest_session_id, exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"detail": str(exc), "code": "ai_error"},

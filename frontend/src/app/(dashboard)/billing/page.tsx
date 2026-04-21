@@ -239,7 +239,7 @@ function BillingContent() {
   }, [refetch, refetchPaymentMethod]);
 
   const plan = status?.subscription.plan ?? 'free';
-  const isPaidPlan = false;
+  const isPaidPlan = ['personal', 'pro', 'team'].includes(plan);
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',

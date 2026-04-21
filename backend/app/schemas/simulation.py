@@ -1,22 +1,62 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Literal, Optional
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.simulation import ArtifactType, MessageRole, SessionStatus
 
 
 class PersonaConfig(BaseModel):
-    role: str = Field(min_length=1, max_length=50, description="Persona role key from /simulation/personas")
+    source_type: Literal["system", "custom", "scenario", "guest"] = "system"
+    role: str | None = Field(default=None, min_length=1, max_length=64, description="Persona role key or custom role label")
     industry: str = Field(default="general", max_length=100, description="e.g. fintech, edtech, healthcare")
     difficulty: int = Field(default=3, ge=1, le=5, description="1=easy, 5=brutal")
+    persona_id: uuid.UUID | None = None
+    persona_name: str | None = Field(default=None, max_length=128)
+    persona_role_label: str | None = Field(default=None, max_length=128)
+    background: str | None = None
+    communication_style: str | None = None
+    focus_areas: list[str] = []
+    catch_phrases: list[str] = []
+    age: int | None = None
+    paid_access: bool | None = None
+    max_turns: int | None = None
+    scenario_id: str | None = None
+    scenario_slug: str | None = None
+    scenario_title: str | None = None
+
+
+class SystemPersonaSelection(BaseModel):
+    role: str = Field(min_length=1, max_length=50, description="Persona role key from /simulation/personas")
 
 
 class SimulationStartRequest(BaseModel):
-    persona_config: PersonaConfig
+    source_type: Literal["system", "custom"]
+    persona_config: SystemPersonaSelection | None = None
+    persona_id: uuid.UUID | None = None
+    industry: str = Field(default="general", max_length=100)
+    difficulty: int | None = Field(default=None, ge=1, le=5)
     document_id: uuid.UUID | None = None
     draft_id: uuid.UUID | None = None
     meeting_id: Optional[uuid.UUID] = None
+
+    @model_validator(mode="after")
+    def validate_start_source(self) -> "SimulationStartRequest":
+        if self.source_type == "system":
+            if self.persona_config is None:
+                raise ValueError("Для системной симуляции нужно передать persona_config.role.")
+            if self.persona_id is not None:
+                raise ValueError("persona_id нельзя передавать для системной симуляции.")
+            if self.difficulty is None:
+                raise ValueError("Для системной симуляции нужно передать difficulty.")
+        if self.source_type == "custom":
+            if self.persona_id is None:
+                raise ValueError("Для кастомной симуляции нужно передать persona_id.")
+            if self.persona_config is not None:
+                raise ValueError("persona_config нельзя передавать для кастомной симуляции.")
+            if self.difficulty is not None:
+                raise ValueError("difficulty нельзя передавать для кастомной симуляции.")
+        return self
 
 
 class StartFromScenarioRequest(BaseModel):

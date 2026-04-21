@@ -7,31 +7,41 @@ export interface PrepCardProps {
   sessionId: string;
 }
 
+type PrepCardArtifact = {
+  opening_move: string;
+  top_arguments: { text: string; strength: string; anchor_phrase: string }[];
+  danger_zones: { topic: string; risk: string; suggested_response: string }[];
+  key_numbers: string[];
+};
+
+type PrepCardResponse = {
+  available: boolean;
+  artifact: PrepCardArtifact | null;
+  teaser?: {
+    top_arguments_count: number;
+    anchor_phrases_preview: string[];
+    danger_zones_count: number;
+  } | null;
+};
+
 export function PrepCard({ sessionId }: PrepCardProps) {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<PrepCardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
-    let timeout: NodeJS.Timeout;
 
     const fetchArtifact = async () => {
       try {
         const res = await api.get(`/simulation/${sessionId}/artifact`);
         if (!mounted) return;
-
-        if (res.generating) {
-          // Poll every 3 seconds if still generating
-          timeout = setTimeout(fetchArtifact, 3000);
-        } else {
-          setData(res);
-          setLoading(false);
-        }
-      } catch (err: any) {
+        setData(res);
+        setLoading(false);
+      } catch (err: unknown) {
         if (!mounted) return;
-        setError(err?.message || 'Ошибка загрузки артефакта');
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки артефакта');
         setLoading(false);
       }
     };
@@ -39,7 +49,6 @@ export function PrepCard({ sessionId }: PrepCardProps) {
     fetchArtifact();
     return () => {
       mounted = false;
-      clearTimeout(timeout);
     };
   }, [sessionId]);
 
@@ -47,13 +56,20 @@ export function PrepCard({ sessionId }: PrepCardProps) {
     return (
       <div className="bg-white border border-neutral-200 p-8 flex flex-col items-center justify-center text-neutral-500">
         <Loader2 size={24} className="animate-spin mb-4" />
-        <p className="text-sm font-inter">Формируем шпаргалку...</p>
+        <p className="text-sm font-inter">Загружаем шпаргалку...</p>
       </div>
     );
   }
 
   if (error) {
-    return null; // Don't show if there's a hard error
+    return (
+      <div className="bg-white border border-red-200 p-6 sm:p-8">
+        <h3 className="font-bold text-neutral-900 mb-2">Шпаргалка недоступна</h3>
+        <p className="text-sm text-neutral-500">
+          Это не отложенная генерация, а битое состояние данных. {error}
+        </p>
+      </div>
+    );
   }
 
   if (!data) return null;
@@ -160,10 +176,12 @@ export function PrepCard({ sessionId }: PrepCardProps) {
               Ключевые тезисы
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {artifact.top_arguments.map((arg: any, i: number) => (
+              {artifact.top_arguments.map((arg, i: number) => (
                 <div key={i} className="border border-neutral-200 p-4 bg-neutral-50 flex flex-col h-full">
-                  <h4 className="font-bold text-sm text-neutral-900 mb-2">{arg.topic}</h4>
-                  <p className="text-sm text-neutral-600 mb-3 flex-1">{arg.rationale}</p>
+                  <h4 className="font-bold text-sm text-neutral-900 mb-2">{arg.text}</h4>
+                  <p className="text-sm text-neutral-600 mb-3 flex-1">
+                    {arg.strength === 'high' ? 'Сильный аргумент, который выдержал давление.' : 'Рабочий аргумент, который стоит усилить формулировкой.'}
+                  </p>
                   <div className="bg-amber-100/50 text-amber-900 text-xs px-3 py-2 border border-amber-200 font-medium">
                     «{arg.anchor_phrase}»
                   </div>
@@ -181,7 +199,7 @@ export function PrepCard({ sessionId }: PrepCardProps) {
               Зоны риска и возражения
             </h3>
             <div className="space-y-3">
-              {artifact.danger_zones.map((zone: any, i: number) => (
+              {artifact.danger_zones.map((zone, i: number) => (
                 <div key={i} className="border border-red-100 p-4 bg-red-50/30 flex gap-4">
                   <div className="hidden sm:flex shrink-0 w-8 h-8 rounded-full bg-red-100 items-center justify-center text-red-600 font-bold text-xs mt-1">
                     {i + 1}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { PlanBadge } from '@/components/PlanBadge';
-import { PERSONA_LABELS, ROLE_VISUALS, DEFAULT_VISUAL, formatDate } from '@/lib/constants/personas';
+import { formatDate, getPersonaDisplayLabel, getPersonaVisual } from '@/lib/constants/personas';
 import type { SessionItem } from '@/lib/constants/personas';
 
 // ── Components ─────────────────────────────────────────────────────────────
@@ -45,9 +45,8 @@ function MetricPod({
 
 function DashboardSessionCard({ session }: { session: SessionItem }) {
   const isActive = session.status === 'active';
-  const role = session.persona_config.role;
-  const personaLabel = PERSONA_LABELS[role] ?? role;
-  const visual = ROLE_VISUALS[role] ?? DEFAULT_VISUAL;
+  const personaLabel = getPersonaDisplayLabel(session.persona_config);
+  const visual = getPersonaVisual(session.persona_config);
   const Icon = visual.icon;
   
   const scoreBadge = session.avg_score !== null 
@@ -361,7 +360,7 @@ function DashboardActive({ sessions, documents, profile }: { sessions: any[], do
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
             <span className="font-medium text-neutral-900">У вас есть незавершённая симуляция</span>
-            <span className="text-neutral-500 text-sm hidden sm:inline">({PERSONA_LABELS[activeSession.persona_config.role] ?? activeSession.persona_config.role})</span>
+            <span className="text-neutral-500 text-sm hidden sm:inline">({getPersonaDisplayLabel(activeSession.persona_config)})</span>
           </div>
           <Link 
             href={`/simulation/${activeSession.id}`}

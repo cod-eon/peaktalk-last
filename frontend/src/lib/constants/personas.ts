@@ -1,12 +1,22 @@
 import {
-  Bot, Users, Briefcase, TrendingUp, TrendingDown,
-  MessageSquare, Zap, Search, Mic, ArrowRight
+  Bot, Users, Briefcase, TrendingUp,
+  MessageSquare, Zap, Search, Mic
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+export type SessionPersonaConfig = {
+  source_type?: 'system' | 'custom' | 'scenario' | 'guest';
+  role?: string | null;
+  industry: string;
+  difficulty: number;
+  persona_id?: string | null;
+  persona_name?: string | null;
+  persona_role_label?: string | null;
+};
+
 export type SessionItem = {
   id: string;
-  persona_config: { role: string; industry: string; difficulty: number };
+  persona_config: SessionPersonaConfig;
   status: 'active' | 'completed' | 'cancelled';
   created_at: string;
   completed_at: string | null;
@@ -70,6 +80,33 @@ export const SHORT_PERSONA: Record<string, string> = {
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export function getPersonaDisplayLabel(personaConfig: SessionPersonaConfig): string {
+  if (personaConfig.source_type === 'custom' && personaConfig.persona_name) {
+    return personaConfig.persona_name;
+  }
+  if (personaConfig.role) {
+    return PERSONA_LABELS[personaConfig.role] ?? personaConfig.role;
+  }
+  return 'Тренер';
+}
+
+export function getPersonaSecondaryLabel(personaConfig: SessionPersonaConfig): string | null {
+  if (personaConfig.source_type === 'custom') {
+    return personaConfig.persona_role_label ?? personaConfig.role ?? null;
+  }
+  return null;
+}
+
+export function getPersonaVisual(personaConfig: SessionPersonaConfig): RoleVisual {
+  if (personaConfig.source_type === 'custom') {
+    return { icon: Bot, iconColor: 'text-[#E8600A]', iconBg: 'bg-[#FEF3E8]' };
+  }
+  if (personaConfig.role) {
+    return ROLE_VISUALS[personaConfig.role] ?? DEFAULT_VISUAL;
+  }
+  return DEFAULT_VISUAL;
 }
 
 export function getInsightTag(session: SessionItem): string | null {

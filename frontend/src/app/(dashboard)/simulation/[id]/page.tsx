@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useBillingStore } from '@/store/billingStore';
 import { UpgradeModal } from '@/components/UpgradeModal';
+import { getPersonaDisplayLabel } from '@/lib/constants/personas';
 
 export default function SimulationPage() {
   const router = useRouter();
@@ -20,7 +21,13 @@ export default function SimulationPage() {
 
   // States
   const [messages, setMessages] = useState<{role: string; content: string; turn_index: number}[]>([]);
-  const [personaConfig, setPersonaConfig] = useState<{role: string; industry: string} | null>(null);
+  const [personaConfig, setPersonaConfig] = useState<{
+    role?: string | null;
+    industry: string;
+    difficulty?: number;
+    source_type?: 'system' | 'custom' | 'scenario' | 'guest';
+    persona_name?: string | null;
+  } | null>(null);
   const [answer, setAnswer] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,8 +214,8 @@ export default function SimulationPage() {
         openUpgradeModal('simulations');
       } else {
         let displayError = message;
-        // Mask Gemini/technical errors
-        if (lowerMessage.includes('gemini') || displayError.includes('40') || displayError.includes('50') || lowerMessage.includes('failed') || lowerMessage.includes('error')) {
+      // Mask provider/technical errors
+      if (lowerMessage.includes('cloud.ru') || displayError.includes('40') || displayError.includes('50') || lowerMessage.includes('failed') || lowerMessage.includes('error')) {
           displayError = 'Ошибка анализа, попробуйте еще раз';
         }
         toast.error('Ошибка отправки сообщения: ' + displayError);
@@ -261,7 +268,9 @@ export default function SimulationPage() {
       );
   }
 
-  const personaLabel = PERSONA_LABELS[personaConfig?.role ?? ''] || personaConfig?.role || 'Тренер';
+  const personaLabel = personaConfig
+    ? getPersonaDisplayLabel({ ...personaConfig, difficulty: personaConfig.difficulty ?? 3 })
+    : 'Тренер';
   const personaDative = PERSONA_DATIVE[personaConfig?.role ?? ''] ?? personaLabel.toLowerCase();
 
   if (isFinished) {

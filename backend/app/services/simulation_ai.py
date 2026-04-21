@@ -8,7 +8,7 @@ from functools import partial
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import settings
-from app.services.gemini import GeminiError, create_gemini_client, extract_completion_text
+from app.services.cloud_ru_ai import CloudRuAIError, create_cloud_ru_client, extract_completion_text
 
 logger = logging.getLogger("peaktalk.ai")
 
@@ -547,7 +547,7 @@ def _infer_turn_index(history: list[dict]) -> int:
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
+    retry=retry_if_exception_type((CloudRuAIError, json.JSONDecodeError)),
     reraise=True,
 )
 async def generate_question(
@@ -555,8 +555,9 @@ async def generate_question(
     doc_text: str,
     history: list[dict],
     user_context: dict | None = None,
+    custom_persona: dict | None = None,
 ) -> SimulationTurn:
-    client = create_gemini_client()
+    client = create_cloud_ru_client()
 
     last_user_message = _extract_last_user_message(history)
     turn_index = _infer_turn_index(history)
@@ -566,6 +567,7 @@ async def generate_question(
         user_context=user_context,
         last_user_message=last_user_message,
         turn_index=turn_index,
+        custom_persona=custom_persona,
     )
 
     prompt = _build_user_prompt(doc_text, history)
@@ -597,11 +599,11 @@ async def generate_question(
             (loop.time() - started) * 1000,
         )
     except Exception as exc:
-        raise GeminiError(f"Cloud.ru simulation call failed: {exc}") from exc
+        raise CloudRuAIError(f"Cloud.ru simulation call failed: {exc}") from exc
 
     raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Empty Cloud.ru response")
+        raise CloudRuAIError("Empty Cloud.ru response")
 
     parsed = _parse_json(raw)
     parsed_followup = bool(parsed.get("is_followup", is_followup))
@@ -619,7 +621,7 @@ async def generate_question(
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
+    retry=retry_if_exception_type((CloudRuAIError, json.JSONDecodeError)),
     reraise=True,
 )
 async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluation:
@@ -634,7 +636,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
         transcript=transcript,
     )
 
-    client = create_gemini_client()
+    client = create_cloud_ru_client()
     try:
         loop = asyncio.get_event_loop()
         started = loop.time()
@@ -656,7 +658,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
             (loop.time() - started) * 1000,
         )
     except Exception as exc:
-        raise GeminiError(f"Cloud.ru evaluation call failed: {exc}") from exc
+        raise CloudRuAIError(f"Cloud.ru evaluation call failed: {exc}") from exc
 
     parsed = _parse_json(extract_completion_text(response))
 
@@ -712,7 +714,7 @@ _PREP_CARD_USER_TEMPLATE = """
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
+    retry=retry_if_exception_type((CloudRuAIError, json.JSONDecodeError)),
     reraise=True,
 )
 async def generate_prep_card(
@@ -742,7 +744,7 @@ async def generate_prep_card(
         transcript=transcript,
     )
 
-    client = create_gemini_client()
+    client = create_cloud_ru_client()
     try:
         loop = asyncio.get_event_loop()
         started = loop.time()
@@ -767,11 +769,11 @@ async def generate_prep_card(
             (loop.time() - started) * 1000,
         )
     except Exception as exc:
-        raise GeminiError(f"Cloud.ru prep card call failed: {exc}") from exc
+        raise CloudRuAIError(f"Cloud.ru prep card call failed: {exc}") from exc
 
     raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Empty Cloud.ru response for prep card")
+        raise CloudRuAIError("Empty Cloud.ru response for prep card")
 
     parsed = _parse_json(raw)
 

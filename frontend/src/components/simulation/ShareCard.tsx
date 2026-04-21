@@ -33,10 +33,17 @@ export function ShareCard({ score, personaName, summary, metrics }: ShareCardPro
     
     setIsExporting(true);
     try {
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        await (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
+      }
+
       const canvas = await html2canvas(cardRef.current, {
-        scale: 2, // Higher quality
+        scale: Math.max(2, window.devicePixelRatio || 1),
         useCORS: true,
         backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: cardRef.current.scrollWidth,
+        windowHeight: cardRef.current.scrollHeight,
       });
       
       const blob = await new Promise<Blob | null>((resolve) => 
@@ -65,11 +72,12 @@ export function ShareCard({ score, personaName, summary, metrics }: ShareCardPro
         } else {
           // Fallback share logic if file sharing is not supported
           const text = `Я прошел стресс-тест в PeakTalk на ${score}/10! А ты сможешь? https://peaktalk.ru`;
-          navigator.clipboard.writeText(text);
-          alert('Текст скопирован: ' + text);
+          await navigator.clipboard.writeText(text);
+          toast.success('Текст для шаринга скопирован');
         }
       }
     } catch (err) {
+      console.error('share-card export failed', err);
       toast.error('Не удалось экспортировать изображение');
     } finally {
       setIsExporting(false);

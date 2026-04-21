@@ -12,7 +12,7 @@ from app.dependencies import get_current_user
 from app.models.draft import AIAnalysisResult, SpeechDraft
 from app.models.user import User
 from app.schemas.draft import AIAnalysisResultResponse, SpeechDraftCreate, SpeechDraftListResponse, SpeechDraftResponse
-from app.services.gemini import GeminiError, analyze_draft
+from app.services.cloud_ru_ai import CloudRuAIError, analyze_draft
 
 logger = logging.getLogger("peaktalk.drafts")
 
@@ -86,13 +86,13 @@ async def analyze_draft_endpoint(
         logger.info("Returning cached analysis draft=%s", draft_id)
         return draft.analysis_result
 
-    logger.info("Starting Gemini analysis draft=%s chars=%d", draft_id, len(draft.raw_text))
+    logger.info("Starting Cloud.ru analysis draft=%s chars=%d", draft_id, len(draft.raw_text))
     profile = current_user.onboarding_profile
     user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
     try:
-        gemini_result = await analyze_draft(draft.raw_text, user_context=user_context)
-    except GeminiError as exc:
-        logger.error("Gemini analysis failed draft=%s error=%s", draft_id, exc)
+        analysis_result = await analyze_draft(draft.raw_text, user_context=user_context)
+    except CloudRuAIError as exc:
+        logger.error("Cloud.ru analysis failed draft=%s error=%s", draft_id, exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Не удалось выполнить AI-анализ: {exc}",
@@ -100,13 +100,13 @@ async def analyze_draft_endpoint(
 
     analysis = AIAnalysisResult(
         draft_id=draft.id,
-        improved_text=gemini_result.improved_text,
-        feedback_json=gemini_result.feedback,
+        improved_text=analysis_result.improved_text,
+        feedback_json=analysis_result.feedback,
     )
     db.add(analysis)
     await db.flush()
     await db.refresh(analysis)
-    logger.info("Analysis saved draft=%s score=%s", draft_id, gemini_result.feedback.get("overall_score"))
+    logger.info("Analysis saved draft=%s score=%s", draft_id, analysis_result.feedback.get("overall_score"))
     return analysis
 
 

@@ -34,14 +34,22 @@ type PersonasData = {
     user_personas?: { id: string; name: string; role: string; communication_style: string; difficulty_hint: number; usage_count: number }[];
 };
 
+type MeetingContext = {
+    id: string;
+    title: string;
+    meeting_date: string;
+    meeting_type: string;
+};
+
 import {
     SessionItem,
-    PERSONA_LABELS,
+    formatDate,
+    getInsightTag,
+    getPersonaDisplayLabel,
+    getPersonaSecondaryLabel,
+    getPersonaVisual,
     ROLE_VISUALS,
     DEFAULT_VISUAL,
-    SHORT_PERSONA,
-    formatDate,
-    getInsightTag
 } from '@/lib/constants/personas';
 
 
@@ -57,8 +65,9 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
         ? 'text-gray-400'
         : scoreVal >= 5 ? 'text-gray-700'
         : 'text-rose-500';
-    const personaLabel = PERSONA_LABELS[session.persona_config.role] ?? session.persona_config.role;
-    const visual = ROLE_VISUALS[session.persona_config.role] ?? DEFAULT_VISUAL;
+    const personaLabel = getPersonaDisplayLabel(session.persona_config);
+    const personaSubLabel = getPersonaSecondaryLabel(session.persona_config);
+    const visual = getPersonaVisual(session.persona_config);
     const RoleIcon = visual.icon;
     const insightTag = isCompleted ? getInsightTag(session) : null;
 
@@ -86,7 +95,7 @@ function SessionCard({ session, onClick, variant = 'default' }: { session: Sessi
                             {personaLabel}
                         </div>
                         <div className="font-inter text-xs text-neutral-500 truncate">
-                            {session.persona_config.industry}
+                            {personaSubLabel ? `${personaSubLabel} • ${session.persona_config.industry}` : session.persona_config.industry}
                         </div>
                     </div>
                 </div>
@@ -199,6 +208,8 @@ function SimulationPageContent() {
     const [difficultyManuallySet, setDifficultyManuallySet] = useState(false);
     const [selectedUserPersonaId, setSelectedUserPersonaId] = useState<string | null>(null);
     const [linkedMeetingId, setLinkedMeetingId] = useState<string | null>(null);
+    const [personaTab, setPersonaTab] = useState<'system' | 'custom'>('system');
+    const [meetingContext, setMeetingContext] = useState<MeetingContext | null>(null);
 
     // Personas from API
     const [personasData, setPersonasData] = useState<PersonasData | null>(null);
@@ -253,14 +264,28 @@ function SimulationPageContent() {
                 if (!difficultyManuallySet) {
                     setDifficulty(personasRes.value.default_difficulty);
                 }
+
+                if (!meetingFromUrl && sessionsRes.status === 'fulfilled' && sessionsRes.value?.items?.length) {
+                    const latestIndustry = sessionsRes.value.items[0]?.persona_config?.industry;
+                    if (latestIndustry) {
+                        if (personasRes.value.industries.includes(latestIndustry)) {
+                            setSelectedDomain(latestIndustry);
+                        } else {
+                            setSelectedDomain('custom');
+                            setCustomDomain(latestIndustry);
+                        }
+                    }
+                }
             }
             setPersonasLoading(false);
 
             // If navigated from personas page, pre-select the user persona
             if (personaFromUrl && personasRes.status === 'fulfilled' && personasRes.value?.user_personas) {
-                const found = personasRes.value.user_personas.find((p: any) => p.id === personaFromUrl);
+                const found = personasRes.value.user_personas.find((p: NonNullable<PersonasData['user_personas']>[number]) => p.id === personaFromUrl);
                 if (found) {
                     setSelectedUserPersonaId(found.id);
+                    setSelectedRole(null);
+                    setPersonaTab('custom');
                     setView('setup');
                 }
             }
@@ -300,7 +325,15 @@ function SimulationPageContent() {
                         return;
                     }
                     if (meetingData?.status === 'ready') {
+                        setMeetingContext({
+                            id: meetingData.meeting_id,
+                            title: meetingData.meeting_title,
+                            meeting_date: meetingData.meeting_date,
+                            meeting_type: meetingData.meeting_type,
+                        });
                         setSelectedRole(meetingData.suggested_role);
+                        setSelectedUserPersonaId(null);
+                        setPersonaTab('system');
                         setLinkedMeetingId(meetingData.meeting_id);
                         setView('setup');
                     }
@@ -347,11 +380,21 @@ function SimulationPageContent() {
     ];
 
     const fallbackIndustries = ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"];
+    const meetingTypeLabels: Record<string, string> = {
+        budget_defense: 'Защита бюджета',
+        qbr: 'QBR',
+        pitch: 'Питч',
+        client_meeting: 'Встреча с клиентом',
+        roadmap_review: 'Обзор roadmap',
+        other: 'Другое',
+    };
     const industryList = personasData ? personasData.industries : fallbackIndustries;
     const domains = [
         ...industryList.map((name) => ({ id: name, name })),
         { id: 'custom', name: 'Своя сфера...' },
     ];
+    const selectedCustomPersona = personasData?.user_personas?.find(p => p.id === selectedUserPersonaId) ?? null;
+    const isCustomSelected = Boolean(selectedUserPersonaId);
 
     const isReady = (selectedRole || selectedUserPersonaId) && selectedDomain && (selectedDomain !== 'custom' || customDomain.trim().length > 0) && selectedDoc !== null;
     const currentStep = !selectedRole && !selectedUserPersonaId ? 1
@@ -377,15 +420,18 @@ function SimulationPageContent() {
             const isDraft = selectedDocItem?.source === 'draft';
             const hasDoc = selectedDoc !== null && selectedDoc !== 'none';
             const payload: Record<string, unknown> = {
-                persona_config: {
-                    role: selectedRole || 'custom',
-                    industry: domainName,
-                    difficulty,
-                },
                 document_id: (hasDoc && !isDraft) ? selectedDoc : null,
                 draft_id: (hasDoc && isDraft) ? selectedDoc : null,
+                industry: domainName,
             };
-            if (selectedUserPersonaId) payload.persona_id = selectedUserPersonaId;
+            if (selectedUserPersonaId) {
+                payload.source_type = 'custom';
+                payload.persona_id = selectedUserPersonaId;
+            } else {
+                payload.source_type = 'system';
+                payload.persona_config = { role: selectedRole };
+                payload.difficulty = difficulty;
+            }
             if (linkedMeetingId) payload.meeting_id = linkedMeetingId;
             const res = await api.post('/simulation/start', payload);
             if (res?.id) {
@@ -496,7 +542,9 @@ function SimulationPageContent() {
                     const roleMap: Record<string, number[]> = {};
                     completedSessions.forEach(s => {
                         if (s.avg_score != null) {
-                            const r = s.persona_config.role;
+                            const r = s.persona_config.source_type === 'custom'
+                                ? `custom:${s.persona_config.persona_name ?? s.persona_config.role ?? 'custom'}`
+                                : (s.persona_config.role ?? 'unknown');
                             roleMap[r] = [...(roleMap[r] ?? []), s.avg_score];
                         }
                     });
@@ -540,7 +588,24 @@ function SimulationPageContent() {
                         : null;
 
                     // Persona icon for "Сложнее всего"
-                    const hardestVisual = hardestRole ? (ROLE_VISUALS[hardestRole.role] ?? DEFAULT_VISUAL) : DEFAULT_VISUAL;
+                    const hardestVisual = hardestRole
+                        ? getPersonaVisual(
+                            hardestRole.role.startsWith('custom:')
+                                ? {
+                                    source_type: 'custom',
+                                    role: hardestRole.role.replace(/^custom:/, ''),
+                                    persona_name: hardestRole.role.replace(/^custom:/, ''),
+                                    industry: 'general',
+                                    difficulty: 3,
+                                }
+                                : {
+                                    source_type: 'system',
+                                    role: hardestRole.role,
+                                    industry: 'general',
+                                    difficulty: 3,
+                                }
+                        )
+                        : DEFAULT_VISUAL;
                     const HardestIcon = hardestVisual.icon;
 
                     const kpiCard = "relative overflow-hidden bg-white border border-neutral-200 p-3 sm:p-4 lg:p-5 transition-all duration-200 flex flex-col";
@@ -653,7 +718,22 @@ function SimulationPageContent() {
                                 </div>
                                 <div className="text-sm sm:text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
                                     {hardestRole
-                                        ? (SHORT_PERSONA[hardestRole.role] ?? hardestRole.role)
+                                        ? getPersonaDisplayLabel(
+                                            hardestRole.role.startsWith('custom:')
+                                                ? {
+                                                    source_type: 'custom',
+                                                    role: hardestRole.role.replace(/^custom:/, ''),
+                                                    persona_name: hardestRole.role.replace(/^custom:/, ''),
+                                                    industry: 'general',
+                                                    difficulty: 3,
+                                                }
+                                                : {
+                                                    source_type: 'system',
+                                                    role: hardestRole.role,
+                                                    industry: 'general',
+                                                    difficulty: 3,
+                                                }
+                                        )
                                         : '—'}
                                 </div>
                                 <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
@@ -779,66 +859,101 @@ function SimulationPageContent() {
             </div>
 
             <div className="space-y-12">
-                {/* 1. ROLE SELECTION */}
+                {meetingContext && (
+                    <section className="border border-[#F9BD8E] bg-[#FEF3E8] p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <div className="text-[11px] font-bold tracking-widest uppercase text-[#B04A08] mb-2">
+                                    Подготовка к встрече
+                                </div>
+                                <div className="text-lg font-semibold text-neutral-900 mb-1">{meetingContext.title}</div>
+                                <div className="text-sm text-neutral-600">
+                                    {new Date(meetingContext.meeting_date).toLocaleDateString('ru-RU', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric',
+                                    })}{' '}
+                                    • {new Date(meetingContext.meeting_date).toLocaleTimeString('ru-RU', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}{' '}
+                                    • {meetingTypeLabels[meetingContext.meeting_type] ?? 'Встреча'}
+                                </div>
+                            </div>
+                            <div className="text-[11px] font-medium text-[#B04A08] text-right max-w-[220px]">
+                                Симуляция останется привязана к этой встрече, даже если ты сменишь персону, индустрию или документ.
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 <section>
                     <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
                         <span className="text-neutral-500">Шаг 1:</span> Кого нужно убедить?
                     </h2>
+
+                    <div className="inline-flex border border-neutral-200 bg-neutral-50 p-1 mb-5">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPersonaTab('system');
+                                setSelectedUserPersonaId(null);
+                            }}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                personaTab === 'system' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500'
+                            }`}
+                        >
+                            Системные
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPersonaTab('custom');
+                                setSelectedRole(null);
+                            }}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                personaTab === 'custom' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500'
+                            }`}
+                        >
+                            Мои персоны
+                        </button>
+                    </div>
+
                     <AnimatePresence mode="wait">
                         {personasLoading ? (
                             <div className="flex items-center gap-3 py-8 text-neutral-500">
                                 <Loader2 className="animate-spin" size={20} />
                                 <span className="font-inter text-sm">Загружаем собеседников...</span>
                             </div>
-                        ) : personasData ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {Object.entries(personasData.personas).map(([key, persona]) => {
-                                    const isSelected = selectedRole === key;
-                                    const visual = ROLE_VISUALS[key] || DEFAULT_VISUAL;
-                                    const IconComp = visual.icon;
-                                    return (
-                                        <button
-                                            key={key}
-                                            onClick={() => { setSelectedRole(key); scrollToStep(step2Ref); }}
-                                            className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
-                                                isSelected
-                                                    ? 'bg-neutral-50 border-neutral-900'
-                                                    : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
-                                            }`}
-                                        >
-                                            {isSelected && (
-                                                <div className="absolute top-4 right-4 text-neutral-900">
-                                                    <CheckCircle2 size={18} />
-                                                </div>
-                                            )}
-                                            {!isSelected && (
-                                                <svg className="absolute bottom-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 pointer-events-none" viewBox="0 0 80 80" fill="none" aria-hidden="true">
-                                                    <circle cx="60" cy="60" r="48" stroke="#6B7280" strokeWidth="1.5" />
-                                                    <circle cx="60" cy="60" r="30" stroke="#6B7280" strokeWidth="1" />
-                                                </svg>
-                                            )}
-                                            <div className={`w-10 h-10 flex items-center justify-center mb-4 transition-colors ${visual.iconBg} border border-neutral-200 ${visual.iconColor}`}>
-                                                <IconComp size={20} />
-                                            </div>
-                                            <div className="font-inter text-lg font-semibold text-neutral-900 mb-2">
-                                                {persona.title}
-                                            </div>
-                                            <div className="font-inter text-xs text-neutral-500 leading-relaxed">
-                                                {persona.description}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {fallbackRoles.map((role) => {
-                                    const Icon = role.icon;
+                        ) : personaTab === 'system' ? (
+                            <motion.div
+                                key="system-tab"
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                            >
+                                {(personasData ? Object.entries(personasData.personas).map(([id, persona]) => ({
+                                    id,
+                                    name: persona.title,
+                                    desc: persona.description,
+                                    visual: ROLE_VISUALS[id] || DEFAULT_VISUAL,
+                                })) : fallbackRoles.map((role) => ({
+                                    id: role.id,
+                                    name: role.name,
+                                    desc: role.desc,
+                                    visual: { icon: role.icon, iconColor: role.iconColor, iconBg: role.iconBg },
+                                }))).map((role) => {
                                     const isSelected = selectedRole === role.id;
+                                    const IconComp = role.visual.icon;
                                     return (
                                         <button
                                             key={role.id}
-                                            onClick={() => { setSelectedRole(role.id); scrollToStep(step2Ref); }}
+                                            onClick={() => {
+                                                setSelectedRole(role.id);
+                                                setSelectedUserPersonaId(null);
+                                                scrollToStep(step2Ref);
+                                            }}
                                             className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
                                                 isSelected
                                                     ? 'bg-neutral-50 border-neutral-900'
@@ -850,8 +965,8 @@ function SimulationPageContent() {
                                                     <CheckCircle2 size={18} />
                                                 </div>
                                             )}
-                                            <div className={`w-10 h-10 flex items-center justify-center mb-4 border border-neutral-200 ${role.iconBg} ${role.iconColor}`}>
-                                                <Icon size={20} />
+                                            <div className={`w-10 h-10 flex items-center justify-center mb-4 border border-neutral-200 ${role.visual.iconBg} ${role.visual.iconColor}`}>
+                                                <IconComp size={20} />
                                             </div>
                                             <div className="font-inter text-lg font-semibold text-neutral-900 mb-2">
                                                 {role.name}
@@ -862,65 +977,84 @@ function SimulationPageContent() {
                                         </button>
                                     );
                                 })}
-                            </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="custom-tab"
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                            >
+                                {personasData?.user_personas && personasData.user_personas.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {personasData.user_personas.map((up) => {
+                                            const isSelected = selectedUserPersonaId === up.id;
+                                            return (
+                                                <button
+                                                    key={up.id}
+                                                    onClick={() => {
+                                                        setSelectedUserPersonaId(up.id);
+                                                        setSelectedRole(null);
+                                                        scrollToStep(step2Ref);
+                                                    }}
+                                                    className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
+                                                        isSelected
+                                                            ? 'bg-[#FEF3E8] border-[#E8600A]'
+                                                            : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
+                                                    }`}
+                                                >
+                                                    {isSelected && (
+                                                        <div className="absolute top-4 right-4 text-[#E8600A]">
+                                                            <CheckCircle2 size={18} />
+                                                        </div>
+                                                    )}
+                                                    <div className="w-10 h-10 flex items-center justify-center mb-4 border border-neutral-200 bg-[#FEF3E8] text-[#E8600A]">
+                                                        <Bot size={20} />
+                                                    </div>
+                                                    <div className="font-inter text-lg font-semibold text-neutral-900 mb-1">
+                                                        {up.name}
+                                                    </div>
+                                                    <div className="font-inter text-xs text-neutral-500 mb-2">{up.role}</div>
+                                                    <div className="font-inter text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                                                        {up.communication_style}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                                        <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 border ${
+                                                            up.difficulty_hint <= 2 ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+                                                            : up.difficulty_hint === 3 ? 'text-amber-600 bg-amber-50 border-amber-200'
+                                                            : 'text-red-600 bg-red-50 border-red-200'
+                                                        }`}>
+                                                            Уровень {up.difficulty_hint}/5
+                                                        </span>
+                                                        {up.usage_count > 0 && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-400 bg-neutral-50 border border-neutral-100 px-2 py-0.5">
+                                                                <Zap size={9} /> {up.usage_count} {up.usage_count === 1 ? 'раз' : up.usage_count < 5 ? 'раза' : 'раз'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="border border-dashed border-neutral-300 bg-neutral-50 p-6 sm:p-8">
+                                        <div className="text-lg font-semibold text-neutral-900 mb-2">Пока нет своих персон</div>
+                                        <p className="text-sm text-neutral-500 max-w-xl mb-4">
+                                            Создай кастомного собеседника, если хочешь тренироваться против конкретного CTO, клиента, инвестора или другого реального персонажа.
+                                        </p>
+                                        <Link
+                                            href="/personas"
+                                            className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white px-4 py-2.5 text-sm font-semibold transition-colors"
+                                        >
+                                            <Plus size={14} />
+                                            Создать персону
+                                        </Link>
+                                    </div>
+                                )}
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </section>
-
-                {/* 1.5. USER PERSONAS */}
-                {personasData?.user_personas && personasData.user_personas.length > 0 && (
-                    <section>
-                        <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
-                            <span className="text-neutral-500">Ваши персоны</span>
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {personasData.user_personas.map((up) => {
-                                const isSelected = selectedUserPersonaId === up.id;
-                                return (
-                                    <button
-                                        key={up.id}
-                                        onClick={() => { setSelectedUserPersonaId(up.id); setSelectedRole(null); scrollToStep(step2Ref); }}
-                                        className={`text-left p-5 border-2 transition-colors duration-200 relative overflow-hidden group ${
-                                            isSelected
-                                                ? 'bg-[#FEF3E8] border-[#E8600A]'
-                                                : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
-                                        }`}
-                                    >
-                                        {isSelected && (
-                                            <div className="absolute top-4 right-4 text-[#E8600A]">
-                                                <CheckCircle2 size={18} />
-                                            </div>
-                                        )}
-                                        <div className="w-10 h-10 flex items-center justify-center mb-4 transition-colors border border-neutral-200 bg-[#FEF3E8] text-[#E8600A]">
-                                            <Bot size={20} />
-                                        </div>
-                                        <div className="font-inter text-lg font-semibold text-neutral-900 mb-1">
-                                            {up.name}
-                                        </div>
-                                        <div className="font-inter text-xs text-neutral-500 mb-2">{up.role}</div>
-                                        <div className="font-inter text-xs text-neutral-400 leading-relaxed line-clamp-2">
-                                            {up.communication_style}
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-3">
-                                            <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 border ${
-                                                up.difficulty_hint <= 2 ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-                                                : up.difficulty_hint === 3 ? 'text-amber-600 bg-amber-50 border-amber-200'
-                                                : 'text-red-600 bg-red-50 border-red-200'
-                                            }`}>
-                                                {up.difficulty_hint <= 2 ? 'Лёгкий' : up.difficulty_hint === 3 ? 'Средний' : 'Сложный'}
-                                            </span>
-                                            {up.usage_count > 0 && (
-                                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-400 bg-neutral-50 border border-neutral-100 px-2 py-0.5">
-                                                    <Zap size={9} /> {up.usage_count} {up.usage_count === 1 ? 'раз' : up.usage_count < 5 ? 'раза' : 'раз'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
 
                 {/* 2. DOMAIN SELECTION */}
                 <section ref={step2Ref}>
@@ -1107,63 +1241,86 @@ function SimulationPageContent() {
                     </div>
                 </section>
 
-                {/* 4. DIFFICULTY SELECTION */}
                 <section>
                     <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
                         <span className="text-neutral-500">Шаг 4:</span> Уровень давления
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {[
-                            {
-                                value: 2,
-                                label: 'Мягкий',
-                                range: '1–3',
-                                desc: 'Собеседник задаёт вопросы и дождётся ответа. Подходит для первой проработки материала.',
-                            },
-                            {
-                                value: 5,
-                                label: 'Стандарт',
-                                range: '4–6',
-                                desc: 'Реальная рабочая встреча — логика, факты, уточняющие вопросы без снисхождения.',
-                            },
-                            {
-                                value: 8,
-                                label: 'Жёсткий',
-                                range: '7–10',
-                                desc: 'Давление, сомнения, встречные аргументы. Стресс-тест перед самой важной встречей.',
-                            },
-                        ].map((opt) => {
-                            const isSelected = difficulty === opt.value;
-                            return (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => { setDifficulty(opt.value); setDifficultyManuallySet(true); }}
-                                    className={`text-left p-4 border-2 transition-colors duration-200 ${
-                                        isSelected
-                                            ? 'bg-neutral-50 border-neutral-900'
-                                            : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-inter font-semibold text-sm text-neutral-900">{opt.label}</span>
-                                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none ${
+                    {!isCustomSelected ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                {
+                                    value: 2,
+                                    label: 'Мягкий',
+                                    range: '1-2',
+                                    desc: 'Собеседник задаёт вопросы спокойно и оставляет пространство на разгон.',
+                                },
+                                {
+                                    value: 4,
+                                    label: 'Стандарт',
+                                    range: '3-4',
+                                    desc: 'Рабочий режим без поблажек: ждёт конкретику, структуру и уверенность.',
+                                },
+                                {
+                                    value: 5,
+                                    label: 'Жёсткий',
+                                    range: '5',
+                                    desc: 'Максимальное давление: сомнения, встречные аргументы и короткий повод потерять контроль.',
+                                },
+                            ].map((opt) => {
+                                const isSelected = difficulty === opt.value;
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            setDifficulty(opt.value);
+                                            setDifficultyManuallySet(true);
+                                        }}
+                                        className={`text-left p-4 border-2 transition-colors duration-200 ${
                                             isSelected
-                                                ? 'bg-neutral-900 text-white'
-                                                : 'bg-neutral-100 text-neutral-500'
-                                        }`}>{opt.range}</span>
+                                                ? 'bg-neutral-50 border-neutral-900'
+                                                : 'bg-white border-transparent shadow-[inset_0_0_0_1px_rgba(229,229,229,1)] hover:bg-neutral-50 hover:shadow-[inset_0_0_0_1px_rgba(163,163,163,1)]'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-inter font-semibold text-sm text-neutral-900">{opt.label}</span>
+                                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none ${
+                                                isSelected
+                                                    ? 'bg-neutral-900 text-white'
+                                                    : 'bg-neutral-100 text-neutral-500'
+                                            }`}>{opt.range}</span>
+                                        </div>
+                                        <p className="font-inter text-xs text-neutral-500 leading-relaxed">{opt.desc}</p>
+                                        <div className={`mt-3 flex min-h-[16px] items-center gap-1.5 text-[11px] font-medium transition-opacity ${
+                                            isSelected ? 'text-neutral-900 opacity-100' : 'opacity-0'
+                                        }`}>
+                                            <CheckCircle2 size={12} />
+                                            Выбрано
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="border border-[#F9BD8E] bg-[#FEF3E8] p-5">
+                            <div className="flex items-start justify-between gap-4 flex-wrap">
+                                <div>
+                                    <div className="text-sm font-semibold text-neutral-900 mb-1">
+                                        {selectedCustomPersona?.name ?? 'Кастомная персона'}
                                     </div>
-                                    <p className="font-inter text-xs text-neutral-500 leading-relaxed">{opt.desc}</p>
-                                    <div className={`mt-3 flex min-h-[16px] items-center gap-1.5 text-[11px] font-medium transition-opacity ${
-                                        isSelected ? 'text-neutral-900 opacity-100' : 'opacity-0'
-                                    }`}>
-                                        <CheckCircle2 size={12} />
-                                        Выбрано
+                                    <div className="text-sm text-neutral-600">
+                                        Для кастомной персоны уровень давления задается в карточке персоны и не меняется на этом экране.
                                     </div>
-                                </button>
-                            );
-                        })}
-                    </div>
+                                </div>
+                                <div className="text-sm font-semibold text-[#B04A08] whitespace-nowrap">
+                                    Уровень {selectedCustomPersona?.difficulty_hint ?? '—'}/5
+                                </div>
+                            </div>
+                            <p className="text-xs text-neutral-500 mt-3 max-w-2xl">
+                                Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность stress-test сценария.
+                            </p>
+                        </div>
+                    )}
                 </section>
 
                 {/* LAUNCH BUTTON — desktop */}

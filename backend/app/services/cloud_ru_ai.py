@@ -79,11 +79,11 @@ _ANALYSIS_USER_TEMPLATE = """
 """
 
 
-class GeminiError(Exception):
+class CloudRuAIError(Exception):
     pass
 
 
-class GeminiAnalysisResult:
+class CloudRuAnalysisResult:
     def __init__(self, improved_text: str, feedback: dict) -> None:
         self.improved_text = improved_text
         self.feedback = feedback
@@ -94,13 +94,10 @@ def _build_openai_client(api_key: str, base_url: str, timeout: float) -> OpenAI:
     return OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 
 
-def create_gemini_client() -> OpenAI:
+def create_cloud_ru_client() -> OpenAI:
     api_key = settings.cloud_ru_api_key.strip()
     if not api_key:
-        raise GeminiError(
-            "Cloud.ru API key is not configured. Set CLOUD_RU_API_KEY "
-            "(or legacy GEMINI_API_KEY during rollout)."
-        )
+        raise CloudRuAIError("Cloud.ru API key is not configured. Set CLOUD_RU_API_KEY.")
     return _build_openai_client(
         api_key=api_key,
         base_url=settings.cloud_ru_base_url,
@@ -138,8 +135,8 @@ def extract_completion_text(response: Any) -> str:
     return ""
 
 
-def _parse_gemini_json(raw: str) -> dict:
-    """Extract JSON from Gemini response, stripping any accidental markdown."""
+def _parse_cloud_ru_json(raw: str) -> dict:
+    """Extract JSON from Cloud.ru response, stripping any accidental markdown."""
     cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("```").strip()
     return json.loads(cleaned)
 
@@ -147,11 +144,11 @@ def _parse_gemini_json(raw: str) -> dict:
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((GeminiError, json.JSONDecodeError)),
+    retry=retry_if_exception_type((CloudRuAIError, json.JSONDecodeError)),
     reraise=True,
 )
-async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAnalysisResult:
-    client = create_gemini_client()
+async def analyze_draft(text: str, user_context: dict | None = None) -> CloudRuAnalysisResult:
+    client = create_cloud_ru_client()
     context_block = ""
     if user_context:
         seg = _SEGMENT_LABELS.get(user_context.get("segment", ""), "")
@@ -189,33 +186,33 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> GeminiAn
             (loop.time() - started) * 1000,
         )
     except Exception as exc:
-        raise GeminiError(f"Cloud.ru API call failed: {exc}") from exc
+        raise CloudRuAIError(f"Cloud.ru API call failed: {exc}") from exc
 
     raw = extract_completion_text(response)
     if not raw:
-        raise GeminiError("Cloud.ru returned empty response")
+        raise CloudRuAIError("Cloud.ru returned empty response")
 
-    parsed = _parse_gemini_json(raw)
+    parsed = _parse_cloud_ru_json(raw)
 
     improved_text = parsed.get("improved_text", "")
     feedback = parsed.get("feedback", {})
 
     if not improved_text or not isinstance(feedback, dict):
-        raise GeminiError(f"Unexpected Gemini response structure: {parsed}")
+        raise CloudRuAIError(f"Unexpected Cloud.ru response structure: {parsed}")
 
     required_keys = {"logic", "style", "clarity", "grammar", "overall_score"}
     if not required_keys.issubset(feedback.keys()):
-        raise GeminiError(f"Missing feedback keys: {required_keys - feedback.keys()}")
+        raise CloudRuAIError(f"Missing feedback keys: {required_keys - feedback.keys()}")
 
     score = feedback.get("overall_score", 0)
     if not isinstance(score, int) or not (1 <= score <= 10):
         feedback["overall_score"] = max(1, min(10, int(score)))
 
-    return GeminiAnalysisResult(improved_text=improved_text, feedback=feedback)
+    return CloudRuAnalysisResult(improved_text=improved_text, feedback=feedback)
 
 
 # ─── Smart hybrid AI detector ────────────────────────────────────────────────
-# Strategy: fast heuristic gate (no tokens) + Gemini arbiter (only when unsure)
+# Strategy: fast heuristic gate (no tokens) + Cloud.ru arbiter (only when unsure)
 
 # Phrases strongly associated with AI-generated Russian text
 _AI_TRIGGER_PHRASES = [
@@ -327,8 +324,8 @@ async def detect_ai_content(text: str) -> bool:
     1. Fast local heuristic scorer (no API tokens spent).
        - score >= 0.75 → immediately flag as AI (high confidence)
        - score <= 0.25 → immediately pass as human
-       - 0.25 < score < 0.75 → uncertain zone → escalate to Gemini
-    2. Gemini arbiter (only called in uncertain zone, cheap flash-lite call with max_output_tokens=10)
+       - 0.25 < score < 0.75 → uncertain zone → escalate to Cloud.ru
+    2. Cloud.ru arbiter (only called in uncertain zone, cheap short call with max_output_tokens=10)
 
     Fails open: returns False on any error — never blocks legitimate users.
     """
@@ -347,7 +344,7 @@ async def detect_ai_content(text: str) -> bool:
         return score >= 0.65
 
     # Uncertain zone (0.25 < score < 0.75): ask Cloud.ru as arbiter
-    client = create_gemini_client()
+    client = create_cloud_ru_client()
     prompt = (
         f"Этот ответ сгенерирован ИИ?\n---\n{text[:2000]}\n---\n"
         "JSON: {\"ai_generated\": true} или {\"ai_generated\": false}"
@@ -377,8 +374,8 @@ async def detect_ai_content(text: str) -> bool:
             (loop.time() - started) * 1000,
         )
         raw = extract_completion_text(response)
-        parsed = _parse_gemini_json(raw)
+        parsed = _parse_cloud_ru_json(raw)
         return bool(parsed.get("ai_generated", False))
     except Exception:
-        # Fail open: if Gemini fails, trust the heuristic score direction
+        # Fail open: if Cloud.ru fails, trust the heuristic score direction
         return score >= 0.55  # In uncertain zone, lean on heuristics

@@ -34,6 +34,17 @@ async def list_meetings(
     stmt = stmt.order_by(UpcomingMeeting.meeting_date.asc()).limit(limit).offset(offset)
     result = await db.execute(stmt)
     meetings = result.scalars().all()
+    linked_session_ids = [m.simulation_session_id for m in meetings if m.simulation_session_id]
+    active_session_ids: set[uuid.UUID] = set()
+    if linked_session_ids:
+        linked_res = await db.execute(
+            select(SimulationSession.id, SimulationSession.status).where(
+                SimulationSession.id.in_(linked_session_ids)
+            )
+        )
+        active_session_ids = {
+            row.id for row in linked_res if row.status == SessionStatus.active
+        }
     return [
         {
             "id": str(m.id),
@@ -43,6 +54,7 @@ async def list_meetings(
             "meeting_type": m.meeting_type,
             "scenario_id": str(m.scenario_id) if m.scenario_id else None,
             "simulation_session_id": str(m.simulation_session_id) if m.simulation_session_id else None,
+            "has_active_preparation": bool(m.simulation_session_id and m.simulation_session_id in active_session_ids),
             "status": m.status.value,
             "reminder_sent": m.reminder_sent,
             "created_at": m.created_at.isoformat(),
@@ -158,8 +170,7 @@ _MEETING_TYPE_TO_PERSONA: dict[str, str] = {
 }
 
 
-@router.post("/{meeting_id}/prepare-simulation")
-async def prepare_simulation_from_meeting(
+async def _prepare_simulation_from_meeting(
     request: Request,
     meeting_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
@@ -189,6 +200,9 @@ async def prepare_simulation_from_meeting(
         if linked_session and linked_session.status == SessionStatus.active:
             return {
                 "existing_session_id": str(linked_session.id),
+                "meeting_title": meeting.title,
+                "meeting_date": meeting.meeting_date.isoformat(),
+                "meeting_type": meeting.meeting_type,
                 "status": "active",
             }
 
@@ -198,9 +212,31 @@ async def prepare_simulation_from_meeting(
     return {
         "suggested_role": suggested_role,
         "meeting_title": meeting.title,
+        "meeting_date": meeting.meeting_date.isoformat(),
+        "meeting_type": meeting.meeting_type,
         "meeting_id": str(meeting.id),
         "status": "ready",
     }
+
+
+@router.get("/{meeting_id}/prepare-simulation")
+async def get_prepare_simulation_from_meeting(
+    request: Request,
+    meeting_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    return await _prepare_simulation_from_meeting(request, meeting_id, current_user, db)
+
+
+@router.post("/{meeting_id}/prepare-simulation")
+async def prepare_simulation_from_meeting(
+    request: Request,
+    meeting_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    return await _prepare_simulation_from_meeting(request, meeting_id, current_user, db)
 
 
 @router.get("/upcoming/reminders")

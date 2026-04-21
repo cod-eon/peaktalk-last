@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,10 +16,7 @@ class Settings(BaseSettings):
     supabase_storage_bucket: str = "peaktalk-dev-bucket"
 
     # AI
-    cloud_ru_api_key: str = Field(
-        default="",
-        validation_alias=AliasChoices("CLOUD_RU_API_KEY", "GEMINI_API_KEY"),
-    )
+    cloud_ru_api_key: str = Field(default="")
     cloud_ru_base_url: str = "https://foundation-models.api.cloud.ru/v1"
     cloud_ru_model: str = "Qwen/Qwen3-Coder-Next"
     cloud_ru_timeout_seconds: float = 30.0

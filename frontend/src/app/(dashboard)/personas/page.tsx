@@ -196,6 +196,9 @@ function PersonaForm({
               </option>
             ))}
           </select>
+          <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
+            Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность stress-test сценария.
+          </p>
         </div>
 
         {/* Background */}

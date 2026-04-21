@@ -3,9 +3,9 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
-from app.services.gemini import GeminiAnalysisResult, GeminiError
+from app.services.cloud_ru_ai import CloudRuAIError, CloudRuAnalysisResult
 
-MOCK_GEMINI_RESULT = GeminiAnalysisResult(
+MOCK_CLOUD_RU_RESULT = CloudRuAnalysisResult(
     improved_text="This is the improved version of the speech.",
     feedback={
         "logic": "Good logical structure with clear sections.",
@@ -22,16 +22,16 @@ DRAFT_PAYLOAD = {
 }
 
 
-async def _mock_analyze_draft_ok(text: str, **kwargs) -> GeminiAnalysisResult:
-    return MOCK_GEMINI_RESULT
+async def _mock_analyze_draft_ok(text: str, **kwargs) -> CloudRuAnalysisResult:
+    return MOCK_CLOUD_RU_RESULT
 
 
-async def _mock_analyze_draft_error(text: str, **kwargs) -> GeminiAnalysisResult:
-    raise GeminiError("API timeout")
+async def _mock_analyze_draft_error(text: str, **kwargs) -> CloudRuAnalysisResult:
+    raise CloudRuAIError("API timeout")
 
 
 @pytest.fixture(autouse=True)
-def mock_gemini(monkeypatch):
+def mock_cloud_ru(monkeypatch):
     monkeypatch.setattr("app.routers.drafts.analyze_draft", _mock_analyze_draft_ok)
 
 
@@ -59,14 +59,14 @@ async def test_analyze_draft(client: AsyncClient) -> None:
     analyze_resp = await client.post(f"/drafts/{draft_id}/analyze")
     assert analyze_resp.status_code == 200
     data = analyze_resp.json()
-    assert data["improved_text"] == MOCK_GEMINI_RESULT.improved_text
+    assert data["improved_text"] == MOCK_CLOUD_RU_RESULT.improved_text
     assert data["feedback_json"]["overall_score"] == 8
     assert data["feedback_json"]["logic"] != ""
 
 
 @pytest.mark.asyncio
 async def test_analyze_draft_idempotent(client: AsyncClient) -> None:
-    """Calling analyze twice should return the cached result, not call Gemini again."""
+    """Calling analyze twice should return the cached result, not call Cloud.ru again."""
     create_resp = await client.post("/drafts", json=DRAFT_PAYLOAD)
     draft_id = create_resp.json()["id"]
 
@@ -104,11 +104,11 @@ async def test_get_analysis_after_analyze(client: AsyncClient) -> None:
 
     response = await client.get(f"/drafts/{draft_id}/analysis")
     assert response.status_code == 200
-    assert response.json()["improved_text"] == MOCK_GEMINI_RESULT.improved_text
+    assert response.json()["improved_text"] == MOCK_CLOUD_RU_RESULT.improved_text
 
 
 @pytest.mark.asyncio
-async def test_analyze_gemini_error(client: AsyncClient, monkeypatch) -> None:
+async def test_analyze_cloud_ru_error(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.setattr("app.routers.drafts.analyze_draft", _mock_analyze_draft_error)
     create_resp = await client.post("/drafts", json=DRAFT_PAYLOAD)
     draft_id = create_resp.json()["id"]

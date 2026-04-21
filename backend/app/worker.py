@@ -101,7 +101,7 @@ def expire_abandoned_sessions_task(self) -> dict:
     from app.models.draft import SpeechDraft
     from app.models.simulation import MessageRole, SessionStatus, SimulationMessage, SimulationSession, SkillMetric
     from app.models.user import User  # noqa: F401 — required so SQLAlchemy resolves Document→User FK
-    from app.services.gemini import GeminiError
+    from app.services.cloud_ru_ai import CloudRuAIError
     from app.services.simulation_ai import evaluate_session
 
     async def _get_source_text(db, document_id, draft_id) -> str:
@@ -169,7 +169,7 @@ def expire_abandoned_sessions_task(self) -> dict:
                         session.completed_at = datetime.now(timezone.utc)
                         finalized += 1
                         log.info("expire: finalized session=%s answers=%d", session.id, len(user_msgs))
-                    except GeminiError as exc:
+                    except CloudRuAIError as exc:
                         log.warning("expire: evaluation failed session=%s err=%s, marking cancelled", session.id, exc)
                         session.status = SessionStatus.cancelled
                         session.completed_at = datetime.now(timezone.utc)
