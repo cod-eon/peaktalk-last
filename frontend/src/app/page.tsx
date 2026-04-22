@@ -4,8 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, X, ArrowRight, FileText, CheckCircle2, Timer, Download, Share2 } from 'lucide-react';
+import { Menu, X, ArrowRight, FileText, CheckCircle2, Shield, Database, Lock, Zap, Target, MessageSquare, BarChart3, Download, ExternalLink } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
+
+/*
+ * PeakTalk — SEO-AEO Landing Page
+ * Primary keyword: тренажер защиты проектов
+ * Secondary: AI симулятор сложных переговоров, подготовка к QBR, стресс-тест аргументов
+ * AEO queries: что такое PeakTalk, как подготовиться к защите бюджета, AI тренажер для переговоров
+ *
+ * Meta title: PeakTalk — AI-тренажер защиты проектов и сложных переговоров
+ * Meta description: Стресс-тест аргументов перед реальной встречей. Загрузите документ, пройдите жёсткий Q&A с AI-оппонентом и найдите слабые места до встречи с CFO, инвестором или клиентом.
+ */
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
@@ -361,7 +371,6 @@ function Hero() {
   return (
     <section className="relative bg-white">
       <div className="min-h-screen w-full flex items-center overflow-hidden pt-16 lg:pt-24 pb-12 lg:pb-0">
-        {/* Editorial grid background */}
         <div className="absolute inset-0 z-0 opacity-[0.25] mix-blend-multiply" style={{
           backgroundImage: 'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
           backgroundSize: '80px 80px',
@@ -372,7 +381,6 @@ function Hero() {
         <div className="container-custom relative z-10 w-full flex flex-col justify-center h-full">
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-8 items-center h-full">
 
-            {/* Text Content */}
             <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-start text-left sm:items-center sm:text-center lg:items-start lg:text-left mt-12 lg:mt-0 lg:pr-10">
 
               <motion.div
@@ -395,10 +403,22 @@ function Hero() {
                 <span className="block">жёсткой <span className="text-[#E8600A] relative">защитой</span>.</span>
               </motion.h1>
 
+              {/* AEO Extraction Block — 25-40 words, standalone answer to "Что такое PeakTalk?" */}
+              <motion.blockquote
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="border-l-2 border-[#E8600A] pl-4 mb-5 max-w-xl"
+              >
+                <p className="font-inter text-base sm:text-lg text-neutral-700 leading-relaxed italic">
+                  PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите жёсткий Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.
+                </p>
+              </motion.blockquote>
+
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
+                transition={{ duration: 0.8, delay: 0.35 }}
                 style={{
                   fontSize: 'clamp(15px, 1.55vw, 19px)',
                   lineHeight: 1.58,
@@ -410,7 +430,6 @@ function Hero() {
                 Пройдите жесткий Q&amp;A с AI-стейкхолдером по вашему документу. Найдите уязвимости в презентации, PnL или финмодели до того, как их найдет бизнес.
               </motion.p>
 
-              {/* Stats strip */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -441,13 +460,13 @@ function Hero() {
                     href="/simulation/guest"
                     className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 text-sm transition-all"
                   >
-                    Попробовать 3 вопроса бесплатно →
+                    Попробовать 3 вопроса бесплатно
                   </Link>
                   <button
                     className="hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all rounded-none border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50"
                     onClick={() => smoothScroll('#scenarios')}
                   >
-                    Посмотреть сценарии →
+                    Посмотреть сценарии
                   </button>
                 </div>
                 <div className="flex items-center gap-4 mt-2">
@@ -458,13 +477,12 @@ function Hero() {
                     className="sm:hidden font-inter text-sm text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-900"
                     onClick={() => smoothScroll('#scenarios')}
                   >
-                    Сценарии →
+                    Сценарии
                   </button>
                 </div>
               </motion.div>
             </div>
 
-            {/* AI Visual */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -479,6 +497,841 @@ function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+// ─── PROBLEM — Pain section, NO product mention ───────────────────────────────
+function Problem() {
+  const pains = [
+    {
+      role: 'Тимлид',
+      scenario: 'Защита приоритетов перед руководством',
+      pain: 'Вы потратили неделю на план. CFO задаёт один вопрос про ROI — и вы понимаете, что не готовы ответить.',
+    },
+    {
+      role: 'Фаундер',
+      scenario: 'Питч инвесторам',
+      pain: 'Инвесторы слышали сотни питчей. Они найдут слабое место в вашей модели за 30 секунд. Вопрос — найдёте ли вы его раньше.',
+    },
+    {
+      role: 'Head of Sales',
+      scenario: 'QBR с ключевым клиентом',
+      pain: 'Клиент недоволен результатом квартала. Он придёт с конкретными цифрами. А у вас — общие фразы и надежда на лучшее.',
+    },
+    {
+      role: 'Руководитель продукта',
+      scenario: 'Защита roadmap перед советом директоров',
+      pain: 'Совет директоров не спрашивает «как дела». Они спрашивают «почему это займёт 6 месяцев» и «что будет, если убрать эту фичу».',
+    },
+  ];
+
+  return (
+    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-12 max-w-2xl"
+        >
+          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Знакомая ситуация</div>
+          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Тренажер защиты проектов: почему подготовки недостаточно
+          </h2>
+        </RevealDiv>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {pains.map((p, i) => (
+            <RevealDiv
+              key={i}
+              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
+              duration={0.5}
+              delay={i * 0.08}
+              margin="-50px 0px"
+              className="bg-white border border-neutral-200 p-6 flex flex-col"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <span className="font-mono text-[11px] uppercase tracking-widest px-2.5 py-1 bg-[#E8600A]/10 text-[#E8600A]">
+                  {p.role}
+                </span>
+                <span className="font-inter text-sm text-neutral-500">{p.scenario}</span>
+              </div>
+              <p className="font-inter text-neutral-700 leading-relaxed text-sm">{p.pain}</p>
+            </RevealDiv>
+          ))}
+        </div>
+
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          delay={0.3}
+          margin="-50px 0px"
+          className="mt-10 max-w-xl"
+        >
+          <p className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
+            Проблема не в том, что вы не знаете свой материал. Проблема в том, что вы не знаете, <strong className="text-neutral-900">какие вопросы вам зададут</strong> — и не тренировали ответы под давлением.
+          </p>
+        </RevealDiv>
+      </div>
+    </section>
+  );
+}
+
+// ─── SOLUTION — Introduce PeakTalk ────────────────────────────────────────────
+function Solution() {
+  return (
+    <section className="bg-white" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <RevealDiv
+            hidden={{ opacity: 0, x: -24, scale: 1 }}
+            visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            delay={0.1}
+            margin="-50px 0px"
+          >
+            <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[ РЕШЕНИЕ ]</div>
+            <h2 className="font-inter font-extrabold text-neutral-900 mb-6" style={{ fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              PeakTalk находит дыры в вашей аргументации — до встречи
+            </h2>
+            <div className="flex flex-col gap-4">
+              <RevealP delay={0.1} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
+                Вы загружаете свой документ — презентацию, финмодель, роадмап. AI-оппонент изучает именно ваш материал и задаёт вопросы, которые заставят вас думать.
+              </RevealP>
+              <RevealP delay={0.2} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
+                Не шаблонные вопросы из интернета. Конкретные, неудобные, основанные на ваших же данных. С адаптивным давлением — от спокойного диалога до жёсткого допроса.
+              </RevealP>
+              <RevealP delay={0.3} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
+                После сессии — разбор по 5 навыкам, транскрипт с комментариями и шпаргалка с сильными аргументами для реальной встречи.
+              </RevealP>
+            </div>
+          </RevealDiv>
+
+          <RevealDiv
+            hidden={{ opacity: 0, y: 28, scale: 0.97 }}
+            visible={{ opacity: 1, y: 0, scale: 1 }}
+            delay={0.2}
+            margin="-50px 0px"
+            className="relative w-full shadow-2xl rounded-none"
+          >
+            <MockupSession />
+          </RevealDiv>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FEATURES AS BENEFITS ─────────────────────────────────────────────────────
+function FeaturesAsBenefits() {
+  const features = [
+    {
+      icon: <FileText size={18} />,
+      feature: 'Анализ вашего документа',
+      benefit: 'Вопросы по вашему материалу, а не шаблонные. AI разбирает презентацию, финмодель или роадмап и находит конкретные уязвимости.',
+    },
+    {
+      icon: <Zap size={18} />,
+      feature: 'Адаптивное давление',
+      benefit: 'AI detects слабые ответы и углубляется именно туда. Каждые 3 вопроса — «кривбол» — неожиданный вызов, как на реальной встрече.',
+    },
+    {
+      icon: <Target size={18} />,
+      feature: '4 персоны оппонентов',
+      benefit: 'CFO режет по ROI. Инвестор давит на риски. Клиент требует обоснование. Совет директоров проверяет стратегию. Каждая роль — другой стиль вопросов.',
+    },
+    {
+      icon: <BarChart3 size={18} />,
+      feature: 'Оценка по 5 навыкам',
+      benefit: 'Аргументация, ясность, стрессоустойчивость, структура ответа, лаконичность. Не абстрактный балл — конкретные зоны роста.',
+    },
+    {
+      icon: <MessageSquare size={18} />,
+      feature: 'Шпаргалка для встречи',
+      benefit: 'Топ-3 аргумента, ключевые цифры, фразы-якоря и зоны риска. Конкретный артефакт, который берёте на реальную встречу.',
+    },
+    {
+      icon: <Download size={18} />,
+      feature: 'PDF-отчёт',
+      benefit: 'Полный транскрипт сессии с комментариями AI. Можно сохранить, поделиться с командой или вернуться перед встречей.',
+    },
+  ];
+
+  return (
+    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-12 max-w-2xl"
+        >
+          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Возможности</div>
+          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Каждая функция — конкретный результат
+          </h2>
+            <p className="font-inter text-neutral-500 mt-3" style={{ fontSize: 16, maxWidth: 520, lineHeight: 1.6 }}>
+              PeakTalk — AI симулятор сложных переговоров, который не генерирует красивый текст. Он находит слабые места и тренирует вашу реакцию.
+            </p>
+        </RevealDiv>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((f, i) => (
+            <RevealDiv
+              key={i}
+              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
+              duration={0.5}
+              delay={i * 0.06}
+              margin="-50px 0px"
+              className="bg-white border border-neutral-200 p-6 flex flex-col"
+            >
+              <div className="w-9 h-9 rounded-none bg-[#E8600A]/10 flex items-center justify-center mb-4 text-[#E8600A]">
+                {f.icon}
+              </div>
+              <h3 className="font-inter font-bold text-neutral-900 text-base mb-2">{f.feature}</h3>
+              <p className="font-inter text-neutral-600 text-sm leading-relaxed flex-1">{f.benefit}</p>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SOCIAL PROOF — Placeholder testimonials ──────────────────────────────────
+function SocialProof() {
+  const testimonials = [
+    {
+      quote: 'Я прошёл симуляцию перед защитой бюджета. CFO задал те же вопросы, что AI — но к ним я уже был готов. Бюджет утвердили с первого раза.',
+      role: 'Тимлид, IT-компания',
+      name: 'Алексей К.',
+    },
+    {
+      quote: 'Загрузила питч-дек перед раундом. AI нашёл три дыры в финмодели, которые я бы заметила только на встрече с инвесторами. Исправила за вечер.',
+      role: 'Фаундер, SaaS-стартап',
+      name: 'Мария Д.',
+    },
+    {
+      quote: 'Использую PeakTalk перед каждым QBR. Это как репетиция перед спектаклем — только вместо зеркала у тебя AI, который реально давит.',
+      role: 'Head of Customer Success',
+      name: 'Дмитрий В.',
+    },
+  ];
+
+  return (
+    <section className="bg-[#0A0A0A]" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-12 text-center"
+        >
+          <div className="font-mono text-xs text-neutral-500 uppercase tracking-widest mb-3">Отзывы</div>
+          <h2 className="font-inter font-extrabold text-white" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Что говорят пользователи
+          </h2>
+        </RevealDiv>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+          {testimonials.map((t, i) => (
+            <RevealDiv
+              key={i}
+              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
+              visible={{ opacity: 1, y: 0, scale: 1 }}
+              duration={0.5}
+              delay={i * 0.08}
+              margin="-50px 0px"
+              className="bg-[#141414] border border-white/10 p-6 flex flex-col"
+            >
+              <p className="font-inter text-neutral-300 text-sm leading-relaxed flex-1 mb-6">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="border-t border-white/10 pt-4">
+                <div className="font-inter font-semibold text-white text-sm">{t.name}</div>
+                <div className="font-mono text-xs text-neutral-500 mt-0.5">{t.role}</div>
+              </div>
+            </RevealDiv>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 gap-[1px] bg-white/10 p-[1px]">
+          {[
+            { value: '20+', label: 'сценариев', sub: 'Защиты, питчи, QBR, переговоры' },
+            { value: '4', label: 'персоны оппонентов', sub: 'CFO · Инвестор · Совет директоров · Клиент' },
+            { value: '5', label: 'критических навыков', sub: 'Аргументация, ясность, устойчивость, структура, лаконичность' },
+          ].map((item, i) => (
+            <RevealDiv
+              key={i}
+              delay={i * 0.08}
+              duration={0.5}
+              margin="-40px 0px"
+              hidden={{ opacity: 0, y: 20 }}
+              visible={{ opacity: 1, y: 0 }}
+              className="bg-[#0A0A0A] flex flex-col p-6 lg:p-8"
+            >
+              <div className="font-inter font-extrabold text-white" style={{ fontSize: 'clamp(28px, 3vw, 44px)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                {item.value}
+              </div>
+              <div className="font-mono text-[#E8600A] text-xs uppercase tracking-widest mt-2 mb-1">{item.label}</div>
+              <div className="font-mono text-neutral-500 text-xs mt-1">{item.sub}</div>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── MID-PAGE CTA ─────────────────────────────────────────────────────────────
+function MidPageCTA() {
+  return (
+    <section className="bg-white" style={{ padding: 'clamp(60px, 8vw, 80px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="text-center max-w-2xl mx-auto"
+        >
+          <h2 className="font-inter font-extrabold text-neutral-900 mb-4" style={{ fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            Попробуйте бесплатно — 3 вопроса без регистрации
+          </h2>
+          <p className="font-inter text-neutral-500 mb-8" style={{ fontSize: 16, lineHeight: 1.6 }}>
+            Загрузите документ, выберите оппонента и получите первую обратную связь. Никаких обязательств.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/simulation/guest"
+              className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-8 py-3.5 text-sm flex items-center justify-center gap-2 transition-all"
+            >
+              Начать стресс-тест <ArrowRight size={14} />
+            </Link>
+            <Link
+              href="/scenarios"
+              className="border border-neutral-200 text-neutral-600 font-inter font-medium rounded-none px-8 py-3.5 text-sm flex items-center justify-center hover:bg-neutral-50 transition-all"
+            >
+              Посмотреть сценарии
+            </Link>
+          </div>
+        </RevealDiv>
+      </div>
+    </section>
+  );
+}
+
+// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
+function HowItWorks() {
+  const steps = [
+    {
+      num: '01',
+      title: 'Загрузи документ или выбери готовый сценарий',
+      desc: 'Не тему — конкретный файл: спич-дек, финмодель, роадмап. PeakTalk разбирает именно его аргументы и данные. Вопросы на сессии будут по вашему материалу.',
+      mockup: <MockupUpload />,
+    },
+    {
+      num: '02',
+      title: 'Выбери оппонента: CFO, инвестор, клиент, совет директоров',
+      desc: 'Каждая роль задаёт разные вопросы. CFO режет по ROI. Инвестор давит на риски. Клиент требует обоснование. Совет директоров проверяет стратегию.',
+      mockup: <MockupSession />,
+    },
+    {
+      num: '03',
+      title: 'Пройди жёсткий Q&A — получи шпаргалку с сильными аргументами',
+      desc: 'После сессии — разбор по каждому ответу. Слабые места подсвечены. Знаете, где и почему потеряли нить. Идёте на встречу без белых пятен.',
+      mockup: <MockupReport />,
+    },
+  ];
+
+  return (
+    <section id="how" className="relative" style={{ backgroundColor: '#fff', padding: 'clamp(80px, 15vw, 180px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-16"
+        >
+          <h2 className="font-inter font-extrabold" style={{ fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+            Как это работает.
+          </h2>
+          <p className="font-mono text-neutral-400 text-xs tracking-widest uppercase">Три шага до уверенной защиты.</p>
+        </RevealDiv>
+
+        <div className="flex flex-col">
+          {steps.map((s, i) => (
+            <div
+              key={s.num}
+              className={`grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-24 py-16 ${i !== steps.length - 1 ? 'border-b border-neutral-200' : ''}`}
+            >
+              <RevealDiv
+                hidden={{ opacity: 0, x: -24, y: 0, scale: 1 }}
+                visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                delay={0.1}
+                margin="-50px 0px"
+                className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
+              >
+                <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
+                <h3 className="font-inter font-bold text-3xl text-neutral-900 mb-6 leading-tight max-w-lg">{s.title}</h3>
+                <p className="font-inter text-base text-neutral-500 leading-relaxed max-w-lg">{s.desc}</p>
+              </RevealDiv>
+
+              <RevealDiv
+                hidden={{ opacity: 0, y: 28, scale: 0.97 }}
+                visible={{ opacity: 1, y: 0, scale: 1 }}
+                delay={0.2}
+                margin="-50px 0px"
+                className="relative w-full shadow-2xl rounded-none"
+              >
+                {s.mockup}
+              </RevealDiv>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── COMPARISON TABLE ─────────────────────────────────────────────────────────
+function Comparison() {
+  return (
+    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-12 max-w-2xl"
+        >
+          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Сравнение</div>
+          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Тренажер защиты проектов vs обычные инструменты
+          </h2>
+          <p className="font-inter text-neutral-500 mt-3" style={{ fontSize: 16, maxWidth: 520, lineHeight: 1.6 }}>
+            Честное сравнение. У каждого инструмента есть свои сильные стороны.
+          </p>
+        </RevealDiv>
+
+        <RevealDiv
+          hidden={{ opacity: 0, y: 24 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          delay={0.1}
+          margin="-50px 0px"
+          className="overflow-x-auto"
+        >
+          <table className="w-full text-sm font-inter" style={{ minWidth: 640 }}>
+            <thead>
+              <tr className="border-b border-neutral-200">
+                <th className="text-left py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400" style={{ minWidth: 200 }}>
+                  Критерий
+                </th>
+                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-[#E8600A]">
+                  PeakTalk
+                </th>
+                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400">
+                  ChatGPT / Gemini
+                </th>
+                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400">
+                  Yoodli / Poised
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {
+                  criterion: 'Вопросы по вашему документу',
+                  peaktalk: true,
+                  chat: 'Вручную, без анализа файла',
+                  coaching: null,
+                },
+                {
+                  criterion: 'Адаптивное давление',
+                  peaktalk: true,
+                  chat: 'Нет, всегда одинаковый тон',
+                  coaching: 'Нет, анализирует речь, не контент',
+                },
+                {
+                  criterion: 'Ролевые оппоненты (CFO, инвестор)',
+                  peaktalk: true,
+                  chat: 'Можно попросить, но без глубины роли',
+                  coaching: null,
+                },
+                {
+                  criterion: 'Оценка аргументации',
+                  peaktalk: true,
+                  chat: 'Субъективная, без метрик',
+                  coaching: 'Оценка темпа речи и filler words',
+                },
+                {
+                  criterion: 'Шпаргалка для встречи',
+                  peaktalk: true,
+                  chat: 'Нужно просить отдельно',
+                  coaching: null,
+                },
+                {
+                  criterion: 'PDF-отчёт',
+                  peaktalk: true,
+                  chat: null,
+                  coaching: null,
+                },
+                {
+                  criterion: 'Где альтернатива сильнее',
+                  peaktalk: 'Узкая специализация',
+                  chat: 'Универсальность — решает любые задачи',
+                  coaching: 'Работа с голосом и подачей в реальном времени',
+                },
+              ].map((row, i) => (
+                <tr key={i} className={`border-b border-neutral-100 ${i === 6 ? 'bg-neutral-50' : ''}`}>
+                  <td className={`py-3 px-4 ${i === 6 ? 'font-semibold text-neutral-900' : 'text-neutral-700'}`}>
+                    {row.criterion}
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    {row.peaktalk === true ? (
+                      <span className="text-emerald-600 font-bold">✓</span>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-center text-neutral-500 text-xs">
+                    {typeof row.chat === 'string' ? row.chat : (row.chat === true ? <span className="text-emerald-600 font-bold">✓</span> : '—')}
+                  </td>
+                  <td className="py-3 px-4 text-center text-neutral-500 text-xs">
+                    {typeof row.coaching === 'string' ? row.coaching : (row.coaching === true ? <span className="text-emerald-600 font-bold">✓</span> : '—')}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </RevealDiv>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+function FAQ() {
+  const faqs = [
+    {
+      q: 'Что такое PeakTalk?',
+      a: 'PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.',
+    },
+    {
+      q: 'Сколько стоит PeakTalk?',
+      a: '3 вопроса бесплатно без регистрации. Полная сессия — 299 ₽. Подписка Personal — от 790 ₽/мес за 10 сессий. Pro — 1 490 ₽/мес без ограничений.',
+    },
+    {
+      q: 'Нужна ли регистрация для начала?',
+      a: 'Нет. Guest-поток даёт 3 бесплатных вопроса без создания аккаунта. Для сохранения сессии и PDF-отчёта потребуется регистрация.',
+    },
+    {
+      q: 'Какие форматы документов поддерживаются?',
+      a: 'PDF, DOCX, TXT. Загрузите презентацию, финмодель, роадмап или любой текстовый документ — AI проанализирует именно ваш материал.',
+    },
+    {
+      q: 'Как AI генерирует вопросы?',
+      a: 'AI анализирует загруженный документ, находит логические уязвимости и генерирует вопросы по вашим данным. Каждые 3 вопроса возможен «кривбол» — неожиданный вызов.',
+    },
+    {
+      q: 'Можно ли создать своего оппонента?',
+      a: 'Да. В Pro-тарифе можно создать кастомную персону с фоном, стилем коммуникации и ключевыми фразами. Персона снапшотится при старте сессии.',
+    },
+    {
+      q: 'Где хранятся мои данные?',
+      a: 'Все данные хранятся в России в соответствии с 152-ФЗ. Документы обрабатываются через Cloud.ru Foundation Models. Автоподписки на бесплатном тарифе нет.',
+    },
+  ];
+
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <section className="bg-white" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+      <div className="container-custom max-w-3xl">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-12 text-center"
+        >
+          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">FAQ</div>
+          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Частые вопросы
+          </h2>
+        </RevealDiv>
+
+        <div className="flex flex-col">
+          {faqs.map((faq, i) => (
+            <RevealDiv
+              key={i}
+              hidden={{ opacity: 0, y: 16 }}
+              visible={{ opacity: 1, y: 0 }}
+              duration={0.5}
+              delay={i * 0.05}
+              margin="-40px 0px"
+              className="border-b border-neutral-200"
+            >
+              <button
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="w-full flex items-start justify-between py-5 text-left group"
+                aria-expanded={openIndex === i}
+              >
+                <span className="font-inter font-semibold text-neutral-900 text-base pr-8 group-hover:text-[#E8600A] transition-colors">
+                  {faq.q}
+                </span>
+                <span className={`shrink-0 mt-1 text-neutral-400 transition-transform duration-200 ${openIndex === i ? 'rotate-45' : ''}`}>
+                  +
+                </span>
+              </button>
+              <AnimatePresence>
+                {openIndex === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <p className="font-inter text-neutral-600 text-sm leading-relaxed pb-5 max-w-xl">
+                      {faq.a}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── TRUST SIGNALS ────────────────────────────────────────────────────────────
+function TrustSignals() {
+  const signals = [
+    {
+      icon: <Shield size={20} />,
+      title: '152-ФЗ',
+      desc: 'Все данные хранятся в России. Полное соответствие российскому законодательству о персональных данных.',
+    },
+    {
+      icon: <Lock size={20} />,
+      title: 'Шифрование',
+      desc: 'Документы и сессии защищены. Ваши материалы не используются для обучения моделей и не передаются третьим лицам.',
+    },
+    {
+      icon: <Database size={20} />,
+      title: 'Cloud.ru',
+      desc: 'AI-модели работают через Cloud.ru Foundation Models — российский провайдер. Данные не покидают страну.',
+    },
+    {
+      icon: <CheckCircle2 size={20} />,
+      title: 'Без автоподписки',
+      desc: 'На бесплатном тарифе — никаких скрытых платежей. Карта не требуется. Платите только за то, что используете.',
+    },
+  ];
+
+  return (
+    <section className="bg-neutral-50" style={{ padding: 'clamp(60px, 8vw, 80px) 0' }}>
+      <div className="container-custom">
+        <RevealDiv
+          hidden={{ opacity: 0, y: 18 }}
+          visible={{ opacity: 1, y: 0 }}
+          duration={0.6}
+          margin="-50px 0px"
+          className="mb-10 text-center"
+        >
+          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Доверие</div>
+          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 32px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
+            Ваши данные под защитой
+          </h2>
+        </RevealDiv>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {signals.map((s, i) => (
+            <RevealDiv
+              key={i}
+              hidden={{ opacity: 0, y: 20 }}
+              visible={{ opacity: 1, y: 0 }}
+              duration={0.5}
+              delay={i * 0.06}
+              margin="-40px 0px"
+              className="bg-white border border-neutral-200 p-5 flex flex-col"
+            >
+              <div className="w-9 h-9 rounded-none bg-[#E8600A]/10 flex items-center justify-center mb-3 text-[#E8600A]">
+                {s.icon}
+              </div>
+              <h3 className="font-inter font-bold text-neutral-900 text-sm mb-1">{s.title}</h3>
+              <p className="font-inter text-neutral-500 text-xs leading-relaxed">{s.desc}</p>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── MOCKUPS ──────────────────────────────────────────────────────────────────
+function MockupUpload() {
+  const files = [
+    { name: 'budget_defence_q3.pdf', size: '1.4 MB' },
+    { name: 'pitch_deck_series_a.pdf', size: '3.2 MB' },
+  ];
+  return (
+    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md relative" style={{ minHeight: 240 }}>
+      <div className="flex items-center justify-center px-4 sm:px-8 py-4 border-b border-neutral-200 bg-gray-50">
+        <span className="text-xs text-neutral-400 tracking-widest font-mono">[ PEAKTALK // ЗАГРУЗКА ]</span>
+      </div>
+      <div className="border border-dashed border-neutral-300 rounded-none mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
+        <div className="w-9 h-9 rounded-none bg-orange-50 flex items-center justify-center">
+          <FileText size={18} style={{ color: '#E8600A' }} strokeWidth={1.5} />
+        </div>
+        <div className="text-center">
+          <p className="text-neutral-900 font-semibold text-sm">Перетащите файл или выберите</p>
+          <p className="text-neutral-400 text-xs mt-0.5 font-mono">PDF, PPTX, DOCX — любой формат</p>
+        </div>
+      </div>
+      <div className="px-4 sm:px-8 pt-4 pb-6 flex flex-col gap-3">
+        {files.map((f) => (
+          <div key={f.name} className="flex items-center justify-between px-3 py-2.5 rounded-none bg-gray-50 border border-gray-100">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-none bg-orange-50 flex items-center justify-center shrink-0">
+                <FileText size={12} style={{ color: '#E8600A' }} />
+              </div>
+              <span className="text-gray-700 text-xs truncate font-mono">{f.name}</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <span className="text-gray-400 text-xs opacity-75 font-mono">{f.size}</span>
+              <CheckCircle2 size={13} color="#10b981" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockupSession() {
+  const { ref: progressBarRef, isInView: progressVisible } = useRevealTrigger<HTMLDivElement>('-72px 0px');
+
+  return (
+    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 260 }}>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-white">
+            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#8B5CF6' }}>CFO</span>
+          </div>
+          <div className="flex flex-col leading-none gap-1">
+            <span className="font-semibold text-gray-900" style={{ fontSize: '13px' }}>Финансовый директор</span>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 font-mono" style={{ fontSize: 10 }}>Жёстко</span>
+              <span className="text-gray-400 font-mono" style={{ fontSize: 10 }}>Вопрос 3 из 10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 px-4 sm:px-6 py-5 flex flex-col gap-4 bg-white relative">
+        <div className="flex justify-start">
+          <div className="max-w-[85%] px-4 py-3 bg-neutral-50 border border-neutral-200 text-neutral-900 font-inter text-sm leading-relaxed">
+            Вы просите $500k на новую инициативу, но в финмодели я не вижу четкого обоснования возврата инвестиций. Каков ROI на горизонте 12 месяцев?
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <div className="max-w-[85%] px-4 py-3 bg-neutral-900 text-white font-inter text-sm leading-relaxed relative">
+            <span className="opacity-50 absolute -left-10 top-3 text-[10px] text-neutral-400 font-mono">Вы</span>
+            Мы ожидаем рост LTV на 15%, что перекроет затраты уже в Q3...
+            <span className="inline-block w-1 h-3 ml-1 bg-white animate-pulse" />
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100" ref={progressBarRef}>
+          <div
+            className="h-full rounded-none origin-left"
+            style={{
+              background: '#E8600A',
+              ...safariMotionStyle,
+              transformOrigin: 'left center',
+              transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+              WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
+              transitionProperty: 'transform',
+              transitionDuration: '1.2s',
+              transitionDelay: '0.3s',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupReport() {
+  const metrics = [
+    { label: 'Аргументация', score: 8 },
+    { label: 'Устойчивость', score: 4 },
+    { label: 'Структура', score: 7 },
+  ];
+
+  function getScoreColor(score: number): string {
+    if (score >= 7) return '#10b981';
+    if (score >= 5) return '#f59e0b';
+    return '#e11d48';
+  }
+
+  return (
+    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 280 }}>
+      <div className="px-5 sm:px-6 py-5 border-b border-gray-100 bg-gradient-to-b from-neutral-50 to-white">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+             <div className="font-inter text-neutral-500 font-medium text-[10px] mb-1 tracking-widest uppercase">Разбор завершён</div>
+             <div className="font-inter font-extrabold text-neutral-900 leading-none" style={{ fontSize: '32px' }}>
+               6<span className="text-lg text-neutral-400 font-medium">/10</span>
+             </div>
+          </div>
+          <div className="text-right">
+             <div className="font-mono text-neutral-500" style={{ fontSize: 11 }}>CFO</div>
+             <div className="font-mono text-neutral-900 font-bold" style={{ fontSize: 11 }}>Средняя готовность</div>
+          </div>
+        </div>
+
+        <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">
+          &laquo;Хорошая попытка, оппонент увидел потенциал. Но местами ты плавал в цифрах — фундамент пошатнулся.&raquo;
+        </p>
+
+        <div className="flex flex-wrap gap-1.5">
+          {metrics.map((m) => {
+            const color = getScoreColor(m.score);
+            return (
+            <span
+              key={m.label}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-none text-xs font-bold font-mono border"
+              style={{ color, backgroundColor: `${color}12`, borderColor: `${color}30` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+              {m.label} {m.score}/10
+            </span>
+          )})}
+        </div>
+      </div>
+
+      <div className="flex-1 p-5 bg-white">
+        <div className="border-l-2 border-amber-200 pl-3 mb-4">
+          <p className="text-xs font-bold text-neutral-900 mb-1">Слабое место: Обоснование ROI</p>
+          <p className="text-[13px] text-neutral-600">На 3-м вопросе вы ушли от ответа про конкретные сроки окупаемости. Рекомендуем подготовить расчет...</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -569,276 +1422,6 @@ function UseCases() {
   );
 }
 
-// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
-function HowItWorks() {
-  const steps = [
-    {
-      num: '01',
-      title: 'Загрузи документ или выбери готовый сценарий',
-      desc: 'Не тему — конкретный файл: спич-дек, финмодель, роадмап. PeakTalk разбирает именно его аргументы и данные. Вопросы на сессии будут по вашему материалу.',
-      mockup: <MockupUpload />,
-    },
-    {
-      num: '02',
-      title: 'Выбери оппонента: CFO, инвестор, клиент, совет директоров',
-      desc: 'Каждая роль задаёт разные вопросы. CFO режет по ROI. Инвестор давит на риски. Клиент требует обоснование. Совет директоров проверяет стратегию.',
-      mockup: <MockupSession />,
-    },
-    {
-      num: '03',
-      title: 'Пройди жёсткий Q&A — получи шпаргалку с сильными аргументами',
-      desc: 'После сессии — разбор по каждому ответу. Слабые места подсвечены. Знаете, где и почему потеряли нить. Идёте на встречу без белых пятен.',
-      mockup: <MockupReport />,
-    },
-  ];
-
-  return (
-    <section id="how" className="relative" style={{ backgroundColor: '#fff', padding: 'clamp(80px, 15vw, 180px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-16"
-        >
-          <h2 className="font-inter font-extrabold" style={{ fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '1rem' }}>
-            Как это работает.
-          </h2>
-          <p className="font-mono text-neutral-400 text-xs tracking-widest uppercase">Три шага до уверенной защиты.</p>
-        </RevealDiv>
-
-        <div className="flex flex-col">
-          {steps.map((s, i) => (
-            <div
-              key={s.num}
-              className={`grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-24 py-16 ${i !== steps.length - 1 ? 'border-b border-neutral-200' : ''}`}
-            >
-              <RevealDiv
-                hidden={{ opacity: 0, x: -24, y: 0, scale: 1 }}
-                visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                delay={0.1}
-                margin="-50px 0px"
-                className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
-              >
-                <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
-                <h3 className="font-inter font-bold text-3xl text-neutral-900 mb-6 leading-tight max-w-lg">{s.title}</h3>
-                <p className="font-inter text-base text-neutral-500 leading-relaxed max-w-lg">{s.desc}</p>
-              </RevealDiv>
-
-              <RevealDiv
-                hidden={{ opacity: 0, y: 28, scale: 0.97 }}
-                visible={{ opacity: 1, y: 0, scale: 1 }}
-                delay={0.2}
-                margin="-50px 0px"
-                className="relative w-full shadow-2xl rounded-none"
-              >
-                {s.mockup}
-              </RevealDiv>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── MOCKUPS (reused from original) ──────────────────────────────────────────
-function MockupUpload() {
-  const files = [
-    { name: 'budget_defence_q3.pdf', size: '1.4 MB' },
-    { name: 'pitch_deck_series_a.pdf', size: '3.2 MB' },
-  ];
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md relative" style={{ minHeight: 240 }}>
-      <div className="flex items-center justify-center px-4 sm:px-8 py-4 border-b border-neutral-200 bg-gray-50">
-        <span className="text-xs text-neutral-400 tracking-widest font-mono">[ PEAKTALK // ЗАГРУЗКА ]</span>
-      </div>
-      <div className="border border-dashed border-neutral-300 rounded-none mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
-        <div className="w-9 h-9 rounded-none bg-orange-50 flex items-center justify-center">
-          <FileText size={18} style={{ color: '#E8600A' }} strokeWidth={1.5} />
-        </div>
-        <div className="text-center">
-          <p className="text-neutral-900 font-semibold text-sm">Перетащите файл или выберите</p>
-          <p className="text-neutral-400 text-xs mt-0.5 font-mono">PDF, PPTX, DOCX — любой формат</p>
-        </div>
-      </div>
-      <div className="px-4 sm:px-8 pt-4 pb-6 flex flex-col gap-3">
-        {files.map((f) => (
-          <div key={f.name} className="flex items-center justify-between px-3 py-2.5 rounded-none bg-gray-50 border border-gray-100">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 rounded-none bg-orange-50 flex items-center justify-center shrink-0">
-                <FileText size={12} style={{ color: '#E8600A' }} />
-              </div>
-              <span className="text-gray-700 text-xs truncate font-mono">{f.name}</span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span className="text-gray-400 text-xs opacity-75 font-mono">{f.size}</span>
-              <CheckCircle2 size={13} color="#10b981" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MockupSession() {
-  const { ref: progressBarRef, isInView: progressVisible } = useRevealTrigger<HTMLDivElement>('-72px 0px');
-
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 260 }}>
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-white">
-            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#8B5CF6' }}>CFO</span>
-          </div>
-          <div className="flex flex-col leading-none gap-1">
-            <span className="font-semibold text-gray-900" style={{ fontSize: '13px' }}>Финансовый директор</span>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 font-mono" style={{ fontSize: 10 }}>Жёстко</span>
-              <span className="text-gray-400 font-mono" style={{ fontSize: 10 }}>Вопрос 3 из 10</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 px-4 sm:px-6 py-5 flex flex-col gap-4 bg-white relative">
-        {/* Assistant Message */}
-        <div className="flex justify-start">
-          <div className="max-w-[85%] px-4 py-3 bg-neutral-50 border border-neutral-200 text-neutral-900 font-inter text-sm leading-relaxed">
-            Вы просите $500k на новую инициативу, но в финмодели я не вижу четкого обоснования возврата инвестиций. Каков ROI на горизонте 12 месяцев?
-          </div>
-        </div>
-
-        {/* User Message (typing or sent) */}
-        <div className="flex justify-end">
-          <div className="max-w-[85%] px-4 py-3 bg-neutral-900 text-white font-inter text-sm leading-relaxed relative">
-            <span className="opacity-50 absolute -left-10 top-3 text-[10px] text-neutral-400 font-mono">Вы</span>
-            Мы ожидаем рост LTV на 15%, что перекроет затраты уже в Q3...
-            <span className="inline-block w-1 h-3 ml-1 bg-white animate-pulse" />
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100" ref={progressBarRef}>
-          <div
-            className="h-full rounded-none origin-left"
-            style={{
-              background: '#E8600A',
-              ...safariMotionStyle,
-              transformOrigin: 'left center',
-              transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-              WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-              transitionProperty: 'transform',
-              transitionDuration: '1.2s',
-              transitionDelay: '0.3s',
-              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MockupReport() {
-  const metrics = [
-    { label: 'Аргументация', score: 8 },
-    { label: 'Устойчивость', score: 4 },
-    { label: 'Структура', score: 7 },
-  ];
-
-  function getScoreOpacity(score: number): number {
-    if (score >= 7) return 1;
-    if (score >= 5) return 0.6;
-    return 0.3;
-  }
-
-  function getScoreColor(score: number): string {
-    if (score >= 7) return '#10b981';
-    if (score >= 5) return '#f59e0b';
-    return '#e11d48';
-  }
-
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 280 }}>
-      <div className="px-5 sm:px-6 py-5 border-b border-gray-100 bg-gradient-to-b from-neutral-50 to-white">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-             <div className="font-inter text-neutral-500 font-medium text-[10px] mb-1 tracking-widest uppercase">Разбор завершён</div>
-             <div className="font-inter font-extrabold text-neutral-900 leading-none" style={{ fontSize: '32px' }}>
-               6<span className="text-lg text-neutral-400 font-medium">/10</span>
-             </div>
-          </div>
-          <div className="text-right">
-             <div className="font-mono text-neutral-500" style={{ fontSize: 11 }}>CFO</div>
-             <div className="font-mono text-neutral-900 font-bold" style={{ fontSize: 11 }}>Средняя готовность</div>
-          </div>
-        </div>
-
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">
-          «Хорошая попытка, оппонент увидел потенциал. Но местами ты плавал в цифрах — фундамент пошатнулся.»
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {metrics.map((m) => {
-            const color = getScoreColor(m.score);
-            return (
-            <span
-              key={m.label}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-none text-xs font-bold font-mono border"
-              style={{ color, backgroundColor: `${color}12`, borderColor: `${color}30` }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-              {m.label} {m.score}/10
-            </span>
-          )})}
-        </div>
-      </div>
-
-      <div className="flex-1 p-5 bg-white">
-        <div className="border-l-2 border-amber-200 pl-3 mb-4">
-          <p className="text-xs font-bold text-neutral-900 mb-1">Слабое место: Обоснование ROI</p>
-          <p className="text-[13px] text-neutral-600">На 3-м вопросе вы ушли от ответа про конкретные сроки окупаемости. Рекомендуем подготовить расчет...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── SOCIAL PROOF ─────────────────────────────────────────────────────────────
-function SocialProof() {
-  return (
-    <section style={{ backgroundColor: '#0A0A0A', padding: 'clamp(60px, 8vw, 100px) 0' }}>
-      <div className="container-custom">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-white/10 p-[1px]">
-          {[
-            { value: 'QBR', label: 'Защиты и бюджеты', sub: 'Для high-stakes бесед' },
-            { value: '4', label: 'ключевых персоны', sub: 'CFO · Инвестор · Совет директоров · Клиент' },
-            { value: '5', label: 'критических навыков', sub: 'аргументация, структура, устойчивость' },
-          ].map((item, i) => (
-            <RevealDiv
-              key={i}
-              delay={i * 0.08}
-              duration={0.5}
-              margin="-40px 0px"
-              hidden={{ opacity: 0, y: 20 }}
-              visible={{ opacity: 1, y: 0 }}
-              className="bg-[#0A0A0A] flex flex-col p-8 lg:p-10"
-            >
-              <div className="font-inter font-extrabold text-white" style={{ fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                {item.value}
-              </div>
-              <div className="font-mono text-[#E8600A] text-xs uppercase tracking-widest mt-2 mb-1">{item.label}</div>
-              <div className="font-mono text-neutral-500 text-xs mt-1">{item.sub}</div>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── PRICING TEASER ───────────────────────────────────────────────────────────
 function PricingBlock() {
   return (
@@ -892,7 +1475,7 @@ function PricingBlock() {
             <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">
               299 ₽ <span className="text-2xl font-medium text-white/50">/ сессия</span>
             </div>
-            <div className="font-inter text-sm text-white/50 mt-2">Или от 990 ₽/мес без ограничений.</div>
+            <div className="font-inter text-sm text-white/50 mt-2">Или от 790 ₽/мес по подписке.</div>
 
             <div className="h-px bg-white/10 my-8" />
 
@@ -994,15 +1577,151 @@ function Footer() {
   );
 }
 
+// ─── JSON-LD STRUCTURED DATA ──────────────────────────────────────────────────
+function JsonLd() {
+  const faqData = [
+    {
+      question: 'Что такое PeakTalk?',
+      answer: 'PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.',
+    },
+    {
+      question: 'Сколько стоит PeakTalk?',
+      answer: '3 вопроса бесплатно без регистрации. Полная сессия — 299 ₽. Подписка Personal — от 790 ₽/мес за 10 сессий. Pro — 1 490 ₽/мес без ограничений.',
+    },
+    {
+      question: 'Нужна ли регистрация для начала?',
+      answer: 'Нет. Guest-поток даёт 3 бесплатных вопроса без создания аккаунта. Для сохранения сессии и PDF-отчёта потребуется регистрация.',
+    },
+    {
+      question: 'Какие форматы документов поддерживаются?',
+      answer: 'PDF, DOCX, TXT. Загрузите презентацию, финмодель, роадмап или любой текстовый документ — AI проанализирует именно ваш материал.',
+    },
+    {
+      question: 'Как AI генерирует вопросы?',
+      answer: 'AI анализирует загруженный документ, находит логические уязвимости и генерирует вопросы по вашим данным. Каждые 3 вопроса возможен «кривбол» — неожиданный вызов.',
+    },
+    {
+      question: 'Можно ли создать своего оппонента?',
+      answer: 'Да. В Pro-тарифе можно создать кастомную персону с фоном, стилем коммуникации и ключевыми фразами. Персона снапшотится при старте сессии.',
+    },
+    {
+      question: 'Где хранятся мои данные?',
+      answer: 'Все данные хранятся в России в соответствии с 152-ФЗ. Документы обрабатываются через Cloud.ru Foundation Models. Автоподписки на бесплатном тарифе нет.',
+    },
+  ];
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'SoftwareApplication',
+        name: 'PeakTalk',
+        url: 'https://peaktalk.ru',
+        description: 'AI-тренажер сложных рабочих коммуникаций. Стресс-тест аргументов перед защитой проектов, бюджетов, QBR и переговорами с жесткими стейкхолдерами.',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'Guest',
+            price: '0',
+            priceCurrency: 'RUB',
+            description: '3 бесплатных вопроса без регистрации',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Per-session',
+            price: '299',
+            priceCurrency: 'RUB',
+            description: 'Одна полная сессия',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Personal',
+            price: '790',
+            priceCurrency: 'RUB',
+            billingIncrement: 'P1M',
+            description: '10 сессий в месяц',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Pro',
+            price: '1490',
+            priceCurrency: 'RUB',
+            billingIncrement: 'P1M',
+            description: 'Безлимитные сессии + кастомные персоны',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Team',
+            price: '4990',
+            priceCurrency: 'RUB',
+            billingIncrement: 'P1M',
+            description: 'Командный доступ до 10 участников',
+          },
+        ],
+        provider: {
+          '@type': 'Organization',
+          name: 'PeakTalk',
+          url: 'https://peaktalk.ru',
+          contactPoint: {
+            '@type': 'ContactPoint',
+            email: 'hello@peaktalk.ru',
+            contactType: 'customer support',
+            availableLanguage: 'Russian',
+          },
+        },
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: faqData.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Главная',
+            item: 'https://peaktalk.ru',
+          },
+        ],
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function Page() {
   return (
     <main className="relative min-h-screen selection:bg-[#E8600A] selection:text-white">
+      <JsonLd />
       <Nav />
       <Hero />
+      <Problem />
+      <Solution />
+      <FeaturesAsBenefits />
+      <SocialProof />
+      <MidPageCTA />
       <UseCases />
       <HowItWorks />
-      <SocialProof />
+      <Comparison />
+      <FAQ />
+      <TrustSignals />
       <PricingBlock />
       <FooterCTA />
     </main>
