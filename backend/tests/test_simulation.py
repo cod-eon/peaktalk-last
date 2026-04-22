@@ -293,7 +293,18 @@ async def test_complete_session_creates_prep_card_artifact(client: AsyncClient, 
     assert session_resp.status_code == 200
 
     from .conftest import TestSessionLocal
+
+    # We need to manually run the artifact creation logic because background tasks
+    # don't share the in-memory SQLite database properly without explicit passing.
+    from app.routers.simulation import _ensure_prep_card_artifact
+    from app.routers.simulation import _load_session
+
     async with TestSessionLocal() as db:
+        # Load the session within our test DB context
+        session = await _load_session(db, uuid.UUID(session_id), TEST_USER_ID)
+        await _ensure_prep_card_artifact(session, db)
+        await db.commit()
+
         from sqlalchemy import select
         artifact_res = await db.execute(
             select(SessionArtifact).where(

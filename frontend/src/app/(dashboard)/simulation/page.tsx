@@ -7,7 +7,6 @@ import {
     Clock, Trophy, Plus, TrendingUp, TrendingDown, Mic, Target, ArrowLeft,
     Loader2, Zap, Ban, FileText, ChevronDown, Search,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -197,7 +196,7 @@ function SimulationPageContent() {
 
     // Sessions history
     const [sessions, setSessions] = useState<SessionItem[]>([]);
-    const [sessionsLoading, setSessionsLoading] = useState(true);
+    const [, setSessionsLoading] = useState(true);
 
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
     const [difficulty, setDifficulty] = useState<number>(3);

@@ -52,7 +52,7 @@ export function PrepCard({ sessionId }: PrepCardProps) {
       } catch (err: unknown) {
         if (!mounted) return;
         // If it's a 404 or 409 from axios/fetch wrapper
-        const status = (err as any)?.response?.status;
+        const status = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'status' in err.response ? (err.response as {status: number}).status : null;
         if (status === 404 || status === 409) {
           setTimeout(fetchArtifact, 2000);
           return;
