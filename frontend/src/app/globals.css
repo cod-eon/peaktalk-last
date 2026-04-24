@@ -92,6 +92,13 @@
     /* ─── Layout ─── */
     --sidebar-width-expanded: 240px;
     --sidebar-width-collapsed: 72px;
+
+    /* ─── Landing editorial system ─── */
+    --landing-paper: #FAF8F4;
+    --landing-ink: #111111;
+    --landing-steel: #73706A;
+    --landing-line: #D9D5CC;
+    --landing-accent: #E8600A;
   }
 
   body {
@@ -110,10 +117,10 @@
     color: var(--text-main);
   }
 
-  /* Heading typography - Standard Inter for professional feel */
+  /* Heading typography */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-inter), sans-serif;
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
     font-weight: 700;
     line-height: 1.05;
   }
@@ -121,14 +128,23 @@
   /* Decorative/Brand Heading Styling */
   .font-syne {
     font-family: var(--font-syne), sans-serif;
-    letter-spacing: -0.04em;
+    letter-spacing: 0;
     line-height: 1.05;
+  }
+
+  .font-display {
+    font-family: var(--font-syne), sans-serif;
+    letter-spacing: 0;
+  }
+
+  .font-inter {
+    font-family: var(--font-inter), sans-serif;
   }
 
   .brand-wordmark {
     font-family: var(--font-syne), sans-serif;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     line-height: 1;
   }
 
@@ -149,15 +165,16 @@
   }
 
   .container-custom {
-    width: 100%;
+    box-sizing: border-box;
+    width: calc(100vw - 48px) !important;
     max-width: 1280px;
     margin-inline: auto;
-    padding-inline: 24px;
+    padding-inline: 0 !important;
   }
 
   @media (min-width: 768px) {
     .container-custom {
-      padding-inline: 48px;
+      width: calc(100vw - 96px) !important;
     }
   }
 

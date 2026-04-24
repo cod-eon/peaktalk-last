@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, X, ArrowRight, FileText, CheckCircle2, Shield, Database, Lock, Zap, Target, MessageSquare, BarChart3, Download, ExternalLink } from 'lucide-react';
+import {
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronDown,
+  Database,
+  FileText,
+  Lock,
+  Menu,
+  MessageSquare,
+  Shield,
+  ShieldAlert,
+  Target,
+  X,
+  Zap,
+} from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
-
-/*
- * PeakTalk — SEO-AEO Landing Page
- * Primary keyword: тренажер защиты проектов
- * Secondary: AI симулятор сложных переговоров, подготовка к QBR, стресс-тест аргументов
- * AEO queries: что такое PeakTalk, как подготовиться к защите бюджета, AI тренажер для переговоров
- *
- * Meta title: PeakTalk — AI-тренажер защиты проектов и сложных переговоров
- * Meta description: Стресс-тест аргументов перед реальной встречей. Загрузите документ, пройдите жёсткий Q&A с AI-оппонентом и найдите слабые места до встречи с CFO, инвестором или клиентом.
- */
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
@@ -47,29 +52,37 @@ type RevealProps = {
   margin?: RevealMargin;
 };
 
+const navItems = [
+  { label: 'Сценарии', id: '#scenarios' },
+  { label: 'Как работает', id: '#how' },
+  { label: 'Сравнение', id: '#comparison' },
+  { label: 'Цены', id: '#pricing' },
+];
+
 const smoothScroll = (id: string) => {
   const element = document.querySelector(id);
-  if (element) {
-    const navHeight = 88;
-    const y = element.getBoundingClientRect().top + window.scrollY - navHeight;
-    window.scrollTo({ top: y, behavior: 'smooth' });
-  }
+  if (!element) return;
+  const navHeight = 88;
+  const y = element.getBoundingClientRect().top + window.scrollY - navHeight;
+  window.scrollTo({ top: y, behavior: 'smooth' });
 };
 
-// ─── HOOKS & UTILS ────────────────────────────────────────────────────────────
 function useScrolled() {
   const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   return scrolled;
 }
 
 function useRevealTrigger<T extends HTMLElement>(margin: RevealMargin = '-64px 0px') {
   const ref = useRef<T | null>(null);
-  const isInView = useInView(ref, { once: true, margin, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, margin, amount: 0.18 });
   return { ref, isInView };
 }
 
@@ -83,6 +96,7 @@ function useIsIOSSafari() {
     const isFxiOS = /FxiOS/i.test(userAgent);
     return isIOS && isWebKit && !isCriOS && !isFxiOS;
   });
+
   return isIOSSafari;
 }
 
@@ -103,10 +117,10 @@ function RevealDiv({
   children,
   className,
   style,
-  hidden = { opacity: 0, y: 24, scale: 0.985 },
+  hidden = { opacity: 0, y: 22, scale: 0.99 },
   visible = { opacity: 1, y: 0, scale: 1 },
   delay = 0,
-  duration = 0.6,
+  duration = 0.55,
   margin,
 }: RevealProps) {
   const prefersReducedMotion = useReducedMotion();
@@ -137,57 +151,25 @@ function RevealDiv({
   );
 }
 
-function RevealP({
-  children,
-  className,
-  style,
-  hidden = { opacity: 0, y: 18 },
-  visible = { opacity: 1, y: 0 },
-  delay = 0,
-  duration = 0.6,
-  margin,
-}: RevealProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const isIOSSafari = useIsIOSSafari();
-  const { ref, isInView } = useRevealTrigger<HTMLParagraphElement>(margin);
-  const hiddenState = prefersReducedMotion ? { opacity: 0 } : normalizeRevealTarget(hidden, isIOSSafari);
-  const visibleState = prefersReducedMotion ? { opacity: 1 } : normalizeRevealTarget(visible, isIOSSafari);
-  const state = isInView ? visibleState : hiddenState;
-
+function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <p
-      ref={ref}
-      style={{
-        ...safariMotionStyle,
-        ...style,
-        opacity: state.opacity,
-        transform: `${buildRevealTransform(state)} translateZ(0)`,
-        WebkitTransform: `${buildRevealTransform(state)} translateZ(0)`,
-        transitionProperty: 'opacity, transform',
-        transitionDuration: `${duration}s`,
-        transitionDelay: `${delay}s`,
-        transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-      className={className}
-    >
+    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/[0.42]' : 'text-neutral-500'}`}>
       {children}
-    </p>
+    </div>
   );
 }
 
-// ─── LOGO ─────────────────────────────────────────────────────────────────────
 function Logo({ size = 24 }: { size?: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={52} height={52} style={{ width: 52, height: 52 }} />
-      <span className="brand-wordmark text-neutral-900" style={{ fontSize: size * 0.9 }}>
+    <div className="flex items-center gap-2">
+      <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={52} height={52} className="h-[52px] w-[52px]" priority />
+      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.9 }}>
         PeakTalk
       </span>
     </div>
   );
 }
 
-// ─── NAVIGATION ────────────────────────────────────────────────────────────────
 function Nav() {
   const scrolled = useScrolled();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -195,91 +177,51 @@ function Nav() {
   return (
     <>
       <motion.nav
-        initial={{ y: -100 }}
+        initial={{ y: -90 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          padding: scrolled ? '14px 0' : '18px 0',
-          background: scrolled
-            ? 'rgba(255, 255, 255, 0.88)'
-            : 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 42%, rgba(255,255,255,0) 100%)',
-          backdropFilter: scrolled ? 'blur(32px) saturate(140%)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(32px) saturate(140%)' : 'none',
-          transition: 'all 0.3s ease',
-        }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-[#faf8f4]/90 py-3 shadow-[0_12px_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl' : 'bg-transparent py-4'}`}
       >
-        <div className="container-custom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-          <div>
+        <div className="container-custom flex items-center justify-between gap-5">
+          <Link href="/" aria-label="PeakTalk">
             <Logo />
-          </div>
+          </Link>
 
-          <div className="hidden lg:flex" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', gap: 40, alignItems: 'center' }}>
-            {[
-              { label: 'Сценарии', id: '#scenarios' },
-              { label: 'Как работает', id: '#how' },
-              { label: 'Цены', id: '#pricing' },
-            ].map((item) => (
+          <div className="hidden items-center gap-8 lg:flex">
+            {navItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => smoothScroll(item.id)}
-                className="font-mono text-neutral-900"
-                style={{
-                  fontSize: 12,
-                  opacity: 0.6,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+                className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
               >
                 {item.label}
               </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div className="hidden lg:flex" style={{ gap: 16, alignItems: 'center' }}>
-              <Link href="/login" className="font-mono text-neutral-900" style={{
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                textDecoration: 'none',
-                opacity: 0.72
-              }}>Вход</Link>
-              <div style={{ width: 1, height: 16, backgroundColor: '#e5e7eb' }} />
-              <Link href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-5 py-2.5 text-sm flex items-center transition-all">
-                Попробовать бесплатно
-              </Link>
-            </div>
-
-            <div className="lg:hidden flex items-center gap-4">
-              <button
-                className="flex items-center justify-center"
-                onClick={() => setMobileMenuOpen(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#171717',
-                  width: 32,
-                  height: 32,
-                  marginRight: -4,
-                }}
-                aria-label="Открыть меню"
-              >
-                <Menu size={28} />
-              </button>
-            </div>
+          <div className="hidden items-center gap-4 lg:flex">
+            <Link
+              href="/login"
+              className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
+            >
+              Вход
+            </Link>
+            <Link
+              href="/simulation/guest"
+              className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#E8600A] hover:border-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"
+            >
+              Проверить документ
+            </Link>
           </div>
+
+          <button
+            type="button"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white/80 text-neutral-950 lg:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Открыть меню"
+          >
+            <Menu size={22} />
+          </button>
         </div>
       </motion.nav>
 
@@ -289,74 +231,42 @@ function Nav() {
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 100,
-              background: 'rgba(255, 255, 255, 0.98)',
-              backdropFilter: 'blur(32px)',
-              WebkitBackdropFilter: 'blur(32px)',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: 24,
-            }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[100] flex flex-col bg-[#faf8f4] p-6"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 64 }}>
+            <div className="mb-14 flex items-center justify-between">
               <Logo />
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#171717',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 48,
-                  height: 48,
-                  marginRight: -12,
-                }}
+                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950"
+                aria-label="Закрыть меню"
               >
-                <X size={32} />
+                <X size={24} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'flex-start' }}>
-              {[
-                { label: 'Сценарии', id: '#scenarios' },
-                { label: 'Как работает', id: '#how' },
-                { label: 'Цены', id: '#pricing' },
-              ].map((item) => (
+            <div className="flex flex-col gap-3">
+              {navItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    setTimeout(() => smoothScroll(item.id), 300);
+                    setTimeout(() => smoothScroll(item.id), 260);
                   }}
-                  className="font-inter font-bold text-neutral-900"
-                  style={{
-                    fontSize: 24,
-                    letterSpacing: '-0.02em',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    padding: '8px 0',
-                  }}
+                  className="cursor-pointer border-b border-neutral-200 py-4 text-left font-display text-[26px] font-semibold leading-none text-neutral-950"
                 >
                   {item.label}
                 </button>
               ))}
-              <div style={{ width: '100%', height: 1, backgroundColor: '#e5e7eb', margin: '16px 0' }} />
-              <Link href="/login" className="font-inter font-semibold text-neutral-400" style={{
-                fontSize: 18,
-                textDecoration: 'none',
-                padding: '8px 0',
-              }}>Личный кабинет</Link>
-              <Link href="/simulation/guest" className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-6 py-3.5 text-sm flex items-center justify-center w-full transition-all">
-                Попробовать бесплатно
+            </div>
+
+            <div className="mt-auto grid gap-3">
+              <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950">
+                Войти
+              </Link>
+              <Link href="/simulation/guest" className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 text-sm font-semibold text-white">
+                Проверить документ бесплатно
               </Link>
             </div>
           </motion.div>
@@ -366,533 +276,140 @@ function Nav() {
   );
 }
 
-// ─── HERO ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative bg-white">
-      <div className="min-h-screen w-full flex items-center overflow-hidden pt-16 lg:pt-24 pb-12 lg:pb-0">
-        <div className="absolute inset-0 z-0 opacity-[0.25] mix-blend-multiply" style={{
-          backgroundImage: 'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-          maskImage: 'radial-gradient(ellipse at top, black 20%, transparent 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at top, black 20%, transparent 70%)'
-        }} />
-
-        <div className="container-custom relative z-10 w-full flex flex-col justify-center h-full">
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-8 items-center h-full">
-
-            <div className="w-full max-w-2xl shrink-0 relative z-20 flex flex-col items-start text-left sm:items-center sm:text-center lg:items-start lg:text-left mt-12 lg:mt-0 lg:pr-10">
-
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0 }}
-                className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 rounded-none px-4 py-1.5 mb-5 bg-white/80 shadow-[0_8px_24px_rgba(0,0,0,0.03)]"
-              >
-                Тренажер для защиты проектов, бюджетов и QBR
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="font-inter font-bold text-[34px] sm:text-5xl lg:text-[64px] text-neutral-900 tracking-tight leading-[0.92] mb-5 max-w-[13.5ch] sm:max-w-[15.5ch] lg:max-w-[16ch]"
-              >
-                <span className="block">Стресс-тест</span>
-                <span className="block">аргументов перед</span>
-                <span className="block">жёсткой <span className="text-[#E8600A] relative">защитой</span>.</span>
-              </motion.h1>
-
-              {/* AEO Extraction Block — 25-40 words, standalone answer to "Что такое PeakTalk?" */}
-              <motion.blockquote
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.25 }}
-                className="border-l-2 border-[#E8600A] pl-4 mb-5 max-w-xl"
-              >
-                <p className="font-inter text-base sm:text-lg text-neutral-700 leading-relaxed italic">
-                  PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите жёсткий Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.
-                </p>
-              </motion.blockquote>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.35 }}
-                style={{
-                  fontSize: 'clamp(15px, 1.55vw, 19px)',
-                  lineHeight: 1.58,
-                  color: '#737373',
-                  marginBottom: 20,
-                  maxWidth: 580,
-                }}
-              >
-                Пройдите жесткий Q&amp;A с AI-стейкхолдером по вашему документу. Найдите уязвимости в презентации, PnL или финмодели до того, как их найдет бизнес.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-                style={safariMotionStyle}
-                className="grid grid-cols-3 w-full max-w-[520px] mb-6 overflow-hidden rounded-none border border-neutral-200 bg-white/85 shadow-[0_18px_40px_rgba(0,0,0,0.04)]"
-              >
-                {[
-                  { value: '4', label: 'типа оппонентов' },
-                  { value: '5', label: 'навыков в оценке' },
-                  { value: '100%', label: 'конфиденциально' },
-                ].map((m, i) => (
-                  <div key={i} className={`flex flex-col gap-1 px-4 py-3 sm:px-5 sm:py-4 ${i !== 2 ? 'border-r border-neutral-200' : ''}`}>
-                    <span className="font-inter font-bold text-[22px] sm:text-2xl text-neutral-900 leading-none">{m.value}</span>
-                    <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-neutral-500">{m.label}</span>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col items-start sm:items-center lg:items-start gap-3 w-full max-w-[520px]"
-              >
-                <div className="flex flex-col sm:flex-row w-full gap-3">
-                  <Link
-                    href="/simulation/guest"
-                    className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none w-full sm:w-auto flex items-center justify-center p-3 sm:px-6 text-sm transition-all"
-                  >
-                    Попробовать 3 вопроса бесплатно
-                  </Link>
-                  <button
-                    className="hidden sm:flex w-auto items-center justify-center p-3 sm:px-6 transition-all rounded-none border border-neutral-200 text-neutral-600 text-sm font-medium hover:bg-neutral-50"
-                    onClick={() => smoothScroll('#scenarios')}
-                  >
-                    Посмотреть сценарии
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 mt-2">
-                  <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest">
-                    Без регистрации. Без карты.
-                  </p>
-                  <button
-                    className="sm:hidden font-inter text-sm text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-900"
-                    onClick={() => smoothScroll('#scenarios')}
-                  >
-                    Сценарии
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.5, delay: 0.2 }}
-              style={safariMotionStyle}
-              className="w-full px-4 lg:px-0 relative min-h-[300px] lg:h-auto flex-1 lg:flex-none flex items-center justify-center z-10 pointer-events-none mt-4 sm:mt-8 lg:mt-0 lg:-translate-y-3"
-            >
-              <div className="absolute inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_65%_35%,rgba(232,96,10,0.08),transparent_42%),radial-gradient(circle_at_38%_72%,rgba(0,0,0,0.05),transparent_40%)]" />
-              <HeroVisual />
-            </motion.div>
-          </div>
-        </div>
+    <section className="relative overflow-hidden bg-[#faf8f4] pt-28 lg:pt-32">
+      <div className="absolute inset-0 opacity-[0.45]" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.055)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(232,96,10,0.13),transparent_32%),linear-gradient(180deg,transparent_0%,#faf8f4_78%)]" />
       </div>
-    </section>
-  );
-}
 
-// ─── PROBLEM — Pain section, NO product mention ───────────────────────────────
-function Problem() {
-  const pains = [
-    {
-      role: 'Тимлид',
-      scenario: 'Защита приоритетов перед руководством',
-      pain: 'Вы потратили неделю на план. CFO задаёт один вопрос про ROI — и вы понимаете, что не готовы ответить.',
-    },
-    {
-      role: 'Фаундер',
-      scenario: 'Питч инвесторам',
-      pain: 'Инвесторы слышали сотни питчей. Они найдут слабое место в вашей модели за 30 секунд. Вопрос — найдёте ли вы его раньше.',
-    },
-    {
-      role: 'Head of Sales',
-      scenario: 'QBR с ключевым клиентом',
-      pain: 'Клиент недоволен результатом квартала. Он придёт с конкретными цифрами. А у вас — общие фразы и надежда на лучшее.',
-    },
-    {
-      role: 'Руководитель продукта',
-      scenario: 'Защита roadmap перед советом директоров',
-      pain: 'Совет директоров не спрашивает «как дела». Они спрашивают «почему это займёт 6 месяцев» и «что будет, если убрать эту фичу».',
-    },
-  ];
-
-  return (
-    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12 max-w-2xl"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Знакомая ситуация</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Тренажер защиты проектов: почему подготовки недостаточно
-          </h2>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {pains.map((p, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
-              visible={{ opacity: 1, y: 0, scale: 1 }}
-              duration={0.5}
-              delay={i * 0.08}
-              margin="-50px 0px"
-              className="bg-white border border-neutral-200 p-6 flex flex-col"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="font-mono text-[11px] uppercase tracking-widest px-2.5 py-1 bg-[#E8600A]/10 text-[#E8600A]">
-                  {p.role}
-                </span>
-                <span className="font-inter text-sm text-neutral-500">{p.scenario}</span>
-              </div>
-              <p className="font-inter text-neutral-700 leading-relaxed text-sm">{p.pain}</p>
-            </RevealDiv>
-          ))}
-        </div>
-
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          delay={0.3}
-          margin="-50px 0px"
-          className="mt-10 max-w-xl"
-        >
-          <p className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
-            Проблема не в том, что вы не знаете свой материал. Проблема в том, что вы не знаете, <strong className="text-neutral-900">какие вопросы вам зададут</strong> — и не тренировали ответы под давлением.
-          </p>
-        </RevealDiv>
-      </div>
-    </section>
-  );
-}
-
-// ─── SOLUTION — Introduce PeakTalk ────────────────────────────────────────────
-function Solution() {
-  return (
-    <section className="bg-white" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <RevealDiv
-            hidden={{ opacity: 0, x: -24, scale: 1 }}
-            visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            delay={0.1}
-            margin="-50px 0px"
+      <div className="container-custom relative z-10 grid min-h-[calc(100vh-112px)] items-center gap-10 pb-16 lg:grid-cols-[minmax(0,0.93fr)_minmax(480px,1.07fr)] lg:pb-20">
+        <div className="max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="mb-6 inline-flex border border-neutral-300 bg-white/72 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-600 shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
           >
-            <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[ РЕШЕНИЕ ]</div>
-            <h2 className="font-inter font-extrabold text-neutral-900 mb-6" style={{ fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              PeakTalk находит дыры в вашей аргументации — до встречи
-            </h2>
-            <div className="flex flex-col gap-4">
-              <RevealP delay={0.1} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
-                Вы загружаете свой документ — презентацию, финмодель, роадмап. AI-оппонент изучает именно ваш материал и задаёт вопросы, которые заставят вас думать.
-              </RevealP>
-              <RevealP delay={0.2} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
-                Не шаблонные вопросы из интернета. Конкретные, неудобные, основанные на ваших же данных. С адаптивным давлением — от спокойного диалога до жёсткого допроса.
-              </RevealP>
-              <RevealP delay={0.3} margin="-40px 0px" className="font-inter text-neutral-600 leading-relaxed" style={{ fontSize: 16 }}>
-                После сессии — разбор по 5 навыкам, транскрипт с комментариями и шпаргалка с сильными аргументами для реальной встречи.
-              </RevealP>
-            </div>
-          </RevealDiv>
+            Peaktalk / meeting defense workspace
+          </motion.div>
 
-          <RevealDiv
-            hidden={{ opacity: 0, y: 28, scale: 0.97 }}
-            visible={{ opacity: 1, y: 0, scale: 1 }}
-            delay={0.2}
-            margin="-50px 0px"
-            className="relative w-full shadow-2xl rounded-none"
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="font-display text-[30px] font-black uppercase leading-[0.94] text-neutral-950 min-[420px]:text-[36px] sm:text-[64px] lg:text-[62px] xl:text-[72px]"
           >
-            <MockupSession />
-          </RevealDiv>
-        </div>
-      </div>
-    </section>
-  );
-}
+            Документ
+            <span className="block text-[#E8600A]">должен</span>
+            выдержать
+            <span className="block">встречу.</span>
+          </motion.h1>
 
-// ─── FEATURES AS BENEFITS ─────────────────────────────────────────────────────
-function FeaturesAsBenefits() {
-  const features = [
-    {
-      icon: <FileText size={18} />,
-      feature: 'Анализ вашего документа',
-      benefit: 'Вопросы по вашему материалу, а не шаблонные. AI разбирает презентацию, финмодель или роадмап и находит конкретные уязвимости.',
-    },
-    {
-      icon: <Zap size={18} />,
-      feature: 'Адаптивное давление',
-      benefit: 'AI detects слабые ответы и углубляется именно туда. Каждые 3 вопроса — «кривбол» — неожиданный вызов, как на реальной встрече.',
-    },
-    {
-      icon: <Target size={18} />,
-      feature: '4 персоны оппонентов',
-      benefit: 'CFO режет по ROI. Инвестор давит на риски. Клиент требует обоснование. Совет директоров проверяет стратегию. Каждая роль — другой стиль вопросов.',
-    },
-    {
-      icon: <BarChart3 size={18} />,
-      feature: 'Оценка по 5 навыкам',
-      benefit: 'Аргументация, ясность, стрессоустойчивость, структура ответа, лаконичность. Не абстрактный балл — конкретные зоны роста.',
-    },
-    {
-      icon: <MessageSquare size={18} />,
-      feature: 'Шпаргалка для встречи',
-      benefit: 'Топ-3 аргумента, ключевые цифры, фразы-якоря и зоны риска. Конкретный артефакт, который берёте на реальную встречу.',
-    },
-    {
-      icon: <Download size={18} />,
-      feature: 'PDF-отчёт',
-      benefit: 'Полный транскрипт сессии с комментариями AI. Можно сохранить, поделиться с командой или вернуться перед встречей.',
-    },
-  ];
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-7 max-w-[320px] text-[17px] leading-[1.65] text-neutral-700 sm:max-w-[620px] sm:text-[19px]"
+          >
+            PeakTalk читает ваш рабочий документ как будущий оппонент: давит по ROI, срокам, рискам и trade-offs,
+            а затем собирает prep-card до реального разговора.
+          </motion.p>
 
-  return (
-    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12 max-w-2xl"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Возможности</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Каждая функция — конкретный результат
-          </h2>
-            <p className="font-inter text-neutral-500 mt-3" style={{ fontSize: 16, maxWidth: 520, lineHeight: 1.6 }}>
-              PeakTalk — AI симулятор сложных переговоров, который не генерирует красивый текст. Он находит слабые места и тренирует вашу реакцию.
-            </p>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.map((f, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
-              visible={{ opacity: 1, y: 0, scale: 1 }}
-              duration={0.5}
-              delay={i * 0.06}
-              margin="-50px 0px"
-              className="bg-white border border-neutral-200 p-6 flex flex-col"
-            >
-              <div className="w-9 h-9 rounded-none bg-[#E8600A]/10 flex items-center justify-center mb-4 text-[#E8600A]">
-                {f.icon}
-              </div>
-              <h3 className="font-inter font-bold text-neutral-900 text-base mb-2">{f.feature}</h3>
-              <p className="font-inter text-neutral-600 text-sm leading-relaxed flex-1">{f.benefit}</p>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── SOCIAL PROOF — Placeholder testimonials ──────────────────────────────────
-function SocialProof() {
-  const testimonials = [
-    {
-      quote: 'Я прошёл симуляцию перед защитой бюджета. CFO задал те же вопросы, что AI — но к ним я уже был готов. Бюджет утвердили с первого раза.',
-      role: 'Тимлид, IT-компания',
-      name: 'Алексей К.',
-    },
-    {
-      quote: 'Загрузила питч-дек перед раундом. AI нашёл три дыры в финмодели, которые я бы заметила только на встрече с инвесторами. Исправила за вечер.',
-      role: 'Фаундер, SaaS-стартап',
-      name: 'Мария Д.',
-    },
-    {
-      quote: 'Использую PeakTalk перед каждым QBR. Это как репетиция перед спектаклем — только вместо зеркала у тебя AI, который реально давит.',
-      role: 'Head of Customer Success',
-      name: 'Дмитрий В.',
-    },
-  ];
-
-  return (
-    <section className="bg-[#0A0A0A]" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12 text-center"
-        >
-          <div className="font-mono text-xs text-neutral-500 uppercase tracking-widest mb-3">Отзывы</div>
-          <h2 className="font-inter font-extrabold text-white" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Что говорят пользователи
-          </h2>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          {testimonials.map((t, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
-              visible={{ opacity: 1, y: 0, scale: 1 }}
-              duration={0.5}
-              delay={i * 0.08}
-              margin="-50px 0px"
-              className="bg-[#141414] border border-white/10 p-6 flex flex-col"
-            >
-              <p className="font-inter text-neutral-300 text-sm leading-relaxed flex-1 mb-6">
-                &ldquo;{t.quote}&rdquo;
-              </p>
-              <div className="border-t border-white/10 pt-4">
-                <div className="font-inter font-semibold text-white text-sm">{t.name}</div>
-                <div className="font-mono text-xs text-neutral-500 mt-0.5">{t.role}</div>
-              </div>
-            </RevealDiv>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-3 gap-[1px] bg-white/10 p-[1px]">
-          {[
-            { value: '20+', label: 'сценариев', sub: 'Защиты, питчи, QBR, переговоры' },
-            { value: '4', label: 'персоны оппонентов', sub: 'CFO · Инвестор · Совет директоров · Клиент' },
-            { value: '5', label: 'критических навыков', sub: 'Аргументация, ясность, устойчивость, структура, лаконичность' },
-          ].map((item, i) => (
-            <RevealDiv
-              key={i}
-              delay={i * 0.08}
-              duration={0.5}
-              margin="-40px 0px"
-              hidden={{ opacity: 0, y: 20 }}
-              visible={{ opacity: 1, y: 0 }}
-              className="bg-[#0A0A0A] flex flex-col p-6 lg:p-8"
-            >
-              <div className="font-inter font-extrabold text-white" style={{ fontSize: 'clamp(28px, 3vw, 44px)', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                {item.value}
-              </div>
-              <div className="font-mono text-[#E8600A] text-xs uppercase tracking-widest mt-2 mb-1">{item.label}</div>
-              <div className="font-mono text-neutral-500 text-xs mt-1">{item.sub}</div>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── MID-PAGE CTA ─────────────────────────────────────────────────────────────
-function MidPageCTA() {
-  return (
-    <section className="bg-white" style={{ padding: 'clamp(60px, 8vw, 80px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="text-center max-w-2xl mx-auto"
-        >
-          <h2 className="font-inter font-extrabold text-neutral-900 mb-4" style={{ fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Попробуйте бесплатно — 3 вопроса без регистрации
-          </h2>
-          <p className="font-inter text-neutral-500 mb-8" style={{ fontSize: 16, lineHeight: 1.6 }}>
-            Загрузите документ, выберите оппонента и получите первую обратную связь. Никаких обязательств.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 grid max-w-[320px] gap-3 sm:flex sm:max-w-none sm:items-center"
+          >
             <Link
               href="/simulation/guest"
-              className="bg-[#171717] hover:bg-black text-white font-inter font-semibold rounded-none px-8 py-3.5 text-sm flex items-center justify-center gap-2 transition-all"
+              className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 border border-neutral-950 bg-neutral-950 px-6 text-sm font-bold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"
             >
-              Начать стресс-тест <ArrowRight size={14} />
+              Проверить документ — 3 вопроса
+              <ArrowRight size={16} />
             </Link>
-            <Link
-              href="/scenarios"
-              className="border border-neutral-200 text-neutral-600 font-inter font-medium rounded-none px-8 py-3.5 text-sm flex items-center justify-center hover:bg-neutral-50 transition-all"
+            <button
+              type="button"
+              onClick={() => smoothScroll('#scenarios')}
+              className="inline-flex min-h-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white/68 px-6 text-sm font-semibold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
             >
               Посмотреть сценарии
-            </Link>
-          </div>
-        </RevealDiv>
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.55, delay: 0.38 }}
+            className="mt-7 grid max-w-[320px] grid-cols-1 border border-neutral-300 bg-white/68 sm:max-w-[650px] sm:grid-cols-3"
+          >
+            {[
+              ['Input', 'memo / deck / QBR'],
+              ['Pressure', 'CFO / client / board'],
+              ['Output', 'risks / prep-card / report'],
+            ].map(([label, value], index) => (
+              <div key={label} className={`px-4 py-4 ${index > 0 ? 'border-t border-neutral-300 sm:border-l sm:border-t-0' : ''}`}>
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">{label}</div>
+                <div className="mt-1 text-sm font-bold text-neutral-950">{value}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          style={safariMotionStyle}
+          className="relative min-w-0 lg:translate-x-10 lg:translate-y-5 xl:translate-x-14"
+        >
+          <HeroVisual />
+        </motion.div>
       </div>
     </section>
   );
 }
 
-// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
-function HowItWorks() {
-  const steps = [
+function ProblemAgitation() {
+  const problems = [
     {
-      num: '01',
-      title: 'Загрузи документ или выбери готовый сценарий',
-      desc: 'Не тему — конкретный файл: спич-дек, финмодель, роадмап. PeakTalk разбирает именно его аргументы и данные. Вопросы на сессии будут по вашему материалу.',
-      mockup: <MockupUpload />,
+      method: 'Живой коуч',
+      problem: 'Хорош для навыка, но не знает ваш QBR, финмодель и политический контекст встречи в четверг.',
     },
     {
-      num: '02',
-      title: 'Выбери оппонента: CFO, инвестор, клиент, совет директоров',
-      desc: 'Каждая роль задаёт разные вопросы. CFO режет по ROI. Инвестор давит на риски. Клиент требует обоснование. Совет директоров проверяет стратегию.',
-      mockup: <MockupSession />,
+      method: 'Онлайн-курс',
+      problem: 'Учит коммуникации вообще. А вам нужен разбор конкретного документа и конкретных возражений.',
     },
     {
-      num: '03',
-      title: 'Пройди жёсткий Q&A — получи шпаргалку с сильными аргументами',
-      desc: 'После сессии — разбор по каждому ответу. Слабые места подсвечены. Знаете, где и почему потеряли нить. Идёте на встречу без белых пятен.',
-      mockup: <MockupReport />,
+      method: 'Универсальный AI-чат',
+      problem: 'Отвечает охотно, но редко держит роль жёсткого стейкхолдера и не оставляет рабочий артефакт.',
     },
   ];
 
   return (
-    <section id="how" className="relative" style={{ backgroundColor: '#fff', padding: 'clamp(80px, 15vw, 180px) 0' }}>
+    <section className="bg-white py-[clamp(76px,9vw,118px)]">
       <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-16"
-        >
-          <h2 className="font-inter font-extrabold" style={{ fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '1rem' }}>
-            Как это работает.
+        <RevealDiv className="mb-12 max-w-4xl" margin="-50px 0px">
+          <SectionLabel>problem / pressure gap</SectionLabel>
+          <h2 className="mt-4 max-w-4xl font-display text-[32px] font-black uppercase leading-[1.02] text-neutral-950 sm:text-[48px] lg:text-[58px]">
+            Идеи редко проваливаются из-за идеи. Чаще — из-за ответа на третий неудобный вопрос.
           </h2>
-          <p className="font-mono text-neutral-400 text-xs tracking-widest uppercase">Три шага до уверенной защиты.</p>
         </RevealDiv>
 
-        <div className="flex flex-col">
-          {steps.map((s, i) => (
-            <div
-              key={s.num}
-              className={`grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-24 py-16 ${i !== steps.length - 1 ? 'border-b border-neutral-200' : ''}`}
+        <div className="grid border border-neutral-200 md:grid-cols-3">
+          {problems.map((item, index) => (
+            <RevealDiv
+              key={item.method}
+              delay={index * 0.06}
+              className={`group relative min-h-[250px] bg-white p-6 transition-colors duration-150 hover:bg-[#111111] ${index > 0 ? 'border-t border-neutral-200 md:border-l md:border-t-0' : ''}`}
             >
-              <RevealDiv
-                hidden={{ opacity: 0, x: -24, y: 0, scale: 1 }}
-                visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                delay={0.1}
-                margin="-50px 0px"
-                className={`${i % 2 === 1 ? 'md:order-last' : ''}`}
-              >
-                <div className="font-mono text-xs text-[#E8600A] tracking-widest mb-4 opacity-50 block">[{s.num}]</div>
-                <h3 className="font-inter font-bold text-3xl text-neutral-900 mb-6 leading-tight max-w-lg">{s.title}</h3>
-                <p className="font-inter text-base text-neutral-500 leading-relaxed max-w-lg">{s.desc}</p>
-              </RevealDiv>
-
-              <RevealDiv
-                hidden={{ opacity: 0, y: 28, scale: 0.97 }}
-                visible={{ opacity: 1, y: 0, scale: 1 }}
-                delay={0.2}
-                margin="-50px 0px"
-                className="relative w-full shadow-2xl rounded-none"
-              >
-                {s.mockup}
-              </RevealDiv>
-            </div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
+              <h3 className="mt-8 text-2xl font-bold text-neutral-950 transition-colors group-hover:text-white">{item.method}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600 transition-colors group-hover:text-white/68">{item.problem}</p>
+              <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#E8600A] transition-all duration-200 group-hover:w-full" />
+            </RevealDiv>
           ))}
         </div>
       </div>
@@ -900,214 +417,371 @@ function HowItWorks() {
   );
 }
 
-// ─── COMPARISON TABLE ─────────────────────────────────────────────────────────
-function Comparison() {
+function ActionFlow() {
+  const steps = [
+    {
+      number: '01',
+      title: 'Загружаете то, что будете защищать',
+      body: 'Не тему и не “контекст”. Конкретный документ: budget memo, roadmap, pitch deck, QBR. Вопросы строятся вокруг ваших формулировок и дыр в логике.',
+      label: 'document intake',
+      icon: FileText,
+    },
+    {
+      number: '02',
+      title: 'Выбираете, кто будет спорить',
+      body: 'CFO давит на окупаемость, клиент на ценность, инвестор на модель роста, board на trade-offs. Роль меняет угол атаки.',
+      label: 'opponent model',
+      icon: ShieldAlert,
+    },
+    {
+      number: '03',
+      title: 'Получаете разбор, а не комплименты',
+      body: 'Критические возражения, слабые ответы, prep-card и список мест, которые надо укрепить до созвона или кабинета.',
+      label: 'meeting artifact',
+      icon: BarChart3,
+    },
+  ];
+
   return (
-    <section className="bg-neutral-50" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
+    <section id="how" className="bg-[#faf8f4] py-[clamp(80px,11vw,146px)]">
       <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12 max-w-2xl"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Сравнение</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Тренажер защиты проектов vs обычные инструменты
+        <RevealDiv className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end" margin="-50px 0px">
+          <div>
+            <SectionLabel>how it works</SectionLabel>
+          <h2 className="mt-4 max-w-3xl font-display text-[32px] font-black leading-[1.05] text-neutral-950 sm:text-[46px] lg:text-[56px]">
+            Один документ. Один оппонент. Один честный разбор.
           </h2>
-          <p className="font-inter text-neutral-500 mt-3" style={{ fontSize: 16, maxWidth: 520, lineHeight: 1.6 }}>
-            Честное сравнение. У каждого инструмента есть свои сильные стороны.
+          </div>
+          <p className="max-w-sm text-[15px] leading-relaxed text-neutral-600">
+            Без учебной сцены и лишней геймификации. Это рабочий prep-room для переговоров, защиты решений и сложных апдейтов.
           </p>
         </RevealDiv>
 
-        <RevealDiv
-          hidden={{ opacity: 0, y: 24 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          delay={0.1}
-          margin="-50px 0px"
-          className="overflow-x-auto"
-        >
-          <table className="w-full text-sm font-inter" style={{ minWidth: 640 }}>
-            <thead>
-              <tr className="border-b border-neutral-200">
-                <th className="text-left py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400" style={{ minWidth: 200 }}>
-                  Критерий
-                </th>
-                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-[#E8600A]">
-                  PeakTalk
-                </th>
-                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400">
-                  ChatGPT / Gemini
-                </th>
-                <th className="text-center py-4 px-4 font-mono text-xs uppercase tracking-widest text-neutral-400">
-                  Yoodli / Poised
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  criterion: 'Вопросы по вашему документу',
-                  peaktalk: true,
-                  chat: 'Вручную, без анализа файла',
-                  coaching: null,
-                },
-                {
-                  criterion: 'Адаптивное давление',
-                  peaktalk: true,
-                  chat: 'Нет, всегда одинаковый тон',
-                  coaching: 'Нет, анализирует речь, не контент',
-                },
-                {
-                  criterion: 'Ролевые оппоненты (CFO, инвестор)',
-                  peaktalk: true,
-                  chat: 'Можно попросить, но без глубины роли',
-                  coaching: null,
-                },
-                {
-                  criterion: 'Оценка аргументации',
-                  peaktalk: true,
-                  chat: 'Субъективная, без метрик',
-                  coaching: 'Оценка темпа речи и filler words',
-                },
-                {
-                  criterion: 'Шпаргалка для встречи',
-                  peaktalk: true,
-                  chat: 'Нужно просить отдельно',
-                  coaching: null,
-                },
-                {
-                  criterion: 'PDF-отчёт',
-                  peaktalk: true,
-                  chat: null,
-                  coaching: null,
-                },
-                {
-                  criterion: 'Где альтернатива сильнее',
-                  peaktalk: 'Узкая специализация',
-                  chat: 'Универсальность — решает любые задачи',
-                  coaching: 'Работа с голосом и подачей в реальном времени',
-                },
-              ].map((row, i) => (
-                <tr key={i} className={`border-b border-neutral-100 ${i === 6 ? 'bg-neutral-50' : ''}`}>
-                  <td className={`py-3 px-4 ${i === 6 ? 'font-semibold text-neutral-900' : 'text-neutral-700'}`}>
-                    {row.criterion}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    {row.peaktalk === true ? (
-                      <span className="text-emerald-600 font-bold">✓</span>
-                    ) : (
-                      <span className="text-neutral-400">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center text-neutral-500 text-xs">
-                    {typeof row.chat === 'string' ? row.chat : (row.chat === true ? <span className="text-emerald-600 font-bold">✓</span> : '—')}
-                  </td>
-                  <td className="py-3 px-4 text-center text-neutral-500 text-xs">
-                    {typeof row.coaching === 'string' ? row.coaching : (row.coaching === true ? <span className="text-emerald-600 font-bold">✓</span> : '—')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </RevealDiv>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {steps.map((step, index) => (
+            <RevealDiv key={step.number} delay={index * 0.08} className="border border-neutral-300 bg-white p-6 lg:min-h-[390px]">
+              <div className="flex items-start justify-between gap-4 border-b border-neutral-200 pb-6">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">{step.label}</div>
+                  <div className="mt-2 font-display text-[44px] font-black leading-none text-[#E8600A]">{step.number}</div>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center border border-neutral-200 bg-[#faf8f4] text-neutral-950">
+                  <step.icon size={20} />
+                </div>
+              </div>
+              <h3 className="mt-8 text-[24px] font-bold leading-[1.12] text-neutral-950">{step.title}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{step.body}</p>
+            </RevealDiv>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-// ─── FAQ ──────────────────────────────────────────────────────────────────────
-function FAQ() {
+function ImpactEvidence() {
+  const evidence = [
+    {
+      title: 'Слабые допущения',
+      body: 'Где документ просит поверить, но не показывает цифры, диапазоны или последствия.',
+      icon: Target,
+    },
+    {
+      title: 'Опасные формулировки',
+      body: 'Где ответ звучит уверенно, но уходит от факта, срока, владельца или trade-off.',
+      icon: MessageSquare,
+    },
+    {
+      title: 'Prep-card перед встречей',
+      body: 'Что открыть за пять минут до разговора: opening move, опорные цифры, риски и ответы.',
+      icon: CheckCircle2,
+    },
+  ];
+
+  return (
+    <section className="relative overflow-hidden bg-[#0b0b0b] py-[clamp(84px,11vw,150px)] text-white">
+      <div className="absolute inset-0 opacity-[0.055]" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.45)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px]" />
+      </div>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#E8600A] via-white/20 to-transparent" aria-hidden="true" />
+
+      <div className="container-custom relative z-10">
+        <RevealDiv className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.55fr)] lg:items-end" margin="-50px 0px">
+          <div>
+            <SectionLabel dark>why it works</SectionLabel>
+            <h2 className="mt-4 max-w-4xl font-display text-[34px] font-black leading-[1.04] text-white sm:text-[52px] lg:text-[68px]">
+              Не “улучшает текст”. Показывает, где вас разберут.
+            </h2>
+          </div>
+          <p className="text-[15px] leading-relaxed text-white/55">
+            Польза не в красивой формулировке. Польза в том, что слабое место всплывает на экране, а не перед CFO, клиентом или советом директоров.
+          </p>
+        </RevealDiv>
+
+        <div className="grid border border-white/12 lg:grid-cols-3">
+          {evidence.map((item, index) => (
+            <RevealDiv
+              key={item.title}
+              delay={index * 0.07}
+              className={`relative min-h-[300px] bg-white/[0.025] p-7 ${index > 0 ? 'border-t border-white/12 lg:border-l lg:border-t-0' : ''}`}
+            >
+              <div className="mb-10 inline-flex h-12 w-12 items-center justify-center border border-white/16 bg-white/[0.035] text-[#E8600A]">
+                <item.icon size={20} />
+              </div>
+              <h3 className="text-[24px] font-bold text-white">{item.title}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-white/55">{item.body}</p>
+              <div className="absolute bottom-6 right-7 font-mono text-[11px] uppercase tracking-[0.16em] text-white/20">signal 0{index + 1}</div>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Scenarios() {
+  const scenarios = [
+    {
+      tag: 'CFO',
+      title: 'Защита бюджета',
+      desc: 'Окупаемость, payback period, цена задержки, что можно убрать без риска.',
+      artifact: 'Budget memo / financial model',
+    },
+    {
+      tag: 'Investor',
+      title: 'Питч раунда',
+      desc: 'Модель роста, рынок, unit-экономика, почему ставка сейчас оправдана.',
+      artifact: 'Pitch deck / fundraising memo',
+    },
+    {
+      tag: 'Client',
+      title: 'QBR и продление',
+      desc: 'Доказательство impact, renewal risk, неприятные вопросы по результатам квартала.',
+      artifact: 'QBR deck / account review',
+    },
+    {
+      tag: 'Board',
+      title: 'Защита roadmap',
+      desc: 'Приоритеты, ресурсы, trade-offs, стоимость переноса и отказа от фич.',
+      artifact: 'Roadmap / strategy memo',
+    },
+  ];
+
+  return (
+    <section id="scenarios" className="bg-white py-[clamp(82px,10vw,128px)]">
+      <div className="container-custom">
+        <RevealDiv className="mb-12 max-w-3xl" margin="-50px 0px">
+          <SectionLabel>meeting scenarios</SectionLabel>
+          <h2 className="mt-4 font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[46px] lg:text-[54px]">
+            Не переговоры вообще. Конкретные встречи, где документ должен держаться.
+          </h2>
+        </RevealDiv>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {scenarios.map((item, index) => (
+            <RevealDiv key={item.title} delay={index * 0.06} className="group flex min-h-[330px] flex-col border border-neutral-200 bg-white p-6 transition-colors duration-150 hover:bg-neutral-950">
+              <div className="mb-8 inline-flex w-fit border border-[#E8600A]/25 bg-[#E8600A]/[0.08] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#B74707] group-hover:border-[#E8600A]/45 group-hover:text-[#ff8d42]">
+                {item.tag}
+              </div>
+              <h3 className="text-[23px] font-bold leading-[1.1] text-neutral-950 transition-colors group-hover:text-white">{item.title}</h3>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-600 transition-colors group-hover:text-white/60">{item.desc}</p>
+              <div className="mt-auto border-t border-neutral-200 pt-5 transition-colors group-hover:border-white/12">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">artifact</div>
+                <div className="mt-1 text-sm font-semibold text-neutral-800 transition-colors group-hover:text-white/78">{item.artifact}</div>
+              </div>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonBlock() {
+  const alternatives = [
+    {
+      title: 'Коуч',
+      weakness: 'Дорогой и не всегда доступен именно перед срочной встречей.',
+    },
+    {
+      title: 'Курс',
+      weakness: 'Длинный горизонт обучения вместо проверки конкретного материала.',
+    },
+    {
+      title: 'AI-чат',
+      weakness: 'Слишком уступчивый: помогает писать, но редко держит неприятную роль.',
+    },
+  ];
+
+  return (
+    <section id="comparison" className="bg-[#faf8f4] py-[clamp(82px,10vw,130px)]">
+      <div className="container-custom">
+        <RevealDiv className="mb-12 max-w-3xl" margin="-50px 0px">
+          <SectionLabel>comparison</SectionLabel>
+          <h2 className="mt-4 font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[46px] lg:text-[54px]">
+            У PeakTalk другая задача: не успокоить, а вскрыть риск.
+          </h2>
+        </RevealDiv>
+
+        <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <RevealDiv className="border border-neutral-950 bg-neutral-950 p-7 text-white lg:p-9">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#E8600A]">PeakTalk</div>
+            <h3 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.04] lg:text-[42px]">
+              Загружаете документ и получаете давление по его слабым местам.
+            </h3>
+            <div className="mt-9 grid gap-3 sm:grid-cols-3">
+              {['вопросы', 'слабые ответы', 'prep-card'].map((item) => (
+                <div key={item} className="border border-white/12 bg-white/[0.035] px-4 py-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">output</div>
+                  <div className="mt-1 text-sm font-semibold text-white">{item}</div>
+                </div>
+              ))}
+            </div>
+          </RevealDiv>
+
+          <div className="grid gap-4">
+            {alternatives.map((item, index) => (
+              <RevealDiv key={item.title} delay={index * 0.06} className="border border-neutral-300 bg-white p-6">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">alternative</div>
+                <h3 className="mt-3 text-xl font-bold text-neutral-950">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{item.weakness}</p>
+              </RevealDiv>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingCTA() {
+  return (
+    <section id="pricing" className="bg-white py-[clamp(82px,10vw,130px)]">
+      <div className="container-custom">
+        <RevealDiv className="mx-auto mb-12 max-w-3xl text-center" margin="-50px 0px">
+          <SectionLabel>start</SectionLabel>
+          <h2 className="mt-4 font-display text-[34px] font-black uppercase leading-[1] text-neutral-950 sm:text-[52px] lg:text-[68px]">
+            Проверьте один документ бесплатно.
+          </h2>
+          <p className="mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-neutral-600">
+            Три вопроса на своём кейсе без регистрации. Достаточно, чтобы понять, где защита уже трещит.
+          </p>
+        </RevealDiv>
+
+        <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
+          <RevealDiv className="flex flex-col border border-neutral-300 bg-[#faf8f4] p-7 lg:p-9">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">guest pressure-test</div>
+            <div className="mt-4 font-display text-[52px] font-black leading-none text-neutral-950">0 ₽</div>
+            <p className="mt-4 text-sm leading-relaxed text-neutral-600">Один документ, выбранный оппонент, первые критические вопросы.</p>
+            <div className="my-7 h-px bg-neutral-300" />
+            <ul className="mb-8 grid gap-3 text-sm text-neutral-700">
+              {['Без регистрации', 'Без карты', '3 вопроса по вашему материалу'].map((item) => (
+                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 bg-[#E8600A]" />{item}</li>
+              ))}
+            </ul>
+            <Link href="/simulation/guest" className="mt-auto flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]">
+              Запустить 3 вопроса
+            </Link>
+          </RevealDiv>
+
+          <RevealDiv delay={0.08} className="flex flex-col border border-neutral-950 bg-neutral-950 p-7 text-white lg:p-9">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">full session</div>
+            <div className="mt-4 flex items-end gap-2 font-display text-[56px] font-black leading-none text-white">
+              <span className="text-[#FF8A3D]">299</span>
+              <span>₽</span>
+              <span className="pb-1 text-lg font-semibold text-white/70">/ сессия</span>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-white/58">Полный разбор, prep-card и материалы, к которым можно вернуться перед встречей.</p>
+            <div className="my-7 h-px bg-white/12" />
+            <ul className="mb-8 grid gap-3 text-sm text-white/72">
+              {['Полная симуляция', 'Слабые ответы и риски', 'Prep-card и отчёт'].map((item) => (
+                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 bg-[#E8600A]" />{item}</li>
+              ))}
+            </ul>
+            <Link href="/billing" className="mt-auto flex min-h-12 items-center justify-center border border-white bg-white px-5 text-sm font-bold text-neutral-950 transition-colors hover:bg-[#faf8f4]">
+              Открыть полную сессию
+            </Link>
+          </RevealDiv>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQAndTrust() {
   const faqs = [
     {
       q: 'Что такое PeakTalk?',
-      a: 'PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.',
+      a: 'PeakTalk — сервис подготовки к защите решений и сложным B2B-встречам. Вы загружаете документ, выбираете оппонента и получаете разбор слабых мест до реального разговора.',
     },
     {
-      q: 'Сколько стоит PeakTalk?',
-      a: '3 вопроса бесплатно без регистрации. Полная сессия — 299 ₽. Подписка Personal — от 790 ₽/мес за 10 сессий. Pro — 1 490 ₽/мес без ограничений.',
+      q: 'Нужна ли регистрация?',
+      a: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора и возврата к материалам.',
     },
     {
-      q: 'Нужна ли регистрация для начала?',
-      a: 'Нет. Guest-поток даёт 3 бесплатных вопроса без создания аккаунта. Для сохранения сессии и PDF-отчёта потребуется регистрация.',
+      q: 'Какие документы подходят?',
+      a: 'Memo, pitch deck, QBR, roadmap, финмодель, стратегия или любой текстовый материал, который вы будете защищать на встрече.',
     },
     {
-      q: 'Какие форматы документов поддерживаются?',
-      a: 'PDF, DOCX, TXT. Загрузите презентацию, финмодель, роадмап или любой текстовый документ — AI проанализирует именно ваш материал.',
-    },
-    {
-      q: 'Как AI генерирует вопросы?',
-      a: 'AI анализирует загруженный документ, находит логические уязвимости и генерирует вопросы по вашим данным. Каждые 3 вопроса возможен «кривбол» — неожиданный вызов.',
-    },
-    {
-      q: 'Можно ли создать своего оппонента?',
-      a: 'Да. В Pro-тарифе можно создать кастомную персону с фоном, стилем коммуникации и ключевыми фразами. Персона снапшотится при старте сессии.',
-    },
-    {
-      q: 'Где хранятся мои данные?',
-      a: 'Все данные хранятся в России в соответствии с 152-ФЗ. Документы обрабатываются через Cloud.ru Foundation Models. Автоподписки на бесплатном тарифе нет.',
+      q: 'Это заменяет коуча?',
+      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного документа и аргументации перед встречей.',
     },
   ];
 
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const signals = [
+    { icon: Shield, title: '152-ФЗ', desc: 'Данные хранятся в России.' },
+    { icon: Lock, title: 'Не обучаем модели', desc: 'Ваши документы не становятся датасетом.' },
+    { icon: Database, title: 'Cloud.ru', desc: 'Обработка через российского провайдера.' },
+    { icon: Zap, title: 'Без карты', desc: 'Guest pressure-test запускается без оплаты.' },
+  ];
+
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="bg-white" style={{ padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom max-w-3xl">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12 text-center"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">FAQ</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Частые вопросы
+    <section className="bg-[#faf8f4] py-[clamp(82px,10vw,130px)]">
+      <div className="container-custom grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(420px,1fr)]">
+        <RevealDiv margin="-50px 0px">
+          <SectionLabel>trust / faq</SectionLabel>
+          <h2 className="mt-4 max-w-xl font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[44px]">
+            Для документов, которые нельзя разбирать на публике.
           </h2>
+          <div className="mt-9 grid gap-3 sm:grid-cols-2">
+            {signals.map((signal) => (
+              <div key={signal.title} className="border border-neutral-300 bg-white/70 p-4">
+                <signal.icon size={18} className="text-[#E8600A]" />
+                <div className="mt-3 text-sm font-bold text-neutral-950">{signal.title}</div>
+                <p className="mt-1 text-xs leading-relaxed text-neutral-600">{signal.desc}</p>
+              </div>
+            ))}
+          </div>
         </RevealDiv>
 
-        <div className="flex flex-col">
-          {faqs.map((faq, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 16 }}
-              visible={{ opacity: 1, y: 0 }}
-              duration={0.5}
-              delay={i * 0.05}
-              margin="-40px 0px"
-              className="border-b border-neutral-200"
-            >
+        <div className="border border-neutral-300 bg-white">
+          {faqs.map((faq, index) => (
+            <div key={faq.q} className={index > 0 ? 'border-t border-neutral-200' : ''}>
               <button
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full flex items-start justify-between py-5 text-left group"
-                aria-expanded={openIndex === i}
+                type="button"
+                onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                className="flex w-full cursor-pointer items-center justify-between gap-5 px-5 py-5 text-left text-base font-bold text-neutral-950 transition-colors hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
+                aria-expanded={openIndex === index}
               >
-                <span className="font-inter font-semibold text-neutral-900 text-base pr-8 group-hover:text-[#E8600A] transition-colors">
-                  {faq.q}
-                </span>
-                <span className={`shrink-0 mt-1 text-neutral-400 transition-transform duration-200 ${openIndex === i ? 'rotate-45' : ''}`}>
-                  +
-                </span>
+                {faq.q}
+                <ChevronDown size={18} className={`shrink-0 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} />
               </button>
               <AnimatePresence>
-                {openIndex === i && (
+                {openIndex === index && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     className="overflow-hidden"
                   >
-                    <p className="font-inter text-neutral-600 text-sm leading-relaxed pb-5 max-w-xl">
-                      {faq.a}
-                    </p>
+                    <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </RevealDiv>
+            </div>
           ))}
         </div>
       </div>
@@ -1115,440 +789,31 @@ function FAQ() {
   );
 }
 
-// ─── TRUST SIGNALS ────────────────────────────────────────────────────────────
-function TrustSignals() {
-  const signals = [
-    {
-      icon: <Shield size={20} />,
-      title: '152-ФЗ',
-      desc: 'Все данные хранятся в России. Полное соответствие российскому законодательству о персональных данных.',
-    },
-    {
-      icon: <Lock size={20} />,
-      title: 'Шифрование',
-      desc: 'Документы и сессии защищены. Ваши материалы не используются для обучения моделей и не передаются третьим лицам.',
-    },
-    {
-      icon: <Database size={20} />,
-      title: 'Cloud.ru',
-      desc: 'AI-модели работают через Cloud.ru Foundation Models — российский провайдер. Данные не покидают страну.',
-    },
-    {
-      icon: <CheckCircle2 size={20} />,
-      title: 'Без автоподписки',
-      desc: 'На бесплатном тарифе — никаких скрытых платежей. Карта не требуется. Платите только за то, что используете.',
-    },
-  ];
-
-  return (
-    <section className="bg-neutral-50" style={{ padding: 'clamp(60px, 8vw, 80px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-10 text-center"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Доверие</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 32px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Ваши данные под защитой
-          </h2>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {signals.map((s, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 20 }}
-              visible={{ opacity: 1, y: 0 }}
-              duration={0.5}
-              delay={i * 0.06}
-              margin="-40px 0px"
-              className="bg-white border border-neutral-200 p-5 flex flex-col"
-            >
-              <div className="w-9 h-9 rounded-none bg-[#E8600A]/10 flex items-center justify-center mb-3 text-[#E8600A]">
-                {s.icon}
-              </div>
-              <h3 className="font-inter font-bold text-neutral-900 text-sm mb-1">{s.title}</h3>
-              <p className="font-inter text-neutral-500 text-xs leading-relaxed">{s.desc}</p>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── MOCKUPS ──────────────────────────────────────────────────────────────────
-function MockupUpload() {
-  const files = [
-    { name: 'budget_defence_q3.pdf', size: '1.4 MB' },
-    { name: 'pitch_deck_series_a.pdf', size: '3.2 MB' },
-  ];
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md relative" style={{ minHeight: 240 }}>
-      <div className="flex items-center justify-center px-4 sm:px-8 py-4 border-b border-neutral-200 bg-gray-50">
-        <span className="text-xs text-neutral-400 tracking-widest font-mono">[ PEAKTALK // ЗАГРУЗКА ]</span>
-      </div>
-      <div className="border border-dashed border-neutral-300 rounded-none mx-4 sm:mx-8 mt-6 py-6 sm:py-10 flex flex-col items-center gap-3 bg-gray-50 hover:border-neutral-400 transition-colors cursor-pointer">
-        <div className="w-9 h-9 rounded-none bg-orange-50 flex items-center justify-center">
-          <FileText size={18} style={{ color: '#E8600A' }} strokeWidth={1.5} />
-        </div>
-        <div className="text-center">
-          <p className="text-neutral-900 font-semibold text-sm">Перетащите файл или выберите</p>
-          <p className="text-neutral-400 text-xs mt-0.5 font-mono">PDF, PPTX, DOCX — любой формат</p>
-        </div>
-      </div>
-      <div className="px-4 sm:px-8 pt-4 pb-6 flex flex-col gap-3">
-        {files.map((f) => (
-          <div key={f.name} className="flex items-center justify-between px-3 py-2.5 rounded-none bg-gray-50 border border-gray-100">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-6 h-6 rounded-none bg-orange-50 flex items-center justify-center shrink-0">
-                <FileText size={12} style={{ color: '#E8600A' }} />
-              </div>
-              <span className="text-gray-700 text-xs truncate font-mono">{f.name}</span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span className="text-gray-400 text-xs opacity-75 font-mono">{f.size}</span>
-              <CheckCircle2 size={13} color="#10b981" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MockupSession() {
-  const { ref: progressBarRef, isInView: progressVisible } = useRevealTrigger<HTMLDivElement>('-72px 0px');
-
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 260 }}>
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-none flex items-center justify-center shrink-0 border border-neutral-200 bg-white">
-            <span className="text-xs opacity-75 font-bold font-mono" style={{ color: '#8B5CF6' }}>CFO</span>
-          </div>
-          <div className="flex flex-col leading-none gap-1">
-            <span className="font-semibold text-gray-900" style={{ fontSize: '13px' }}>Финансовый директор</span>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 font-mono" style={{ fontSize: 10 }}>Жёстко</span>
-              <span className="text-gray-400 font-mono" style={{ fontSize: 10 }}>Вопрос 3 из 10</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 px-4 sm:px-6 py-5 flex flex-col gap-4 bg-white relative">
-        <div className="flex justify-start">
-          <div className="max-w-[85%] px-4 py-3 bg-neutral-50 border border-neutral-200 text-neutral-900 font-inter text-sm leading-relaxed">
-            Вы просите $500k на новую инициативу, но в финмодели я не вижу четкого обоснования возврата инвестиций. Каков ROI на горизонте 12 месяцев?
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <div className="max-w-[85%] px-4 py-3 bg-neutral-900 text-white font-inter text-sm leading-relaxed relative">
-            <span className="opacity-50 absolute -left-10 top-3 text-[10px] text-neutral-400 font-mono">Вы</span>
-            Мы ожидаем рост LTV на 15%, что перекроет затраты уже в Q3...
-            <span className="inline-block w-1 h-3 ml-1 bg-white animate-pulse" />
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100" ref={progressBarRef}>
-          <div
-            className="h-full rounded-none origin-left"
-            style={{
-              background: '#E8600A',
-              ...safariMotionStyle,
-              transformOrigin: 'left center',
-              transform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-              WebkitTransform: `translateZ(0) scaleX(${progressVisible ? 0.3 : 0})`,
-              transitionProperty: 'transform',
-              transitionDuration: '1.2s',
-              transitionDelay: '0.3s',
-              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MockupReport() {
-  const metrics = [
-    { label: 'Аргументация', score: 8 },
-    { label: 'Устойчивость', score: 4 },
-    { label: 'Структура', score: 7 },
-  ];
-
-  function getScoreColor(score: number): string {
-    if (score >= 7) return '#10b981';
-    if (score >= 5) return '#f59e0b';
-    return '#e11d48';
-  }
-
-  return (
-    <div className="w-full rounded-none overflow-hidden border border-neutral-200 bg-white shadow-md flex flex-col" style={{ minHeight: 280 }}>
-      <div className="px-5 sm:px-6 py-5 border-b border-gray-100 bg-gradient-to-b from-neutral-50 to-white">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-             <div className="font-inter text-neutral-500 font-medium text-[10px] mb-1 tracking-widest uppercase">Разбор завершён</div>
-             <div className="font-inter font-extrabold text-neutral-900 leading-none" style={{ fontSize: '32px' }}>
-               6<span className="text-lg text-neutral-400 font-medium">/10</span>
-             </div>
-          </div>
-          <div className="text-right">
-             <div className="font-mono text-neutral-500" style={{ fontSize: 11 }}>CFO</div>
-             <div className="font-mono text-neutral-900 font-bold" style={{ fontSize: 11 }}>Средняя готовность</div>
-          </div>
-        </div>
-
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 italic">
-          &laquo;Хорошая попытка, оппонент увидел потенциал. Но местами ты плавал в цифрах — фундамент пошатнулся.&raquo;
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {metrics.map((m) => {
-            const color = getScoreColor(m.score);
-            return (
-            <span
-              key={m.label}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-none text-xs font-bold font-mono border"
-              style={{ color, backgroundColor: `${color}12`, borderColor: `${color}30` }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-              {m.label} {m.score}/10
-            </span>
-          )})}
-        </div>
-      </div>
-
-      <div className="flex-1 p-5 bg-white">
-        <div className="border-l-2 border-amber-200 pl-3 mb-4">
-          <p className="text-xs font-bold text-neutral-900 mb-1">Слабое место: Обоснование ROI</p>
-          <p className="text-[13px] text-neutral-600">На 3-м вопросе вы ушли от ответа про конкретные сроки окупаемости. Рекомендуем подготовить расчет...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── USE CASES ────────────────────────────────────────────────────────────────
-function UseCases() {
-  const cases = [
-    {
-      tag: 'CFO',
-      title: 'Защита бюджета',
-      desc: 'Ваш бюджет будет порезан, если вы не можете ответить на эти вопросы.',
-      accent: '#E8600A',
-    },
-    {
-      tag: 'Инвестор',
-      title: 'Питч раунда',
-      desc: 'Инвесторы слышали всё. Ваш нарратив должен выдержать давление.',
-      accent: '#8B5CF6',
-    },
-    {
-      tag: 'Клиент',
-      title: 'QBR с клиентом',
-      desc: 'Клиент недоволен. Подготовьтесь к жёсткому разговору.',
-      accent: '#10b981',
-    },
-    {
-      tag: 'Совет директоров',
-      title: 'Защита roadmap',
-      desc: 'Стейкхолдеры будут давить. Знайте свои ответы заранее.',
-      accent: '#3b82f6',
-    },
-  ];
-
-  return (
-    <section id="scenarios" style={{ backgroundColor: '#fff', padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.6}
-          margin="-50px 0px"
-          className="mb-12"
-        >
-          <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-3">Сценарии</div>
-          <h2 className="font-inter font-extrabold text-neutral-900" style={{ fontSize: 'clamp(24px, 3vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1.06 }}>
-            Под какую встречу готовитесь?
-          </h2>
-          <p className="font-inter text-neutral-500 mt-3" style={{ fontSize: 16, maxWidth: 520, lineHeight: 1.6 }}>
-            Загрузите документ по конкретному сценарию — симулятор настроит вопросы под роль оппонента.
-          </p>
-        </RevealDiv>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cases.map((c, i) => (
-            <RevealDiv
-              key={i}
-              hidden={{ opacity: 0, y: 24, scale: 0.985 }}
-              visible={{ opacity: 1, y: 0, scale: 1 }}
-              duration={0.5}
-              delay={i * 0.08}
-              margin="-50px 0px"
-              className="group relative flex flex-col border border-neutral-200 bg-white hover:border-neutral-300 transition-all p-6"
-            >
-              <div
-                className="font-mono text-[11px] uppercase tracking-widest px-2.5 py-1 mb-4 inline-flex w-fit"
-                style={{ backgroundColor: `${c.accent}14`, color: c.accent }}
-              >
-                {c.tag}
-              </div>
-              <h3 className="font-inter font-bold text-neutral-900 text-lg mb-2 leading-snug">{c.title}</h3>
-              <p className="font-inter text-neutral-500 text-sm leading-relaxed flex-1">{c.desc}</p>
-              <div className="mt-5 pt-4 border-t border-neutral-100">
-                <Link
-                  href="/simulation/guest"
-                  className="font-mono text-xs uppercase tracking-widest text-neutral-400 hover:text-neutral-900 transition-colors flex items-center gap-1.5"
-                >
-                  Запустить <ArrowRight size={11} />
-                </Link>
-              </div>
-              <div
-                className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-150 ease-out"
-                style={{ backgroundColor: c.accent }}
-              />
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── PRICING TEASER ───────────────────────────────────────────────────────────
-function PricingBlock() {
-  return (
-    <section id="pricing" style={{ backgroundColor: '#0A0A0A', padding: 'clamp(80px, 10vw, 120px) 0' }}>
-      <div className="container-custom">
-        <h2 className="font-inter font-extrabold" style={{ fontSize: 'clamp(32px, 4vw, 52px)', color: '#FFF', letterSpacing: '-0.03em', textAlign: 'center', margin: 0 }}>
-          Начните без обязательств.
-        </h2>
-        <div className="font-mono" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', marginTop: '12px', marginBottom: '56px' }}>
-          3 вопроса — без регистрации. Полная сессия — от 299 ₽.
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
-          <RevealDiv
-            hidden={{ opacity: 0, x: -24, scale: 0.985 }}
-            visible={{ opacity: 1, x: 0, scale: 1 }}
-            duration={0.7}
-            className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
-          >
-            <div className="font-mono text-xs opacity-75 text-white/50 uppercase tracking-widest">Попробовать</div>
-            <div className="font-inter font-bold text-5xl text-white leading-none mt-2">Бесплатно</div>
-            <div className="font-inter text-sm text-white/50 mt-2">3 вопроса. Без регистрации.</div>
-
-            <div className="h-px bg-white/10 my-8" />
-
-            <div className="flex flex-col gap-3 flex-1 mb-8">
-              {[
-                "3 вопроса Q&A по вашему документу",
-                "Выбор персоны-оппонента",
-                "Базовая обратная связь после сессии",
-              ].map((ft, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <span className="text-emerald-500 shrink-0 mt-0.5">✓</span>
-                  <span className="font-inter text-sm text-white/75">{ft}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link href="/simulation/guest" className="w-full py-4 text-center border border-white/20 rounded-none bg-transparent text-white font-inter font-semibold text-sm hover:border-white/40 transition-colors mt-auto">
-              Начать бесплатно
-            </Link>
-          </RevealDiv>
-
-          <RevealDiv
-            hidden={{ opacity: 0, x: 24, scale: 0.985 }}
-            visible={{ opacity: 1, x: 0, scale: 1 }}
-            duration={0.7}
-            className="flex flex-col bg-[#141414] border border-white/10 rounded-none p-8 md:p-10"
-          >
-            <div className="font-mono text-xs opacity-75 text-[#E8600A] uppercase tracking-widest">Полная сессия</div>
-            <div className="font-inter font-bold text-5xl text-white leading-none mt-2 flex items-baseline gap-2">
-              299 ₽ <span className="text-2xl font-medium text-white/50">/ сессия</span>
-            </div>
-            <div className="font-inter text-sm text-white/50 mt-2">Или от 790 ₽/мес по подписке.</div>
-
-            <div className="h-px bg-white/10 my-8" />
-
-            <div className="flex flex-col gap-3 flex-1 mb-8">
-              {[
-                "10 вопросов с жёстким Q&A",
-                "Полный разбор по 5 навыкам",
-                "Транскрипт с комментариями",
-                "Экспорт PDF-отчёта",
-              ].map((ft, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <span className="text-emerald-500 shrink-0 mt-0.5">✓</span>
-                  <span className="font-inter text-sm text-white/75">{ft}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link href="/billing" className="bg-white hover:bg-neutral-100 text-[#0A0A0A] font-inter font-semibold rounded-none w-full mt-auto block text-center py-3 text-sm transition-all">
-              Посмотреть все тарифы
-            </Link>
-          </RevealDiv>
-        </div>
-
-        <div className="font-mono text-xs text-white/40 text-center mt-8">
-          Без скрытых платежей. Без автоподписки на бесплатном режиме.
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── FOOTER CTA ───────────────────────────────────────────────────────────────
 function FooterCTA() {
   return (
-    <section className="relative overflow-hidden bg-black">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <img src="/footercta_bg.png" alt="" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0 bg-black/70 md:bg-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-black/40 to-[#0A0A0A]" />
+    <section className="relative overflow-hidden bg-black text-white">
+      <div className="absolute inset-0 opacity-[0.06]" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" />
       </div>
-      <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E8600A] to-transparent" aria-hidden="true" />
 
-      <div className="py-32 lg:py-48 text-center container-custom relative z-10">
-        <RevealDiv
-          hidden={{ opacity: 0, y: 18 }}
-          visible={{ opacity: 1, y: 0 }}
-          duration={0.8}
-          delay={0.3}
-          className="font-mono"
-          style={{
-            fontSize: '12px',
-            color: '#E8600A',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            opacity: 0.85,
-            marginBottom: '20px'
-          }}
-        >
-          Следующая важная встреча уже в календаре.
+      <div className="container-custom relative z-10 py-[clamp(92px,12vw,170px)] text-center">
+        <RevealDiv margin="-50px 0px">
+          <SectionLabel dark>final check</SectionLabel>
+          <h2 className="mx-auto mt-5 max-w-5xl font-display text-[38px] font-black uppercase leading-[0.98] text-white sm:text-[62px] lg:text-[86px]">
+            Не несите слабый документ на сильную встречу.
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-white/55">
+            Запустите pressure-test и посмотрите, где аргументация ломается, пока это ещё можно исправить.
+          </p>
+          <div className="mt-10 flex justify-center">
+            <Link href="/simulation/guest" className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/24 bg-white px-6 text-sm font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white">
+              Проверить документ бесплатно
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.32]">3 вопроса. Без регистрации. На своём кейсе.</p>
         </RevealDiv>
-        <h2 className="font-inter font-extrabold text-4xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] text-white max-w-4xl mx-auto">
-          Подготовься сейчас.
-        </h2>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
-          <Link
-            href="/simulation/guest"
-            className="px-6 py-3 rounded-none border border-white/30 text-white bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all duration-150 flex items-center justify-center gap-3 font-inter font-semibold text-base group"
-          >
-            <span className="relative z-10">Начать стресс-тест</span>
-            <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform duration-150" />
-          </Link>
-        </div>
       </div>
 
       <Footer />
@@ -1558,55 +823,35 @@ function FooterCTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/10 py-12 relative z-10 bg-black">
-      <div className="container-custom flex flex-col md:flex-row justify-between items-center gap-8 text-white/80">
-        <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1.5">
+    <footer className="relative z-10 border-t border-white/10 bg-black py-10">
+      <div className="container-custom flex flex-col items-center justify-between gap-7 text-white/75 md:flex-row">
+        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
           <div className="brightness-0 invert"><Logo size={20} /></div>
-          <div className="font-mono" style={{ fontSize: 12, opacity: 0.75, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
-            Стресс-тест аргументации до реальной встречи
-          </div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">meeting defense workspace</div>
         </div>
-
-        <div className="flex flex-wrap justify-center gap-8 font-mono text-xs opacity-75 tracking-widest uppercase text-white/40">
-          <Link href="/contacts" className="hover:text-white transition-colors">Контакты</Link>
-          <Link href="/personal-data" className="hover:text-white transition-colors">Оферта</Link>
-          <Link href="/privacy" className="hover:text-white transition-colors">Конфиденциальность</Link>
+        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]">
+          <Link href="/contacts" className="transition-colors hover:text-white">Контакты</Link>
+          <Link href="/personal-data" className="transition-colors hover:text-white">Оферта</Link>
+          <Link href="/privacy" className="transition-colors hover:text-white">Конфиденциальность</Link>
         </div>
       </div>
     </footer>
   );
 }
 
-// ─── JSON-LD STRUCTURED DATA ──────────────────────────────────────────────────
 function JsonLd() {
   const faqData = [
     {
       question: 'Что такое PeakTalk?',
-      answer: 'PeakTalk — AI-тренажер сложных рабочих коммуникаций. Загрузите документ, пройдите Q&A с виртуальным стейкхолдером и найдите слабые места в аргументации до реальной встречи.',
+      answer: 'PeakTalk — сервис подготовки к защите решений и сложным B2B-встречам. Вы загружаете документ, выбираете оппонента и получаете разбор слабых мест до реального разговора.',
     },
     {
-      question: 'Сколько стоит PeakTalk?',
-      answer: '3 вопроса бесплатно без регистрации. Полная сессия — 299 ₽. Подписка Personal — от 790 ₽/мес за 10 сессий. Pro — 1 490 ₽/мес без ограничений.',
+      question: 'Нужна ли регистрация?',
+      answer: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора и возврата к материалам.',
     },
     {
-      question: 'Нужна ли регистрация для начала?',
-      answer: 'Нет. Guest-поток даёт 3 бесплатных вопроса без создания аккаунта. Для сохранения сессии и PDF-отчёта потребуется регистрация.',
-    },
-    {
-      question: 'Какие форматы документов поддерживаются?',
-      answer: 'PDF, DOCX, TXT. Загрузите презентацию, финмодель, роадмап или любой текстовый документ — AI проанализирует именно ваш материал.',
-    },
-    {
-      question: 'Как AI генерирует вопросы?',
-      answer: 'AI анализирует загруженный документ, находит логические уязвимости и генерирует вопросы по вашим данным. Каждые 3 вопроса возможен «кривбол» — неожиданный вызов.',
-    },
-    {
-      question: 'Можно ли создать своего оппонента?',
-      answer: 'Да. В Pro-тарифе можно создать кастомную персону с фоном, стилем коммуникации и ключевыми фразами. Персона снапшотится при старте сессии.',
-    },
-    {
-      question: 'Где хранятся мои данные?',
-      answer: 'Все данные хранятся в России в соответствии с 152-ФЗ. Документы обрабатываются через Cloud.ru Foundation Models. Автоподписки на бесплатном тарифе нет.',
+      question: 'Какие документы подходят?',
+      answer: 'Memo, pitch deck, QBR, roadmap, финмодель, стратегия или любой текстовый материал, который вы будете защищать на встрече.',
     },
   ];
 
@@ -1617,7 +862,7 @@ function JsonLd() {
         '@type': 'SoftwareApplication',
         name: 'PeakTalk',
         url: 'https://peaktalk.ru',
-        description: 'AI-тренажер сложных рабочих коммуникаций. Стресс-тест аргументов перед защитой проектов, бюджетов, QBR и переговорами с жесткими стейкхолдерами.',
+        description: 'Сервис подготовки к защите бюджета, roadmap и QBR. Загружаете документ, выбираете оппонента и получаете разбор слабых мест до реальной встречи.',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: [
@@ -1635,41 +880,11 @@ function JsonLd() {
             priceCurrency: 'RUB',
             description: 'Одна полная сессия',
           },
-          {
-            '@type': 'Offer',
-            name: 'Personal',
-            price: '790',
-            priceCurrency: 'RUB',
-            billingIncrement: 'P1M',
-            description: '10 сессий в месяц',
-          },
-          {
-            '@type': 'Offer',
-            name: 'Pro',
-            price: '1490',
-            priceCurrency: 'RUB',
-            billingIncrement: 'P1M',
-            description: 'Безлимитные сессии + кастомные персоны',
-          },
-          {
-            '@type': 'Offer',
-            name: 'Team',
-            price: '4990',
-            priceCurrency: 'RUB',
-            billingIncrement: 'P1M',
-            description: 'Командный доступ до 10 участников',
-          },
         ],
         provider: {
           '@type': 'Organization',
           name: 'PeakTalk',
           url: 'https://peaktalk.ru',
-          contactPoint: {
-            '@type': 'ContactPoint',
-            email: 'hello@peaktalk.ru',
-            contactType: 'customer support',
-            availableLanguage: 'Russian',
-          },
         },
       },
       {
@@ -1683,46 +898,25 @@ function JsonLd() {
           },
         })),
       },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Главная',
-            item: 'https://peaktalk.ru',
-          },
-        ],
-      },
     ],
   };
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-    />
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />;
 }
 
-// ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function Page() {
   return (
     <main className="relative min-h-screen selection:bg-[#E8600A] selection:text-white">
       <JsonLd />
       <Nav />
       <Hero />
-      <Problem />
-      <Solution />
-      <FeaturesAsBenefits />
-      <SocialProof />
-      <MidPageCTA />
-      <UseCases />
-      <HowItWorks />
-      <Comparison />
-      <FAQ />
-      <TrustSignals />
-      <PricingBlock />
+      <ProblemAgitation />
+      <ActionFlow />
+      <ImpactEvidence />
+      <Scenarios />
+      <ComparisonBlock />
+      <PricingCTA />
+      <FAQAndTrust />
       <FooterCTA />
     </main>
   );

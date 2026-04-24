@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Syne } from "next/font/google";
+import { IBM_Plex_Sans, JetBrains_Mono, Unbounded } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const bodyFont = IBM_Plex_Sans({
   variable: "--font-inter",
   subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const syne = Syne({
+const displayFont = Unbounded({
   variable: "--font-syne",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700", "800", "900"],
   display: "swap",
 });
 
@@ -69,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${inter.variable} ${syne.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body className={`${bodyFont.variable} ${displayFont.variable} ${jetbrainsMono.variable} antialiased`}>
         <Script
           id="yandex-metrika"
           strategy="afterInteractive"
