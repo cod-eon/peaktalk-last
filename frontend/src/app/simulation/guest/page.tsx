@@ -1,36 +1,33 @@
-'use client'
+'use client';
 
-import React, { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
+  AlertTriangle,
   ArrowRight,
-  Loader2,
+  Bot,
+  Briefcase,
   CheckCircle2,
   DollarSign,
+  Loader2,
+  Lock,
+  Mic,
+  Shield,
+  Sparkles,
+  Timer,
   TrendingUp,
   Users,
-  Briefcase,
-  Lock,
-  Sparkles,
-  Zap,
-  Shield,
-  FileText,
-} from 'lucide-react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { startGuestSession, sendGuestMessage } from '@/lib/guest-api'
-import VideoBackground from '@/components/VideoBackground'
+} from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { startGuestSession, sendGuestMessage } from '@/lib/guest-api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Step = 'input' | 'chat' | 'paywall'
+type Step = 'input' | 'chat' | 'paywall';
 
 interface Message {
-  role: 'user' | 'assistant'
-  content: string
+  role: 'user' | 'assistant';
+  content: string;
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
 
 const PERSONAS = [
   {
@@ -38,576 +35,688 @@ const PERSONAS = [
     label: 'CFO',
     subtitle: 'Финансовый директор',
     icon: DollarSign,
-    description: 'Задаёт жёсткие вопросы по unit-экономике и ROI',
+    description: 'Бьёт по ROI, unit-экономике, срокам окупаемости и допущениям.',
   },
   {
     id: 'investor',
     label: 'Инвестор',
-    subtitle: '',
+    subtitle: 'Раунд / fundraising',
     icon: TrendingUp,
-    description: 'Проверяет рыночные гипотезы и стратегию роста',
+    description: 'Проверяет рынок, рост, риски и логику ставок в модели.',
   },
   {
     id: 'board_member',
-    label: 'Совет директоров',
-    subtitle: '',
+    label: 'Совет',
+    subtitle: 'Board / exec review',
     icon: Users,
-    description: 'Оценивает стратегические решения и риски',
+    description: 'Режет roadmap, trade-offs и аргументацию по ресурсам.',
   },
   {
     id: 'client',
     label: 'Клиент',
-    subtitle: '',
+    subtitle: 'QBR / renewal',
     icon: Briefcase,
-    description: 'Сомневается в ценности и сравнивает с альтернативами',
+    description: 'Требует доказать ценность, цифры результата и следующий шаг.',
   },
-]
+];
 
 const DIFFICULTIES = [
-  { value: 1, label: 'Мягко' },
-  { value: 3, label: 'Стандартно' },
-  { value: 5, label: 'Жёстко' },
-]
+  { value: 1, label: 'Мягко', note: 'проверка логики' },
+  { value: 3, label: 'Стандартно', note: 'рабочее давление' },
+  { value: 5, label: 'Жёстко', note: 'как на встрече' },
+];
 
-const MAX_GUEST_TURNS = 3
-const MAX_TEXT_LENGTH = 8000
+const MAX_GUEST_TURNS = 3;
+const MAX_TEXT_LENGTH = 8000;
 
-// ─── Component ───────────────────────────────────────────────────────────────
+function Header({
+  right,
+}: {
+  right?: React.ReactNode;
+}) {
+  return (
+    <header className="h-14 border-b border-neutral-200 flex items-center justify-between px-4 sm:px-5 shrink-0 bg-white/95 backdrop-blur-sm relative z-10">
+      <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
+        <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
+        <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
+      </Link>
+      {right ? <div className="flex items-center gap-2">{right}</div> : null}
+    </header>
+  );
+}
 
 export default function GuestSimulationPage() {
-  // Step state
-  const [step, setStep] = useState<Step>('input')
+  const [step, setStep] = useState<Step>('input');
+  const [text, setText] = useState('');
+  const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number>(3);
+  const [guestSessionId, setGuestSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [turn, setTurn] = useState(0);
+  const [answer, setAnswer] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(90);
 
-  // Input form state
-  const [text, setText] = useState('')
-  const [selectedPersona, setSelectedPersona] = useState<string | null>(null)
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number>(3)
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Chat state
-  const [guestSessionId, setGuestSessionId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [turn, setTurn] = useState(0)
-  const [answer, setAnswer] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  const chatBottomRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  // Scroll chat to bottom on new messages
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+    if (step === 'chat') {
+      textareaRef.current?.focus();
+    }
+  }, [step, turn]);
 
-  // ── Derived ──────────────────────────────────────────────────────────────
-  const charsLeft = MAX_TEXT_LENGTH - text.length
-  const isReady =
-    text.trim().length >= 20 && selectedPersona !== null
+  useEffect(() => {
+    if (step !== 'chat' || isLoading || timeLeft <= 0) return;
 
-  const personaLabel =
-    PERSONAS.find((p) => p.id === selectedPersona)?.label ?? ''
-  const difficultyLabel =
-    DIFFICULTIES.find((d) => d.value === selectedDifficulty)?.label ?? ''
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
+    return () => clearInterval(interval);
+  }, [step, isLoading, timeLeft]);
+
+  const charsLeft = MAX_TEXT_LENGTH - text.length;
+  const isReady = text.trim().length >= 20 && selectedPersona !== null;
+  const currentPersona = PERSONAS.find((p) => p.id === selectedPersona) ?? null;
+  const personaLabel = currentPersona?.label ?? '';
+  const difficulty = DIFFICULTIES.find((d) => d.value === selectedDifficulty) ?? DIFFICULTIES[1];
+
+  const assistantMessages = messages.filter((msg) => msg.role === 'assistant');
+  const currentQuestion = assistantMessages.length
+    ? assistantMessages[assistantMessages.length - 1].content
+    : 'Подготавливаем первый вопрос...';
+
+  const transcript = messages.reduce<Array<{ question?: string; answer?: string }>>((acc, msg) => {
+    if (msg.role === 'assistant') {
+      acc.push({ question: msg.content });
+      return acc;
+    }
+    const last = acc[acc.length - 1];
+    if (last && !last.answer) {
+      last.answer = msg.content;
+    }
+    return acc;
+  }, []);
+
+  const previousTranscript = transcript.slice(0, Math.max(0, transcript.length - 1));
+  const progressPct = Math.min((turn / MAX_GUEST_TURNS) * 100, 100);
+  const isWarningTime = timeLeft <= 15;
 
   const handleStart = async () => {
-    if (!isReady || isLoading) return
-    setIsLoading(true)
+    if (!isReady || isLoading) return;
+    setIsLoading(true);
+
     try {
-      const res = await startGuestSession(
-        text,
-        selectedPersona!,
-        selectedDifficulty
-      )
-      setGuestSessionId(res.guest_session_id)
-      setMessages([{ role: 'assistant', content: res.first_question }])
-      setTurn(1)
-      setStep('chat')
+      const res = await startGuestSession(text, selectedPersona!, selectedDifficulty);
+      setGuestSessionId(res.guest_session_id);
+      setMessages([{ role: 'assistant', content: res.first_question }]);
+      setTurn(1);
+      setTimeLeft(90);
+      setStep('chat');
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Ошибка запуска сессии'
-      alert(msg)
+      const msg = err instanceof Error ? err.message : 'Ошибка запуска сессии';
+      alert(msg);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleSendAnswer = async () => {
-    if (!answer.trim() || !guestSessionId || isLoading) return
-    const currentAnswer = answer.trim()
-    setAnswer('')
-    setIsLoading(true)
+  const handleSendAnswer = useCallback(async (timeoutAnswer?: string) => {
+    const nextAnswer = (timeoutAnswer ?? answer).trim();
+    if (!nextAnswer || !guestSessionId || isLoading) return;
 
-    // Optimistic user message
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', content: currentAnswer },
-    ])
+    if (!timeoutAnswer) {
+      setAnswer('');
+    }
+
+    setIsLoading(true);
+
+    setMessages((prev) => [...prev, { role: 'user', content: nextAnswer }]);
 
     try {
-      const res = await sendGuestMessage(guestSessionId, currentAnswer)
+      const res = await sendGuestMessage(guestSessionId, nextAnswer);
 
       if (res.limit_reached) {
-        localStorage.setItem("peaktalk_guest_session_id", guestSessionId)
-        localStorage.setItem("peaktalk_guest_difficulty", String(selectedDifficulty))
-        setStep("paywall")
-        return
+        localStorage.setItem('peaktalk_guest_session_id', guestSessionId);
+        localStorage.setItem('peaktalk_guest_difficulty', String(selectedDifficulty));
+        setStep('paywall');
+        return;
       }
 
       if (res.question) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: res.question! },
-        ])
-        setTurn((t) => t + 1)
+        setMessages((prev) => [...prev, { role: 'assistant', content: res.question! }]);
+        setTurn((value) => value + 1);
+        setTimeLeft(90);
       }
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Ошибка отправки сообщения'
-      alert(msg)
+      const msg = err instanceof Error ? err.message : 'Ошибка отправки сообщения';
+      alert(msg);
+      if (!timeoutAnswer) {
+        setAnswer(nextAnswer);
+      }
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  }, [answer, guestSessionId, isLoading, selectedDifficulty]);
+
+  useEffect(() => {
+    if (step !== 'chat' || timeLeft > 0 || isLoading) return;
+    void handleSendAnswer(answer.trim() ? answer : '[Время на ответ истекло, ответ не предоставлен]');
+  }, [answer, handleSendAnswer, isLoading, step, timeLeft]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      handleSendAnswer()
+      e.preventDefault();
+      void handleSendAnswer();
     }
-  }
+  };
 
-  // ── Render: Input step ───────────────────────────────────────────────────
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   if (step === 'input') {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
-        {/* Background Video */}
-        <VideoBackground opacity={0.35} />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#0A0A0A]/80 via-[#0A0A0A]/50 to-[#0A0A0A]/90" />
+      <div className="min-h-screen bg-white bg-page-geo-subtle flex flex-col">
+        <Header
+          right={
+            <>
+              <span className="hidden sm:inline-flex font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500 border border-neutral-200 px-2.5 py-1 bg-neutral-50">
+                guest session
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A] border border-[#E8600A]/20 px-2.5 py-1 bg-[#FEF3E8]">
+                3 вопроса
+              </span>
+            </>
+          }
+        />
 
-        {/* Header */}
-        <header className="h-14 border-b border-white/[0.06] flex items-center px-5 shrink-0 relative z-10">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} className="brightness-0 invert" />
-            <span className="brand-wordmark text-white text-[15px]">PeakTalk</span>
-          </Link>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12 relative z-10">
-          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left: Hero Copy */}
-            <div className="hidden lg:flex flex-col gap-6">
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-              >
-                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#E8600A] bg-[#E8600A]/10 border border-[#E8600A]/20 px-3 py-1.5 inline-block mb-5 font-bold">
-                  Стресс-тест без регистрации
-                </div>
-                <h1 className="font-inter font-bold text-3xl xl:text-4xl text-white leading-[1.1] tracking-tight mb-4">
-                  Подготовьтесь к<br />
-                  <span className="text-[#E8600A]">жёстким вопросам</span>
-                </h1>
-                <p className="font-inter text-neutral-400 text-base leading-relaxed max-w-md">
-                  Вставьте черновик презентации, финмодели или PnL — получите критические вопросы от выбранного стейкхолдера.
-                </p>
-              </motion.div>
-
-              {/* Value Props */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
-                className="flex flex-col gap-4"
-              >
-                {[
-                  { icon: Zap, text: '3 бесплатных вопроса для оценки' },
-                  { icon: Shield, text: 'Данные удаляются после сессии' },
-                  { icon: FileText, text: 'PDF-отчёт в полной версии' },
-                ].map(({ icon: Icon, text }) => (
-                  <div key={text} className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center border border-white/10 bg-white/[0.03]">
-                      <Icon size={14} className="text-[#E8600A]" />
-                    </div>
-                    <span className="font-inter text-sm text-neutral-300">{text}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* Right: Form Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
+        <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10 relative z-10">
+          <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-              className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] shadow-2xl p-6 sm:p-8"
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="border border-neutral-200 bg-white"
             >
-              {/* Mobile Title */}
-              <div className="lg:hidden mb-6 text-center">
-                <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#E8600A] bg-[#E8600A]/10 px-3 py-1.5 inline-block mb-4 font-bold">
-                  Стресс-тест без регистрации
+              <div className="border-b border-neutral-200 px-5 py-5 sm:px-6">
+                <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#E8600A] mb-3">
+                  guest setup
                 </div>
-                <h1 className="font-inter font-bold text-2xl text-white leading-tight tracking-tight mb-2">
-                  Подготовьтесь к <span className="text-[#E8600A]">жёстким вопросам</span>
+                <h1 className="font-inter text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-neutral-900 max-w-[18ch]">
+                  Запустите 3 вопроса на своём документе
                 </h1>
-                <p className="font-inter text-neutral-400 text-sm">
-                  Вставьте черновик — получите 3 критических вопроса.
+                <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-neutral-600">
+                  Не demo-chat, а короткая продуктовая сессия: загрузите текст встречи, выберите роль оппонента и
+                  получите первый stress-test до реального разговора.
                 </p>
               </div>
 
-              {/* Step 1: Text input */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[11px] font-bold tracking-widest uppercase text-neutral-500">
-                    Текст вашего выступления
-                  </label>
-                  <span
-                    className={`font-mono text-[11px] ${
-                      charsLeft < 500 ? 'text-amber-500' : 'text-neutral-600'
-                    }`}
-                  >
-                    {text.length} / {MAX_TEXT_LENGTH}
-                  </span>
+              <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="border border-neutral-200 bg-neutral-50">
+                  <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+                    <label className="font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-700">
+                      Артефакт встречи
+                    </label>
+                    <span className={`font-mono text-[11px] ${charsLeft < 500 ? 'text-amber-600' : 'text-neutral-500'}`}>
+                      {text.length} / {MAX_TEXT_LENGTH}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
+                      placeholder="Вставьте тезисы презентации, memo, QBR deck, roadmap или финмодели..."
+                      className="min-h-[220px] w-full resize-none border border-neutral-200 bg-white px-4 py-4 text-[16px] leading-relaxed text-neutral-900 outline-none transition-all placeholder:text-neutral-400 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+                    />
+                  </div>
                 </div>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
-                  placeholder="Вставьте тезисы вашего проекта или скопируйте текст со слайдов..."
-                  className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-[#E8600A]/50 focus:ring-1 focus:ring-[#E8600A]/30 outline-none transition-all resize-none p-4 text-neutral-200 placeholder:text-neutral-600 min-h-[140px] font-inter text-sm"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
 
-              {/* Step 2: Persona selector */}
-              <div className="mb-6">
-                <div className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3">
-                  Кто ваш оппонент
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {PERSONAS.map((persona) => {
-                    const Icon = persona.icon
-                    const isSelected = selectedPersona === persona.id
-                    return (
-                      <motion.button
-                        key={persona.id}
-                        type="button"
-                        onClick={() => setSelectedPersona(persona.id)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.15 }}
-                        className={`text-left p-3.5 border transition-all duration-200 relative flex items-start gap-3 ${
-                          isSelected
-                            ? 'border-[#E8600A] bg-[#E8600A]/10 ring-1 ring-[#E8600A]/30'
-                            : 'border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.03]'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-2.5 right-2.5 text-[#E8600A]">
-                            <CheckCircle2 size={14} />
-                          </div>
-                        )}
-                        <div
-                          className={`w-9 h-9 flex items-center justify-center shrink-0 border transition-colors ${
-                            isSelected
-                              ? 'bg-[#E8600A] text-white border-[#E8600A]'
-                              : 'bg-white/[0.03] text-neutral-500 border-white/[0.08]'
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+                  <div className="border border-neutral-200 bg-white">
+                    <div className="border-b border-neutral-200 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-700">
+                      Кто будет спорить с решением
+                    </div>
+                    <div className="grid gap-2 p-3 sm:grid-cols-2">
+                      {PERSONAS.map((persona) => {
+                        const Icon = persona.icon;
+                        const isSelected = selectedPersona === persona.id;
+
+                        return (
+                          <button
+                            key={persona.id}
+                            type="button"
+                            onClick={() => setSelectedPersona(persona.id)}
+                            className={`group border px-4 py-4 text-left transition-colors ${
+                              isSelected
+                                ? 'border-neutral-900 bg-neutral-900 text-white'
+                                : 'border-neutral-200 bg-white text-neutral-900 hover:border-neutral-400 hover:bg-neutral-50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center border ${
+                                  isSelected
+                                    ? 'border-white/20 bg-white/10 text-white'
+                                    : 'border-neutral-200 bg-neutral-50 text-neutral-600'
+                                }`}
+                              >
+                                <Icon size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-inter text-sm font-semibold leading-none">{persona.label}</div>
+                                <div className={`mt-1 text-[11px] uppercase tracking-[0.14em] font-mono ${isSelected ? 'text-white/60' : 'text-neutral-400'}`}>
+                                  {persona.subtitle}
+                                </div>
+                                <p className={`mt-3 text-[13px] leading-relaxed ${isSelected ? 'text-white/80' : 'text-neutral-600'}`}>
+                                  {persona.description}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="border border-neutral-200 bg-white">
+                    <div className="border-b border-neutral-200 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-700">
+                      Уровень давления
+                    </div>
+                    <div className="grid gap-2 p-3">
+                      {DIFFICULTIES.map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => setSelectedDifficulty(item.value)}
+                          className={`border px-4 py-3 text-left transition-colors ${
+                            selectedDifficulty === item.value
+                              ? 'border-neutral-900 bg-neutral-900 text-white'
+                              : 'border-neutral-200 bg-neutral-50 text-neutral-900 hover:border-neutral-400'
                           }`}
                         >
-                          <Icon size={16} />
-                        </div>
-                        <div className="flex-1 pr-5">
-                          <div className="font-inter font-bold text-[13px] text-neutral-200 mb-0.5 leading-snug">
-                            {persona.label}
+                          <div className="font-inter text-sm font-semibold">{item.label}</div>
+                          <div className={`mt-1 font-mono text-[10px] uppercase tracking-[0.14em] ${selectedDifficulty === item.value ? 'text-white/60' : 'text-neutral-400'}`}>
+                            {item.note}
                           </div>
-                          <div className="font-inter text-[11px] text-neutral-500 leading-relaxed">
-                            {persona.description}
-                          </div>
-                        </div>
-                      </motion.button>
-                    )
-                  })}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Step 3: Difficulty selector */}
-              <div className="mb-7">
-                <div className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3">
-                  Уровень давления
+              <div className="border-t border-neutral-200 px-5 py-4 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+                    Без регистрации. На своём кейсе. Сразу в продуктовый flow.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleStart}
+                    disabled={!isReady || isLoading}
+                    className="flex h-12 min-w-[220px] items-center justify-center gap-3 border border-neutral-900 bg-neutral-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isLoading ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <>
+                        Запустить 3 вопроса
+                        <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div className="flex gap-2">
-                  {DIFFICULTIES.map((d) => (
-                    <button
-                      key={d.value}
-                      type="button"
-                      onClick={() => setSelectedDifficulty(d.value)}
-                      className={`flex-1 px-4 py-2.5 border text-sm font-inter transition-all duration-200 ${
-                        selectedDifficulty === d.value
-                          ? 'bg-[#E8600A] border-[#E8600A] text-white font-semibold'
-                          : 'bg-white/[0.03] border-white/[0.08] text-neutral-500 hover:border-white/[0.2] hover:bg-white/[0.05]'
-                      }`}
-                    >
-                      {d.label}
-                    </button>
+              </div>
+            </motion.section>
+
+            <motion.aside
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.08 }}
+              className="grid gap-4 self-start"
+            >
+              <div className="border border-neutral-200 bg-white">
+                <div className="border-b border-neutral-200 px-4 py-3">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">guest mode</div>
+                  <div className="mt-1 text-sm font-semibold text-neutral-900">Что проверит эта сессия</div>
+                </div>
+                <div className="grid gap-2 p-4">
+                  {[
+                    'Где ответы не держатся на цифрах',
+                    'Какие допущения не защищены',
+                    'Где вы уходите в общие формулировки',
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2 border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+                      <Sparkles size={13} className="mt-0.5 shrink-0 text-[#E8600A]" />
+                      <span className="text-[13px] leading-relaxed text-neutral-700">{item}</span>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* CTA */}
-              <button
-                type="button"
-                onClick={handleStart}
-                disabled={!isReady || isLoading}
-                className="w-full bg-[#E8600A] hover:bg-[#c95207] text-white font-inter font-bold text-base h-14 flex items-center justify-center gap-3 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <>
-                    Начать симуляцию
-                    <ArrowRight size={20} />
-                  </>
-                )}
-              </button>
-
-              <p className="text-center font-mono text-[10px] text-neutral-600 mt-4 uppercase tracking-wider">
-                Без регистрации · 3 вопроса бесплатно · Данные удаляются
-              </p>
-            </motion.div>
+              <div className="border border-neutral-200 bg-[#FCFCFD] px-4 py-4">
+                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">после 3 вопросов</div>
+                <div className="grid gap-2">
+                  {[
+                    'Сохранение сессии',
+                    'Полный разбор слабых мест',
+                    'Prep-card перед встречей',
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2">
+                      <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />
+                      <span className="text-[13px] leading-relaxed text-neutral-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.aside>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
-  // ── Render: Chat step ────────────────────────────────────────────────────
   if (step === 'chat') {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
-        {/* Background Video */}
-        <VideoBackground opacity={0.15} />
-        <div className="absolute inset-0 z-[1] bg-[#0A0A0A]/70" />
-
-        {/* Header */}
-        <header className="h-14 border-b border-white/[0.06] flex items-center justify-between px-5 shrink-0 relative z-10 bg-[#0A0A0A]/80 backdrop-blur-sm">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} className="brightness-0 invert" />
-            <span className="brand-wordmark text-white text-[15px]">PeakTalk</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] text-neutral-400 border border-white/[0.08] px-2 py-1 bg-white/[0.03]">
-              {personaLabel}
-            </span>
-            <span
-              className={`font-mono text-[11px] border px-2 py-1 ${
-                selectedDifficulty >= 5
-                  ? 'border-red-500/30 text-red-400 bg-red-500/10'
-                  : selectedDifficulty >= 3
-                  ? 'border-amber-500/30 text-amber-400 bg-amber-500/10'
-                  : 'border-white/[0.08] text-neutral-500 bg-white/[0.03]'
-              }`}
-            >
-              {difficultyLabel}
-            </span>
-          </div>
-        </header>
-
-        {/* Progress indicator */}
-        <div className="border-b border-white/[0.04] px-5 py-2.5 flex items-center justify-between relative z-10 bg-[#0A0A0A]/60">
-          <div className="flex items-center gap-2">
-            {Array.from({ length: MAX_GUEST_TURNS }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 transition-colors duration-300 ${
-                  i < turn ? 'bg-[#E8600A]' : 'bg-white/[0.08]'
+      <div className="min-h-screen bg-white bg-page-geo-subtle flex flex-col">
+        <Header
+          right={
+            <>
+              <span className="hidden sm:inline-flex font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500 border border-neutral-200 px-2.5 py-1 bg-neutral-50">
+                guest session
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-700 border border-neutral-200 px-2.5 py-1 bg-white">
+                {personaLabel}
+              </span>
+              <span
+                className={`font-mono text-[10px] uppercase tracking-[0.16em] px-2.5 py-1 border ${
+                  selectedDifficulty >= 5
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : selectedDifficulty >= 3
+                    ? 'border-amber-200 bg-amber-50 text-amber-700'
+                    : 'border-neutral-200 bg-neutral-50 text-neutral-600'
                 }`}
-              />
-            ))}
-          </div>
-          <span className="font-mono text-[11px] text-neutral-600">
-            Вопрос {Math.min(turn, MAX_GUEST_TURNS)} из {MAX_GUEST_TURNS}
-          </span>
-        </div>
+              >
+                {difficulty.label}
+              </span>
+            </>
+          }
+        />
 
-        {/* Chat messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 relative z-10">
-          <div className="max-w-2xl mx-auto flex flex-col gap-4">
-            <AnimatePresence initial={false}>
-              {messages.map((msg, idx) => (
+        <main className="flex-1 px-4 py-5 sm:px-6 sm:py-8">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="mb-5 border border-neutral-200 bg-white">
+              <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">question flow</div>
+                  <div className="mt-2 text-sm font-semibold text-neutral-900">
+                    Вопрос {Math.min(turn, MAX_GUEST_TURNS)} из {MAX_GUEST_TURNS}
+                  </div>
+                </div>
+                <div className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-xs ${
+                  timeLeft === 0
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : isWarningTime
+                    ? 'border-amber-200 bg-amber-50 text-amber-700'
+                    : 'border-neutral-200 bg-neutral-50 text-neutral-700'
+                }`}>
+                  <Timer size={14} className={isWarningTime && timeLeft > 0 ? 'animate-pulse' : ''} />
+                  {formatTime(timeLeft)}
+                </div>
+              </div>
+              <div className="h-1.5 bg-neutral-100">
                 <motion.div
-                  key={idx}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  className="h-full bg-neutral-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="grid gap-4">
+                <motion.section
+                  key={`question-${turn}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className="border border-neutral-200 bg-white"
                 >
-                  {msg.role === 'assistant' ? (
-                    <div className="flex items-start gap-2.5 max-w-[85%]">
-                      <div className="w-7 h-7 flex items-center justify-center shrink-0 bg-[#E8600A]/15 border border-[#E8600A]/25 mt-0.5">
-                        <Sparkles size={13} className="text-[#E8600A]" />
-                      </div>
-                      <div className="bg-white/[0.05] border border-white/[0.08] px-4 py-3 font-inter text-sm leading-relaxed text-neutral-200">
-                        {msg.content}
-                      </div>
+                  <div className="border-b border-neutral-200 px-4 py-3 sm:px-5">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">Текущий вопрос</div>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <div className="mb-4 inline-flex items-center gap-2 border border-[#E8600A]/20 bg-[#FEF3E8] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.14em] text-[#B45309]">
+                      <Bot size={12} />
+                      {personaLabel}
                     </div>
-                  ) : (
-                    <div className="max-w-[80%] bg-[#E8600A] text-white px-4 py-3 font-inter text-sm leading-relaxed">
-                      {msg.content}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                    <h1 className="text-xl sm:text-2xl lg:text-[30px] font-medium leading-tight text-neutral-900">
+                      {currentQuestion}
+                    </h1>
+                  </div>
+                </motion.section>
 
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-7 h-7 flex items-center justify-center shrink-0 bg-[#E8600A]/15 border border-[#E8600A]/25 mt-0.5">
-                    <Sparkles size={13} className="text-[#E8600A]" />
+                <section className="border border-neutral-200 bg-white">
+                  <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 sm:px-5">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+                      Ваш ответ
+                    </div>
+                    <div className="font-mono text-[11px] text-neutral-500">{answer.length} симв.</div>
                   </div>
-                  <div className="bg-white/[0.05] border border-white/[0.08] px-4 py-3 flex items-center gap-2">
-                    <Loader2 size={13} className="animate-spin text-neutral-500" />
-                    <span className="font-mono text-[11px] text-neutral-500">Анализирует...</span>
+
+                  <div className="p-4 sm:p-5">
+                    <AnimatePresence>
+                      {timeLeft <= 15 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          className="mb-4 flex items-start gap-2 border border-amber-200 bg-amber-50 px-3 py-3"
+                        >
+                          <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-700" />
+                          <p className="text-[13px] leading-relaxed text-amber-800">
+                            Времени мало. Лучше дать короткий и конкретный ответ, чем уйти в общие слова.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <textarea
+                      ref={textareaRef}
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Защитите решение коротко и по делу. Ctrl+Enter — отправить."
+                      disabled={isLoading}
+                      className={`min-h-[180px] w-full resize-none border px-4 py-4 text-[16px] leading-relaxed text-neutral-900 outline-none transition-all placeholder:text-neutral-400 ${
+                        isLoading
+                          ? 'border-neutral-200 bg-neutral-50'
+                          : 'border-neutral-200 bg-neutral-50 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900'
+                      }`}
+                    />
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled
+                          className="flex h-12 w-12 items-center justify-center border border-neutral-200 bg-neutral-50 text-neutral-400"
+                          title="Voice input disabled in guest redesign preview"
+                        >
+                          <Mic size={18} />
+                        </button>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+                          Guest mode • 3 вопроса • без сохранения черновика
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => void handleSendAnswer()}
+                        disabled={!answer.trim() || isLoading}
+                        className="flex h-12 min-w-[180px] items-center justify-center gap-3 border border-neutral-900 bg-neutral-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Анализ...
+                          </>
+                        ) : (
+                          <>
+                            Ответить
+                            <ArrowRight size={16} />
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </section>
               </div>
-            )}
 
-            <div ref={chatBottomRef} />
-          </div>
-        </div>
+              <aside className="grid gap-4 self-start">
+                <section className="border border-neutral-200 bg-white">
+                  <div className="border-b border-neutral-200 px-4 py-3">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">Журнал сессии</div>
+                  </div>
+                  <div className="grid gap-3 p-4">
+                    {previousTranscript.length === 0 ? (
+                      <div className="border border-neutral-200 bg-neutral-50 px-3 py-3">
+                        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">turn 01</div>
+                        <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+                          После первого ответа здесь появится краткая история предыдущих ходов.
+                        </p>
+                      </div>
+                    ) : (
+                      previousTranscript.map((item, index) => (
+                        <div key={`${item.question}-${index}`} className="border border-neutral-200 bg-neutral-50 px-3 py-3">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
+                            turn 0{index + 1}
+                          </div>
+                          <p className="mt-2 text-[13px] leading-relaxed text-neutral-700">{item.question}</p>
+                          {item.answer ? (
+                            <div className="mt-3 border-l-2 border-[#E8600A] pl-3">
+                              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#B45309]">ваш ответ</div>
+                              <p className="mt-1 text-[13px] leading-relaxed text-neutral-600">{item.answer}</p>
+                            </div>
+                          ) : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
 
-        {/* Input area */}
-        <div className="border-t border-white/[0.06] px-4 py-4 bg-[#0A0A0A]/90 backdrop-blur-sm relative z-10">
-          <div className="max-w-2xl mx-auto">
-            <textarea
-              ref={textareaRef}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ваш ответ... (Ctrl+Enter для отправки)"
-              disabled={isLoading}
-              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-[#E8600A]/50 focus:ring-1 focus:ring-[#E8600A]/30 outline-none transition-all resize-none p-4 text-neutral-200 placeholder:text-neutral-600 min-h-[100px] font-inter text-sm mb-3"
-              style={{ fontSize: '16px' }}
-            />
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleSendAnswer}
-                disabled={!answer.trim() || isLoading}
-                className="bg-[#E8600A] hover:bg-[#c95207] text-white font-inter font-semibold px-6 h-11 flex items-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <>
-                    Ответить
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
+                <section className="border border-neutral-200 bg-[#FCFCFD] px-4 py-4">
+                  <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">после guest test</div>
+                  <div className="grid gap-2">
+                    {[
+                      'Сохранить сессию',
+                      'Открыть полный разбор',
+                      'Получить prep-card перед встречей',
+                    ].map((item) => (
+                      <div key={item} className="flex items-start gap-2">
+                        <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />
+                        <span className="text-[13px] leading-relaxed text-neutral-700">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </aside>
             </div>
           </div>
-        </div>
+        </main>
       </div>
-    )
+    );
   }
 
-  // ── Render: Paywall step ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
-      {/* Background Video */}
-      <VideoBackground opacity={0.2} />
-      <div className="absolute inset-0 z-[1] bg-[#0A0A0A]/80" />
+    <div className="min-h-screen bg-white bg-page-geo-subtle flex flex-col">
+      <Header
+        right={
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A] border border-[#E8600A]/20 px-2.5 py-1 bg-[#FEF3E8]">
+            guest complete
+          </span>
+        }
+      />
 
-      {/* Header */}
-      <header className="h-14 border-b border-white/[0.06] flex items-center px-5 shrink-0 relative z-10 bg-[#0A0A0A]/80 backdrop-blur-sm">
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-          <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} className="brightness-0 invert" />
-          <span className="brand-wordmark text-white text-[15px]">PeakTalk</span>
-        </Link>
-      </header>
-
-      {/* Blurred chat background */}
-      <div className="flex-1 relative overflow-hidden z-10">
-        {/* Blurred chat history */}
-        <div className="absolute inset-0 overflow-y-auto px-4 py-6 pointer-events-none select-none opacity-20 blur-[4px]">
-          <div className="max-w-2xl mx-auto flex flex-col gap-4">
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+      <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="border border-neutral-200 bg-white p-5 sm:p-6">
+            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400 mb-4">session snapshot</div>
+            <div className="grid gap-3">
+              {messages.slice(0, 4).map((msg, index) => (
                 <div
-                  className={`max-w-[80%] px-4 py-3 font-inter text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-[#E8600A] text-white'
-                      : 'bg-white/[0.05] border border-white/[0.08] text-neutral-200'
+                  key={`${msg.role}-${index}`}
+                  className={`border px-4 py-3 ${
+                    msg.role === 'assistant' ? 'border-neutral-200 bg-neutral-50' : 'border-[#F2C6A6] bg-[#FEF7F0]'
                   }`}
                 >
-                  {msg.content}
+                  <div className={`font-mono text-[10px] uppercase tracking-[0.14em] ${msg.role === 'assistant' ? 'text-neutral-400' : 'text-[#B45309]'}`}>
+                    {msg.role === 'assistant' ? personaLabel || 'оппонент' : 'ваш ответ'}
+                  </div>
+                  <p className="mt-2 text-[13px] leading-relaxed text-neutral-700">{msg.content}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </section>
 
-        {/* Paywall overlay */}
-        <div className="absolute inset-0 flex items-center justify-center px-4 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+          <motion.section
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] shadow-2xl p-6 sm:p-8"
+            className="border border-neutral-200 bg-white"
           >
-            {/* Lock icon */}
-            <div className="w-12 h-12 bg-[#E8600A]/15 border border-[#E8600A]/25 flex items-center justify-center mb-5">
-              <Lock size={20} className="text-[#E8600A]" />
+            <div className="border-b border-neutral-200 px-5 py-5">
+              <div className="flex h-12 w-12 items-center justify-center border border-[#E8600A]/20 bg-[#FEF3E8] text-[#E8600A]">
+                <Lock size={18} />
+              </div>
+              <h2 className="mt-5 text-2xl font-bold tracking-tight text-neutral-900">
+                3 вопроса пройдены. Полный разбор открывается после сохранения сессии.
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+                Guest-режим показал механику. Полная сессия сохраняет историю, открывает разбор слабых мест и даёт
+                prep-card перед встречей.
+              </p>
             </div>
 
-            <h2 className="font-inter font-bold text-xl text-white mb-2">
-              Вы прошли 3 бесплатных вопроса
-            </h2>
-            <p className="font-inter text-sm text-neutral-400 mb-6">
-              Это был демо-режим. Полная сессия даёт более глубокий анализ аргументации и конкретный разбор слабых мест.
-            </p>
-
-            {/* Teaser */}
-            <div className="bg-white/[0.03] border border-white/[0.06] p-4 mb-6">
-              <div className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3">
-                В полной версии
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {[
-                  'Ещё 5–12 вопросов под давлением',
-                  'PDF-отчёт с оценками по навыкам',
-                  'Шпаргалка с сильными аргументами',
-                  'Разбор каждого ответа с комментариями',
-                ].map((feature) => (
-                  <div key={feature} className="flex items-start gap-2.5">
-                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="font-inter text-sm text-neutral-300">{feature}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="grid gap-3 px-5 py-5">
+              {[
+                'Полный pressure-test по документу',
+                'Разбор слабых ответов и уязвимых допущений',
+                'Prep-card, транскрипт и материалы на встречу',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3 border border-neutral-200 bg-neutral-50 px-4 py-3">
+                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" />
+                  <span className="text-[13px] leading-relaxed text-neutral-700">{item}</span>
+                </div>
+              ))}
             </div>
 
-            {/* Primary CTA */}
-            <Link
-              href="/register?return=/simulation/from-guest"
-              className="w-full bg-[#E8600A] hover:bg-[#c95207] text-white font-inter font-semibold text-sm h-12 flex items-center justify-center gap-2 transition-colors mb-3"
-            >
-              Сохранить сессию
-              <ArrowRight size={16} />
-            </Link>
-
-            <p className="text-center font-mono text-[11px] text-neutral-600 mt-3">
-              Включает полный отчёт и шпаргалку
-            </p>
-          </motion.div>
+            <div className="border-t border-neutral-200 px-5 py-5">
+              <Link
+                href="/register?return=/simulation/from-guest"
+                className="flex h-12 w-full items-center justify-center gap-2 border border-neutral-900 bg-neutral-900 text-sm font-semibold text-white transition-colors hover:bg-black"
+              >
+                Сохранить сессию и открыть разбор
+                <ArrowRight size={16} />
+              </Link>
+              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+                Включает отчёт, prep-card и возврат к сессии
+              </p>
+              <div className="mt-4 flex items-start gap-2 border border-neutral-200 bg-[#FCFCFD] px-3 py-3">
+                <Shield size={14} className="mt-0.5 shrink-0 text-neutral-400" />
+                <p className="text-[13px] leading-relaxed text-neutral-600">
+                  Данные хранятся в российском контуре. Free-guest режим не включает автоподписку.
+                </p>
+              </div>
+            </div>
+          </motion.section>
         </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
