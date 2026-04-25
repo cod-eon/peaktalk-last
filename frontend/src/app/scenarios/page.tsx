@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Loader2, AlertCircle, Sparkles } from 'lucide-react'
+import { ArrowRight, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -22,15 +22,15 @@ import {
 
 const CATEGORY_META: Record<
   string,
-  { label: string; color: string; textColor: string }
+  { label: string; accent: string }
 > = {
-  all: { label: 'Все', color: 'bg-neutral-100', textColor: 'text-neutral-700' },
-  budget: { label: 'Бюджет', color: 'bg-blue-50', textColor: 'text-blue-700' },
-  roadmap: { label: 'Roadmap', color: 'bg-violet-50', textColor: 'text-violet-700' },
-  investors: { label: 'Инвесторы', color: 'bg-amber-50', textColor: 'text-amber-700' },
-  clients: { label: 'Клиенты', color: 'bg-emerald-50', textColor: 'text-emerald-700' },
-  people: { label: 'Люди', color: 'bg-pink-50', textColor: 'text-pink-700' },
-  crisis: { label: 'Кризис', color: 'bg-red-50', textColor: 'text-red-700' },
+  all: { label: 'Все', accent: 'Все сценарии' },
+  budget: { label: 'Бюджет', accent: 'Финансы' },
+  roadmap: { label: 'Roadmap', accent: 'Руководство' },
+  investors: { label: 'Инвесторы', accent: 'Инвестор' },
+  clients: { label: 'Клиенты', accent: 'Эскалация' },
+  people: { label: 'Люди', accent: 'HR / менеджмент' },
+  crisis: { label: 'Кризис', accent: 'Разбор инцидента' },
 }
 
 // ─── Scenario card ────────────────────────────────────────────────────────────
@@ -47,8 +47,8 @@ function DifficultyDots({ value }: { value: number }) {
       {Array.from({ length: max }).map((_, i) => (
         <span
           key={i}
-          className={`w-1.5 h-1.5 rounded-full ${
-            i < safeValue ? 'bg-neutral-700' : 'bg-neutral-200'
+          className={`h-1.5 w-1.5 ${
+            i < safeValue ? 'bg-[#E8600A]' : 'bg-neutral-200'
           }`}
         />
       ))}
@@ -59,9 +59,7 @@ function DifficultyDots({ value }: { value: number }) {
 function CategoryBadge({ category }: { category: string }) {
   const meta = CATEGORY_META[category] ?? CATEGORY_META['all']
   return (
-    <span
-      className={`inline-block px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-none ${meta.color} ${meta.textColor}`}
-    >
+    <span className="inline-block border border-neutral-200 bg-white px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-600">
       {meta.label}
     </span>
   )
@@ -72,34 +70,36 @@ function ScenarioCard({ scenario }: { scenario: ScenarioCatalogItem }) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white border border-neutral-200 hover:border-neutral-400 transition-all group"
+      className="group flex min-h-[280px] flex-col border border-neutral-200 bg-white transition-colors hover:border-neutral-950"
     >
-      <div className="p-5">
-        {/* Top row: category + persona */}
-        <div className="flex items-center justify-between mb-3">
+      <div className="flex h-full flex-col p-5 sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <CategoryBadge category={scenario.category} />
-          <span className="font-mono text-xs text-neutral-400">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
             {scenario.persona}
           </span>
         </div>
 
-        {/* Title + subtitle */}
-        <h3 className="font-inter font-semibold text-sm text-neutral-900 mb-1 leading-snug">
+        <h3 className="font-inter text-[21px] font-bold leading-[1.1] text-neutral-950">
           {scenario.title}
         </h3>
-        <p className="font-inter text-xs text-neutral-500 leading-relaxed mb-4">
-          {scenario.subtitle}
+        <p className="mt-3 font-inter text-sm leading-relaxed text-neutral-600">
+          {scenario.problem ?? scenario.subtitle}
         </p>
 
-        {/* Bottom row: difficulty + CTA */}
-        <div className="flex items-center justify-between">
-          <DifficultyDots value={scenario.difficulty} />
+        <div className="mt-auto border-t border-neutral-200 pt-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
+              Давление
+            </span>
+            <DifficultyDots value={scenario.difficulty} />
+          </div>
           <Link
             href={`/scenarios/${scenario.slug}`}
-            className="inline-flex items-center gap-1.5 font-inter text-xs font-semibold text-neutral-900 hover:text-neutral-600 transition-colors group-hover:underline"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-4 font-inter text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
           >
-            Начать подготовку
-            <ChevronRight size={13} />
+            Разобрать сценарий
+            <ChevronRight size={15} />
           </Link>
         </div>
       </div>
@@ -109,20 +109,19 @@ function ScenarioCard({ scenario }: { scenario: ScenarioCatalogItem }) {
 
 function ScenarioOfTheDay({ scenario }: { scenario: ScenarioCatalogItem }) {
   return (
-    <section className="mb-8 border border-neutral-900 bg-neutral-900 text-white overflow-hidden">
+    <section className="mb-8 border border-neutral-950 bg-neutral-950 text-white">
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0">
         <div className="p-6 sm:p-8">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-300 mb-4">
-            <Sparkles size={12} />
-            Scenario of the day
+          <div className="mb-4 inline-flex border border-[#E8600A]/40 bg-[#E8600A]/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">
+            Сценарий дня
           </div>
-          <h2 className="font-inter font-bold text-2xl sm:text-[2rem] leading-tight tracking-tight mb-3">
+          <h2 className="font-inter text-2xl font-black leading-tight tracking-tight sm:text-[2.4rem]">
             {scenario.title}
           </h2>
-          <p className="font-inter text-sm sm:text-base text-neutral-300 max-w-2xl leading-relaxed mb-6">
-            {scenario.subtitle}
+          <p className="mt-4 max-w-2xl font-inter text-sm leading-relaxed text-white/68 sm:text-base">
+            {scenario.problem ?? scenario.subtitle}
           </p>
-          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm mb-6">
+          <div className="mb-6 mt-6 flex flex-wrap items-center gap-3 text-xs sm:text-sm">
             <CategoryBadge category={scenario.category} />
             <span className="font-mono uppercase tracking-[0.12em] text-neutral-400">
               {scenario.persona}
@@ -131,21 +130,28 @@ function ScenarioOfTheDay({ scenario }: { scenario: ScenarioCatalogItem }) {
           </div>
           <Link
             href={`/scenarios/${scenario.slug}`}
-            className="inline-flex items-center gap-2 bg-white text-neutral-900 px-4 py-3 font-inter text-sm font-semibold hover:bg-neutral-100 transition-colors"
+            className="inline-flex min-h-12 items-center justify-center gap-2 border border-white bg-white px-5 font-inter text-sm font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white"
           >
-            Начать с этого сценария
+            Открыть сценарий
             <ChevronRight size={16} />
           </Link>
         </div>
 
-        <div className="border-t lg:border-t-0 lg:border-l border-white/10 p-6 sm:p-8 bg-white/[0.03]">
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400 mb-3">
-            Зачем открыть именно его
+        <div className="border-t border-white/12 bg-white/[0.035] p-6 sm:p-8 lg:border-l lg:border-t-0">
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">
+            Что проверит PeakTalk
           </div>
           <ul className="space-y-3 font-inter text-sm text-neutral-200 leading-relaxed">
-            <li>Сценарий уже готов к запуску без настройки роли и контекста вручную.</li>
-            <li>Подходит как быстрый вход в продукт, если нужно потренироваться сегодня.</li>
-            <li>Помогает увидеть формат стресс-теста до загрузки собственных материалов.</li>
+            {(scenario.expectedOutput ?? [
+              'Слабые места в материале до реальной встречи.',
+              'Вопросы, которые неприятно услышать без подготовки.',
+              'Короткую prep-card для ответа под давлением.',
+            ]).map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-2 h-2 w-2 shrink-0 bg-[#E8600A]" />
+                <span>{item}</span>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -284,26 +290,33 @@ export default function ScenariosPage() {
             Войти
           </Link>
           <Link
-            href="/register"
-            className="bg-[#171717] hover:bg-black text-white font-inter font-semibold text-xs px-4 py-2 transition-colors"
+            href="/simulation/guest"
+            className="border border-neutral-950 bg-neutral-950 px-4 py-2 font-inter text-xs font-semibold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
           >
-            Начать
+            3 вопроса
           </Link>
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
         {/* Page header */}
         <div className="mb-8">
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-500 border border-neutral-200 px-3 py-1.5 inline-block mb-4">
-            Библиотека сценариев
+          <div className="mb-4 inline-block border border-neutral-200 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">
+            Сценарии PeakTalk
           </div>
-          <h1 className="font-inter font-bold text-2xl sm:text-3xl text-neutral-900 leading-tight tracking-tight mb-2">
-            Сценарии стресс-тестов
+          <h1 className="max-w-3xl font-inter text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[46px]">
+            Подготовка к конкретной рабочей встрече, а не тренажёр речи вообще.
           </h1>
-          <p className="font-inter text-neutral-500 text-sm max-w-xl">
-            Готовые рабочие ситуации — начни подготовку в 2 клика
+          <p className="mt-5 max-w-2xl font-inter text-base leading-relaxed text-neutral-600">
+            Выберите сценарий, вставьте документ, презентацию, отчёт или тезисы и проверьте, где аргументация не держит давление руководителя, клиента, инвестора или CFO.
           </p>
+          <Link
+            href="/simulation/guest"
+            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-5 text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+          >
+            Проверить свой материал
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
         {dailyScenario && <ScenarioOfTheDay scenario={dailyScenario} />}
@@ -316,7 +329,7 @@ export default function ScenariosPage() {
         )}
 
         {/* Category filter tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
           {tabs.map((tab) => {
             const isActive = activeCategory === tab.id
             return (
@@ -324,7 +337,7 @@ export default function ScenariosPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveCategory(tab.id)}
-                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 border text-xs font-mono font-medium transition-all ${
+                className={`shrink-0 flex items-center gap-1.5 border px-3.5 py-2 font-mono text-xs font-medium transition-all ${
                   isActive
                     ? 'bg-neutral-900 border-neutral-900 text-white'
                     : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-700'
@@ -357,7 +370,7 @@ export default function ScenariosPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {scenarios.map((scenario) => (
               <ScenarioCard key={scenario.id} scenario={scenario} />
             ))}

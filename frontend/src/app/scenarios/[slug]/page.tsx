@@ -1,81 +1,68 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft,
-  ChevronRight,
-  Loader2,
-  CheckCircle2,
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { getScenario } from '@/lib/scenarios-api'
 import {
-  getScenario,
-  startFromScenario,
-} from '@/lib/scenarios-api'
-import { createClient } from '@/lib/supabase/client'
-import {
+  START_PRESSURE_OPTIONS,
   enrichScenario,
   getFallbackScenarioBySlug,
   normalizeScenarioDisplayDifficulty,
   normalizeStartDifficulty,
-  START_PRESSURE_OPTIONS,
   type ScenarioCatalogItem,
 } from '@/lib/scenarios-catalog'
 
-// ─── Hardcoded example questions by category ─────────────────────────────────
-
 const EXAMPLE_QUESTIONS: Record<string, string[]> = {
   budget: [
-    'Покажите unit-экономику',
-    'Что будет, если мы срежем это на 50%?',
-    'Какая альтернатива?',
+    'Что сломается, если мы урежем эту статью на 50%?',
+    'Где доказательство, что эти расходы дают возврат?',
+    'Что вы сами готовы сократить?',
   ],
   roadmap: [
-    'Почему именно сейчас?',
-    'Что вы не сделаете ради этого?',
-    'Как это влияет на текущий план?',
+    'Почему команда не может просто взять обе задачи?',
+    'Что именно мы потеряем при переносе релиза?',
+    'Что вы предлагаете вместо отказа?',
   ],
   investors: [
-    'Почему этот рынок?',
-    'Что не работает в вашей модели?',
-    'Почему вы, а не конкурент?',
+    'Почему этот рынок достаточно большой?',
+    'Где доказательство, что рост не куплен скидками?',
+    'Что в вашей модели сейчас не работает?',
   ],
   clients: [
-    'Что конкретно пошло не так?',
-    'Почему мы должны вам доверять?',
-    'Какие гарантии?',
+    'Почему мы узнаём об этом только сейчас?',
+    'Какие гарантии вы готовы дать?',
+    'Почему нам не начать миграцию к другому подрядчику?',
   ],
   people: [
-    'Почему именно такое решение?',
-    'Что изменится после?',
-    'Как вы это измерите?',
+    'Почему именно это решение, а не мягкий вариант?',
+    'Как вы отделяете факты от личного отношения?',
+    'Какие риски вы берёте на себя?',
   ],
   crisis: [
-    'Кто виноват?',
-    'Почему это не было предотвращено?',
-    'Что конкретно изменится?',
+    'Почему это не было предотвращено раньше?',
+    'Кто владел риском до инцидента?',
+    'Как мы поймём, что проблема действительно закрыта?',
   ],
 }
 
-// ─── Category meta ────────────────────────────────────────────────────────────
-
-const CATEGORY_META: Record<
-  string,
-  { label: string; color: string; textColor: string }
-> = {
-  budget: { label: 'Бюджет', color: 'bg-blue-50', textColor: 'text-blue-700' },
-  roadmap: { label: 'Roadmap', color: 'bg-violet-50', textColor: 'text-violet-700' },
-  investors: { label: 'Инвесторы', color: 'bg-amber-50', textColor: 'text-amber-700' },
-  clients: { label: 'Клиенты', color: 'bg-emerald-50', textColor: 'text-emerald-700' },
-  people: { label: 'Люди', color: 'bg-pink-50', textColor: 'text-pink-700' },
-  crisis: { label: 'Кризис', color: 'bg-red-50', textColor: 'text-red-700' },
+const CATEGORY_META: Record<string, { label: string; role: string }> = {
+  budget: { label: 'Бюджет', role: 'Финансы' },
+  roadmap: { label: 'Roadmap', role: 'Руководство' },
+  investors: { label: 'Инвесторы', role: 'Инвестор' },
+  clients: { label: 'Клиенты', role: 'Эскалация клиента' },
+  people: { label: 'Люди', role: 'HR / менеджмент' },
+  crisis: { label: 'Кризис', role: 'Разбор инцидента' },
 }
-
-// ─── Difficulty selector ──────────────────────────────────────────────────────
 
 function DifficultyDots({ value }: { value: number }) {
   const safeValue = normalizeScenarioDisplayDifficulty(value)
@@ -85,8 +72,8 @@ function DifficultyDots({ value }: { value: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <span
           key={i}
-          className={`w-1.5 h-1.5 rounded-full ${
-            i < safeValue ? 'bg-neutral-700' : 'bg-neutral-200'
+          className={`h-1.5 w-1.5 ${
+            i < safeValue ? 'bg-[#E8600A]' : 'bg-neutral-200'
           }`}
         />
       ))}
@@ -94,43 +81,27 @@ function DifficultyDots({ value }: { value: number }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function ScenarioDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const slug = params?.slug as string
 
   const [scenario, setScenario] = useState<ScenarioCatalogItem | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [difficulty, setDifficulty] = useState<number>(5)
-  const [isStarting, setIsStarting] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const [isUsingFallback, setIsUsingFallback] = useState(false)
-  const [startError, setStartError] = useState<string | null>(null)
 
-  // Check auth state
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session?.user)
-    })
-  }, [])
-
-  // Load scenario
   useEffect(() => {
     async function load() {
       setIsLoading(true)
       setError(null)
-      setStartError(null)
       setIsUsingFallback(false)
+
       try {
         const data = await getScenario(slug)
         const enrichedScenario = enrichScenario(data)
         setScenario(enrichedScenario)
         setDifficulty(normalizeStartDifficulty(enrichedScenario.recommended_difficulty))
-        setIsUsingFallback(false)
       } catch {
         const fallback = getFallbackScenarioBySlug(slug)
         if (fallback) {
@@ -144,70 +115,26 @@ export default function ScenarioDetailPage() {
         setIsLoading(false)
       }
     }
+
     if (slug) load()
   }, [slug])
 
-  const handleStart = async () => {
-    if (!scenario || isStarting) return
-
-    setStartError(null)
-
-    if (!isLoggedIn) {
-      router.push(`/register?return=/scenarios/${slug}`)
-      return
-    }
-
-    setIsStarting(true)
-    try {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        setIsStarting(false)
-        router.push(`/register?return=/scenarios/${slug}`)
-        return
-      }
-
-      const res = await startFromScenario(scenario.id, difficulty, session.access_token)
-      if (res?.id) {
-        router.push(`/simulation/${res.id}`)
-      } else {
-        throw new Error('Не удалось получить ID симуляции')
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Ошибка запуска'
-      setStartError(msg)
-      setIsStarting(false)
-    }
-  }
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <header className="h-14 border-b border-neutral-200 flex items-center px-5">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-            <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
-          </Link>
-        </header>
-        <div className="flex-1 flex items-center justify-center">
+      <Shell>
+        <div className="flex flex-1 items-center justify-center">
           <Loader2 className="animate-spin text-neutral-400" size={28} />
         </div>
-      </div>
+      </Shell>
     )
   }
 
   if (error || !scenario) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <header className="h-14 border-b border-neutral-200 flex items-center px-5">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-            <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-            <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
-          </Link>
-        </header>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4">
+      <Shell>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
           <AlertCircle size={32} className="text-neutral-300" />
-          <p className="font-inter text-neutral-500 text-sm">
+          <p className="font-inter text-sm text-neutral-500">
             {error ?? 'Сценарий не найден'}
           </p>
           <Link
@@ -217,214 +144,383 @@ export default function ScenarioDetailPage() {
             Все сценарии
           </Link>
         </div>
-      </div>
+      </Shell>
     )
   }
 
   const categoryMeta = CATEGORY_META[scenario.category] ?? {
     label: scenario.category,
-    color: 'bg-neutral-100',
-    textColor: 'text-neutral-700',
+    role: scenario.persona,
   }
-  const exampleQuestions = EXAMPLE_QUESTIONS[scenario.category] ?? []
+  const exampleQuestions =
+    scenario.sampleQuestions ?? EXAMPLE_QUESTIONS[scenario.category] ?? []
+  const whatToPrepare = scenario.whatToPrepare ?? [
+    'Документ, презентацию, квартальный отчёт, postmortem или тезисы встречи.',
+    'Кто будет оппонентом и чего он хочет добиться.',
+    'Вашу текущую позицию и ограничения.',
+  ]
+  const expectedOutput = scenario.expectedOutput ?? [
+    'Критические вопросы по вашему материалу.',
+    'Слабые места в ответах и логике защиты.',
+    'Короткая prep-card перед встречей.',
+  ]
+  const faq = scenario.faq ?? []
+  const jsonLd =
+    faq.length > 0
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Сценарии',
+                item: 'https://peaktalk.ru/scenarios',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: scenario.title,
+                item: `https://peaktalk.ru/scenarios/${scenario.slug}`,
+              },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faq.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.answer,
+              },
+            })),
+          },
+        ]
+      : null
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <header className="h-14 border-b border-neutral-200 flex items-center justify-between px-5 shrink-0">
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-75 transition-opacity">
-          <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-          <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="font-mono text-xs uppercase tracking-widest text-neutral-400 hover:text-neutral-900 transition-colors"
-          >
-            Войти
-          </Link>
-          <Link
-            href="/register"
-            className="bg-[#171717] hover:bg-black text-white font-inter font-semibold text-xs px-4 py-2 transition-colors"
-          >
-            Начать
-          </Link>
-        </div>
-      </header>
+    <Shell>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
-        {/* Back link */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
         <Link
           href="/scenarios"
-          className="inline-flex items-center gap-1.5 font-inter text-sm text-neutral-400 hover:text-neutral-900 transition-colors mb-8"
+          className="mb-8 inline-flex items-center gap-1.5 font-inter text-sm text-neutral-400 transition-colors hover:text-neutral-900"
         >
           <ArrowLeft size={15} />
           Все сценарии
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Main content */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
           <div className="lg:col-span-2">
             {isUsingFallback && (
-              <div className="mb-6 flex items-start gap-3 border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <div className="mb-6 flex items-start gap-3 border border-[#E8600A]/30 bg-[#E8600A]/[0.06] px-4 py-3 text-[#8F3705]">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
                 <p className="font-inter text-sm leading-relaxed">
                   Показываем встроенное описание сценария, потому что API каталога сейчас недоступен.
                 </p>
               </div>
             )}
 
-            {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Category + difficulty + persona row */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span
-                  className={`inline-block px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded-none ${categoryMeta.color} ${categoryMeta.textColor}`}
-                >
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="inline-block border border-neutral-200 bg-white px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-600">
                   {categoryMeta.label}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <DifficultyDots value={scenario.difficulty} />
-                </div>
+                <DifficultyDots value={scenario.difficulty} />
                 <span className="font-mono text-xs text-neutral-400">
                   {scenario.persona}
                 </span>
               </div>
 
-              <h1 className="font-inter font-bold text-2xl sm:text-3xl text-neutral-900 leading-tight tracking-tight mb-2">
+              <h1 className="font-inter text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[46px]">
                 {scenario.title}
               </h1>
-              <p className="font-inter text-neutral-500 text-sm mb-6">
+              <p className="mt-5 max-w-2xl font-inter text-base leading-relaxed text-neutral-600">
                 {scenario.subtitle}
               </p>
             </motion.div>
 
-            {/* Situation block */}
-            {scenario.situation && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.08 }}
+              className="my-8 grid border border-neutral-200 bg-white sm:grid-cols-3"
+            >
+              {[
+                ['Оппонент', scenario.persona],
+                ['Фокус', categoryMeta.role],
+                ['Результат', 'вопросы / риски / prep-card'],
+              ].map(([label, value], index) => (
+                <div
+                  key={label}
+                  className={`p-4 ${
+                    index > 0
+                      ? 'border-t border-neutral-200 sm:border-l sm:border-t-0'
+                      : ''
+                  }`}
+                >
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+                    {label}
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-neutral-950">
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+
+            {(scenario.problem || scenario.pressure) && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="mb-8"
+                className="mb-8 grid gap-4 sm:grid-cols-2"
               >
-                <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3 border-b border-neutral-200 pb-2">
-                  Ситуация
-                </h2>
-                <div className="font-inter text-sm text-neutral-700 leading-relaxed space-y-3">
-                  {scenario.situation.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
-                </div>
+                {scenario.problem && (
+                  <InfoPanel label="Проблема" text={scenario.problem} />
+                )}
+                {scenario.pressure && (
+                  <InfoPanel label="Кто давит" text={scenario.pressure} tone="risk" />
+                )}
               </motion.div>
             )}
 
-            {/* Example questions */}
-            {exampleQuestions.length > 0 && (
+            {scenario.situation && (
+              <TextBlock title="Контекст встречи" text={scenario.situation} />
+            )}
+
+            <SectionList
+              title="Что вставить в PeakTalk"
+              items={whatToPrepare}
+              marker="мат"
+            />
+
+            <SectionList
+              title="Примеры вопросов"
+              items={exampleQuestions}
+              marker="вопр"
+            />
+
+            <SectionList
+              title="Что получите"
+              items={expectedOutput}
+              marker="итог"
+            />
+
+            {faq.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.15 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
                 className="mb-8"
               >
-                <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-3 border-b border-neutral-200 pb-2">
-                  Типичные вопросы на этой встрече
+                <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+                  FAQ
                 </h2>
-                <div className="flex flex-col gap-2">
-                  {exampleQuestions.map((q, i) => (
+                <div className="grid gap-3">
+                  {faq.map((item) => (
                     <div
-                      key={i}
-                      className="flex items-start gap-3 p-3.5 bg-neutral-50 border border-neutral-200"
+                      key={item.question}
+                      className="border border-neutral-200 bg-white p-4"
                     >
-                      <span className="font-mono text-[10px] text-neutral-400 shrink-0 mt-0.5">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <span className="font-inter text-sm text-neutral-700">
-                        {q}
-                      </span>
+                      <h3 className="font-inter text-sm font-bold text-neutral-950">
+                        {item.question}
+                      </h3>
+                      <p className="mt-2 font-inter text-sm leading-relaxed text-neutral-600">
+                        {item.answer}
+                      </p>
                     </div>
                   ))}
                 </div>
               </motion.div>
             )}
 
-            {/* Mobile CTA (shown below content) */}
             <div className="lg:hidden">
               <StartBlock
                 scenario={scenario}
                 difficulty={difficulty}
                 setDifficulty={setDifficulty}
-                isLoggedIn={isLoggedIn}
-                isStarting={isStarting}
-                onStart={handleStart}
-                slug={slug}
-                startError={startError}
               />
             </div>
           </div>
 
-          {/* Sidebar: Start block (desktop only) */}
           <div className="hidden lg:block">
             <div className="sticky top-8">
               <StartBlock
                 scenario={scenario}
                 difficulty={difficulty}
                 setDifficulty={setDifficulty}
-                isLoggedIn={isLoggedIn}
-                isStarting={isStarting}
-                onStart={handleStart}
-                slug={slug}
-                startError={startError}
               />
             </div>
           </div>
         </div>
       </main>
+    </Shell>
+  )
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-75"
+        >
+          <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
+          <span className="brand-wordmark text-[15px] text-neutral-900">
+            PeakTalk
+          </span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="font-mono text-xs uppercase tracking-widest text-neutral-400 transition-colors hover:text-neutral-900"
+          >
+            Войти
+          </Link>
+          <Link
+            href="/simulation/guest"
+            className="border border-neutral-950 bg-neutral-950 px-4 py-2 font-inter text-xs font-semibold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+          >
+            3 вопроса
+          </Link>
+        </div>
+      </header>
+      {children}
     </div>
   )
 }
 
-// ─── Start block ──────────────────────────────────────────────────────────────
+function InfoPanel({
+  label,
+  text,
+  tone = 'default',
+}: {
+  label: string
+  text: string
+  tone?: 'default' | 'risk'
+}) {
+  return (
+    <div
+      className={`border p-5 ${
+        tone === 'risk'
+          ? 'border-[#E8600A]/30 bg-[#E8600A]/[0.04]'
+          : 'border-neutral-200 bg-white'
+      }`}
+    >
+      <div
+        className={`font-mono text-[10px] uppercase tracking-[0.16em] ${
+          tone === 'risk' ? 'text-[#B74707]' : 'text-neutral-400'
+        }`}
+      >
+        {label}
+      </div>
+      <p className="mt-3 font-inter text-sm leading-relaxed text-neutral-700">
+        {text}
+      </p>
+    </div>
+  )
+}
+
+function TextBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.12 }}
+      className="mb-8"
+    >
+      <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+        {title}
+      </h2>
+      <div className="space-y-3 font-inter text-sm leading-relaxed text-neutral-700">
+        {text.split('\n\n').map((para) => (
+          <p key={para}>{para}</p>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+function SectionList({
+  title,
+  items,
+  marker,
+}: {
+  title: string
+  items: string[]
+  marker: string
+}) {
+  if (items.length === 0) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.14 }}
+      className="mb-8"
+    >
+      <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+        {title}
+      </h2>
+      <div className="grid gap-2">
+        {items.map((item, i) => (
+          <div
+            key={item}
+            className="flex items-start gap-3 border border-neutral-200 bg-white p-3.5"
+          >
+            <span className="mt-0.5 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-[#B74707]">
+              {marker} {String(i + 1).padStart(2, '0')}
+            </span>
+            <span className="font-inter text-sm leading-relaxed text-neutral-700">
+              {item}
+            </span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
 
 interface StartBlockProps {
   scenario: ScenarioCatalogItem
   difficulty: number
   setDifficulty: (v: number) => void
-  isLoggedIn: boolean | null
-  isStarting: boolean
-  onStart: () => void
-  slug: string
-  startError: string | null
 }
 
 function StartBlock({
   scenario,
   difficulty,
   setDifficulty,
-  isLoggedIn,
-  isStarting,
-  onStart,
-  slug,
-  startError,
 }: StartBlockProps) {
   const recommendedPreset = normalizeStartDifficulty(scenario.recommended_difficulty)
 
   return (
-    <div className="bg-white border border-neutral-200 p-5 sm:p-6">
-      <h3 className="font-inter font-semibold text-sm text-neutral-900 mb-4">
-        Начать стресс-тест по этому сценарию
+    <div className="border border-neutral-950 bg-white p-5 sm:p-6">
+      <h3 className="mb-4 font-inter text-xl font-black leading-tight text-neutral-950">
+        Проверить свой материал в бесплатном режиме
       </h3>
 
-      <p className="font-inter text-sm text-neutral-500 leading-relaxed mb-5">
-        Сценарий уже настроит контекст разговора. Остаётся выбрать уровень давления и запустить сессию.
+      <p className="mb-5 font-inter text-sm leading-relaxed text-neutral-600">
+        Вставьте документ, презентацию, отчёт или тезисы. PeakTalk задаст первые критические вопросы как будущий оппонент.
       </p>
 
-      {/* Difficulty selector */}
       <div className="mb-5">
-        <div className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-2.5">
+        <div className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
           Уровень давления
         </div>
         <div className="flex flex-col gap-2">
@@ -435,7 +531,7 @@ function StartBlock({
                 key={opt.value}
                 type="button"
                 onClick={() => setDifficulty(opt.value)}
-                className={`flex items-center justify-between px-3 py-2.5 border text-left transition-all ${
+                className={`flex items-center justify-between border px-3 py-2.5 text-left transition-all ${
                   isSelected
                     ? 'border-neutral-900 bg-neutral-50'
                     : 'border-neutral-200 hover:border-neutral-400'
@@ -443,14 +539,16 @@ function StartBlock({
               >
                 <span
                   className={`font-inter text-sm ${
-                    isSelected ? 'font-semibold text-neutral-900' : 'text-neutral-500'
+                    isSelected
+                      ? 'font-semibold text-neutral-900'
+                      : 'text-neutral-500'
                   }`}
                 >
                   {opt.label}
                 </span>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`font-mono text-[10px] px-1.5 py-0.5 ${
+                    className={`px-1.5 py-0.5 font-mono text-[10px] ${
                       isSelected
                         ? 'bg-neutral-900 text-white'
                         : 'bg-neutral-100 text-neutral-500'
@@ -468,54 +566,25 @@ function StartBlock({
         </div>
       </div>
 
-      {/* Recommended badge */}
       {scenario.recommended_difficulty && (
-        <div className="flex items-center gap-1.5 mb-4 text-xs text-neutral-400 font-inter">
-          <span className="w-1.5 h-1.5 bg-neutral-300 rounded-full" />
+        <div className="mb-4 flex items-center gap-1.5 font-inter text-xs text-neutral-400">
+          <span className="h-1.5 w-1.5 bg-[#E8600A]" />
           Рекомендованный уровень:{' '}
           {START_PRESSURE_OPTIONS.find((d) => d.value === recommendedPreset)?.label}
         </div>
       )}
 
-      {/* CTA */}
-      {isLoggedIn === false ? (
-        <Link
-          href={`/register?return=/scenarios/${slug}`}
-          className="w-full bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm h-12 flex items-center justify-center gap-2 transition-colors"
-        >
-          Зарегистрироваться и начать
-          <ChevronRight size={16} />
-        </Link>
-      ) : (
-        <button
-          type="button"
-          onClick={onStart}
-          disabled={isStarting || isLoggedIn === null}
-          className="w-full bg-[#171717] hover:bg-black text-white font-inter font-semibold text-sm h-12 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isStarting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <>
-              Начать стресс-тест
-              <ChevronRight size={16} />
-            </>
-          )}
-        </button>
-      )}
+      <Link
+        href="/simulation/guest"
+        className="flex h-12 w-full items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 font-inter text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+      >
+        Запустить 3 вопроса
+        <ArrowRight size={16} />
+      </Link>
 
-      {isLoggedIn === false && (
-        <p className="text-center font-mono text-[11px] text-neutral-400 mt-2">
-          Первые 3 сессии — бесплатно
-        </p>
-      )}
-
-      {startError && (
-        <div className="mt-3 flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2">
-          <AlertCircle size={15} className="shrink-0 mt-0.5" />
-          <span className="font-inter leading-relaxed">{startError}</span>
-        </div>
-      )}
+      <p className="mt-2 text-center font-mono text-[11px] text-neutral-400">
+        Без регистрации для первой проверки
+      </p>
     </div>
   )
 }

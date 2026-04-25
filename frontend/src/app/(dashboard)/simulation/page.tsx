@@ -560,10 +560,6 @@ function SimulationPageContent() {
                         : 'Серьёзная работа';
 
                     const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
-                    const trendIconBg = progressDelta == null ? 'bg-gray-50'
-                        : progressDelta > 0 ? 'bg-emerald-50'
-                        : progressDelta < 0 ? 'bg-rose-50'
-                        : 'bg-gray-50';
                     const trendSub = progressDelta == null
                         ? 'Пройди ещё один тест, чтобы увидеть динамику'
                         : progressDelta > 0 ? 'Ты растёшь!'
@@ -572,9 +568,6 @@ function SimulationPageContent() {
 
                     // Sparkline: последние 7 scored сессий
                     const sparkScores = scoredByDate.slice(-7).map(s => Math.round(s.avg_score! * 10));
-                    const sparkColor = progressDelta == null ? '#cbd5e1'
-                        : progressDelta > 0 ? '#10b981'
-                        : progressDelta < 0 ? '#f43f5e' : '#94a3b8';
                     // y: 3 (score=10, top) → 23 (score=0, bottom) — 3px padding for r=2.5 dots
                     const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
                     const sparkPoints = sparkScores.length >= 2
@@ -801,10 +794,10 @@ function SimulationPageContent() {
                     )}
                     <div>
                         <h1 className="font-inter text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight tracking-tight m-0 mb-2">
-                            Выбери себе вызов
+                            Настройте стресс-тест встречи
                         </h1>
                         <p className="font-inter text-neutral-500 max-w-2xl text-sm leading-relaxed">
-                            Кто сегодня по ту сторону стола? Настрой контекст и покажи класс.
+                            Выберите оппонента, контекст и материал, который нужно защитить перед реальным разговором.
                         </p>
                     </div>
                 </div>

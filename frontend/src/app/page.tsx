@@ -6,21 +6,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
-  BarChart3,
-  CheckCircle2,
   ChevronDown,
-  Database,
-  FileText,
   Lock,
   Menu,
-  MessageSquare,
-  Shield,
   ShieldAlert,
   Target,
+  Timer,
   X,
-  Zap,
 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
+
+const CTA_LABEL = 'Запустить 3 вопроса бесплатно';
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
@@ -53,16 +49,16 @@ type RevealProps = {
 };
 
 const navItems = [
-  { label: 'Сценарии', id: '#scenarios' },
   { label: 'Как работает', id: '#how' },
-  { label: 'Сравнение', id: '#comparison' },
-  { label: 'Цены', id: '#pricing' },
+  { label: 'Сценарии', id: '#scenarios' },
+  { label: 'Что бесплатно', id: '#pricing' },
+  { label: 'FAQ', id: '#faq' },
 ];
 
 const smoothScroll = (id: string) => {
   const element = document.querySelector(id);
   if (!element) return;
-  const navHeight = 88;
+  const navHeight = 82;
   const y = element.getBoundingClientRect().top + window.scrollY - navHeight;
   window.scrollTo({ top: y, behavior: 'smooth' });
 };
@@ -117,16 +113,16 @@ function RevealDiv({
   children,
   className,
   style,
-  hidden = { opacity: 0, y: 22, scale: 0.99 },
+  hidden = { opacity: 1, y: 14, scale: 1 },
   visible = { opacity: 1, y: 0, scale: 1 },
   delay = 0,
-  duration = 0.55,
+  duration = 0.45,
   margin,
 }: RevealProps) {
   const prefersReducedMotion = useReducedMotion();
   const isIOSSafari = useIsIOSSafari();
   const { ref, isInView } = useRevealTrigger<HTMLDivElement>(margin);
-  const hiddenState = prefersReducedMotion ? { opacity: 0 } : normalizeRevealTarget(hidden, isIOSSafari);
+  const hiddenState = prefersReducedMotion ? { opacity: 1 } : normalizeRevealTarget(hidden, isIOSSafari);
   const visibleState = prefersReducedMotion ? { opacity: 1 } : normalizeRevealTarget(visible, isIOSSafari);
   const state = isInView ? visibleState : hiddenState;
 
@@ -153,7 +149,7 @@ function RevealDiv({
 
 function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/[0.42]' : 'text-neutral-500'}`}>
+    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/[0.45]' : 'text-neutral-500'}`}>
       {children}
     </div>
   );
@@ -162,8 +158,8 @@ function SectionLabel({ children, dark = false }: { children: React.ReactNode; d
 function Logo({ size = 24 }: { size?: number }) {
   return (
     <div className="flex items-center gap-2">
-      <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={52} height={52} className="h-[52px] w-[52px]" priority />
-      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.9 }}>
+      <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={44} height={44} className="h-10 w-10 sm:h-11 sm:w-11" priority />
+      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.86 }}>
         PeakTalk
       </span>
     </div>
@@ -177,10 +173,10 @@ function Nav() {
   return (
     <>
       <motion.nav
-        initial={{ y: -90 }}
+        initial={{ y: -84 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-[#faf8f4]/90 py-3 shadow-[0_12px_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl' : 'bg-transparent py-4'}`}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-white/90 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl' : 'bg-[#faf8f4]/84 py-3.5 backdrop-blur-md'}`}
       >
         <div className="container-custom flex items-center justify-between gap-5">
           <Link href="/" aria-label="PeakTalk">
@@ -210,13 +206,13 @@ function Nav() {
               href="/simulation/guest"
               className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#E8600A] hover:border-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"
             >
-              Проверить документ
+              {CTA_LABEL}
             </Link>
           </div>
 
           <button
             type="button"
-            className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white/80 text-neutral-950 lg:hidden"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 lg:hidden"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Открыть меню"
           >
@@ -231,10 +227,10 @@ function Nav() {
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[100] flex flex-col bg-[#faf8f4] p-6"
           >
-            <div className="mb-14 flex items-center justify-between">
+            <div className="mb-12 flex items-center justify-between">
               <Logo />
               <button
                 type="button"
@@ -252,9 +248,9 @@ function Nav() {
                   key={item.label}
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    setTimeout(() => smoothScroll(item.id), 260);
+                    setTimeout(() => smoothScroll(item.id), 240);
                   }}
-                  className="cursor-pointer border-b border-neutral-200 py-4 text-left font-display text-[26px] font-semibold leading-none text-neutral-950"
+                  className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950"
                 >
                   {item.label}
                 </button>
@@ -265,8 +261,8 @@ function Nav() {
               <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950">
                 Войти
               </Link>
-              <Link href="/simulation/guest" className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 text-sm font-semibold text-white">
-                Проверить документ бесплатно
+              <Link href="/simulation/guest" className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white">
+                {CTA_LABEL}
               </Link>
             </div>
           </motion.div>
@@ -278,92 +274,97 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#faf8f4] pt-28 lg:pt-32">
-      <div className="absolute inset-0 opacity-[0.45]" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.055)_1px,transparent_1px)] bg-[size:64px_64px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(232,96,10,0.13),transparent_32%),linear-gradient(180deg,transparent_0%,#faf8f4_78%)]" />
+    <section className="relative overflow-hidden bg-[#faf8f4] pt-24 sm:pt-28 lg:pt-30">
+      <div className="absolute inset-0 opacity-[0.42]" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,#faf8f4_86%)]" />
       </div>
 
-      <div className="container-custom relative z-10 grid min-h-[calc(100vh-112px)] items-center gap-10 pb-16 lg:grid-cols-[minmax(0,0.93fr)_minmax(480px,1.07fr)] lg:pb-20">
+      <div className="container-custom relative z-10 grid items-center gap-7 pb-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(430px,0.9fr)] lg:gap-10 lg:pb-16">
         <div className="max-w-3xl">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="mb-6 inline-flex border border-neutral-300 bg-white/72 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-600 shadow-[0_12px_30px_rgba(0,0,0,0.04)]"
+            transition={{ duration: 0.4 }}
+            className="mb-5 inline-flex max-w-full border border-neutral-300 bg-white/78 px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-600"
           >
-            Peaktalk / meeting defense workspace
+            подготовка к сложной рабочей встрече
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display text-[30px] font-black uppercase leading-[0.94] text-neutral-950 min-[420px]:text-[36px] sm:text-[64px] lg:text-[62px] xl:text-[72px]"
+            transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-[720px] font-display text-[34px] font-black leading-[0.98] text-neutral-950 sm:text-[56px] lg:text-[62px] xl:text-[68px]"
           >
-            Документ
-            <span className="block text-[#E8600A]">должен</span>
-            выдержать
-            <span className="block">встречу.</span>
+            Проверьте аргументы до встречи
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-7 max-w-[320px] text-[17px] leading-[1.65] text-neutral-700 sm:max-w-[620px] sm:text-[19px]"
+            transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-700 sm:text-[19px]"
           >
-            PeakTalk читает ваш рабочий документ как будущий оппонент: давит по ROI, срокам, рискам и trade-offs,
-            а затем собирает prep-card до реального разговора.
+            Вставьте тезисы или план разговора. PeakTalk задаст 3 неудобных вопроса как руководитель,
+            клиент или инвестор и покажет, где ответ не выдерживает давления.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 grid max-w-[320px] gap-3 sm:flex sm:max-w-none sm:items-center"
+            transition={{ duration: 0.55, delay: 0.23, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-7 grid gap-3 sm:flex sm:items-center"
           >
             <Link
               href="/simulation/guest"
-              className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 border border-neutral-950 bg-neutral-950 px-6 text-sm font-bold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"
+              className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 border border-neutral-950 bg-neutral-950 px-5 text-sm font-bold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:px-6"
             >
-              Проверить документ — 3 вопроса
+              {CTA_LABEL}
               <ArrowRight size={16} />
             </Link>
             <button
               type="button"
               onClick={() => smoothScroll('#scenarios')}
-              className="inline-flex min-h-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white/68 px-6 text-sm font-semibold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
+              className="inline-flex min-h-12 cursor-pointer items-center justify-center px-2 text-sm font-bold text-neutral-700 underline decoration-neutral-300 underline-offset-4 transition-colors duration-150 hover:text-neutral-950 hover:decoration-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:px-3"
             >
               Посмотреть сценарии
             </button>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.55, delay: 0.38 }}
-            className="mt-7 grid max-w-[320px] grid-cols-1 border border-neutral-300 bg-white/68 sm:max-w-[650px] sm:grid-cols-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.32 }}
+            className="mt-6 flex max-w-[680px] flex-wrap gap-x-5 gap-y-2 font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-500"
           >
-            {[
-              ['Input', 'memo / deck / QBR'],
-              ['Pressure', 'CFO / client / board'],
-              ['Output', 'risks / prep-card / report'],
-            ].map(([label, value], index) => (
-              <div key={label} className={`px-4 py-4 ${index > 0 ? 'border-t border-neutral-300 sm:border-l sm:border-t-0' : ''}`}>
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">{label}</div>
-                <div className="mt-1 text-sm font-bold text-neutral-950">{value}</div>
-              </div>
-            ))}
+            <span>без регистрации</span>
+            <span className="text-[#E8600A]">3 вопроса</span>
+            <span>на своём кейсе</span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.52, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-7 border border-neutral-950 bg-neutral-950 p-4 text-white md:hidden"
+          >
+            <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#FF8A3D]">вопрос оппонента 01/03</div>
+            <p className="mt-3 text-[15px] font-semibold leading-relaxed">
+              Почему это решение важнее двух альтернатив, которые уже лежат в backlog?
+            </p>
+            <div className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-white/58">
+              Слабое место: нет цены задержки и владельца следующего шага.
+            </div>
           </motion.div>
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.985 }}
+          initial={{ opacity: 0, y: 18, scale: 0.99 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
           style={safariMotionStyle}
-          className="relative min-w-0 lg:translate-x-10 lg:translate-y-5 xl:translate-x-14"
+          className="relative hidden min-w-0 md:block lg:translate-x-2"
         >
           <HeroVisual />
         </motion.div>
@@ -372,165 +373,48 @@ function Hero() {
   );
 }
 
-function ProblemAgitation() {
-  const problems = [
+function PressureGap() {
+  const items = [
     {
-      method: 'Живой коуч',
-      problem: 'Хорош для навыка, но не знает ваш QBR, финмодель и политический контекст встречи в четверг.',
+      title: 'Вопрос оппонента',
+      body: 'Почему это решение важнее двух альтернатив, которые уже лежат в backlog?',
     },
     {
-      method: 'Онлайн-курс',
-      problem: 'Учит коммуникации вообще. А вам нужен разбор конкретного документа и конкретных возражений.',
+      title: 'Слабое место',
+      body: 'Вы называете срок, но не показываете зависимость от ресурсов и владельца решения.',
     },
     {
-      method: 'Универсальный AI-чат',
-      problem: 'Отвечает охотно, но редко держит роль жёсткого стейкхолдера и не оставляет рабочий артефакт.',
+      title: 'Prep-card',
+      body: 'Начните с цены задержки, затем назовите компромисс и условия, при которых план меняется.',
     },
   ];
 
   return (
-    <section className="bg-white py-[clamp(76px,9vw,118px)]">
+    <section className="bg-white py-[clamp(46px,7vw,82px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 max-w-4xl" margin="-50px 0px">
-          <SectionLabel>problem / pressure gap</SectionLabel>
-          <h2 className="mt-4 max-w-4xl font-display text-[32px] font-black uppercase leading-[1.02] text-neutral-950 sm:text-[48px] lg:text-[58px]">
-            Идеи редко проваливаются из-за идеи. Чаще — из-за ответа на третий неудобный вопрос.
-          </h2>
-        </RevealDiv>
-
-        <div className="grid border border-neutral-200 md:grid-cols-3">
-          {problems.map((item, index) => (
-            <RevealDiv
-              key={item.method}
-              delay={index * 0.06}
-              className={`group relative min-h-[250px] bg-white p-6 transition-colors duration-150 hover:bg-[#111111] ${index > 0 ? 'border-t border-neutral-200 md:border-l md:border-t-0' : ''}`}
-            >
-              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
-              <h3 className="mt-8 text-2xl font-bold text-neutral-950 transition-colors group-hover:text-white">{item.method}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600 transition-colors group-hover:text-white/68">{item.problem}</p>
-              <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#E8600A] transition-all duration-200 group-hover:w-full" />
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ActionFlow() {
-  const steps = [
-    {
-      number: '01',
-      title: 'Загружаете то, что будете защищать',
-      body: 'Не тему и не “контекст”. Конкретный документ: budget memo, roadmap, pitch deck, QBR. Вопросы строятся вокруг ваших формулировок и дыр в логике.',
-      label: 'document intake',
-      icon: FileText,
-    },
-    {
-      number: '02',
-      title: 'Выбираете, кто будет спорить',
-      body: 'CFO давит на окупаемость, клиент на ценность, инвестор на модель роста, board на trade-offs. Роль меняет угол атаки.',
-      label: 'opponent model',
-      icon: ShieldAlert,
-    },
-    {
-      number: '03',
-      title: 'Получаете разбор, а не комплименты',
-      body: 'Критические возражения, слабые ответы, prep-card и список мест, которые надо укрепить до созвона или кабинета.',
-      label: 'meeting artifact',
-      icon: BarChart3,
-    },
-  ];
-
-  return (
-    <section id="how" className="bg-[#faf8f4] py-[clamp(80px,11vw,146px)]">
-      <div className="container-custom">
-        <RevealDiv className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end" margin="-50px 0px">
+        <RevealDiv className="mb-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <SectionLabel>how it works</SectionLabel>
-          <h2 className="mt-4 max-w-3xl font-display text-[32px] font-black leading-[1.05] text-neutral-950 sm:text-[46px] lg:text-[56px]">
-            Один документ. Один оппонент. Один честный разбор.
-          </h2>
-          </div>
-          <p className="max-w-sm text-[15px] leading-relaxed text-neutral-600">
-            Без учебной сцены и лишней геймификации. Это рабочий prep-room для переговоров, защиты решений и сложных апдейтов.
-          </p>
-        </RevealDiv>
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          {steps.map((step, index) => (
-            <RevealDiv key={step.number} delay={index * 0.08} className="border border-neutral-300 bg-white p-6 lg:min-h-[390px]">
-              <div className="flex items-start justify-between gap-4 border-b border-neutral-200 pb-6">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">{step.label}</div>
-                  <div className="mt-2 font-display text-[44px] font-black leading-none text-[#E8600A]">{step.number}</div>
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center border border-neutral-200 bg-[#faf8f4] text-neutral-950">
-                  <step.icon size={20} />
-                </div>
-              </div>
-              <h3 className="mt-8 text-[24px] font-bold leading-[1.12] text-neutral-950">{step.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{step.body}</p>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ImpactEvidence() {
-  const evidence = [
-    {
-      title: 'Слабые допущения',
-      body: 'Где документ просит поверить, но не показывает цифры, диапазоны или последствия.',
-      icon: Target,
-    },
-    {
-      title: 'Опасные формулировки',
-      body: 'Где ответ звучит уверенно, но уходит от факта, срока, владельца или trade-off.',
-      icon: MessageSquare,
-    },
-    {
-      title: 'Prep-card перед встречей',
-      body: 'Что открыть за пять минут до разговора: opening move, опорные цифры, риски и ответы.',
-      icon: CheckCircle2,
-    },
-  ];
-
-  return (
-    <section className="relative overflow-hidden bg-[#0b0b0b] py-[clamp(84px,11vw,150px)] text-white">
-      <div className="absolute inset-0 opacity-[0.055]" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.45)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px]" />
-      </div>
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#E8600A] via-white/20 to-transparent" aria-hidden="true" />
-
-      <div className="container-custom relative z-10">
-        <RevealDiv className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.55fr)] lg:items-end" margin="-50px 0px">
-          <div>
-            <SectionLabel dark>why it works</SectionLabel>
-            <h2 className="mt-4 max-w-4xl font-display text-[34px] font-black leading-[1.04] text-white sm:text-[52px] lg:text-[68px]">
-              Не “улучшает текст”. Показывает, где вас разберут.
+            <SectionLabel>что на выходе</SectionLabel>
+            <h2 className="mt-4 max-w-2xl text-[27px] font-bold leading-[1.08] text-neutral-950 sm:text-[40px]">
+              Слабое место лучше увидеть на экране, а не за столом переговоров.
             </h2>
           </div>
-          <p className="text-[15px] leading-relaxed text-white/55">
-            Польза не в красивой формулировке. Польза в том, что слабое место всплывает на экране, а не перед CFO, клиентом или советом директоров.
+          <p className="max-w-2xl text-[15px] leading-relaxed text-neutral-600">
+            PeakTalk не пишет красивый текст вместо Вас. Он быстро показывает, какой вопрос прилетит,
+            где ответ ломается и как усилить формулировку до встречи.
           </p>
         </RevealDiv>
 
-        <div className="grid border border-white/12 lg:grid-cols-3">
-          {evidence.map((item, index) => (
+        <div className="grid border-y border-neutral-200 lg:grid-cols-3">
+          {items.map((item, index) => (
             <RevealDiv
               key={item.title}
-              delay={index * 0.07}
-              className={`relative min-h-[300px] bg-white/[0.025] p-7 ${index > 0 ? 'border-t border-white/12 lg:border-l lg:border-t-0' : ''}`}
+              delay={index * 0.05}
+              className={`bg-white py-4 ${index > 0 ? 'border-t border-neutral-200 lg:border-l lg:border-t-0 lg:pl-6' : ''} ${index < items.length - 1 ? 'lg:pr-6' : ''}`}
             >
-              <div className="mb-10 inline-flex h-12 w-12 items-center justify-center border border-white/16 bg-white/[0.035] text-[#E8600A]">
-                <item.icon size={20} />
-              </div>
-              <h3 className="text-[24px] font-bold text-white">{item.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-white/55">{item.body}</p>
-              <div className="absolute bottom-6 right-7 font-mono text-[11px] uppercase tracking-[0.16em] text-white/20">signal 0{index + 1}</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
+              <h3 className="mt-3 text-lg font-bold leading-tight text-neutral-950 sm:text-xl">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-600">{item.body}</p>
             </RevealDiv>
           ))}
         </div>
@@ -539,112 +423,82 @@ function ImpactEvidence() {
   );
 }
 
-function Scenarios() {
-  const scenarios = [
+function ActionFlowPipeline() {
+  const steps = [
     {
-      tag: 'CFO',
-      title: 'Защита бюджета',
-      desc: 'Окупаемость, payback period, цена задержки, что можно убрать без риска.',
-      artifact: 'Budget memo / financial model',
+      id: '01',
+      label: 'материал',
+      title: 'Загрузите спич',
+      body: 'Тезисы, КП, письмо клиенту или план защиты бюджета.',
+      result: 'готовый сценарий тренировки',
+      svg: '/illustrations/upload-document.svg',
     },
     {
-      tag: 'Investor',
-      title: 'Питч раунда',
-      desc: 'Модель роста, рынок, unit-экономика, почему ставка сейчас оправдана.',
-      artifact: 'Pitch deck / fundraising memo',
+      id: '02',
+      label: 'давление',
+      title: 'Пройдите симуляцию',
+      body: 'Ответьте на 3 вопроса, которые проверяют ценность, риски и компромиссы.',
+      result: 'проверенная аргументация',
+      svg: '/illustrations/ai-chat.svg',
     },
     {
-      tag: 'Client',
-      title: 'QBR и продление',
-      desc: 'Доказательство impact, renewal risk, неприятные вопросы по результатам квартала.',
-      artifact: 'QBR deck / account review',
-    },
-    {
-      tag: 'Board',
-      title: 'Защита roadmap',
-      desc: 'Приоритеты, ресурсы, trade-offs, стоимость переноса и отказа от фич.',
-      artifact: 'Roadmap / strategy memo',
-    },
-  ];
-
-  return (
-    <section id="scenarios" className="bg-white py-[clamp(82px,10vw,128px)]">
-      <div className="container-custom">
-        <RevealDiv className="mb-12 max-w-3xl" margin="-50px 0px">
-          <SectionLabel>meeting scenarios</SectionLabel>
-          <h2 className="mt-4 font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[46px] lg:text-[54px]">
-            Не переговоры вообще. Конкретные встречи, где документ должен держаться.
-          </h2>
-        </RevealDiv>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {scenarios.map((item, index) => (
-            <RevealDiv key={item.title} delay={index * 0.06} className="group flex min-h-[330px] flex-col border border-neutral-200 bg-white p-6 transition-colors duration-150 hover:bg-neutral-950">
-              <div className="mb-8 inline-flex w-fit border border-[#E8600A]/25 bg-[#E8600A]/[0.08] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#B74707] group-hover:border-[#E8600A]/45 group-hover:text-[#ff8d42]">
-                {item.tag}
-              </div>
-              <h3 className="text-[23px] font-bold leading-[1.1] text-neutral-950 transition-colors group-hover:text-white">{item.title}</h3>
-              <p className="mt-4 text-sm leading-relaxed text-neutral-600 transition-colors group-hover:text-white/60">{item.desc}</p>
-              <div className="mt-auto border-t border-neutral-200 pt-5 transition-colors group-hover:border-white/12">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">artifact</div>
-                <div className="mt-1 text-sm font-semibold text-neutral-800 transition-colors group-hover:text-white/78">{item.artifact}</div>
-              </div>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ComparisonBlock() {
-  const alternatives = [
-    {
-      title: 'Коуч',
-      weakness: 'Дорогой и не всегда доступен именно перед срочной встречей.',
-    },
-    {
-      title: 'Курс',
-      weakness: 'Длинный горизонт обучения вместо проверки конкретного материала.',
-    },
-    {
-      title: 'AI-чат',
-      weakness: 'Слишком уступчивый: помогает писать, но редко держит неприятную роль.',
+      id: '03',
+      label: 'правки',
+      title: 'Получите план улучшений',
+      body: 'Увидьте слабые места, формулировки и следующий рабочий шаг.',
+      result: 'список правок',
+      svg: '/illustrations/report-checklist.svg',
     },
   ];
 
   return (
-    <section id="comparison" className="bg-[#faf8f4] py-[clamp(82px,10vw,130px)]">
+    <section id="how" className="bg-[#faf8f4] py-[clamp(46px,7vw,82px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 max-w-3xl" margin="-50px 0px">
-          <SectionLabel>comparison</SectionLabel>
-          <h2 className="mt-4 font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[46px] lg:text-[54px]">
-            У PeakTalk другая задача: не успокоить, а вскрыть риск.
-          </h2>
+        <RevealDiv className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <SectionLabel>как работает</SectionLabel>
+            <h2 className="mt-4 max-w-3xl text-[27px] font-bold leading-[1.08] text-neutral-950 sm:text-[40px]">
+              Один материал → три неудобных вопроса → рабочий план ответа.
+            </h2>
+          </div>
+          <p className="max-w-md text-[15px] leading-relaxed text-neutral-600">
+            Без учебной сцены и геймификации. Только короткий контур подготовки к разговору, где Вас будут проверять.
+          </p>
         </RevealDiv>
 
-        <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-          <RevealDiv className="border border-neutral-950 bg-neutral-950 p-7 text-white lg:p-9">
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#E8600A]">PeakTalk</div>
-            <h3 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.04] lg:text-[42px]">
-              Загружаете документ и получаете давление по его слабым местам.
-            </h3>
-            <div className="mt-9 grid gap-3 sm:grid-cols-3">
-              {['вопросы', 'слабые ответы', 'prep-card'].map((item) => (
-                <div key={item} className="border border-white/12 bg-white/[0.035] px-4 py-4">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">output</div>
-                  <div className="mt-1 text-sm font-semibold text-white">{item}</div>
+        <div className="grid border border-neutral-300 bg-white lg:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="border-b border-neutral-300 bg-neutral-950 p-5 text-white lg:border-b-0 lg:border-r lg:p-6">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">pipeline</div>
+            <p className="mt-4 text-[18px] font-bold leading-[1.16] lg:text-[22px] lg:leading-[1.12]">
+              Материал превращается в проверку аргументов, а не в ещё один AI-текст.
+            </p>
+          </div>
+          <div className="grid lg:grid-cols-3">
+            {steps.map((step, index) => (
+              <RevealDiv
+                key={step.title}
+                delay={index * 0.05}
+                className={`relative bg-white p-5 md:p-7 ${index > 0 ? 'border-t border-neutral-200 lg:border-l lg:border-t-0' : ''}`}
+              >
+                {index < steps.length - 1 && (
+                  <div className="pointer-events-none absolute -right-3 top-8 z-20 hidden h-6 w-6 items-center justify-center bg-white text-[#E8600A] lg:flex">
+                    <ArrowRight size={14} />
+                  </div>
+                )}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">{step.label}</div>
+                    <div className="mt-2 font-mono text-[12px] font-bold text-[#E8600A]">{step.id}</div>
+                  </div>
+                  <div className="relative -mt-2 h-16 w-20 shrink-0 overflow-hidden bg-[#faf8f4]">
+                    <Image src={step.svg} fill sizes="80px" className="object-contain p-2" alt="" aria-hidden="true" />
+                  </div>
                 </div>
-              ))}
-            </div>
-          </RevealDiv>
-
-          <div className="grid gap-4">
-            {alternatives.map((item, index) => (
-              <RevealDiv key={item.title} delay={index * 0.06} className="border border-neutral-300 bg-white p-6">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">alternative</div>
-                <h3 className="mt-3 text-xl font-bold text-neutral-950">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{item.weakness}</p>
+                <h3 className="mt-4 text-[20px] font-bold leading-[1.12] text-neutral-950 md:text-[22px]">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-600">{step.body}</p>
+                <div className="mt-5 border-t border-neutral-100 pt-3 text-sm font-semibold text-[#E8600A]">
+                  Результат: {step.result}
+                </div>
               </RevealDiv>
             ))}
           </div>
@@ -654,48 +508,116 @@ function ComparisonBlock() {
   );
 }
 
+function InteractiveScenarios() {
+  const scenarios = [
+    {
+      tag: 'Бюджет',
+      title: 'Защитить бюджет перед руководителем',
+      desc: 'Когда просят сократить расходы, а Вам нужно доказать, что решение влияет на результат.',
+      href: '/scenarios/budget-cut-q3',
+      svg: '/illustrations/cfo-negotiation.svg',
+    },
+    {
+      tag: 'Клиент',
+      title: 'Подготовиться к разговору с клиентом',
+      desc: 'Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
+      href: '/scenarios/client-escalation',
+      svg: '/illustrations/client-meeting.svg',
+    },
+    {
+      tag: 'Инвестор',
+      title: 'Выдержать вопросы инвестора',
+      desc: 'Когда будут давить на рынок, рост, unit-экономику и реалистичность плана.',
+      href: '/scenarios/series-a-pitch',
+      svg: '/illustrations/investor-pitch.svg',
+    },
+  ];
+
+  return (
+    <section id="scenarios" className="bg-white py-[clamp(46px,7vw,82px)]">
+      <div className="container-custom">
+        <RevealDiv className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <SectionLabel>сценарии встреч</SectionLabel>
+            <h2 className="mt-4 max-w-3xl text-[27px] font-bold leading-[1.08] text-neutral-950 sm:text-[40px]">
+              Начните не с “переговоров вообще”, а с разговора, который уже стоит в календаре.
+            </h2>
+          </div>
+          <Link href="/scenarios" className="inline-flex min-h-11 w-fit items-center gap-2 border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-950">
+            Все сценарии
+            <ArrowRight size={15} />
+          </Link>
+        </RevealDiv>
+
+        <div className="grid border border-neutral-300 bg-neutral-200 gap-px lg:grid-cols-3">
+          {scenarios.map((item, index) => (
+            <RevealDiv key={item.title} delay={index * 0.04} className="group flex min-h-[250px] flex-col bg-white p-5 transition-colors duration-150 hover:bg-[#faf8f4] lg:min-h-[290px] lg:p-6">
+              <div className="mb-5 flex items-center justify-between gap-4 lg:mb-7">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#B74707]">{item.tag}</div>
+                <div className="font-mono text-[11px] font-bold text-[#E8600A]">0{index + 1}</div>
+              </div>
+              <div className="relative mb-5 h-24 overflow-hidden border border-neutral-200 bg-[#faf8f4] lg:h-28">
+                <Image src={item.svg} fill sizes="(min-width: 1024px) 30vw, 100vw" className="object-contain p-3 transition-transform duration-300 group-hover:-translate-y-1" alt="" aria-hidden="true" />
+              </div>
+              <h3 className="text-[20px] font-bold leading-[1.1] text-neutral-950 lg:text-[22px]">{item.title}</h3>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-600">{item.desc}</p>
+              <Link
+                href={item.href}
+                className="mt-auto inline-flex w-fit items-center gap-2 pt-5 text-sm font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 lg:pt-7"
+              >
+                Разобрать сценарий
+                <ArrowRight size={15} />
+              </Link>
+            </RevealDiv>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PricingCTA() {
   return (
-    <section id="pricing" className="bg-white py-[clamp(82px,10vw,130px)]">
+    <section id="pricing" className="bg-[#faf8f4] py-[clamp(46px,7vw,82px)]">
       <div className="container-custom">
-        <RevealDiv className="mx-auto mb-12 max-w-3xl text-center" margin="-50px 0px">
-          <SectionLabel>start</SectionLabel>
-          <h2 className="mt-4 font-display text-[34px] font-black uppercase leading-[1] text-neutral-950 sm:text-[52px] lg:text-[68px]">
-            Проверьте один документ бесплатно.
+        <RevealDiv className="mx-auto mb-6 max-w-3xl text-center">
+          <SectionLabel>бесплатно / полностью</SectionLabel>
+          <h2 className="mt-4 text-[28px] font-bold leading-[1.08] text-neutral-950 sm:text-[42px]">
+            Бесплатно — первые 3 вопроса. Полная сессия — когда нужно сохранить разбор.
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-neutral-600">
-            Три вопроса на своём кейсе без регистрации. Достаточно, чтобы понять, где защита уже трещит.
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-neutral-600 sm:text-[16px]">
+            Мы не прячем границу: бесплатный режим показывает механику на Вашем материале. Отчёт, расшифровка и prep-card открываются в полной сессии.
           </p>
         </RevealDiv>
 
-        <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
-          <RevealDiv className="flex flex-col border border-neutral-300 bg-[#faf8f4] p-7 lg:p-9">
-            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">guest pressure-test</div>
-            <div className="mt-4 font-display text-[52px] font-black leading-none text-neutral-950">0 ₽</div>
-            <p className="mt-4 text-sm leading-relaxed text-neutral-600">Один документ, выбранный оппонент, первые критические вопросы.</p>
-            <div className="my-7 h-px bg-neutral-300" />
-            <ul className="mb-8 grid gap-3 text-sm text-neutral-700">
-              {['Без регистрации', 'Без карты', '3 вопроса по вашему материалу'].map((item) => (
-                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 bg-[#E8600A]" />{item}</li>
+        <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
+          <RevealDiv className="flex flex-col border border-neutral-300 bg-white p-5 lg:p-7">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">бесплатный pressure-test</div>
+            <div className="mt-3 text-[42px] font-black leading-none text-neutral-950">0 ₽</div>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-600">Материал встречи, выбранный оппонент и первые 3 вопроса без регистрации.</p>
+            <div className="my-5 h-px bg-neutral-200" />
+            <ul className="mb-6 grid gap-2.5 text-sm text-neutral-700">
+              {['Без регистрации', 'Без карты', 'На тезисах, документе или плане разговора'].map((item) => (
+                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 shrink-0 bg-[#E8600A]" />{item}</li>
               ))}
             </ul>
             <Link href="/simulation/guest" className="mt-auto flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]">
-              Запустить 3 вопроса
+              {CTA_LABEL}
             </Link>
           </RevealDiv>
 
-          <RevealDiv delay={0.08} className="flex flex-col border border-neutral-950 bg-neutral-950 p-7 text-white lg:p-9">
-            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">full session</div>
-            <div className="mt-4 flex items-end gap-2 font-display text-[56px] font-black leading-none text-white">
+          <RevealDiv delay={0.08} className="flex flex-col border border-neutral-950 bg-neutral-950 p-5 text-white lg:p-7">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">полная сессия</div>
+            <div className="mt-3 flex items-end gap-2 text-[46px] font-black leading-none text-white">
               <span className="text-[#FF8A3D]">299</span>
               <span>₽</span>
               <span className="pb-1 text-lg font-semibold text-white/70">/ сессия</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-white/58">Полный разбор, prep-card и материалы, к которым можно вернуться перед встречей.</p>
-            <div className="my-7 h-px bg-white/12" />
-            <ul className="mb-8 grid gap-3 text-sm text-white/72">
-              {['Полная симуляция', 'Слабые ответы и риски', 'Prep-card и отчёт'].map((item) => (
-                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 bg-[#E8600A]" />{item}</li>
+            <p className="mt-3 text-sm leading-relaxed text-white/62">Полная симуляция для подготовки к конкретному разговору, с сохранением материалов.</p>
+            <div className="my-5 h-px bg-white/12" />
+            <ul className="mb-6 grid gap-2.5 text-sm text-white/76">
+              {['История вопросов и ответов', 'Разбор слабых мест', 'Prep-card и отчёт перед встречей'].map((item) => (
+                <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 shrink-0 bg-[#E8600A]" />{item}</li>
               ))}
             </ul>
             <Link href="/billing" className="mt-auto flex min-h-12 items-center justify-center border border-white bg-white px-5 text-sm font-bold text-neutral-950 transition-colors hover:bg-[#faf8f4]">
@@ -712,45 +634,47 @@ function FAQAndTrust() {
   const faqs = [
     {
       q: 'Что такое PeakTalk?',
-      a: 'PeakTalk — сервис подготовки к защите решений и сложным B2B-встречам. Вы загружаете документ, выбираете оппонента и получаете разбор слабых мест до реального разговора.',
+      a: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
     },
     {
       q: 'Нужна ли регистрация?',
-      a: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора и возврата к материалам.',
+      a: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора, отчёта и prep-card.',
     },
     {
-      q: 'Какие документы подходят?',
-      a: 'Memo, pitch deck, QBR, roadmap, финмодель, стратегия или любой текстовый материал, который вы будете защищать на встрече.',
+      q: 'Что можно вставить вместо документа?',
+      a: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
     },
     {
-      q: 'Это заменяет коуча?',
-      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного документа и аргументации перед встречей.',
+      q: 'Это заменяет коуча или курс?',
+      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного материала перед конкретным разговором.',
     },
   ];
 
   const signals = [
-    { icon: Shield, title: '152-ФЗ', desc: 'Данные хранятся в России.' },
-    { icon: Lock, title: 'Не обучаем модели', desc: 'Ваши документы не становятся датасетом.' },
-    { icon: Database, title: 'Cloud.ru', desc: 'Обработка через российского провайдера.' },
-    { icon: Zap, title: 'Без карты', desc: 'Guest pressure-test запускается без оплаты.' },
+    { icon: Target, title: 'Конкретный материал', desc: 'Вопросы строятся вокруг текста, который Вы вставили.' },
+    { icon: ShieldAlert, title: 'Неприятная роль', desc: 'Оппонент давит по цифрам, срокам, рискам и компромиссам.' },
+    { icon: Timer, title: 'Перед встречей', desc: 'Формат рассчитан на подготовку, когда времени мало.' },
+    { icon: Lock, title: 'Без карты на старте', desc: 'Бесплатный режим запускается без оплаты и регистрации.' },
   ];
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="bg-[#faf8f4] py-[clamp(82px,10vw,130px)]">
-      <div className="container-custom grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(420px,1fr)]">
-        <RevealDiv margin="-50px 0px">
+    <section id="faq" className="bg-white py-[clamp(46px,7vw,82px)]">
+      <div className="container-custom grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(420px,1fr)]">
+        <RevealDiv>
           <SectionLabel>trust / faq</SectionLabel>
-          <h2 className="mt-4 max-w-xl font-display text-[32px] font-black leading-[1.06] text-neutral-950 sm:text-[44px]">
-            Для документов, которые нельзя разбирать на публике.
+          <h2 className="mt-4 max-w-xl text-[27px] font-bold leading-[1.08] text-neutral-950 sm:text-[40px]">
+            Для разговоров, где общие формулировки не проходят.
           </h2>
-          <div className="mt-9 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-2.5">
             {signals.map((signal) => (
-              <div key={signal.title} className="border border-neutral-300 bg-white/70 p-4">
-                <signal.icon size={18} className="text-[#E8600A]" />
-                <div className="mt-3 text-sm font-bold text-neutral-950">{signal.title}</div>
-                <p className="mt-1 text-xs leading-relaxed text-neutral-600">{signal.desc}</p>
+              <div key={signal.title} className="flex gap-3 border-t border-neutral-200 pt-3">
+                <signal.icon size={18} className="mt-0.5 shrink-0 text-[#E8600A]" />
+                <div>
+                  <div className="text-sm font-bold text-neutral-950">{signal.title}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">{signal.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -762,7 +686,7 @@ function FAQAndTrust() {
               <button
                 type="button"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="flex w-full cursor-pointer items-center justify-between gap-5 px-5 py-5 text-left text-base font-bold text-neutral-950 transition-colors hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
+                className="flex w-full cursor-pointer items-center justify-between gap-5 px-5 py-4 text-left text-base font-bold text-neutral-950 transition-colors hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
                 aria-expanded={openIndex === index}
               >
                 {faq.q}
@@ -777,7 +701,7 @@ function FAQAndTrust() {
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">{faq.a}</p>
+                    <p className="px-5 pb-4 text-sm leading-relaxed text-neutral-600">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -795,24 +719,23 @@ function FooterCTA() {
       <div className="absolute inset-0 opacity-[0.06]" aria-hidden="true">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" />
       </div>
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E8600A] to-transparent" aria-hidden="true" />
 
-      <div className="container-custom relative z-10 py-[clamp(92px,12vw,170px)] text-center">
-        <RevealDiv margin="-50px 0px">
+      <div className="container-custom relative z-10 py-[clamp(70px,9vw,112px)] text-center">
+        <RevealDiv>
           <SectionLabel dark>final check</SectionLabel>
-          <h2 className="mx-auto mt-5 max-w-5xl font-display text-[38px] font-black uppercase leading-[0.98] text-white sm:text-[62px] lg:text-[86px]">
-            Не несите слабый документ на сильную встречу.
+          <h2 className="mx-auto mt-5 max-w-4xl font-display text-[36px] font-black leading-[1.02] text-white sm:text-[56px] lg:text-[66px]">
+            Не несите слабый ответ на сильную встречу.
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-white/55">
-            Запустите pressure-test и посмотрите, где аргументация ломается, пока это ещё можно исправить.
+          <p className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-white/58">
+            Запустите 3 вопроса на своём материале и посмотрите, где аргументация требует усиления.
           </p>
-          <div className="mt-10 flex justify-center">
+          <div className="mt-9 flex justify-center">
             <Link href="/simulation/guest" className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/24 bg-white px-6 text-sm font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white">
-              Проверить документ бесплатно
+              {CTA_LABEL}
               <ArrowRight size={16} />
             </Link>
           </div>
-          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.32]">3 вопроса. Без регистрации. На своём кейсе.</p>
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.34]">без регистрации / без карты / на своём кейсе</p>
         </RevealDiv>
       </div>
 
@@ -827,9 +750,10 @@ function Footer() {
       <div className="container-custom flex flex-col items-center justify-between gap-7 text-white/75 md:flex-row">
         <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
           <div className="brightness-0 invert"><Logo size={20} /></div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">meeting defense workspace</div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">meeting pressure-test</div>
         </div>
         <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]">
+          <Link href="/scenarios" className="transition-colors hover:text-white">Сценарии</Link>
           <Link href="/contacts" className="transition-colors hover:text-white">Контакты</Link>
           <Link href="/personal-data" className="transition-colors hover:text-white">Оферта</Link>
           <Link href="/privacy" className="transition-colors hover:text-white">Конфиденциальность</Link>
@@ -843,15 +767,15 @@ function JsonLd() {
   const faqData = [
     {
       question: 'Что такое PeakTalk?',
-      answer: 'PeakTalk — сервис подготовки к защите решений и сложным B2B-встречам. Вы загружаете документ, выбираете оппонента и получаете разбор слабых мест до реального разговора.',
+      answer: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
     },
     {
       question: 'Нужна ли регистрация?',
-      answer: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора и возврата к материалам.',
+      answer: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора, отчёта и prep-card.',
     },
     {
-      question: 'Какие документы подходят?',
-      answer: 'Memo, pitch deck, QBR, roadmap, финмодель, стратегия или любой текстовый материал, который вы будете защищать на встрече.',
+      question: 'Что можно вставить вместо документа?',
+      answer: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
     },
   ];
 
@@ -862,23 +786,23 @@ function JsonLd() {
         '@type': 'SoftwareApplication',
         name: 'PeakTalk',
         url: 'https://peaktalk.ru',
-        description: 'Сервис подготовки к защите бюджета, roadmap и QBR. Загружаете документ, выбираете оппонента и получаете разбор слабых мест до реальной встречи.',
+        description: 'Сервис подготовки к сложным рабочим встречам: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места аргументации.',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: [
           {
             '@type': 'Offer',
-            name: 'Guest',
+            name: 'Guest pressure-test',
             price: '0',
             priceCurrency: 'RUB',
             description: '3 бесплатных вопроса без регистрации',
           },
           {
             '@type': 'Offer',
-            name: 'Per-session',
+            name: 'Full session',
             price: '299',
             priceCurrency: 'RUB',
-            description: 'Одна полная сессия',
+            description: 'Полная сессия с отчётом и prep-card',
           },
         ],
         provider: {
@@ -906,15 +830,13 @@ function JsonLd() {
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen selection:bg-[#E8600A] selection:text-white">
+    <main className="relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white">
       <JsonLd />
       <Nav />
       <Hero />
-      <ProblemAgitation />
-      <ActionFlow />
-      <ImpactEvidence />
-      <Scenarios />
-      <ComparisonBlock />
+      <PressureGap />
+      <ActionFlowPipeline />
+      <InteractiveScenarios />
       <PricingCTA />
       <FAQAndTrust />
       <FooterCTA />

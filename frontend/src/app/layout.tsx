@@ -29,9 +29,9 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://peaktalk.ru"),
-  title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
+  title: "PeakTalk — подготовка к сложным рабочим встречам",
   description:
-    "Тренажер защиты проектов PeakTalk — стресс-тест аргументов перед встречей. Загрузите документ, пройдите Q&A с AI-оппонентом и найдите слабые места до CFO, инвестора или клиента.",
+    "PeakTalk помогает проверить аргументы перед встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места до руководителя, клиента или инвестора.",
   applicationName: "PeakTalk",
   manifest: "/manifest.json",
   icons: {
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
+    title: "PeakTalk — подготовка к сложным рабочим встречам",
     description:
-      "Тренажер защиты проектов PeakTalk — стресс-тест аргументов перед встречей. Загрузите документ, пройдите Q&A с AI-оппонентом и найдите слабые места до CFO, инвестора или клиента.",
+      "Проверьте аргументы перед встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места.",
     url: "https://peaktalk.ru",
     siteName: "PeakTalk",
     locale: "ru_RU",
@@ -53,9 +53,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "PeakTalk — AI-симулятор сложных рабочих коммуникаций",
+    title: "PeakTalk — подготовка к сложным рабочим встречам",
     description:
-      "Тренажер защиты проектов PeakTalk — стресс-тест аргументов с AI-оппонентом до реальной встречи.",
+      "Проверьте аргументы с AI-оппонентом до реальной встречи.",
   },
   robots: {
     index: true,
@@ -95,6 +95,7 @@ export default function RootLayout({
         />
         <noscript>
           <div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://mc.yandex.ru/watch/108419591"
               style={{ position: "absolute", left: "-9999px" }}
