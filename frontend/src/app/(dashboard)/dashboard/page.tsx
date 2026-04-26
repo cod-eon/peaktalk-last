@@ -1,42 +1,48 @@
 "use client";
 
 import React from 'react';
-import { Play, Target, AlertTriangle, ArrowRight, Upload, Activity, Loader2, FileText } from 'lucide-react';
+import { Play, Target, AlertTriangle, ArrowRight, Upload, Activity, Loader2, FileText, BarChart3, RotateCcw, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import type { DocumentItem, UserProfile } from '@/hooks/useDashboardData';
 import { PlanBadge } from '@/components/PlanBadge';
-import { formatDate, getPersonaDisplayLabel, getPersonaVisual } from '@/lib/constants/personas';
+import { formatDate, getPersonaDisplayLabel } from '@/lib/constants/personas';
 import type { SessionItem } from '@/lib/constants/personas';
 import type { BillingStatus, PlanId } from '@/types/billing';
 
 // ── Components ─────────────────────────────────────────────────────────────
 
 function MetricPod({
-  label, value, subtitle, icon
+  label, value, subtitle, icon, variant = 'default'
 }: {
   label: string;
   value: React.ReactNode;
   subtitle?: string;
   icon: React.ReactNode;
+  variant?: 'default' | 'critical';
 }) {
   return (
-    <div className="bg-white border border-neutral-200 rounded-none p-6 flex flex-col justify-between h-full">
+    <div className="bg-white border border-[#D9D5CC] rounded-none p-4 sm:p-6 flex flex-col justify-between h-full min-h-[138px]">
       <div className="flex justify-between items-start gap-3 mb-6">
-        <span className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase leading-tight">
+        <span className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase leading-tight">
           {label}
         </span>
-        <div className="text-neutral-400 shrink-0">
-          {icon}
-        </div>
+        {variant === 'critical' ? (
+          <span className="bg-[#B91C1C] text-white px-2.5 py-1 font-mono text-[9px] font-bold leading-none tracking-[0.12em] uppercase">
+            Требует внимания
+          </span>
+        ) : (
+          <div className="text-[#111827] shrink-0">{icon}</div>
+        )}
       </div>
       <div className="flex flex-col gap-1">
-        <div className="font-inter text-3xl font-bold text-neutral-900 tracking-tight flex items-baseline gap-1">
+        <div className="font-inter text-4xl sm:text-5xl font-black text-[#111827] tracking-tight flex items-baseline gap-1">
           {value}
         </div>
+        <div className={`mt-2 h-1 w-full ${variant === 'critical' ? 'bg-[#E8600A]' : 'bg-[#111827]'}`} />
         {subtitle && (
-          <span className="font-inter text-[11px] font-medium tracking-wide text-neutral-400 mt-1">
+          <span className="font-inter text-xs font-medium tracking-wide text-[#73706A] mt-2">
             {subtitle}
           </span>
         )}
@@ -48,41 +54,37 @@ function MetricPod({
 function DashboardSessionCard({ session }: { session: SessionItem }) {
   const isActive = session.status === 'active';
   const personaLabel = getPersonaDisplayLabel(session.persona_config);
-  const visual = getPersonaVisual(session.persona_config);
-  const Icon = visual.icon;
   
   const scoreBadge = session.avg_score !== null 
-    ? <span className="font-mono text-sm font-bold text-neutral-700">{Math.round(session.avg_score * 10)}/10</span>
+    ? <span className="font-mono text-[11px] font-bold text-[#111827]">{Math.round(session.avg_score * 10)}/10</span>
     : null;
+  const date = formatDate(session.completed_at || session.created_at);
 
   return (
     <Link 
       href={isActive ? `/simulation/${session.id}` : `/simulation/${session.id}/report`}
-      className="flex items-center justify-between p-4 px-6 border-b border-neutral-100 hover:bg-neutral-50 transition-colors group last:border-b-0"
+      className="grid grid-cols-1 gap-3 px-4 py-4 border-b border-[#D9D5CC] hover:bg-[#FAF8F4] transition-colors group last:border-b-0 sm:grid-cols-[minmax(0,1fr)_120px_128px_28px] sm:items-center sm:px-6"
     >
-      <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 ${visual.iconBg} ${visual.iconColor} flex items-center justify-center shrink-0`}>
-          <Icon size={20} />
-        </div>
-        <div>
-          <div className="font-medium text-neutral-900">{personaLabel}</div>
-          <div className="text-xs text-neutral-500 whitespace-nowrap">
-            {session.persona_config.industry} • {formatDate(session.created_at)}
-          </div>
+      <div className="min-w-0">
+        <div className="font-semibold text-[#111827] truncate">{personaLabel}</div>
+        <div className="mt-1 text-xs text-[#73706A] truncate">
+          {session.persona_config.industry}
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#73706A]">{date}</div>
+      <div>
         {isActive ? (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-medium">
-             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-             Активна
+          <span className="inline-flex border border-[#D97706] bg-[#D97706]/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#92400E]">
+             В процессе
           </span>
         ) : (
-          scoreBadge
+          <span className="inline-flex items-center gap-2 border border-[#D9D5CC] bg-white px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#111827]">
+            Завершено {scoreBadge}
+          </span>
         )}
-        <div className="text-neutral-300 group-hover:text-neutral-900 transition-colors">
-          <ArrowRight size={16} />
-        </div>
+      </div>
+      <div className="text-[#73706A] group-hover:text-[#111827] transition-colors sm:justify-self-end">
+        <ArrowRight size={16} />
       </div>
     </Link>
   );
@@ -108,17 +110,20 @@ function SimpleChart({ sessions }: { sessions: Array<{ avg_score: number | null;
   const baselineY = paddingY + height - ((5 - minScore) / (maxScore - minScore)) * height;
 
   return (
-    <div className="h-[280px] p-6 pt-10 relative flex flex-col">
-      <div className="flex-1 border-b border-dashed border-neutral-200 relative">
-        <svg viewBox="0 0 800 200" preserveAspectRatio="none" className="w-full h-full text-emerald-500 overflow-visible">
-           <line x1="0" y1={baselineY} x2="800" y2={baselineY} stroke="currentColor" strokeDasharray="5,5" className="text-neutral-200" strokeWidth="2" />
+    <div className="h-[300px] p-6 pt-8 relative flex flex-col">
+      <div className="flex-1 border-b border-[#D9D5CC] relative">
+        <svg viewBox="0 0 800 200" preserveAspectRatio="none" className="w-full h-full text-[#111827] overflow-visible">
+           {[40, 80, 120, 160].map(y => (
+             <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="#D9D5CC" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+           ))}
+           <line x1="0" y1={baselineY} x2="800" y2={baselineY} stroke="#E8600A" strokeDasharray="6,6" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
            <path d={pathD} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
            {points.map((p, i) => (
-             <circle key={i} cx={p.x} cy={p.y} r="6" fill="white" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+             <circle key={i} cx={p.x} cy={p.y} r="6" fill="#111827" stroke="#FAF8F4" strokeWidth="2" vectorEffect="non-scaling-stroke" />
            ))}
         </svg>
       </div>
-      <div className="flex items-end justify-between px-4 pt-4 text-[11px] text-neutral-400 font-medium whitespace-nowrap overflow-hidden">
+      <div className="flex items-end justify-between px-4 pt-4 font-mono text-[10px] text-[#73706A] font-medium uppercase tracking-[0.08em] whitespace-nowrap overflow-hidden">
         {points.map((p, i) => {
            const d = new Date(p.session.completed_at || p.session.created_at);
            const str = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
@@ -138,45 +143,45 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
   if (documents.length === 0) {
     tip = {
       title: "Загрузите текст выступления",
-      desc: "Для точной симуляции нужен контекст.",
+      desc: "Для точного stress-test нужен контекст: тезисы, аргументы и ожидаемые возражения.",
       action: "Перейти к загрузке",
       href: "/upload",
       icon: <Upload size={24} className="text-[#E8600A]" />
     };
   } else if (completedSessions.length === 0) {
     tip = {
-      title: "Завершите симуляцию",
-      desc: "Только завершенные тренировки формируют статистику.",
-      action: "Начать тест",
+      title: "Проведите первый stress-test",
+      desc: "Завершённая симуляция сформирует базовую линию устойчивости аргументации.",
+      action: "Начать стресс-тест",
       href: "/simulation",
-      icon: <Target size={24} className="text-emerald-500" />
+      icon: <Target size={24} className="text-[#E8600A]" />
     };
   } else if (inactivityDays > 7 && sessions.length > 0) {
     tip = {
-      title: "Регулярная практика улучшает результаты",
-      desc: "Вы не тренировались больше недели. Пора размяться!",
+      title: "Данные устарели",
+      desc: "Последний стресс-тест был больше недели назад. Обновите картину перед реальной встречей.",
       action: "Продолжить",
       href: "/simulation",
-      icon: <Activity size={24} className="text-amber-500" />
+      icon: <Activity size={24} className="text-[#D97706]" />
     };
   } else {
     tip = {
-      title: "Пройдите еще симуляции",
-      desc: "График динамики станет доступен после 3-й завершенной сессии.",
-      action: "Новая тренировка",
+      title: "Недостаточно точек для динамики",
+      desc: "График станет показательным после трёх завершённых стресс-тестов.",
+      action: "Новый стресс-тест",
       href: "/simulation",
-      icon: <Target size={24} className="text-emerald-500" />
+      icon: <Target size={24} className="text-[#E8600A]" />
     };
   }
 
   return (
-    <div className="h-[280px] p-6 relative flex flex-col justify-center items-center text-center bg-neutral-50/50 border-t border-neutral-100 mt-2">
-      <div className="bg-white p-4 rounded-full border border-neutral-200 shadow-sm mb-4 text-emerald-500 flex items-center justify-center">
+    <div className="h-[300px] p-6 relative flex flex-col justify-center items-center text-center bg-[#FAF8F4] border-t border-[#D9D5CC] mt-2">
+      <div className="bg-white p-4 border border-[#D9D5CC] mb-4 flex items-center justify-center">
          {tip.icon}
       </div>
-      <h3 className="font-bold text-neutral-900 mb-2">{tip.title}</h3>
-      <p className="text-sm text-neutral-500 mb-6 max-w-sm">{tip.desc}</p>
-      <Link href={tip.href} className="text-sm font-semibold text-neutral-900 hover:text-black hover:underline flex items-center gap-1 group">
+      <h3 className="font-bold text-[#111827] mb-2">{tip.title}</h3>
+      <p className="text-sm text-[#73706A] mb-6 max-w-sm">{tip.desc}</p>
+      <Link href={tip.href} className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#111827] hover:text-[#E8600A] flex items-center gap-1 group">
          {tip.action} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
       </Link>
     </div>
@@ -188,22 +193,22 @@ function DashboardDocuments({ documents }: { documents: Array<{ id: string; name
   const recentDocs = documents.slice(0, 3);
   
   return (
-    <div className="bg-white border border-neutral-200 rounded-none overflow-hidden mt-8 mb-8">
-      <div className="p-6 border-b border-neutral-200 flex justify-between items-center">
-        <h2 className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
+    <div className="bg-white border border-[#D9D5CC] rounded-none overflow-hidden mt-8 mb-8">
+      <div className="p-6 border-b border-[#D9D5CC] flex justify-between items-center">
+        <h2 className="font-mono text-[11px] font-bold text-[#73706A] tracking-[0.18em] uppercase">
           ПОСЛЕДНИЕ ДОКУМЕНТЫ
         </h2>
       </div>
       <div className="flex flex-col">
         {recentDocs.map(doc => (
-          <div key={doc.id} className="flex items-center justify-between p-4 px-6 border-b border-neutral-100 hover:bg-neutral-50 transition-colors group last:border-b-0">
+          <div key={doc.id} className="flex items-center justify-between p-4 px-6 border-b border-[#D9D5CC] hover:bg-[#FAF8F4] transition-colors group last:border-b-0">
              <div className="flex items-center gap-3">
                <div className="w-8 h-8 bg-[#FEF3E8] text-[#E8600A] flex items-center justify-center shrink-0">
                  <FileText size={16} />
                </div>
                <div>
-                 <div className="font-medium text-neutral-900 truncate max-w-[150px] sm:max-w-[300px]">{doc.name}</div>
-                 <div className="text-xs text-neutral-500">{formatDate(doc.created_at)}</div>
+                 <div className="font-medium text-[#111827] truncate max-w-[150px] sm:max-w-[300px]">{doc.name}</div>
+                 <div className="text-xs text-[#73706A]">{formatDate(doc.created_at)}</div>
                </div>
              </div>
              <Link 
@@ -248,37 +253,37 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center py-20 text-center max-w-2xl mx-auto"
+      className="flex flex-col items-center justify-center py-20 text-center max-w-3xl mx-auto"
     >
       <div className="flex items-center gap-3 mb-6">
         <PlanBadge plan={plan} />
-        <span className="text-[11px] font-medium text-neutral-500 font-mono tracking-tight uppercase">
+        <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
           Осталось симуляций: {simulationsLeft}
         </span>
       </div>
       
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 tracking-tight mb-4">
+      <h1 className="text-3xl sm:text-5xl font-black text-[#111827] tracking-tight mb-4">
         {title}
       </h1>
       
-      <p className="text-sm sm:text-base text-neutral-500 mb-10 max-w-md mx-auto">
-        Загрузите текст выступления или начните тренировку прямо сейчас с ИИ-оппонентом.
+      <p className="text-sm sm:text-base text-[#73706A] mb-10 max-w-xl mx-auto">
+        Загрузите текст выступления или начните stress-test аргументации с AI-оппонентом перед реальной встречей.
       </p>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
         <Link
           href="/upload"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-neutral-200 rounded-none hover:border-neutral-400 text-neutral-700 hover:text-neutral-900 px-6 py-3.5 text-sm font-semibold transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-6 py-3.5 text-sm font-semibold transition-colors"
         >
           <Upload size={16} />
           Загрузить документ
         </Link>
         <Link
           href="/simulation"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-6 py-3.5 text-sm font-semibold transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-6 py-3.5 text-sm font-semibold transition-colors"
         >
           <Play size={16} className="fill-white" />
-          Начать симуляцию
+          Начать stress-test
         </Link>
       </div>
     </motion.div>
@@ -311,8 +316,8 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
   if (validScores.length > 0) {
     const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
     const avg10 = Math.round(avg * 10);
-    const colorClass = avg10 >= 7 ? "text-emerald-500" : avg10 >= 4 ? "text-amber-500" : "text-red-500";
-    indexMarkup = <span className={colorClass}>{avg10}<span className="text-neutral-400 text-xl">/10</span></span>;
+    const colorClass = avg10 >= 7 ? "text-[#111827]" : avg10 >= 4 ? "text-[#D97706]" : "text-[#DC2626]";
+    indexMarkup = <span className={colorClass}>{avg10}<span className="text-[#73706A] text-xl">/10</span></span>;
     indexSubtitle = "Средний результат всех защит";
   }
 
@@ -333,24 +338,27 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 border-b border-[#D9D5CC] pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Сводка</h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
-            Аналитика ваших последних защит.
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#E8600A] mb-2">
+            Executive stress-test console
+          </p>
+          <h1 className="text-3xl font-black text-[#111827] tracking-tight">Сводка аналитики</h1>
+          <p className="text-sm font-medium text-[#73706A] mt-1">
+            Устойчивость аргументации, уязвимости и история последних защит.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/upload"
-            className="inline-flex items-center justify-center gap-2 bg-white border border-neutral-200 rounded-none hover:border-neutral-400 text-neutral-700 hover:text-neutral-900 px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Upload size={14} />
             Загрузить документ
           </Link>
           <Link
             href="/simulation"
-            className="inline-flex items-center justify-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Play size={14} className="fill-white" />
             Новый стресс-тест
@@ -359,65 +367,96 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
       </motion.div>
 
       {activeSession && (
-        <motion.div variants={itemVariants} className="border-2 border-neutral-900 bg-neutral-50 p-4 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <motion.div variants={itemVariants} className="border-2 border-[#111827] bg-white p-4 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[8px_8px_0_rgba(232,96,10,0.18)]">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
-            <span className="font-medium text-neutral-900">У вас есть незавершённая симуляция</span>
-            <span className="text-neutral-500 text-sm hidden sm:inline">({getPersonaDisplayLabel(activeSession.persona_config)})</span>
+            <div className="w-2 h-2 bg-[#E8600A] shrink-0" />
+            <span className="font-medium text-[#111827]">Незавершённый стресс-тест</span>
+            <span className="text-[#73706A] text-sm hidden sm:inline">({getPersonaDisplayLabel(activeSession.persona_config)})</span>
           </div>
           <Link 
             href={`/simulation/${activeSession.id}`}
-            className="bg-[#171717] text-white px-5 py-2.5 text-sm font-semibold hover:bg-black transition-colors rounded-none whitespace-nowrap text-center"
+            className="bg-[#111827] text-white px-5 py-2.5 text-sm font-semibold hover:bg-black transition-colors rounded-none whitespace-nowrap text-center"
           >
             Продолжить
           </Link>
         </motion.div>
       )}
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <MetricPod
           label="ИНДЕКС УСТОЙЧИВОСТИ"
           value={indexMarkup}
           subtitle={indexSubtitle}
-          icon={<Target size={18} className="text-emerald-500" />}
+          icon={<BarChart3 size={18} />}
         />
         <MetricPod
           label="КРИТИЧЕСКИЕ УЯЗВИМОСТИ"
           value={criticalCount}
           subtitle="Сессии с баллом ниже 4/10"
-          icon={<AlertTriangle size={18} className="text-red-500" />}
+          icon={<ShieldAlert size={18} />}
+          variant={criticalCount > 0 ? 'critical' : 'default'}
         />
         <MetricPod
           label="СЕССИЙ ЗА МЕСЯЦ"
           value={monthlySessionsCount}
-          subtitle="Интенсивность тренировок"
-          icon={<Activity size={18} className="text-amber-500" />}
+          subtitle="Интенсивность stress-test сессий"
+          icon={<RotateCcw size={18} />}
         />
       </motion.div>
 
       {/* ── 3. CHART SECTION ── */}
-      <motion.div variants={itemVariants} className="bg-white border border-neutral-200 rounded-none overflow-hidden mb-8 flex flex-col">
-        <div className="p-6 pb-0">
-          <h2 className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
-            ДИНАМИКА ИНДЕКСА УСТОЙЧИВОСТИ
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4 mb-8">
+        <section className="bg-white border border-[#D9D5CC] rounded-none overflow-hidden flex flex-col">
+          <div className="p-5 sm:p-6 pb-0 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <h2 className="text-2xl font-black leading-tight text-[#111827]">
+              Динамика индекса<br className="hidden sm:block" /> устойчивости
+            </h2>
+            <div className="inline-flex self-start border border-[#D9D5CC] bg-[#FAF8F4] p-1">
+              <span className="bg-[#111827] px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white">Месяц</span>
+              <span className="px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#73706A]">Квартал</span>
+            </div>
+          </div>
+          {scoredSessions.length >= 3 ? (
+            <SimpleChart sessions={scoredSessions} />
+          ) : (
+            <NextStepsPanel documents={documents} completedSessions={completedSessions} sessions={sessions} />
+          )}
+        </section>
+
+        <aside className="bg-[#050505] border border-[#050505] p-8 min-h-[300px] flex flex-col items-center justify-center text-center text-white">
+          <div className="mb-6 flex h-12 w-12 items-center justify-center border border-white/20 bg-white text-[#111827]">
+            <Upload size={24} />
+          </div>
+          <h2 className="text-2xl font-black leading-tight">
+            Загрузить текст<br />выступления
           </h2>
-        </div>
-        {scoredSessions.length >= 3 ? (
-          <SimpleChart sessions={scoredSessions} />
-        ) : (
-          <NextStepsPanel documents={documents} completedSessions={completedSessions} sessions={sessions} />
-        )}
+          <p className="mt-4 text-sm leading-relaxed text-white/58">
+            AI-анализ аргументации и поиск логических уязвимостей перед встречей.
+          </p>
+          <Link
+            href="/upload"
+            className="mt-8 inline-flex items-center justify-center border border-white px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white hover:text-[#111827]"
+          >
+            Перейти к загрузке
+          </Link>
+        </aside>
       </motion.div>
 
       {/* ── 4. HISTORY SECTION ── */}
-      <motion.div variants={itemVariants} className="bg-white border border-neutral-200 rounded-none overflow-hidden">
-        <div className="p-6 border-b border-neutral-200 flex justify-between items-center">
-          <h2 className="font-inter text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
-            ЛЕНТА СИМУЛЯЦИЙ
+      <motion.div variants={itemVariants} className="bg-white border border-[#D9D5CC] rounded-none overflow-hidden">
+        <div className="p-6 border-b border-[#D9D5CC] flex justify-between items-center">
+          <h2 className="text-2xl font-black text-[#111827]">
+            Лента симуляций
           </h2>
-          <Link href="/simulation" className="text-xs font-semibold text-neutral-500 hover:text-neutral-900 flex items-center gap-1 group">
+          <Link href="/simulation" className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#73706A] hover:text-[#111827] flex items-center gap-1 group">
             Все <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
+        </div>
+        <div className="hidden border-b border-[#D9D5CC] bg-[#F3F0EA] px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] sm:grid sm:grid-cols-[minmax(0,1fr)_120px_128px_28px]">
+          <span>Название</span>
+          <span>Дата</span>
+          <span>Статус</span>
+          <span></span>
         </div>
         <div className="flex flex-col">
           {recentSessions.map(session => (
@@ -440,9 +479,10 @@ export default function DashboardPage() {
   const { profile, sessions, documents, billing, userState, isLoading, error } = useDashboardData();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 font-inter bg-white min-h-screen">
+    <div className="min-h-screen bg-[#FAF8F4] bg-page-geo-subtle px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 pb-16 font-inter">
+      <div className="max-w-6xl mx-auto">
       {error && (
-        <div className="mb-8 p-3 bg-red-50 text-red-600 text-sm flex items-center justify-center border border-red-200">
+        <div className="mb-8 p-3 bg-white text-[#DC2626] text-sm flex items-center justify-center border border-[#DC2626]/30">
            <AlertTriangle size={16} className="mr-2" />
            Не удалось загрузить историю. Показаны частичные данные.
         </div>
@@ -450,14 +490,15 @@ export default function DashboardPage() {
 
       {isLoading || userState === 'loading' ? (
         <div className="flex flex-col items-center justify-center min-h-[50vh]">
-          <Loader2 size={32} className="animate-spin text-neutral-900 mb-4" />
-          <span className="font-mono text-[11px] text-neutral-500 tracking-widest uppercase">Загрузка аналитики...</span>
+          <Loader2 size={32} className="animate-spin text-[#111827] mb-4" />
+          <span className="font-mono text-[11px] text-[#73706A] tracking-[0.18em] uppercase">Загрузка аналитики...</span>
         </div>
       ) : userState === 'new' ? (
         <DashboardNewUser profile={profile} billing={billing} />
       ) : (
         <DashboardActive sessions={sessions} documents={documents} />
       )}
+      </div>
     </div>
   );
 }

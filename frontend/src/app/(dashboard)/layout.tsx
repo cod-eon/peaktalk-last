@@ -13,14 +13,14 @@ export default function DashboardLayout({
 }) {
   return (
     <MaintenanceGate>
-      <div className="min-h-screen bg-white flex">
+      <div className="min-h-screen bg-[#FAF8F4] flex">
         <NotificationRealtime />
 
         {/* Desktop Sidebar (Fixed) */}
         <Sidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col bg-white pb-16 md:pb-0 overflow-x-hidden relative">
+        <main className="flex-1 md:ml-[72px] min-h-screen flex flex-col bg-[#FAF8F4] pb-16 md:pb-0 overflow-x-hidden relative">
           <MobileHeader />
           {children}
         </main>
