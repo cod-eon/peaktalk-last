@@ -95,7 +95,10 @@ async def analyze_draft_endpoint(
         logger.error("Cloud.ru analysis failed draft=%s error=%s", draft_id, exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Не удалось выполнить AI-анализ: {exc}",
+            detail={
+                "detail": "AI-анализ временно недоступен. Попробуйте ещё раз через несколько минут.",
+                "code": "ai_provider_unavailable",
+            },
         ) from exc
 
     analysis = AIAnalysisResult(

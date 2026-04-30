@@ -21,6 +21,26 @@ const PLAN_CONFIG: Record<
     className:
       'bg-neutral-100 text-neutral-500 border border-neutral-200',
   },
+  personal: {
+    label: 'PERSONAL',
+    className:
+      'bg-[#E8600A]/10 text-[#B74707] border border-[#E8600A]/20',
+  },
+  pro: {
+    label: 'PRO',
+    className:
+      'bg-violet-50 text-violet-700 border border-violet-100',
+  },
+  team: {
+    label: 'TEAM',
+    className:
+      'bg-neutral-950 text-white border border-neutral-950',
+  },
+  starter: {
+    label: 'STARTER',
+    className:
+      'bg-[#E8600A]/10 text-[#B74707] border border-[#E8600A]/20',
+  },
 };
 
 export function PlanBadge({ plan }: PlanBadgeProps) {

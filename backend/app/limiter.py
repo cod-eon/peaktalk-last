@@ -10,7 +10,11 @@ def _rate_limit_key(request):
     # share a counter — rate limits are never triggered during pytest runs.
     if os.getenv("APP_ENV") == "test":
         return str(uuid.uuid4())
-    return get_remote_address(request)
+    return (
+        request.headers.get("X-Real-IP")
+        or request.headers.get("X-Forwarded-For", "").split(",", 1)[0].strip()
+        or get_remote_address(request)
+    )
 
 
 # Single shared limiter used by all routers and main.py.

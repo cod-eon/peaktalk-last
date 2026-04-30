@@ -35,7 +35,7 @@ function FromGuestBridgeInner() {
         localStorage.removeItem('peaktalk_guest_difficulty');
         
         toast.success('Контекст сессии успешно перенесён!');
-        if (mounted) router.replace(`/simulation/${res.session_id}`);
+        if (mounted) router.replace(`/simulation/${res.id}`);
       } catch (err: unknown) {
         if (!mounted) return;
         const apiError = err as Error & { code?: string };

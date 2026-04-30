@@ -184,9 +184,17 @@ export default function ScenariosPage() {
 
         if (scenariosRes.status === 'fulfilled' && Array.isArray(scenariosRes.value?.items)) {
           const items = scenariosRes.value.items.map(enrichScenario)
-          setCatalog(items)
-          setScenarios(items)
-          setIsUsingFallback(false)
+          if (items.length > 0) {
+            setCatalog(items)
+            setScenarios(items)
+            setIsUsingFallback(false)
+          } else {
+            const fallbackItems = getFallbackScenarios()
+            setCatalog(fallbackItems)
+            setScenarios(fallbackItems)
+            setIsUsingFallback(true)
+            setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск симуляции остаётся доступным.')
+          }
         } else {
           const fallbackItems = getFallbackScenarios()
           setCatalog(fallbackItems)
@@ -239,7 +247,14 @@ export default function ScenariosPage() {
 
         if (isCancelled) return
 
-        setScenarios(res.items.map(enrichScenario))
+        const items = res.items.map(enrichScenario)
+        if (items.length > 0) {
+          setScenarios(items)
+        } else {
+          setScenarios(getFallbackScenarios(activeCategory))
+          setIsUsingFallback(true)
+          setLoadNotice('Для этой категории временно показываем встроенные сценарии.')
+        }
       } catch {
         if (isCancelled) return
 

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, CheckCircle2, Loader2, Lock, Timer, UserRound, Briefcase, TrendingUp } from 'lucide-react';
+import { ArrowRight, Loader2, Lock, Timer, UserRound, Briefcase, TrendingUp } from 'lucide-react';
 import { sendGuestMessage, startGuestSession } from '@/lib/guest-api';
 
 type Step = 'input' | 'chat' | 'paywall';
@@ -256,6 +256,9 @@ export default function GuestSimulationPage() {
                         placeholder="Опишите ситуацию. Например: тезисы защиты бюджета, спорный момент с клиентом, запрос инвестиций..."
                         className="h-[200px] w-full resize-none border border-neutral-200 bg-white p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-300 focus:border-neutral-400 transition-colors"
                       />
+                      <p className="mt-2 font-inter text-xs leading-relaxed text-neutral-500">
+                        Не вставляйте пароли, персональные данные и коммерческие тайны. Материал нужен только для pressure-test этой сессии и не показывается другим пользователям.
+                      </p>
                       <button
                         type="button"
                         onClick={() => setText(SAMPLE_TEXT)}

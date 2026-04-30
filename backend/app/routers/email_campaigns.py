@@ -8,6 +8,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.config import settings
+from app.dependencies import get_current_user
 from app.models.scenario import Scenario
 from app.models.user import User
 from app.services.email import send_weekly_scenario_email
@@ -21,8 +23,15 @@ router = APIRouter(prefix="/email", tags=["email-campaigns"])
 async def send_weekly_digest(
     request: Request,
     limit: int = Query(50, ge=1, le=500),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    if current_user.email not in settings.get_admin_emails():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"detail": "Доступ запрещён.", "code": "admin_required"},
+        )
+
     today = datetime.now(timezone.utc).date()
     week_seed = today.isocalendar()[1]
     seed = int(hashlib.md5(str(week_seed).encode()).hexdigest(), 16)
