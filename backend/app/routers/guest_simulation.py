@@ -36,6 +36,17 @@ ALLOWED_PERSONAS = frozenset(
     ["cfo", "investor", "board_member", "client", "hr", "tech_lead", "ceo", "journalist"]
 )
 
+PERSONA_ALIASES = {
+    "board": "board_member",
+    "board member": "board_member",
+    "совет директоров": "board_member",
+    "клиент": "client",
+    "руководитель": "cfo",
+    "финансовый директор": "cfo",
+    "инвестор": "investor",
+    "техлид": "tech_lead",
+}
+
 _PAYWALL_RESPONSE = {
     "message": "Вы использовали 3 бесплатных вопроса",
     "cta_primary": {
@@ -61,11 +72,13 @@ class GuestStartRequest(BaseModel):
     @field_validator("persona")
     @classmethod
     def persona_must_be_allowed(cls, v: str) -> str:
-        if v not in ALLOWED_PERSONAS:
+        normalized = v.strip().lower().replace("-", "_")
+        normalized = PERSONA_ALIASES.get(normalized, normalized)
+        if normalized not in ALLOWED_PERSONAS:
             raise ValueError(
                 f"persona must be one of: {', '.join(sorted(ALLOWED_PERSONAS))}"
             )
-        return v
+        return normalized
 
 
 class GuestStartResponse(BaseModel):

@@ -29,6 +29,55 @@ const getDefaultErrorMessage = (status: number) => {
   }
 }
 
+export class ApiError extends Error {
+  status: number
+  code?: string
+
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+  }
+}
+
+export function parseApiErrorBody(errorData: unknown, fallback: string): { message: string; code?: string } {
+  if (!errorData || typeof errorData !== 'object') return { message: fallback }
+
+  const data = errorData as { detail?: unknown; message?: unknown; code?: unknown }
+  const code = typeof data.code === 'string' ? data.code : undefined
+
+  if (typeof data.detail === 'string') {
+    return { message: data.detail, code }
+  }
+
+  if (Array.isArray(data.detail)) {
+    return {
+      message: data.detail
+        .map((e) => {
+          if (e && typeof e === 'object' && 'msg' in e && typeof e.msg === 'string') return e.msg
+          return JSON.stringify(e)
+        })
+        .join('; '),
+      code,
+    }
+  }
+
+  if (data.detail && typeof data.detail === 'object') {
+    const detail = data.detail as { detail?: unknown; message?: unknown; code?: unknown }
+    return {
+      message:
+        (typeof detail.detail === 'string' && detail.detail) ||
+        (typeof detail.message === 'string' && detail.message) ||
+        fallback,
+      code: typeof detail.code === 'string' ? detail.code : code,
+    }
+  }
+
+  if (typeof data.message === 'string') return { message: data.message, code }
+  return { message: fallback, code }
+}
+
 export const api = {
   async get(endpoint: string, options: RequestInit = {}) {
     return this.request(endpoint, { ...options, method: 'GET' })
@@ -114,26 +163,20 @@ export const api = {
           // Use safe redirect that preserves Next.js router cache limits
           window.location.replace('/login')
         }
-        throw new Error('Сессия истекла. Пожалуйста, войдите снова.')
+        throw new ApiError('Сессия истекла. Пожалуйста, войдите снова.', 401)
       }
 
       let errorMessage = getDefaultErrorMessage(response.status)
+      let errorCode: string | undefined
       try {
         const errorData = await response.json()
-        if (typeof errorData.detail === 'string') {
-          errorMessage = errorData.detail
-        } else if (Array.isArray(errorData.detail)) {
-          // FastAPI validation errors: [{loc, msg, type}]
-          errorMessage = errorData.detail
-            .map((e: { msg?: string }) => e.msg ?? JSON.stringify(e))
-            .join('; ')
-        } else if (typeof errorData.message === 'string') {
-          errorMessage = errorData.message
-        }
+        const parsed = parseApiErrorBody(errorData, errorMessage)
+        errorMessage = parsed.message
+        errorCode = parsed.code
       } catch {
         errorMessage = getDefaultErrorMessage(response.status)
       }
-      throw new Error(errorMessage)
+      throw new ApiError(errorMessage, response.status, errorCode)
     }
 
     // 204 No Content — no body to parse

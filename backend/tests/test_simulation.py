@@ -1,10 +1,13 @@
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
 
+from app.models.guest import GuestSession
 from app.models.personalized_persona import PersonalizedPersona
-from app.models.simulation import ArtifactType, SessionArtifact, SimulationSession
+from app.models.draft import SpeechDraft
+from app.models.simulation import ArtifactType, SessionArtifact, SessionStatus, SimulationSession
 from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import SimulationTurn, SkillEvaluation
 from .conftest import TEST_USER_ID
@@ -110,6 +113,43 @@ async def test_start_without_source_succeeds(client: AsyncClient) -> None:
     })
     assert resp.status_code == 201
     assert resp.json()["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_uses_public_token_and_active_status(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    token = str(uuid.uuid4())
+    guest = GuestSession(
+        session_token=token,
+        text="Нужно защитить бюджет внедрения перед CFO и показать риски сокращения.",
+        persona="cfo",
+        difficulty=3,
+        turn_count=1,
+        messages=[
+            {"role": "system", "content": "internal setup"},
+            {"role": "assistant", "content": "Почему это нельзя сократить?"},
+            {"role": "user", "content": "Потому что релиз сдвинется."},
+        ],
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db_session.add(guest)
+    await db_session.commit()
+
+    resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+
+    assert resp.status_code == 201
+    session = await db_session.get(SimulationSession, uuid.UUID(resp.json()["id"]))
+    assert session is not None
+    assert session.status == SessionStatus.active
+    assert session.draft_id is not None
+    draft = await db_session.get(SpeechDraft, session.draft_id)
+    assert draft is not None
+    assert draft.raw_text == guest.text
 
 
 @pytest.fixture

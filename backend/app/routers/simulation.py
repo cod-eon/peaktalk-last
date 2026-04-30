@@ -969,7 +969,7 @@ async def start_from_guest(
 ) -> StartFromGuestResponse:
     # Load guest session
     guest_res = await db.execute(
-        select(GuestSession).where(GuestSession.id == body.guest_session_id)
+        select(GuestSession).where(GuestSession.session_token == body.guest_session_id)
     )
     guest = guest_res.scalar_one_or_none()
     if not guest:
@@ -979,8 +979,8 @@ async def start_from_guest(
         )
 
     # 1. Consume limits
-    await consume_session_credit(db, current_user.id)
-    await increment_simulation_counter(db, current_user.id)
+    await consume_session_credit(str(current_user.id), db)
+    await increment_simulation_counter(str(current_user.id), db)
 
     # 2. Transfer session
     persona_config = {
@@ -992,7 +992,7 @@ async def start_from_guest(
     session = SimulationSession(
         user_id=current_user.id,
         persona_config=persona_config,
-        status=SessionStatus.IN_PROGRESS,
+        status=SessionStatus.active,
     )
     db.add(session)
     await db.flush()
@@ -1002,7 +1002,7 @@ async def start_from_guest(
     draft = SpeechDraft(
         user_id=current_user.id,
         title="Guest Session Upload",
-        content=guest.text,
+        raw_text=guest.text,
     )
     db.add(draft)
     await db.flush()
@@ -1011,11 +1011,9 @@ async def start_from_guest(
 
     # 4. Transfer messages
     for idx, msg in enumerate(guest.messages):
-        # ensure mapped correctly to roles
-        # The GuestSession messages format is {"role": "system" | "user" | "assistant", "content": str}
         role_str = msg.get("role", "system")
         if role_str == "system":
-            mapped_role = MessageRole.system
+            continue
         elif role_str == "assistant":
             mapped_role = MessageRole.assistant
         elif role_str == "user":

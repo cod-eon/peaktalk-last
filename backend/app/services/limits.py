@@ -13,7 +13,7 @@ import uuid as _uuid_module
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -362,12 +362,20 @@ async def increment_simulation_counter(user_id: str, db: AsyncSession) -> None:
 
     Does NOT consume session_credits — call consume_session_credit() for that.
     """
-    counter = await get_usage_counter(user_id, db)
-    counter.simulations_used += 1
+    uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
+    await get_usage_counter(user_id, db)
+    await db.execute(
+        update(UsageCounter)
+        .where(UsageCounter.user_id == uid)
+        .values(
+            simulations_used=UsageCounter.simulations_used + 1,
+            updated_at=datetime.now(timezone.utc),
+        )
+    )
     await db.flush()
     logger.debug(
-        "limits: simulation counter incremented user_id=%s total=%d",
-        user_id, counter.simulations_used,
+        "limits: simulation counter incremented user_id=%s",
+        user_id,
     )
 
 
@@ -377,24 +385,42 @@ async def consume_session_credit(user_id: str, db: AsyncSession) -> bool:
     Returns True if a credit was consumed, False if none were available.
     Should be called at simulation start when the user has session_credits > 0.
     """
+    uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
     counter = await get_usage_counter(user_id, db)
     if counter.session_credits <= 0:
         return False
-    counter.session_credits -= 1
+    result = await db.execute(
+        update(UsageCounter)
+        .where(UsageCounter.user_id == uid, UsageCounter.session_credits > 0)
+        .values(
+            session_credits=UsageCounter.session_credits - 1,
+            updated_at=datetime.now(timezone.utc),
+        )
+    )
     await db.flush()
+    if result.rowcount == 0:
+        return False
     logger.info(
-        "limits: session credit consumed user_id=%s remaining=%d",
-        user_id, counter.session_credits,
+        "limits: session credit consumed user_id=%s",
+        user_id,
     )
     return True
 
 
 async def increment_document_counter(user_id: str, db: AsyncSession) -> None:
     """Increment document upload counter for the user."""
-    counter = await get_usage_counter(user_id, db)
-    counter.documents_uploaded += 1
+    uid = _uuid_module.UUID(user_id) if isinstance(user_id, str) else user_id
+    await get_usage_counter(user_id, db)
+    await db.execute(
+        update(UsageCounter)
+        .where(UsageCounter.user_id == uid)
+        .values(
+            documents_uploaded=UsageCounter.documents_uploaded + 1,
+            updated_at=datetime.now(timezone.utc),
+        )
+    )
     await db.flush()
     logger.debug(
-        "limits: document counter incremented user_id=%s total=%d",
-        user_id, counter.documents_uploaded,
+        "limits: document counter incremented user_id=%s",
+        user_id,
     )

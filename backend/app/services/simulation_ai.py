@@ -573,7 +573,7 @@ async def generate_question(
     prompt = _build_user_prompt(doc_text, history)
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         started = loop.time()
         response = await loop.run_in_executor(
             None,
@@ -638,7 +638,7 @@ async def evaluate_session(doc_text: str, messages: list[dict]) -> SkillEvaluati
 
     client = create_cloud_ru_client()
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         started = loop.time()
         response = await loop.run_in_executor(
             None,
@@ -746,7 +746,7 @@ async def generate_prep_card(
 
     client = create_cloud_ru_client()
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         started = loop.time()
         response = await loop.run_in_executor(
             None,

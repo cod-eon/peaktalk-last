@@ -1,3 +1,5 @@
+import { ApiError, parseApiErrorBody } from './api'
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export interface Scenario {
@@ -34,13 +36,16 @@ async function fetchPublic<T>(path: string): Promise<T> {
   })
   if (!res.ok) {
     let msg = 'Ошибка загрузки данных'
+    let code: string | undefined
     try {
       const data = await res.json()
-      if (typeof data.detail === 'string') msg = data.detail
+      const parsed = parseApiErrorBody(data, msg)
+      msg = parsed.message
+      code = parsed.code
     } catch {
       // ignore
     }
-    throw new Error(msg)
+    throw new ApiError(msg, res.status, code)
   }
   return res.json()
 }
@@ -73,13 +78,16 @@ export async function startFromScenario(
   })
   if (!res.ok) {
     let msg = 'Не удалось запустить симуляцию'
+    let code: string | undefined
     try {
       const data = await res.json()
-      if (typeof data.detail === 'string') msg = data.detail
+      const parsed = parseApiErrorBody(data, msg)
+      msg = parsed.message
+      code = parsed.code
     } catch {
       // ignore
     }
-    throw new Error(msg)
+    throw new ApiError(msg, res.status, code)
   }
   return res.json()
 }

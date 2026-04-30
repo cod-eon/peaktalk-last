@@ -138,6 +138,11 @@ def extract_completion_text(response: Any) -> str:
 def _parse_cloud_ru_json(raw: str) -> dict:
     """Extract JSON from Cloud.ru response, stripping any accidental markdown."""
     cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("```").strip()
+    if not cleaned.startswith("{"):
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            cleaned = cleaned[start : end + 1]
     return json.loads(cleaned)
 
 
@@ -161,7 +166,7 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> CloudRuA
     prompt = context_block + _ANALYSIS_USER_TEMPLATE.format(text=text)
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         started = loop.time()
         response = await loop.run_in_executor(
             None,
@@ -192,7 +197,11 @@ async def analyze_draft(text: str, user_context: dict | None = None) -> CloudRuA
     if not raw:
         raise CloudRuAIError("Cloud.ru returned empty response")
 
-    parsed = _parse_cloud_ru_json(raw)
+    try:
+        parsed = _parse_cloud_ru_json(raw)
+    except json.JSONDecodeError as exc:
+        logger.warning("ai.analyze_draft invalid_json raw_prefix=%r", raw[:200])
+        raise CloudRuAIError("Cloud.ru returned invalid JSON") from exc
 
     improved_text = parsed.get("improved_text", "")
     feedback = parsed.get("feedback", {})

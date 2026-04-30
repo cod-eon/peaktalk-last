@@ -180,7 +180,7 @@ class SendMessageResponse(BaseModel):
     ai_detected: bool = False
 
 class StartFromGuestRequest(BaseModel):
-    guest_session_id: uuid.UUID
+    guest_session_id: str = Field(min_length=1, max_length=128)
     difficulty: int = Field(default=3, ge=1, le=10)
 
 class StartFromGuestResponse(BaseModel):

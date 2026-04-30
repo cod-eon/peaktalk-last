@@ -1,4 +1,4 @@
-export type PlanId = 'free' | 'per_session';
+export type PlanId = 'free' | 'per_session' | 'personal' | 'pro' | 'team' | 'starter';
 
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing' | 'incomplete';
 

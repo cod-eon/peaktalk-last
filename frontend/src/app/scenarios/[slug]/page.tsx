@@ -11,8 +11,9 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { getScenario } from '@/lib/scenarios-api'
+import { useParams, useRouter } from 'next/navigation'
+import { getScenario, startFromScenario } from '@/lib/scenarios-api'
+import { createClient } from '@/lib/supabase/client'
 import {
   START_PRESSURE_OPTIONS,
   enrichScenario,
@@ -83,6 +84,7 @@ function DifficultyDots({ value }: { value: number }) {
 
 export default function ScenarioDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = params?.slug as string
 
   const [scenario, setScenario] = useState<ScenarioCatalogItem | null>(null)
@@ -90,6 +92,7 @@ export default function ScenarioDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [difficulty, setDifficulty] = useState<number>(5)
   const [isUsingFallback, setIsUsingFallback] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -200,6 +203,31 @@ export default function ScenarioDetailPage() {
           },
         ]
       : null
+
+  const handleStartScenario = async () => {
+    if (!scenario || isStarting || isUsingFallback) {
+      router.push('/simulation/guest')
+      return
+    }
+
+    setIsStarting(true)
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      if (!token) {
+        router.push('/simulation/guest')
+        return
+      }
+
+      const started = await startFromScenario(scenario.id, difficulty, token)
+      router.push(`/simulation/${started.id}`)
+    } catch {
+      router.push('/simulation/guest')
+    } finally {
+      setIsStarting(false)
+    }
+  }
 
   return (
     <Shell>
@@ -353,6 +381,8 @@ export default function ScenarioDetailPage() {
                 scenario={scenario}
                 difficulty={difficulty}
                 setDifficulty={setDifficulty}
+                isStarting={isStarting}
+                onStart={handleStartScenario}
               />
             </div>
           </div>
@@ -363,6 +393,8 @@ export default function ScenarioDetailPage() {
                 scenario={scenario}
                 difficulty={difficulty}
                 setDifficulty={setDifficulty}
+                isStarting={isStarting}
+                onStart={handleStartScenario}
               />
             </div>
           </div>
@@ -500,12 +532,16 @@ interface StartBlockProps {
   scenario: ScenarioCatalogItem
   difficulty: number
   setDifficulty: (v: number) => void
+  isStarting: boolean
+  onStart: () => void
 }
 
 function StartBlock({
   scenario,
   difficulty,
   setDifficulty,
+  isStarting,
+  onStart,
 }: StartBlockProps) {
   const recommendedPreset = normalizeStartDifficulty(scenario.recommended_difficulty)
 
@@ -574,13 +610,15 @@ function StartBlock({
         </div>
       )}
 
-      <Link
-        href="/simulation/guest"
+      <button
+        type="button"
+        onClick={onStart}
+        disabled={isStarting}
         className="flex h-12 w-full items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 font-inter text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
       >
-        Запустить 3 вопроса
-        <ArrowRight size={16} />
-      </Link>
+        {isStarting ? 'Запускаем...' : 'Запустить сценарий'}
+        {isStarting ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+      </button>
 
       <p className="mt-2 text-center font-mono text-[11px] text-neutral-400">
         Без регистрации для первой проверки
