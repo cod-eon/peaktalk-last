@@ -70,91 +70,63 @@ function ScenarioCard({ scenario }: { scenario: ScenarioCatalogItem }) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group flex min-h-[280px] flex-col border border-neutral-200 bg-white transition-colors hover:border-neutral-950"
+      className="group flex flex-col border border-black/[0.08] bg-white transition-all hover:border-neutral-950 hover:shadow-sm"
     >
-      <div className="flex h-full flex-col p-5 sm:p-6">
-        <div className="mb-5 flex items-center justify-between gap-3">
+      <Link href={`/scenarios/${scenario.slug}`} className="flex h-full flex-col p-6 sm:p-8">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <CategoryBadge category={scenario.category} />
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
-            {scenario.persona}
-          </span>
+          <DifficultyDots value={scenario.difficulty} />
         </div>
 
-        <h3 className="font-inter text-[21px] font-bold leading-[1.1] text-neutral-950">
+        <h3 className="font-display text-[22px] font-black leading-tight text-neutral-950">
           {scenario.title}
         </h3>
-        <p className="mt-3 font-inter text-sm leading-relaxed text-neutral-600">
+        <p className="mt-4 font-inter text-[15px] leading-relaxed text-neutral-500 line-clamp-2">
           {scenario.problem ?? scenario.subtitle}
         </p>
 
-        <div className="mt-auto border-t border-neutral-200 pt-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
-              Давление
-            </span>
-            <DifficultyDots value={scenario.difficulty} />
+        <div className="mt-8 flex items-center justify-between border-t border-black/[0.04] pt-6">
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-400 transition-colors group-hover:text-neutral-950">
+            {scenario.persona}
+          </span>
+          <div className="flex h-8 w-8 items-center justify-center bg-neutral-100 text-neutral-950 transition-colors group-hover:bg-[#E8600A] group-hover:text-white">
+            <ArrowRight size={16} />
           </div>
-          <Link
-            href={`/scenarios/${scenario.slug}`}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-4 font-inter text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
-          >
-            Разобрать сценарий
-            <ChevronRight size={15} />
-          </Link>
         </div>
-      </div>
+      </Link>
     </motion.div>
   )
 }
 
 function ScenarioOfTheDay({ scenario }: { scenario: ScenarioCatalogItem }) {
   return (
-    <section className="mb-8 border border-neutral-950 bg-neutral-950 text-white">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-0">
-        <div className="p-6 sm:p-8">
-          <div className="mb-4 inline-flex border border-[#E8600A]/40 bg-[#E8600A]/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">
-            Сценарий дня
-          </div>
-          <h2 className="font-inter text-2xl font-black leading-tight tracking-tight sm:text-[2.4rem]">
-            {scenario.title}
-          </h2>
-          <p className="mt-4 max-w-2xl font-inter text-sm leading-relaxed text-white/68 sm:text-base">
-            {scenario.problem ?? scenario.subtitle}
-          </p>
-          <div className="mb-6 mt-6 flex flex-wrap items-center gap-3 text-xs sm:text-sm">
-            <CategoryBadge category={scenario.category} />
-            <span className="font-mono uppercase tracking-[0.12em] text-neutral-400">
-              {scenario.persona}
-            </span>
-            <DifficultyDots value={scenario.difficulty} />
-          </div>
-          <Link
-            href={`/scenarios/${scenario.slug}`}
-            className="inline-flex min-h-12 items-center justify-center gap-2 border border-white bg-white px-5 font-inter text-sm font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white"
-          >
-            Открыть сценарий
-            <ChevronRight size={16} />
-          </Link>
+    <section className="mb-12 border border-neutral-950 bg-neutral-950 p-6 sm:p-10 text-white transition-colors hover:border-[#E8600A]">
+      <Link href={`/scenarios/${scenario.slug}`} className="group block">
+        <div className="mb-6 inline-flex border border-[#E8600A]/40 bg-[#E8600A]/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#FF8A3D]">
+          Сценарий дня
         </div>
-
-        <div className="border-t border-white/12 bg-white/[0.035] p-6 sm:p-8 lg:border-l lg:border-t-0">
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">
-            Что проверит PeakTalk
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <h2 className="font-display text-[28px] font-black leading-tight tracking-tight sm:text-[42px]">
+              {scenario.title}
+            </h2>
+            <div className="mt-8 flex items-center gap-4 text-xs">
+              <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#FF8A3D]">
+                {scenario.persona}
+              </span>
+              <DifficultyDots value={scenario.difficulty} />
+            </div>
           </div>
-          <ul className="space-y-3 font-inter text-sm text-neutral-200 leading-relaxed">
-            {(scenario.expectedOutput ?? [
-              'Слабые места в материале до реальной встречи.',
-              'Вопросы, которые неприятно услышать без подготовки.',
-              'Короткую prep-card для ответа под давлением.',
-            ]).map((item) => (
-              <li key={item} className="flex gap-3">
-                <span className="mt-2 h-2 w-2 shrink-0 bg-[#E8600A]" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col justify-between">
+            <p className="font-inter text-[16px] leading-relaxed text-white/70">
+              {scenario.problem ?? scenario.subtitle}
+            </p>
+            <div className="mt-8 flex items-center gap-3 text-[14px] font-bold text-white transition-colors group-hover:text-[#FF8A3D]">
+              Открыть сценарий <ArrowRight size={16} />
+            </div>
+          </div>
         </div>
-      </div>
+      </Link>
     </section>
   )
 }
@@ -289,24 +261,25 @@ export default function ScenariosPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Minimal public header */}
-      <header className="h-14 border-b border-neutral-200 flex items-center justify-between px-5 shrink-0">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-5 sm:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2.5 hover:opacity-75 transition-opacity"
+          className="flex items-center gap-2 transition-opacity hover:opacity-75"
+          aria-label="PeakTalk"
         >
-          <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-          <span className="brand-wordmark text-neutral-900 text-[15px]">PeakTalk</span>
+          <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" />
+          <span className="brand-wordmark text-[18px] text-neutral-950">PeakTalk</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="font-mono text-xs uppercase tracking-widest text-neutral-400 hover:text-neutral-900 transition-colors"
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950"
           >
-            Войти
+            Вход
           </Link>
           <Link
             href="/simulation/guest"
-            className="border border-neutral-950 bg-neutral-950 px-4 py-2 font-inter text-xs font-semibold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+            className="inline-flex min-h-[44px] items-center justify-center border border-neutral-950 bg-neutral-950 px-5 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
           >
             3 вопроса
           </Link>
@@ -315,23 +288,13 @@ export default function ScenariosPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
         {/* Page header */}
-        <div className="mb-8">
-          <div className="mb-4 inline-block border border-neutral-200 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500">
-            Сценарии PeakTalk
-          </div>
-          <h1 className="max-w-3xl font-inter text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[46px]">
-            Подготовка к конкретной рабочей встрече, а не тренажёр речи вообще.
+        <div className="mb-12 max-w-3xl">
+          <h1 className="font-display text-[42px] font-black leading-[1.05] text-neutral-950 sm:text-[56px]">
+            Сценарии проверок
           </h1>
-          <p className="mt-5 max-w-2xl font-inter text-base leading-relaxed text-neutral-600">
-            Выберите сценарий, вставьте документ, презентацию, отчёт или тезисы и проверьте, где аргументация не держит давление руководителя, клиента, инвестора или CFO.
+          <p className="mt-6 font-inter text-[18px] leading-relaxed text-neutral-500">
+            Каталог типовых рабочих ситуаций для стресс-теста аргументации. Выберите сценарий и проверьте свой материал на прочность до реальной встречи.
           </p>
-          <Link
-            href="/simulation/guest"
-            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-5 text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
-          >
-            Проверить свой материал
-            <ArrowRight size={16} />
-          </Link>
         </div>
 
         {dailyScenario && <ScenarioOfTheDay scenario={dailyScenario} />}

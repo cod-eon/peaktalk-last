@@ -165,7 +165,7 @@ export default function ScenarioDetailPage() {
   const expectedOutput = scenario.expectedOutput ?? [
     'Критические вопросы по вашему материалу.',
     'Слабые места в ответах и логике защиты.',
-    'Короткая prep-card перед встречей.',
+    'Короткая памятка перед встречей перед встречей.',
   ]
   const faq = scenario.faq ?? []
   const jsonLd =
@@ -206,28 +206,32 @@ export default function ScenarioDetailPage() {
 
   const handleStartScenario = async () => {
     if (!scenario || isStarting || isUsingFallback) {
-      router.push('/simulation/guest')
-      return
+      if (scenario) {
+        localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
+      }
+      router.push(`/simulation/guest?persona=${scenario?.category ?? 'cfo'}&difficulty=${difficulty}&from_scenario=true`);
+      return;
     }
 
-    setIsStarting(true)
+    setIsStarting(true);
     try {
-      const supabase = createClient()
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
+      const supabase = createClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
       if (!token) {
-        router.push('/simulation/guest')
-        return
+        router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}`);
+        return;
       }
 
-      const started = await startFromScenario(scenario.id, difficulty, token)
-      router.push(`/simulation/${started.id}`)
+      const started = await startFromScenario(scenario.id, difficulty, token);
+      router.push(`/simulation/${started.id}`);
     } catch {
-      router.push('/simulation/guest')
+      localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
+      router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);
     } finally {
-      setIsStarting(false)
+      setIsStarting(false);
     }
-  }
+  };
 
   return (
     <Shell>
@@ -273,10 +277,10 @@ export default function ScenarioDetailPage() {
                 </span>
               </div>
 
-              <h1 className="font-inter text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[46px]">
+              <h1 className="font-display text-[36px] font-black leading-[1.05] text-neutral-950 sm:text-[52px]">
                 {scenario.title}
               </h1>
-              <p className="mt-5 max-w-2xl font-inter text-base leading-relaxed text-neutral-600">
+              <p className="mt-5 max-w-2xl font-inter text-[17px] leading-relaxed text-neutral-600">
                 {scenario.subtitle}
               </p>
             </motion.div>
@@ -285,25 +289,17 @@ export default function ScenarioDetailPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.08 }}
-              className="my-8 grid border border-neutral-200 bg-white sm:grid-cols-3"
+              className="my-10 flex flex-wrap gap-8 sm:gap-16 border-b border-black/[0.08] pb-10"
             >
               {[
                 ['Оппонент', scenario.persona],
                 ['Фокус', categoryMeta.role],
-                ['Результат', 'вопросы / риски / prep-card'],
-              ].map(([label, value], index) => (
-                <div
-                  key={label}
-                  className={`p-4 ${
-                    index > 0
-                      ? 'border-t border-neutral-200 sm:border-l sm:border-t-0'
-                      : ''
-                  }`}
-                >
-                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400">
                     {label}
                   </div>
-                  <div className="mt-1 text-sm font-bold text-neutral-950">
+                  <div className="mt-2 text-[17px] font-bold text-neutral-950">
                     {value}
                   </div>
                 </div>
@@ -315,13 +311,13 @@ export default function ScenarioDetailPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="mb-8 grid gap-4 sm:grid-cols-2"
+                className="mb-12 space-y-8"
               >
                 {scenario.problem && (
-                  <InfoPanel label="Проблема" text={scenario.problem} />
+                  <TextBlock title="Суть проблемы" text={scenario.problem} />
                 )}
                 {scenario.pressure && (
-                  <InfoPanel label="Кто давит" text={scenario.pressure} tone="risk" />
+                  <TextBlock title="Источник давления" text={scenario.pressure} tone="risk" />
                 )}
               </motion.div>
             )}
@@ -331,21 +327,18 @@ export default function ScenarioDetailPage() {
             )}
 
             <SectionList
-              title="Что вставить в PeakTalk"
+              title="Что нужно для подготовки"
               items={whatToPrepare}
-              marker="мат"
             />
 
             <SectionList
-              title="Примеры вопросов"
+              title="Какие вопросы будем отрабатывать"
               items={exampleQuestions}
-              marker="вопр"
             />
 
             <SectionList
-              title="Что получите"
+              title="Что вы получите на выходе"
               items={expectedOutput}
-              marker="итог"
             />
 
             {faq.length > 0 && (
@@ -353,21 +346,18 @@ export default function ScenarioDetailPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="mb-8"
+                className="mb-12"
               >
-                <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+                <h2 className="mb-6 font-display text-[22px] font-bold text-neutral-950">
                   FAQ
                 </h2>
-                <div className="grid gap-3">
+                <div className="space-y-6">
                   {faq.map((item) => (
-                    <div
-                      key={item.question}
-                      className="border border-neutral-200 bg-white p-4"
-                    >
-                      <h3 className="font-inter text-sm font-bold text-neutral-950">
+                    <div key={item.question}>
+                      <h3 className="font-inter text-[17px] font-bold text-neutral-950">
                         {item.question}
                       </h3>
-                      <p className="mt-2 font-inter text-sm leading-relaxed text-neutral-600">
+                      <p className="mt-2 font-inter text-[16px] leading-relaxed text-neutral-600">
                         {item.answer}
                       </p>
                     </div>
@@ -407,26 +397,25 @@ export default function ScenarioDetailPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-5 sm:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2.5 transition-opacity hover:opacity-75"
+          className="flex items-center gap-2 transition-opacity hover:opacity-75"
+          aria-label="PeakTalk"
         >
-          <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-          <span className="brand-wordmark text-[15px] text-neutral-900">
-            PeakTalk
-          </span>
+          <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" />
+          <span className="brand-wordmark text-[18px] text-neutral-950">PeakTalk</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="font-mono text-xs uppercase tracking-widest text-neutral-400 transition-colors hover:text-neutral-900"
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950"
           >
-            Войти
+            Вход
           </Link>
           <Link
             href="/simulation/guest"
-            className="border border-neutral-950 bg-neutral-950 px-4 py-2 font-inter text-xs font-semibold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+            className="inline-flex min-h-[44px] items-center justify-center border border-neutral-950 bg-neutral-950 px-5 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
           >
             3 вопроса
           </Link>
@@ -437,49 +426,18 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function InfoPanel({
-  label,
-  text,
-  tone = 'default',
-}: {
-  label: string
-  text: string
-  tone?: 'default' | 'risk'
-}) {
-  return (
-    <div
-      className={`border p-5 ${
-        tone === 'risk'
-          ? 'border-[#E8600A]/30 bg-[#E8600A]/[0.04]'
-          : 'border-neutral-200 bg-white'
-      }`}
-    >
-      <div
-        className={`font-mono text-[10px] uppercase tracking-[0.16em] ${
-          tone === 'risk' ? 'text-[#B74707]' : 'text-neutral-400'
-        }`}
-      >
-        {label}
-      </div>
-      <p className="mt-3 font-inter text-sm leading-relaxed text-neutral-700">
-        {text}
-      </p>
-    </div>
-  )
-}
-
-function TextBlock({ title, text }: { title: string; text: string }) {
+function TextBlock({ title, text, tone = 'default' }: { title: string; text: string; tone?: 'default' | 'risk' }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.12 }}
-      className="mb-8"
+      className="mb-10"
     >
-      <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+      <h2 className={`mb-4 font-display text-[22px] font-bold ${tone === 'risk' ? 'text-[#B74707]' : 'text-neutral-950'}`}>
         {title}
       </h2>
-      <div className="space-y-3 font-inter text-sm leading-relaxed text-neutral-700">
+      <div className="space-y-4 font-inter text-[16px] leading-relaxed text-neutral-600">
         {text.split('\n\n').map((para) => (
           <p key={para}>{para}</p>
         ))}
@@ -491,11 +449,9 @@ function TextBlock({ title, text }: { title: string; text: string }) {
 function SectionList({
   title,
   items,
-  marker,
 }: {
   title: string
   items: string[]
-  marker: string
 }) {
   if (items.length === 0) return null
 
@@ -504,26 +460,24 @@ function SectionList({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.14 }}
-      className="mb-8"
+      className="mb-12"
     >
-      <h2 className="mb-3 border-b border-neutral-200 pb-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500">
+      <h2 className="mb-5 font-display text-[22px] font-bold text-neutral-950">
         {title}
       </h2>
-      <div className="grid gap-2">
-        {items.map((item, i) => (
-          <div
+      <ul className="space-y-4">
+        {items.map((item) => (
+          <li
             key={item}
-            className="flex items-start gap-3 border border-neutral-200 bg-white p-3.5"
+            className="flex items-start gap-4"
           >
-            <span className="mt-0.5 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-[#B74707]">
-              {marker} {String(i + 1).padStart(2, '0')}
-            </span>
-            <span className="font-inter text-sm leading-relaxed text-neutral-700">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#E8600A]" />
+            <span className="font-inter text-[16px] leading-relaxed text-neutral-600">
               {item}
             </span>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </motion.div>
   )
 }
@@ -546,12 +500,12 @@ function StartBlock({
   const recommendedPreset = normalizeStartDifficulty(scenario.recommended_difficulty)
 
   return (
-    <div className="border border-neutral-950 bg-white p-5 sm:p-6">
-      <h3 className="mb-4 font-inter text-xl font-black leading-tight text-neutral-950">
+    <div className="border border-neutral-950 bg-[#faf8f4] p-5 sm:p-7 shadow-lg">
+      <h3 className="mb-4 font-display text-[24px] font-black leading-tight text-neutral-950">
         Проверить свой материал в бесплатном режиме
       </h3>
 
-      <p className="mb-5 font-inter text-sm leading-relaxed text-neutral-600">
+      <p className="mb-6 font-inter text-[15px] leading-relaxed text-neutral-600">
         Вставьте документ, презентацию, отчёт или тезисы. PeakTalk задаст первые критические вопросы как будущий оппонент.
       </p>
 
@@ -614,10 +568,10 @@ function StartBlock({
         type="button"
         onClick={onStart}
         disabled={isStarting}
-        className="flex h-12 w-full items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 font-inter text-sm font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+        className="flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] font-inter text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:opacity-50"
       >
         {isStarting ? 'Запускаем...' : 'Запустить сценарий'}
-        {isStarting ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+        {isStarting ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
       </button>
 
       <p className="mt-2 text-center font-mono text-[11px] text-neutral-400">

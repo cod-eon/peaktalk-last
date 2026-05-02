@@ -28,8 +28,8 @@ export type SessionItem = {
 export const PERSONA_LABELS: Record<string, string> = {
   supervisor: 'Научный руководитель',
   reviewer: 'Придирчивый рецензент',
-  peer: 'Однокурсник-скептик',
-  tech_lead: 'Тимлид / Principal Engineer',
+  peer: 'Коллега-скептик',
+  tech_lead: 'Тимлид / ведущий инженер',
   hr: 'HR-менеджер',
   senior_dev: 'Старший разработчик',
   investor: 'Венчурный инвестор',

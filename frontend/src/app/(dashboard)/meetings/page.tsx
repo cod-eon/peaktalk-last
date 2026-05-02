@@ -60,7 +60,7 @@ const MEETING_TYPE_LABELS: Record<MeetingType, string> = {
   qbr: "QBR",
   pitch: "Питч",
   client_meeting: "Встреча с клиентом",
-  roadmap_review: "Обзор roadmap",
+  roadmap_review: "Обзор дорожной карты",
   other: "Другое",
 };
 
@@ -687,7 +687,7 @@ export default function MeetingsPage() {
                 </p>
                 <p className="text-[13px] text-neutral-400 font-inter max-w-xs leading-relaxed">
                   Добавьте предстоящую встречу, чтобы подготовиться к ней с
-                  помощью AI-симуляции
+                  помощью ИИ-симуляции
                 </p>
               </div>
               <button

@@ -95,8 +95,8 @@ export function Sidebar() {
                             className={`
                                 flex items-center gap-3 px-2.5 h-9 transition-all duration-150 relative group w-[216px]
                                 ${isActive
-                                    ? 'bg-neutral-100 text-neutral-900'
-                                    : 'text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50'
+                                    ? 'bg-neutral-200 text-black font-bold'
+                                    : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'
                                 }
                             `}
                         >
@@ -105,8 +105,8 @@ export function Sidebar() {
                                 strokeWidth={isActive ? 2.5 : 2}
                                 className={`shrink-0 transition-colors ${
                                     isActive
-                                        ? 'text-neutral-900'
-                                        : 'text-neutral-400 group-hover:text-neutral-500'
+                                        ? 'text-black'
+                                        : 'text-neutral-400 group-hover:text-neutral-600'
                                 }`}
                             />
                             <div className="flex-1 overflow-hidden">
@@ -118,7 +118,7 @@ export function Sidebar() {
                                             exit={{ opacity: 0 }}
                                             transition={{ duration: 0.12 }}
                                             className={`text-[13px] whitespace-nowrap font-inter ${
-                                                isActive ? 'font-semibold text-neutral-900' : 'font-medium'
+                                                isActive ? 'font-bold text-black' : 'font-medium'
                                             }`}
                                         >
                                             {item.name}
