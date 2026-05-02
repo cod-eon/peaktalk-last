@@ -29,7 +29,7 @@ function MetricPod({
           {label}
         </span>
         {variant === 'critical' ? (
-          <span className="bg-[#B91C1C] text-white px-2.5 py-1 font-mono text-[9px] font-bold leading-none tracking-[0.12em] uppercase">
+          <span className="bg-[#E8600A] text-white px-2.5 py-1 font-mono text-[9px] font-bold leading-none tracking-[0.12em] uppercase">
             Требует внимания
           </span>
         ) : (
@@ -143,14 +143,14 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
   if (documents.length === 0) {
     tip = {
       title: "Загрузите текст выступления",
-      desc: "Для точного stress-test нужен контекст: тезисы, аргументы и ожидаемые возражения.",
+      desc: "Для точной проверки нужен контекст: тезисы, аргументы и ожидаемые возражения.",
       action: "Перейти к загрузке",
       href: "/upload",
       icon: <Upload size={24} className="text-[#E8600A]" />
     };
   } else if (completedSessions.length === 0) {
     tip = {
-      title: "Проведите первый stress-test",
+      title: "Проведите первую проверку",
       desc: "Завершённая симуляция сформирует базовую линию устойчивости аргументации.",
       action: "Начать стресс-тест",
       href: "/simulation",
@@ -267,7 +267,7 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       </h1>
       
       <p className="text-sm sm:text-base text-[#73706A] mb-10 max-w-xl mx-auto">
-        Загрузите текст выступления или начните stress-test аргументации с AI-оппонентом перед реальной встречей.
+        Загрузите текст выступления или проверьте аргументацию с ИИ-оппонентом перед реальной встречей.
       </p>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -283,7 +283,7 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-6 py-3.5 text-sm font-semibold transition-colors"
         >
           <Play size={16} className="fill-white" />
-          Начать stress-test
+          Начать проверку
         </Link>
       </div>
     </motion.div>
@@ -316,7 +316,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
   if (validScores.length > 0) {
     const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
     const avg10 = Math.round(avg * 10);
-    const colorClass = avg10 >= 7 ? "text-[#111827]" : avg10 >= 4 ? "text-[#D97706]" : "text-[#DC2626]";
+    const colorClass = avg10 >= 7 ? "text-[#111827]" : avg10 >= 4 ? "text-[#D97706]" : "text-[#E8600A]";
     indexMarkup = <span className={colorClass}>{avg10}<span className="text-[#73706A] text-xl">/10</span></span>;
     indexSubtitle = "Средний результат всех защит";
   }
@@ -341,7 +341,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 border-b border-[#D9D5CC] pb-6">
         <div>
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#E8600A] mb-2">
-            Executive stress-test console
+            Панель подготовки к сложной встрече
           </p>
           <h1 className="text-3xl font-black text-[#111827] tracking-tight">Сводка аналитики</h1>
           <p className="text-sm font-medium text-[#73706A] mt-1">
@@ -358,7 +358,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
           </Link>
           <Link
             href="/simulation"
-            className="inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-[#E8600A] hover:bg-[#B74707] text-white border border-[#E8600A] hover:border-[#B74707] rounded-none px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Play size={14} className="fill-white" />
             Новый стресс-тест
@@ -392,14 +392,14 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
         <MetricPod
           label="КРИТИЧЕСКИЕ УЯЗВИМОСТИ"
           value={criticalCount}
-          subtitle="Сессии с баллом ниже 4/10"
+          subtitle="Разборы, где аргументы не выдержали давления"
           icon={<ShieldAlert size={18} />}
           variant={criticalCount > 0 ? 'critical' : 'default'}
         />
         <MetricPod
           label="СЕССИЙ ЗА МЕСЯЦ"
           value={monthlySessionsCount}
-          subtitle="Интенсивность stress-test сессий"
+          subtitle="Сколько тренировок запущено в этом месяце"
           icon={<RotateCcw size={18} />}
         />
       </motion.div>
@@ -431,7 +431,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
             Загрузить текст<br />выступления
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-white/58">
-            AI-анализ аргументации и поиск логических уязвимостей перед встречей.
+            Анализ аргументации и поиск логических уязвимостей перед встречей.
           </p>
           <Link
             href="/upload"

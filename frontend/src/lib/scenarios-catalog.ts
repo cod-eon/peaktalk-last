@@ -49,7 +49,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     expectedOutput: [
       'Список слабых мест в аргументации бюджета.',
       'Формулировки для защиты критичных статей.',
-      'Короткая prep-card перед встречей с CFO.',
+      'Короткая памятка перед встречей перед встречей с CFO.',
     ],
     faq: [
       {
@@ -67,7 +67,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
   {
     id: 'fallback-roadmap-reprioritization',
     slug: 'roadmap-reprioritization',
-    title: 'Переприоритизация roadmap',
+    title: 'Переприоритизация дорожной карты',
     subtitle: 'Совет директоров требует сдвинуть сроки ключевого релиза',
     category: 'roadmap',
     persona: 'Совет директоров',
@@ -80,7 +80,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     pressure:
       'Board будет спрашивать, почему нельзя ускориться, что вы готовы снять с плана и какую цену компания платит за перенос.',
     whatToPrepare: [
-      'Текущий roadmap с зависимостями и критическими сроками.',
+      'Текущая дорожная карта с зависимостями и критическими сроками.',
       'Стоимость переноса: клиенты, выручка, технический долг, команда.',
       'Один-два реалистичных варианта компромисса.',
     ],
@@ -91,13 +91,13 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
       'Что вы предлагаете вместо отказа?',
     ],
     expectedOutput: [
-      'Карта уязвимых мест в защите roadmap.',
+      'Карта уязвимых мест в защите дорожной карты.',
       'Более жёсткие формулировки trade-offs.',
       'Черновик ответа на давление по срокам.',
     ],
     faq: [
       {
-        question: 'Нужно ли загружать весь roadmap?',
+        question: 'Нужно ли загружать всю дорожную карту?',
         answer:
           'Нет. Лучше дать фрагмент с инициативой, зависимостями и причиной конфликта. Чем конкретнее контекст, тем полезнее вопросы.',
       },
@@ -112,7 +112,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     id: 'fallback-series-a-pitch',
     slug: 'series-a-pitch',
     title: 'Питч перед Series A',
-    subtitle: 'Инвестор жёстко давит на рынок, рост и unit-экономику',
+    subtitle: 'Инвестор жёстко давит на рынок, рост и экономику сделки',
     category: 'investors',
     persona: 'Инвестор',
     difficulty: 5,
@@ -125,7 +125,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
       'Давление пойдёт на TAM/SAM/SOM, качество роста, churn, CAC, payback и слабые места команды.',
     whatToPrepare: [
       'Pitch deck или короткий fundraising memo.',
-      'Ключевые цифры по росту, retention, CAC, payback и pipeline.',
+      'Ключевые цифры по росту, retention, CAC, payback и воронка.',
       'Честное объяснение главного риска раунда.',
     ],
     sampleQuestions: [
@@ -137,7 +137,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     expectedOutput: [
       'Список инвесторских вопросов, на которых pitch проседает.',
       'Более точные ответы по рынку и экономике.',
-      'Prep-card с рисками, которые лучше признать заранее.',
+      'Памятка перед встречей с рисками, которые лучше признать заранее.',
     ],
     faq: [
       {
@@ -269,7 +269,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     expectedOutput: [
       'Список дыр в postmortem до встречи с руководством.',
       'Ответы на вопросы про ответственность и профилактику.',
-      'Короткая prep-card для разбора инцидента.',
+      'Короткая памятка перед встречей для разбора инцидента.',
     ],
     faq: [
       {

@@ -20,10 +20,10 @@ export default function UploadPage() {
     const [logs, setLogs] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const DEMO_PITCH = `Привет! Я — Илья, фаундер стартапа PeakTalk. Мы делаем AI-тренажер для спикеров, который решает проблему страха публичных выступлений. 
-По статистике, 75% людей боятся выступать. Из-за этого стартаперы проваливают спичи, а эксперты боятся просить повышение. 
-Наш продукт — это B2C SaaS. Пользователь загружает текст своей речи, а наш ИИ-судья, например "строгий инвестор", задает каверзные вопросы по логике и структуре.
-Мы уже запустили MVP и у нас более 500 активных пользователей. Сейчас мы ищем инвестиции в размере 10 миллионов рублей для масштабирования маркетинга и выхода на B2B рынок корпоративного обучения. Буду рад ответить на вопросы!`;
+    const DEMO_PITCH = `Привет! Я — Илья, основатель PeakTalk. Мы делаем ИИ-симулятор сложных рабочих разговоров, который помогает проверять аргументацию до важной встречи.
+По статистике, 75% людей боятся выступать. Из-за этого руководители и эксперты хуже защищают решения, бюджеты и инициативы.
+Наш продукт — это сервис с индивидуальной покупкой. Пользователь загружает текст своей речи, а наш ИИ-судья, например "строгий инвестор", задает каверзные вопросы по логике и структуре.
+Мы уже запустили первую версию и у нас более 500 активных пользователей. Сейчас мы ищем инвестиции в размере 10 миллионов рублей для масштабирования маркетинга и выхода на корпоративный рынок корпоративного обучения. Буду рад ответить на вопросы!`;
 
     const setDemoText = () => {
         setMode('text');
@@ -75,7 +75,7 @@ export default function UploadPage() {
         if (mode === 'text' && !text.trim()) return;
 
         setIsProcessing(true);
-        setLogs(['> Инициализация AI-движка PeakTalk...']);
+        setLogs(['> Инициализация ИИ-движка PeakTalk...']);
 
         try {
             let documentId = null;
@@ -92,9 +92,9 @@ export default function UploadPage() {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 documentId = uploadRes.id;
-                
+
                 // If the parser was synchronous, it will have extracted text
                 if (uploadRes.extracted_text) {
                     rawText = uploadRes.extracted_text;
@@ -123,7 +123,7 @@ export default function UploadPage() {
             // 2. Create draft
             setLogs(prev => [...prev, '> Создание черновика речи...']);
             const draftTitle = mode === 'file' ? (file?.name ?? 'Документ') : 'Анализ текста ' + new Date().toLocaleTimeString('ru-RU');
-            
+
             const draftRes = await api.post('/drafts', {
                 title: draftTitle,
                 raw_text: rawText,
@@ -135,12 +135,12 @@ export default function UploadPage() {
             // 3. Request Analysis
             setLogs(prev => [...prev, '> Запуск глубокого семантического анализа (Cloud.ru AI)...']);
             setLogs(prev => [...prev, '> Поиск стилистических и риторических уязвимостей...']);
-            
+
             await api.post(`/drafts/${draftId}/analyze`);
-            
+
             setLogs(prev => [...prev, '> Формирование рекомендаций...']);
             setLogs(prev => [...prev, '> Анализ завершен. Перенаправление...']);
-            
+
             setTimeout(() => {
                 router.push(`/analysis/${draftId}`);
             }, 1000);
@@ -178,7 +178,7 @@ export default function UploadPage() {
                     >
                         {/* ─── UPLOAD WORKSPACE ─── */}
                         <div className="bg-white border border-neutral-200 rounded-none overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.03)]">
-                            
+
                             {/* Tabs */}
                             <div className="flex w-full border-b border-neutral-200 bg-white">
                                 <button
@@ -219,14 +219,14 @@ export default function UploadPage() {
                                                 onDragLeave={handleDragLeave}
                                                 onDrop={handleDrop}
                                                 className={`h-full w-full flex flex-col items-center justify-center rounded-none border-2 border-dashed transition-all cursor-pointer ${
-                                                    isDragging 
-                                                        ? 'border-neutral-900 bg-neutral-50 scale-[0.98]' 
+                                                    isDragging
+                                                        ? 'border-neutral-900 bg-neutral-50 scale-[0.98]'
                                                         : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                                                 }`}
                                                 onClick={() => !file && fileInputRef.current?.click()}
                                             >
                                                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".txt,.pdf,.doc,.docx,.md" />
-                                                
+
                                                 {file ? (
                                                     <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
                                                         <div className="w-16 h-16 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-900">
@@ -250,7 +250,7 @@ export default function UploadPage() {
                                                         </div>
                                                         <h3 className="text-neutral-900 font-medium mb-1">Брось черновик сюда</h3>
                                                         <p className="text-neutral-400 text-xs mb-6 text-center max-w-[240px]">(AI разберется, или просто кликни)</p>
-                                                        
+
                                                         <div className="flex gap-2 flex-wrap justify-center">
                                                             {['PDF', 'DOCX', 'TXT'].map((ext) => (
                                                                 <span key={ext} className="px-2 py-1 rounded-none bg-neutral-50 border border-neutral-200 font-mono text-[10px] text-neutral-500 tracking-wider">
@@ -283,8 +283,8 @@ export default function UploadPage() {
                                                         {text.length} символов
                                                     </span>
                                                     {text.length === 0 && (
-                                                        <button 
-                                                            onClick={setDemoText} 
+                                                        <button
+                                                            onClick={setDemoText}
                                                             className="text-[11px] text-neutral-600 hover:text-neutral-900 transition-colors bg-neutral-50 hover:bg-neutral-100 rounded-none px-2.5 py-1.5 font-medium border border-neutral-200"
                                                         >
                                                             Вставить демо-спич
@@ -377,7 +377,7 @@ export default function UploadPage() {
                             </div>
                         </div>
 
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}

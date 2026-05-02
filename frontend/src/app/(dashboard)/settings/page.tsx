@@ -28,9 +28,9 @@ const SEGMENT_LABELS: Record<string, string> = {
 };
 
 const GOAL_LABELS: Record<string, string> = {
-  budget_defense: 'Защита бюджета / roadmap',
+  budget_defense: 'Защита бюджета / дорожной карты',
   pitch: 'Инвест-спич / продажа',
-  qbr: 'QBR / клиентский review',
+  qbr: 'Клиентский квартальный обзор',
   stakeholder: 'Сложный разговор со стейкхолдером',
   other: 'Другое',
 };

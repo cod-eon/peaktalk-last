@@ -29,9 +29,9 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://peaktalk.ru"),
-  title: "PeakTalk — подготовка к сложным рабочим встречам",
+  title: "PeakTalk — проверка аргументов перед важной рабочей встречей",
   description:
-    "PeakTalk помогает проверить аргументы перед встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места до руководителя, клиента или инвестора.",
+    "Подготовьтесь к защите бюджета, инвест-питчу или клиентской эскалации: вставьте тезисы и получите неудобные вопросы, слабые места и план усиления аргументации.",
   applicationName: "PeakTalk",
   manifest: "/manifest.json",
   icons: {
@@ -43,19 +43,24 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "PeakTalk — подготовка к сложным рабочим встречам",
+    title: "PeakTalk — проверка аргументов перед важной рабочей встречей",
     description:
-      "Проверьте аргументы перед встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места.",
+      "Вставьте тезисы или план разговора, получите неудобные вопросы, слабые места и план усиления аргументации.",
     url: "https://peaktalk.ru",
     siteName: "PeakTalk",
     locale: "ru_RU",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "PeakTalk" }],
   },
   twitter: {
-    card: "summary",
-    title: "PeakTalk — подготовка к сложным рабочим встречам",
+    card: "summary_large_image",
+    title: "PeakTalk — проверка аргументов перед важной рабочей встречей",
     description:
-      "Проверьте аргументы с AI-оппонентом до реальной встречи.",
+      "Проверьте аргументы с ИИ-оппонентом до реальной встречи.",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: "/",
   },
   robots: {
     index: true,

@@ -57,8 +57,8 @@ export default function SimulationPage() {
   const PERSONA_LABELS: Record<string, string> = {
     supervisor: 'Научный руководитель',
     reviewer: 'Придирчивый рецензент',
-    peer: 'Однокурсник-скептик',
-    tech_lead: 'Тимлид / Principal Engineer',
+    peer: 'Коллега-скептик',
+    tech_lead: 'Тимлид / ведущий инженер',
     hr: 'HR-менеджер',
     senior_dev: 'Старший разработчик',
     investor: 'Венчурный инвестор',
@@ -76,7 +76,7 @@ export default function SimulationPage() {
   const PERSONA_DATIVE: Record<string, string> = {
     supervisor: 'научному руководителю',
     reviewer: 'придирчивому рецензенту',
-    peer: 'однокурснику-скептику',
+    peer: 'коллеге-скептику',
     tech_lead: 'тимлиду',
     hr: 'HR-менеджеру',
     senior_dev: 'старшему разработчику',

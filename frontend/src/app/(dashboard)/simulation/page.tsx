@@ -372,18 +372,18 @@ function SimulationPageContent() {
 
     const fallbackRoles = [
         { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций.', icon: TrendingUp, iconColor: 'text-amber-600', iconBg: 'bg-amber-50' },
-        { id: 'tech_lead', name: 'Тимлид / Principal Engineer', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-[#E8600A]', iconBg: 'bg-[#FEF3E8]' },
-        { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и soft skills.', icon: Users, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
+        { id: 'tech_lead', name: 'Тимлид / Ведущий инженер', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-[#E8600A]', iconBg: 'bg-[#FEF3E8]' },
+        { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и навыки общения.', icon: Users, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
         { id: 'audience', name: 'Общая аудитория', desc: 'Провокационный. Задаёт каверзные вопросы, ищет слабые места.', icon: Mic, iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     ];
 
     const fallbackIndustries = ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"];
     const meetingTypeLabels: Record<string, string> = {
         budget_defense: 'Защита бюджета',
-        qbr: 'QBR',
+        qbr: 'Квартальный обзор',
         pitch: 'Питч',
         client_meeting: 'Встреча с клиентом',
-        roadmap_review: 'Обзор roadmap',
+        roadmap_review: 'Обзор дорожной карты',
         other: 'Другое',
     };
     const industryList = personasData ? personasData.industries : fallbackIndustries;
@@ -1298,7 +1298,7 @@ function SimulationPageContent() {
                                 </div>
                             </div>
                             <p className="text-xs text-neutral-500 mt-3 max-w-2xl">
-                                Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность stress-test сценария.
+                                Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность стресс-тест сценария.
                             </p>
                         </div>
                     )}

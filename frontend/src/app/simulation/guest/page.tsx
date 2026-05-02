@@ -40,24 +40,25 @@ const safariMotionStyle: React.CSSProperties = {
 
 function Header() {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-5 sm:px-8">
       <Link
         href="/"
-        className="flex items-center gap-2.5 transition-opacity hover:opacity-75"
+        className="flex items-center gap-2 transition-opacity hover:opacity-75"
+        aria-label="PeakTalk"
       >
-        <Image src="/logo_svg.svg" alt="PeakTalk" width={28} height={28} />
-        <span className="brand-wordmark text-[15px] text-neutral-900">PeakTalk</span>
+        <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" />
+        <span className="brand-wordmark text-[18px] text-neutral-950">PeakTalk</span>
       </Link>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <Link
           href="/login"
-          className="font-mono text-xs uppercase tracking-widest text-neutral-400 transition-colors hover:text-neutral-900"
+          className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950"
         >
-          Войти
+          Вход
         </Link>
         <Link
           href="/scenarios"
-          className="border border-neutral-950 bg-neutral-950 px-4 py-2 font-inter text-xs font-semibold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+          className="inline-flex min-h-[44px] items-center justify-center border border-neutral-950 bg-neutral-950 px-5 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
         >
           Сценарии
         </Link>
@@ -92,12 +93,31 @@ export default function GuestSimulationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(90);
   const [error, setError] = useState<string | null>(null);
+  const [hasScenarioParam, setHasScenarioParam] = useState(false);
 
   const answerRef = useRef<HTMLTextAreaElement>(null);
   const currentPersona = PERSONAS.find((persona) => persona.id === selectedPersona) ?? PERSONAS[0];
   const isReady = text.trim().length >= 20;
   const currentQuestion = messages.filter((message) => message.role === 'assistant').at(-1)?.content ?? 'Анализ вводных данных...';
   const progress = Math.min((turn / MAX_GUEST_TURNS) * 100, 100);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isFromScenario = params.get('from_scenario') === 'true';
+    if (isFromScenario) {
+      setHasScenarioParam(true);
+      const ctx = localStorage.getItem('peaktalk_guest_context');
+      if (ctx) setText(ctx);
+    }
+    const p = params.get('persona');
+    if (p) setHasScenarioParam(true);
+    
+    // Map scenario categories to our 3 guest personas, or just use the exact match
+    const mapped = p === 'investors' ? 'investor' : p === 'clients' ? 'client' : p === 'cfo' || p === 'budget' || p === 'roadmap' ? 'cfo' : p;
+    if (mapped && PERSONAS.some(x => x.id === mapped)) setSelectedPersona(mapped);
+    const d = params.get('difficulty');
+    if (d && DIFFICULTIES.some(x => x.value === Number(d))) setSelectedDifficulty(Number(d));
+  }, []);
 
   const transcript = useMemo(() => {
     return messages.reduce<Array<{ question?: string; answer?: string }>>((acc, message) => {
@@ -184,7 +204,7 @@ export default function GuestSimulationPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <AnimatePresence mode="wait">
 
           {/* INPUT STATE */}
@@ -197,99 +217,123 @@ export default function GuestSimulationPage() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               style={safariMotionStyle}
             >
-              <div className="mb-6">
-                <Label className="mb-3 text-[#E8600A]">бесплатный pressure-test</Label>
-                <h1 className="font-inter text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[40px]">
+              <div className="mb-4">
+                <Label className="mb-2 text-[#E8600A]">бесплатная проверка</Label>
+                <h1 className="font-display text-[32px] font-black leading-[1.05] text-neutral-950 sm:text-[42px]">
                   Настройка симуляции
                 </h1>
-                <p className="mt-4 max-w-xl font-inter text-[15px] leading-relaxed text-neutral-600">
+                <p className="mt-3 max-w-2xl font-inter text-[16px] leading-relaxed text-neutral-600">
                   Подготовьтесь к сложной встрече. Задайте контекст, выберите профиль оппонента и уровень жесткости.
                 </p>
               </div>
 
               <div className="border border-neutral-200 bg-white">
-                <div className="p-5 sm:p-7">
+                <div className="p-4 sm:p-6">
                   {/* Persona Selection */}
-                  <div className="mb-7">
-                    <Label className="mb-3">оппонент</Label>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {PERSONAS.map((persona) => {
-                        const isSelected = selectedPersona === persona.id;
-                        const Icon = persona.icon;
-                        return (
-                          <button
-                            key={persona.id}
-                            type="button"
-                            onClick={() => setSelectedPersona(persona.id)}
-                            className={`group flex flex-col items-start gap-3 border p-4 text-left transition-all duration-200 ${
-                              isSelected
-                                ? 'border-[#E8600A] bg-[#E8600A]/[0.04]'
-                                : 'border-neutral-200 bg-white hover:border-neutral-400'
-                            }`}
-                          >
-                            <Icon size={18} className={isSelected ? 'text-[#E8600A]' : 'text-neutral-400 group-hover:text-neutral-600'} />
-                            <div>
-                              <span className={`block text-[14px] font-bold ${isSelected ? 'text-neutral-950' : 'text-neutral-700'}`}>
-                                {persona.label}
-                              </span>
-                              <span className="mt-0.5 block text-[11px] leading-relaxed text-neutral-500">
-                                {persona.note}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
+                  {!hasScenarioParam && (
+                    <div className="mb-6">
+                      <Label className="mb-3">оппонент</Label>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {PERSONAS.map((persona) => {
+                          const isSelected = selectedPersona === persona.id;
+                          const Icon = persona.icon;
+                          return (
+                            <button
+                              key={persona.id}
+                              type="button"
+                              onClick={() => setSelectedPersona(persona.id)}
+                              className={`group flex flex-col items-start gap-3 border p-4 text-left transition-all duration-200 ${
+                                isSelected
+                                  ? 'border-[#E8600A] bg-[#E8600A]/[0.04]'
+                                  : 'border-neutral-200 bg-white hover:border-neutral-400'
+                              }`}
+                            >
+                              <Icon size={20} className={isSelected ? 'text-[#E8600A]' : 'text-neutral-400 group-hover:text-neutral-600'} />
+                              <div>
+                                <span className={`block text-[16px] font-bold ${isSelected ? 'text-neutral-950' : 'text-neutral-700'}`}>
+                                  {persona.label}
+                                </span>
+                                <span className="mt-1 block text-[13px] leading-relaxed text-neutral-500">
+                                  {persona.note}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Context Input */}
-                  <div className="mb-7">
-                    <div className="mb-3 flex items-center justify-between">
-                      <Label>контекст встречи</Label>
-                      <span className="font-mono text-[10px] text-neutral-300">{text.length}/{MAX_TEXT_LENGTH}</span>
-                    </div>
-                    <div className="relative">
-                      <textarea
-                        id="meeting-material"
-                        value={text}
-                        onChange={(event) => setText(event.target.value.slice(0, MAX_TEXT_LENGTH))}
-                        placeholder="Опишите ситуацию. Например: тезисы защиты бюджета, спорный момент с клиентом, запрос инвестиций..."
-                        className="h-[200px] w-full resize-none border border-neutral-200 bg-white p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-300 focus:border-neutral-400 transition-colors"
-                      />
-                      <p className="mt-2 font-inter text-xs leading-relaxed text-neutral-500">
-                        Не вставляйте пароли, персональные данные и коммерческие тайны. Материал нужен только для pressure-test этой сессии и не показывается другим пользователям.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setText(SAMPLE_TEXT)}
-                        className="absolute bottom-3 right-3 font-mono text-[10px] uppercase tracking-[0.12em] text-[#E8600A] transition-colors hover:text-[#FF8A3D]"
-                      >
-                        [вставить пример]
-                      </button>
-                    </div>
+                  <div className={hasScenarioParam ? '' : 'mb-6'}>
+                    {!hasScenarioParam ? (
+                      <>
+                        <div className="mb-3 flex items-center justify-between">
+                          <Label>контекст встречи</Label>
+                          <span className="font-mono text-[10px] text-neutral-300">{text.length}/{MAX_TEXT_LENGTH}</span>
+                        </div>
+                        <div>
+                          <textarea
+                            id="meeting-material"
+                            value={text}
+                            onChange={(event) => setText(event.target.value.slice(0, MAX_TEXT_LENGTH))}
+                            placeholder="Опишите ситуацию. Например: тезисы защиты бюджета, спорный момент с клиентом, запрос инвестиций..."
+                            className="h-[120px] w-full resize-none border border-neutral-200 bg-[#faf8f4] p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 transition-colors"
+                          />
+                          <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="font-inter text-[13px] leading-relaxed text-neutral-500 sm:max-w-[85%]">
+                              Не вставляйте пароли, персональные данные и коммерческие тайны. Материал нужен только для проверки в этой сессии.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setText(SAMPLE_TEXT)}
+                              className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-neutral-950"
+                            >
+                              [вставить пример]
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mb-2 bg-neutral-50 border border-neutral-200 p-5">
+                        <Label className="mb-2 text-[#E8600A]">готовый сценарий</Label>
+                        <p className="font-inter text-[15px] leading-relaxed text-neutral-700">
+                          Контекст и вводные данные успешно загружены. Вы можете сразу начинать симуляцию.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Difficulty & Start */}
-                  <div className="flex flex-col gap-5 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <Label className="mb-3">уровень давления</Label>
-                      <div className="flex gap-2">
-                        {DIFFICULTIES.map((item) => (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() => setSelectedDifficulty(item.value)}
-                            className={`px-4 py-2 font-mono text-[11px] uppercase tracking-[0.1em] transition-all ${
-                              selectedDifficulty === item.value
-                                ? 'bg-neutral-950 text-white font-bold'
-                                : 'bg-white text-neutral-500 border border-neutral-200 hover:border-neutral-400 hover:text-neutral-700'
-                            }`}
-                          >
-                            {item.label}
-                          </button>
-                        ))}
+                  <div className={`flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between ${hasScenarioParam ? 'mt-6' : 'border-t border-neutral-200 pt-6'}`}>
+                    {!hasScenarioParam && (
+                      <div className="pt-2">
+                        <Label className="mb-3">уровень давления</Label>
+                        <div className="flex gap-2">
+                          {DIFFICULTIES.map((item) => (
+                            <button
+                              key={item.value}
+                              type="button"
+                              onClick={() => setSelectedDifficulty(item.value)}
+                              className={`min-h-[44px] px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-all ${
+                                selectedDifficulty === item.value
+                                  ? 'bg-neutral-950 text-white shadow-md'
+                                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900'
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {hasScenarioParam && (
+                      <div className="pt-2">
+                        <div className="flex items-center gap-2">
+                          <Label>Сложность: {DIFFICULTIES.find(d => d.value === selectedDifficulty)?.label || 'Рабоче'}</Label>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex flex-col items-end gap-2">
                       {error && (
@@ -299,14 +343,14 @@ export default function GuestSimulationPage() {
                         type="button"
                         onClick={handleStart}
                         disabled={!isReady || isLoading}
-                        className="group flex h-12 w-full items-center justify-center gap-3 bg-neutral-950 px-8 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#E8600A] disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400 sm:w-auto"
+                        className="group flex min-h-[52px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-8 text-[14px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none sm:w-auto"
                       >
                         {isLoading ? (
-                          <Loader2 size={16} className="animate-spin" />
+                          <Loader2 size={18} className="animate-spin" />
                         ) : (
                           <>
                             Начать тест
-                            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                           </>
                         )}
                       </button>
@@ -332,9 +376,9 @@ export default function GuestSimulationPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 bg-[#E8600A] animate-pulse" />
-                    <Label>live simulation</Label>
+                    <Label>живая симуляция</Label>
                   </div>
-                  <h1 className="mt-2 font-inter text-2xl font-black text-neutral-950">
+                  <h1 className="mt-3 font-display text-3xl font-black text-neutral-950 sm:text-4xl">
                     Раунд 0{Math.min(turn, MAX_GUEST_TURNS)} / 0{MAX_GUEST_TURNS}
                   </h1>
                 </div>
@@ -344,10 +388,10 @@ export default function GuestSimulationPage() {
                     <Label className="mb-1">оппонент</Label>
                     <div className="font-inter text-sm font-bold text-neutral-950">{currentPersona.label}</div>
                   </div>
-                  <div className={`flex flex-col items-end border-l border-neutral-200 pl-5 ${timeLeft <= 15 ? 'text-[#E8600A]' : 'text-neutral-950'}`}>
+                  <div className={`flex flex-col items-end border-l border-neutral-200 pl-6 ${timeLeft <= 15 ? 'text-[#E8600A]' : 'text-neutral-950'}`}>
                     <Label className="mb-1">таймер</Label>
-                    <div className="flex items-center gap-2 font-mono text-lg tracking-tight font-bold">
-                      <Timer size={16} className={timeLeft <= 15 ? 'animate-pulse' : ''} />
+                    <div className="flex items-center gap-2 font-mono text-xl tracking-tight font-bold">
+                      <Timer size={20} className={timeLeft <= 15 ? 'animate-pulse' : ''} />
                       {formatTime(timeLeft)}
                     </div>
                   </div>
@@ -376,7 +420,7 @@ export default function GuestSimulationPage() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25 }}
-                    className="font-inter text-base font-medium leading-relaxed text-neutral-950 sm:text-lg"
+                    className="font-inter text-[18px] font-medium leading-relaxed text-neutral-950 sm:text-[20px]"
                   >
                     {currentQuestion}
                   </motion.p>
@@ -413,16 +457,16 @@ export default function GuestSimulationPage() {
                     type="button"
                     onClick={() => void handleSendAnswer()}
                     disabled={!answer.trim() || isLoading}
-                    className="group flex h-10 w-full items-center justify-center gap-2 bg-neutral-950 px-6 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-[#E8600A] disabled:bg-neutral-200 disabled:text-neutral-400 sm:w-auto"
+                    className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-10 text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none sm:w-auto"
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 size={14} className="animate-spin" /> Анализ
+                        <Loader2 size={18} className="animate-spin" /> Анализ
                       </>
                     ) : (
                       <>
                         Ответить
-                        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                        <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                       </>
                     )}
                   </button>
@@ -437,13 +481,13 @@ export default function GuestSimulationPage() {
                     {transcript.slice(0, -1).map((item, index) => (
                       <div key={index} className="grid gap-1.5">
                         <div className="flex gap-3">
-                          <span className="font-mono text-[10px] text-neutral-400 pt-0.5">Q</span>
-                          <p className="text-sm font-medium text-neutral-700">{item.question}</p>
+                          <span className="font-mono text-[11px] font-bold text-neutral-400 pt-0.5">Q</span>
+                          <p className="text-[15px] font-medium text-neutral-700">{item.question}</p>
                         </div>
                         {item.answer && (
                           <div className="flex gap-3">
-                            <span className="font-mono text-[10px] text-[#E8600A] pt-0.5">A</span>
-                            <p className="text-sm text-neutral-500">{item.answer}</p>
+                            <span className="font-mono text-[11px] font-bold text-[#E8600A] pt-0.5">A</span>
+                            <p className="text-[15px] text-neutral-600">{item.answer}</p>
                           </div>
                         )}
                       </div>
@@ -468,8 +512,8 @@ export default function GuestSimulationPage() {
                 <h1 className="font-inter text-[28px] font-black leading-[1.08] text-neutral-950 sm:text-[36px]">
                   Демо-режим завершён
                 </h1>
-                <p className="mt-4 font-inter text-[15px] leading-relaxed text-neutral-600">
-                  Вы прошли 3 вопроса. Зарегистрируйтесь, чтобы получить полный разбор, prep-card и доступ ко всем сценариям.
+                <p className="mt-5 font-inter text-[17px] leading-relaxed text-neutral-600">
+                  Вы прошли 3 вопроса. Зарегистрируйтесь, чтобы получить полный разбор, памятку перед встречей и доступ ко всем сценариям.
                 </p>
               </div>
 
@@ -493,13 +537,13 @@ export default function GuestSimulationPage() {
                   <div className="mt-7 grid gap-3 border-t border-neutral-200 pt-7">
                     <Link
                       href="/register?return=/simulation/from-guest"
-                      className="group flex h-12 w-full items-center justify-center gap-3 bg-neutral-950 px-8 font-inter text-sm font-bold text-white transition-colors hover:bg-[#E8600A]"
+                      className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-10 text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
                     >
                       Разблокировать отчёт
-                      <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                      <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                     </Link>
                     <p className="text-center font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                      Сохранить прогресс и получить prep-card
+                      Сохранить прогресс и получить памятку
                     </p>
                   </div>
                 </div>

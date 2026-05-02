@@ -290,7 +290,7 @@ const weeklyRhythm = [
   { day: 'Чт', threads: 'разбор сценария', telegram: 'пост про продукт', instagram: '—' },
   { day: 'Пт', threads: 'прямой CTA', telegram: 'приглашение на пробу', instagram: 'карусель' },
   { day: 'Сб', threads: 'личная история', telegram: 'короткий итог', instagram: 'stories' },
-  { day: 'Вс', threads: 'вывод недели', telegram: 'weekly review', instagram: '—' },
+  { day: 'Вс', threads: 'вывод недели', telegram: 'итоги недели', instagram: '—' },
 ];
 
 const analyticsEvents = [
@@ -421,7 +421,7 @@ function ContentUnitCard() {
           ['Ситуация', 'CFO просит урезать бюджет на 30%'],
           ['Неудобный вопрос', 'Что сломается, если урезать эту статью на 50%?'],
           ['Слабый ответ', 'Команда не успеет.'],
-          ['Сильный ответ', 'Сдвинется релиз для клиента X, риск потери Y млн pipeline, компромисс — урезать Z, но сохранить A.'],
+          ['Сильный ответ', 'Сдвинется релиз для клиента X, риск потери Y млн из воронки, компромисс — урезать Z, но сохранить A.'],
           ['CTA', 'Проверьте свой материал на 3 вопросах.'],
         ].map(([label, value], index) => (
           <div key={label} className="grid gap-3 border border-black/8 bg-[rgba(17,24,39,0.02)] px-4 py-3 sm:grid-cols-[130px_1fr]">
@@ -824,7 +824,7 @@ export default function MarketingPlanPage() {
           {
             icon: AlertTriangle,
             title: 'Чего не говорить',
-            text: 'Не “AI-коуч”, не “публичные выступления”, не “soft skills”, не игра и не челлендж.',
+            text: 'Не “ИИ-коуч”, не “публичные выступления”, не “мягкие навыки”, не игра и не челлендж.',
           },
           {
             icon: FileText,
