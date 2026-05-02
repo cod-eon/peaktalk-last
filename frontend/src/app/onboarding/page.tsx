@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2, Download, Monitor, Smartphone } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { getUTM } from '@/lib/utm';
 
 type Segment = 'manager' | 'head' | 'founder' | 'customer_facing' | 'other';
 type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
@@ -127,6 +128,11 @@ function OnboardingForm() {
         setIsSubmitting(true);
         try {
             await api.post('/me/onboarding', { segment, primary_goal: goal });
+            // Send UTM for OAuth users (email signups already have it in user_metadata)
+            const utm = getUTM();
+            if (utm.utm_source) {
+                await api.post('/me/utm', utm).catch(() => {});
+            }
             setStep(3);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Ошибка сохранения';

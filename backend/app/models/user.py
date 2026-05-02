@@ -50,6 +50,13 @@ class User(Base):
     notification_email_enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
     notification_push_enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
 
+    # UTM tracking (first-touch attribution)
+    utm_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    utm_medium: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    utm_campaign: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    utm_content: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    utm_term: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     onboarding_profile: Mapped["OnboardingProfile | None"] = relationship(
         "OnboardingProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
