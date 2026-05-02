@@ -42,6 +42,7 @@ from app.schemas.admin import (
     AdminStatsResponse,
     AdminSubscriptionItem,
     AdminSubscriptionsResponse,
+    AdminUtmStatsResponse,
     AdminUserDetail,
     AdminUserItem,
     AdminUsersResponse,
@@ -50,6 +51,10 @@ from app.schemas.admin import (
     MaintenanceUpdateRequest,
     SetPlanRequest,
     SetPlanResponse,
+    UtmCampaignRow,
+    UtmDayPoint,
+    UtmMediumRow,
+    UtmSourceRow,
 )
 from app.services.app_settings import MAINTENANCE_MODE_KEY, get_maintenance_mode, set_maintenance_mode
 
@@ -737,3 +742,102 @@ async def delete_expired_guest_sessions(
         _admin.email,
     )
     return {"deleted": deleted_count}
+
+
+@router.get("/utm/stats", response_model=AdminUtmStatsResponse)
+async def get_utm_stats(
+    _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> AdminUtmStatsResponse:
+    """UTM attribution statistics: breakdown by source, medium, campaign."""
+
+    total_tracked = await db.scalar(
+        select(func.count()).select_from(User).where(User.utm_source.isnot(None))
+    ) or 0
+    total_direct = await db.scalar(
+        select(func.count()).select_from(User).where(User.utm_source == "direct")
+    ) or 0
+
+    # Sources
+    src_rows = (
+        await db.execute(
+            select(
+                func.coalesce(User.utm_source, "direct").label("source"),
+                func.count().label("count"),
+                func.min(User.created_at).label("first_at"),
+                func.max(User.created_at).label("latest_at"),
+            )
+            .group_by(func.coalesce(User.utm_source, "direct"))
+            .order_by(func.count().desc())
+        )
+    ).all()
+    sources = [
+        UtmSourceRow(
+            source=r.source,
+            count=r.count,
+            pct=round(r.count / max(total_tracked, 1) * 100, 1),
+            first_at=r.first_at,
+            latest_at=r.latest_at,
+        )
+        for r in src_rows
+    ]
+
+    # Mediums
+    med_rows = (
+        await db.execute(
+            select(
+                func.coalesce(User.utm_medium, "(none)").label("medium"),
+                func.count().label("count"),
+            )
+            .group_by(func.coalesce(User.utm_medium, "(none)"))
+            .order_by(func.count().desc())
+            .limit(20)
+        )
+    ).all()
+    mediums = [UtmMediumRow(medium=r.medium, count=r.count) for r in med_rows]
+
+    # Campaigns
+    cam_rows = (
+        await db.execute(
+            select(
+                func.coalesce(User.utm_campaign, "(none)").label("campaign"),
+                func.count().label("count"),
+            )
+            .group_by(func.coalesce(User.utm_campaign, "(none)"))
+            .order_by(func.count().desc())
+            .limit(20)
+        )
+    ).all()
+    campaigns = [UtmCampaignRow(campaign=r.campaign, count=r.count) for r in cam_rows]
+
+    # By day (last 30 days)
+    since = datetime.now(timezone.utc) - timedelta(days=30)
+    day_rows = (
+        await db.execute(
+            select(
+                func.date_trunc("day", User.created_at).label("date"),
+                func.coalesce(User.utm_source, "direct").label("source"),
+                func.count().label("count"),
+            )
+            .where(User.created_at >= since)
+            .group_by("date", "source")
+            .order_by("date")
+        )
+    ).all()
+    by_day = [
+        UtmDayPoint(
+            date=r.date.strftime("%Y-%m-%d") if r.date else "",
+            source=r.source,
+            count=r.count,
+        )
+        for r in day_rows
+    ]
+
+    return AdminUtmStatsResponse(
+        sources=sources,
+        mediums=mediums,
+        campaigns=campaigns,
+        by_day=by_day,
+        total_tracked=total_tracked,
+        total_direct=total_direct,
+    )

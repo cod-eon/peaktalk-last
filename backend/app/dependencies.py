@@ -102,8 +102,19 @@ async def get_current_user(
         if not email:
             logger.warning("auth: no email for user_id=%s, cannot provision", user_id)
             raise credentials_exception
+
+        # Read first-touch UTM from Supabase user_metadata (set during sign-up)
+        utm_meta = (sb_user.user_metadata or {}) if sb_user else {}
         try:
-            user = User(id=user_id, email=email)
+            user = User(
+                id=user_id,
+                email=email,
+                utm_source=utm_meta.get("utm_source"),
+                utm_medium=utm_meta.get("utm_medium"),
+                utm_campaign=utm_meta.get("utm_campaign"),
+                utm_content=utm_meta.get("utm_content"),
+                utm_term=utm_meta.get("utm_term"),
+            )
             db.add(user)
             await db.flush()
             await db.refresh(user)

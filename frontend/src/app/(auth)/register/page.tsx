@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CheckCircle2 } from "lucide-react";
 import { translateAuthError } from "@/lib/authErrors";
+import { getUTM } from "@/lib/utm";
 
 function RegisterForm() {
   const [name, setName] = useState("");
@@ -30,11 +31,12 @@ function RegisterForm() {
     const nextUrl = returnUrl ? `/onboarding?return=${encodeURIComponent(returnUrl)}` : '/onboarding';
 
     const supabase = createClient();
+    const utm = getUTM();
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { display_name: name },
+        data: { display_name: name, ...utm },
         captchaToken,
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
       },
@@ -181,10 +183,14 @@ router.push(nextUrl);
         <button
           type="button"
           onClick={async () => {
+            const returnUrl = searchParams.get('return');
+            const nextParam = returnUrl
+              ? `?next=${encodeURIComponent(`/onboarding?return=${encodeURIComponent(returnUrl)}`)}`
+              : '';
             const supabase = createClient();
             await supabase.auth.signInWithOAuth({
               provider: 'google',
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
+              options: { redirectTo: `${window.location.origin}/auth/callback${nextParam}` },
             });
           }}
           className="flex-1 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-none py-2.5 flex items-center justify-center gap-2 transition-colors"

@@ -33,3 +33,11 @@ class OnboardingProfileCreate(BaseModel):
 class UserUpdate(BaseModel):
     notification_email_enabled: bool | None = None
     notification_push_enabled: bool | None = None
+
+
+class UtmData(BaseModel):
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
+    utm_content: str | None = None
+    utm_term: str | None = None

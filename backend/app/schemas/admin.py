@@ -197,3 +197,41 @@ class MaintenanceStatusResponse(BaseModel):
 
 class MaintenanceUpdateRequest(BaseModel):
     enabled: bool
+
+
+# ---------------------------------------------------------------------------
+# UTM stats
+# ---------------------------------------------------------------------------
+
+
+class UtmSourceRow(BaseModel):
+    source: str
+    count: int
+    pct: float
+    first_at: datetime | None = None
+    latest_at: datetime | None = None
+
+
+class UtmMediumRow(BaseModel):
+    medium: str
+    count: int
+
+
+class UtmCampaignRow(BaseModel):
+    campaign: str
+    count: int
+
+
+class UtmDayPoint(BaseModel):
+    date: str
+    source: str
+    count: int
+
+
+class AdminUtmStatsResponse(BaseModel):
+    sources: list[UtmSourceRow]
+    mediums: list[UtmMediumRow]
+    campaigns: list[UtmCampaignRow]
+    by_day: list[UtmDayPoint]
+    total_tracked: int
+    total_direct: int

@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.dependencies import _get_supabase, get_current_user
 from app.models.user import OnboardingProfile, User
-from app.schemas.user import OnboardingProfileCreate, UserResponse, UserUpdate
+from app.schemas.user import OnboardingProfileCreate, UserResponse, UserUpdate, UtmData
 
 logger = logging.getLogger("peaktalk.users")
 
@@ -94,7 +94,7 @@ async def update_me(
         current_user.notification_push_enabled = body.notification_push_enabled
 
     await db.flush()
-    
+
     # Reload with onboarding profile
     result = await db.execute(
         select(User)
@@ -102,4 +102,23 @@ async def update_me(
         .where(User.id == current_user.id)
     )
     return result.scalar_one()
+
+
+@router.post("/utm", status_code=status.HTTP_204_NO_CONTENT)
+async def save_utm(
+    body: UtmData,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Save first-touch UTM data. Only writes if utm_source is not already set."""
+    if current_user.utm_source is not None:
+        return
+
+    current_user.utm_source = body.utm_source
+    current_user.utm_medium = body.utm_medium
+    current_user.utm_campaign = body.utm_campaign
+    current_user.utm_content = body.utm_content
+    current_user.utm_term = body.utm_term
+    await db.flush()
+    logger.info("save_utm: saved for user_id=%s source=%s", current_user.id, body.utm_source)
 
