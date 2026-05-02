@@ -27,29 +27,33 @@ export type UtmData = {
 export function captureUTM(): void {
   if (typeof window === 'undefined') return;
 
-  // Already captured — first-touch, never overwrite
-  if (localStorage.getItem(STORAGE_KEY)) return;
+  try {
+    // Already captured — first-touch, never overwrite
+    if (localStorage.getItem(STORAGE_KEY)) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const hasUtm = UTM_KEYS.some((k) => params.has(k));
+    const params = new URLSearchParams(window.location.search);
+    const hasUtm = UTM_KEYS.some((k) => params.has(k));
 
-  const data: UtmData = hasUtm
-    ? {
-        utm_source: params.get('utm_source'),
-        utm_medium: params.get('utm_medium'),
-        utm_campaign: params.get('utm_campaign'),
-        utm_content: params.get('utm_content'),
-        utm_term: params.get('utm_term'),
-      }
-    : {
-        utm_source: 'direct',
-        utm_medium: null,
-        utm_campaign: null,
-        utm_content: null,
-        utm_term: null,
-      };
+    const data: UtmData = hasUtm
+      ? {
+          utm_source: params.get('utm_source'),
+          utm_medium: params.get('utm_medium'),
+          utm_campaign: params.get('utm_campaign'),
+          utm_content: params.get('utm_content'),
+          utm_term: params.get('utm_term'),
+        }
+      : {
+          utm_source: 'direct',
+          utm_medium: null,
+          utm_campaign: null,
+          utm_content: null,
+          utm_term: null,
+        };
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // localStorage unavailable (private browsing, quota, etc.) — no-op
+  }
 }
 
 export function getUTM(): UtmData {
@@ -57,12 +61,11 @@ export function getUTM(): UtmData {
     return { utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null };
   }
 
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return { utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null };
-  }
-
   try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return { utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null };
+    }
     return JSON.parse(raw) as UtmData;
   } catch {
     return { utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null };
@@ -71,5 +74,5 @@ export function getUTM(): UtmData {
 
 export function clearUTM(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* no-op */ }
 }

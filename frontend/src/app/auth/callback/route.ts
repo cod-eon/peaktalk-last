@@ -43,7 +43,7 @@ export async function GET(request: Request) {
         if (meRes.ok) {
           const me = await meRes.json();
           if (!me?.onboarding_profile) {
-            return NextResponse.redirect(`${origin}/onboarding`);
+            return NextResponse.redirect(`${origin}${next}`);
           }
         }
       } catch {
