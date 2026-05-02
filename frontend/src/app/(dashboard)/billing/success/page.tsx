@@ -9,9 +9,13 @@ import { useBillingStore } from '@/store/billingStore';
 export default function BillingSuccessPage() {
   const { fetchStatus, status, isLoading } = useBillingStore();
 
-  const isPaidPlan = false || false;
-  const isConfirmed = Boolean(isPaidPlan && status?.subscription.status === 'active');
-  const planLabel = false ? 'TEAM' : 'PRO';
+  const activePlan = status?.subscription.plan;
+  const isPaidPlan = Boolean(activePlan && ['personal', 'pro', 'team'].includes(activePlan));
+  const hasSessionCredit = (status?.usage.session_credits ?? 0) > 0;
+  const isConfirmed = Boolean(
+    status?.subscription.status === 'active' && (isPaidPlan || hasSessionCredit),
+  );
+  const planLabel = hasSessionCredit && !isPaidPlan ? 'РАЗОВАЯ СЕССИЯ' : (activePlan ?? 'pro').toUpperCase();
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',

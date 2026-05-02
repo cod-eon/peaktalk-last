@@ -29,6 +29,7 @@ export interface BillingSubscription {
 export interface BillingUsage {
   simulations_used: number;
   documents_uploaded: number;
+  session_credits: number;
   period_start: string;
 }
 
@@ -45,8 +46,8 @@ export interface BillingStatus {
   limits: BillingLimits;
   can_start_simulation: boolean;
   can_upload_document: boolean;
+  can_use_pdf: boolean;
   payments_enabled: boolean;
-  session_credits?: number;
 }
 
 export interface PaymentMethodSummary {

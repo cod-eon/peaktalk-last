@@ -105,18 +105,27 @@ export default function GuestSimulationPage() {
     const params = new URLSearchParams(window.location.search);
     const isFromScenario = params.get('from_scenario') === 'true';
     if (isFromScenario) {
-      setHasScenarioParam(true);
       const ctx = localStorage.getItem('peaktalk_guest_context');
-      if (ctx) setText(ctx);
+      if (ctx) {
+        setHasScenarioParam(true);
+        setText(ctx);
+      }
     }
     const p = params.get('persona');
-    if (p) setHasScenarioParam(true);
     
     // Map scenario categories to our 3 guest personas, or just use the exact match
-    const mapped = p === 'investors' ? 'investor' : p === 'clients' ? 'client' : p === 'cfo' || p === 'budget' || p === 'roadmap' ? 'cfo' : p;
+    const mapped = p === 'investors' ? 'investor' : p === 'clients' ? 'client' : p === 'cfo' || p === 'budget' || p === 'roadmap' || p === 'people' || p === 'crisis' ? 'cfo' : p;
     if (mapped && PERSONAS.some(x => x.id === mapped)) setSelectedPersona(mapped);
     const d = params.get('difficulty');
-    if (d && DIFFICULTIES.some(x => x.value === Number(d))) setSelectedDifficulty(Number(d));
+    if (d) {
+      const requestedDifficulty = Number(d);
+      const closestDifficulty = DIFFICULTIES.reduce((closest, item) =>
+        Math.abs(item.value - requestedDifficulty) < Math.abs(closest.value - requestedDifficulty)
+          ? item
+          : closest,
+      DIFFICULTIES[1]);
+      setSelectedDifficulty(closestDifficulty.value);
+    }
   }, []);
 
   const transcript = useMemo(() => {
