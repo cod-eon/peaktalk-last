@@ -14,9 +14,9 @@ export interface ScenarioCatalogItem extends Scenario {
 }
 
 export const START_PRESSURE_OPTIONS = [
-  { value: 2, label: 'Мягко', range: '1–3' },
-  { value: 5, label: 'Стандарт', range: '4–6' },
-  { value: 8, label: 'Жёстко', range: '7–10' },
+  { value: 1, label: 'Мягко', range: '1–2' },
+  { value: 3, label: 'Стандарт', range: '3–4' },
+  { value: 5, label: 'Жёстко', range: '5' },
 ] as const
 
 const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [

@@ -173,7 +173,7 @@ function BillingContent() {
   const highlightPerSession = planParam === 'per_session';
 
   const paymentsEnabled = status?.payments_enabled ?? true;
-  const sessionCredits = status?.session_credits ?? 0;
+  const sessionCredits = status?.usage.session_credits ?? 0;
 
   const handleTestSetPlan = useCallback(
     async (plan: 'free' | 'personal' | 'pro' | 'team', periodDays?: number) => {
@@ -552,16 +552,20 @@ function BillingContent() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PLAN_DISPLAY.map((p) => {
                 const isCurrent = p.id === plan;
-                const isDowngrade = false && p.id !== 'team';
+                const planRank: Record<string, number> = {
+                  free: 0,
+                  starter: 0,
+                  per_session: 0,
+                  personal: 1,
+                  pro: 2,
+                  team: 3,
+                };
+                const isDowngrade = planRank[p.id] < planRank[plan];
                 const canUpgradeToPlan =
                   paymentsEnabled &&
                   !isCurrent &&
                   !isDowngrade &&
-                  (
-                    (plan === 'free' || false || plan === 'per_session') ||
-                    (false && (false || false)) ||
-                    (false && false)
-                  );
+                  planRank[p.id] > planRank[plan];
 
                 return (
                   <div

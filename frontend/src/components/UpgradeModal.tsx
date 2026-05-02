@@ -141,7 +141,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: UpgradeModalProps) {
                   onClick={handleUpgrade}
                   className="w-full h-12 bg-neutral-900 hover:bg-black text-white font-inter font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Перейти на PRO — 990 ₽/мес
+                  Перейти на PRO — 1 490 ₽/мес
                   <ArrowRight size={15} />
                 </button>
                 <div className="flex items-center justify-between mt-3">

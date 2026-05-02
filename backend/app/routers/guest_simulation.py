@@ -4,8 +4,6 @@ Allows unauthenticated users to run a 3-question stress-test session.
 After 3 turns the response carries a paywall payload directing the user
 to either pay-per-session (299 ₽) or register for free.
 """
-from __future__ import annotations
-
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone

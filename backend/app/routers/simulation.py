@@ -979,7 +979,7 @@ async def start_from_guest(
         )
 
     # 1. Consume limits
-    await consume_session_credit(str(current_user.id), db)
+    consumed_credit = await consume_session_credit(str(current_user.id), db)
     await increment_simulation_counter(str(current_user.id), db)
 
     # 2. Transfer session
@@ -987,6 +987,7 @@ async def start_from_guest(
         "role": guest.persona,
         "industry": "general",
         "difficulty": body.difficulty,
+        "paid_access": consumed_credit,
     }
 
     session = SimulationSession(

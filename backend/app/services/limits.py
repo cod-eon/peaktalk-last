@@ -221,7 +221,14 @@ async def get_usage_counter(user_id: str, db: AsyncSession) -> UsageCounter:
     if period_start.tzinfo is None:
         period_start = period_start.replace(tzinfo=timezone.utc)
 
-    if now > period_start + timedelta(days=BILLING_PERIOD_DAYS):
+    subscription = await get_user_subscription(user_id, db)
+    effective_plan = _effective_plan(subscription)
+    should_reset_period = (
+        effective_plan in _SUBSCRIPTION_PLANS
+        and now > period_start + timedelta(days=BILLING_PERIOD_DAYS)
+    )
+
+    if should_reset_period:
         logger.info(
             "limits: billing period rolled over, resetting sim counter user_id=%s "
             "old_period_start=%s simulations_used=%d",

@@ -219,7 +219,8 @@ export default function ScenarioDetailPage() {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}`);
+        localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
+        router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);
         return;
       }
 

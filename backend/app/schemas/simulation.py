@@ -61,7 +61,7 @@ class SimulationStartRequest(BaseModel):
 
 class StartFromScenarioRequest(BaseModel):
     scenario_id: uuid.UUID
-    difficulty: int = Field(default=3, ge=1, le=10)
+    difficulty: int = Field(default=3, ge=1, le=5)
 
 
 class StartFromScenarioResponse(BaseModel):

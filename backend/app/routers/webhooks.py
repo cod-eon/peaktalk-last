@@ -11,6 +11,7 @@ YooKassa webhook setup:
 """
 
 import logging
+import ipaddress
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -107,18 +108,67 @@ def _resolve_yookassa_event_type(event: YookassaWebhookEvent) -> str:
     return event.event or event.type
 
 
-def _extract_plan_from_payment(payment_obj: dict) -> PlanType:
+def _extract_plan_from_payment(payment_obj: dict) -> PlanType | None:
     """Derive PlanType from YooKassa payment metadata."""
     meta = payment_obj.get("metadata") or {}
     plan_value = meta.get("plan", "")
     try:
         return PlanType(plan_value)
     except ValueError:
-        # Fallback: inspect description
         desc = (payment_obj.get("description") or "").lower()
+        if "per_session" in desc or "одна полная сессия" in desc:
+            return PlanType.per_session
+        if "personal" in desc:
+            return PlanType.personal
+        if "pro" in desc:
+            return PlanType.pro
         if "team" in desc:
             return PlanType.team
-        return PlanType.pro
+        logger.warning(
+            "webhooks/yookassa: unable to resolve plan from metadata/description "
+            "payment_id=%s plan=%r",
+            payment_obj.get("id"),
+            plan_value,
+        )
+        return None
+
+
+def _request_origin_ip(request: Request) -> str:
+    """Return the caller IP, trusting X-Forwarded-For only from local/private proxies."""
+    client_host = request.client.host if request.client else ""
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    if not forwarded_for:
+        return client_host
+
+    try:
+        client_addr = ipaddress.ip_address(client_host)
+    except ValueError:
+        return client_host
+
+    if client_addr.is_private or client_addr.is_loopback:
+        return forwarded_for.split(",")[0].strip()
+    return client_host
+
+
+def _verify_yookassa_secret(request: Request) -> None:
+    """Optionally verify a shared webhook secret if configured."""
+    if not settings.yookassa_webhook_secret:
+        return
+
+    header_secret = (
+        request.headers.get("X-Webhook-Secret")
+        or request.headers.get("X-Yookassa-Webhook-Secret")
+    )
+    bearer = request.headers.get("Authorization")
+    if header_secret == settings.yookassa_webhook_secret:
+        return
+    if bearer == f"Bearer {settings.yookassa_webhook_secret}":
+        return
+    logger.warning("webhooks/yookassa: invalid webhook secret")
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid webhook secret",
+    )
 
 
 async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None:
@@ -153,6 +203,8 @@ async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None
 
     # Resolve plan from metadata
     plan = _extract_plan_from_payment(payment_obj)
+    if plan is None:
+        return
 
     # Extract payment amount
     amount_obj = payment_obj.get("amount") or {}
@@ -260,7 +312,13 @@ async def _handle_payment_cancelled(payment_obj: dict, db: AsyncSession) -> None
         select(Subscription).where(Subscription.user_id == user_id)
     )
     subscription = result2.scalar_one_or_none()
-    if subscription is not None and subscription.status != SubscriptionStatus.active:
+    is_recurrent_failure = (
+        (meta.get("type") == "recurrent")
+        or bool(meta.get("subscription_id"))
+    )
+    if subscription is not None and (
+        is_recurrent_failure or subscription.status != SubscriptionStatus.active
+    ):
         subscription.status = SubscriptionStatus.past_due
         await db.flush()
         logger.info(
@@ -284,11 +342,10 @@ async def yookassa_webhook(
       - payment.cancelled  → mark payment failed, set subscription past_due
       - refund.succeeded   → logged only (no subscription changes in MVP)
     """
+    _verify_yookassa_secret(request)
+
     # IP allowlist verification
-    client_host = request.client.host if request.client else ""
-    # X-Forwarded-For header is set by Nginx reverse proxy
-    forwarded_for = request.headers.get("X-Forwarded-For", "")
-    real_ip = forwarded_for.split(",")[0].strip() if forwarded_for else client_host
+    real_ip = _request_origin_ip(request)
 
     if settings.app_env != "development" and not verify_webhook_ip(real_ip):
         logger.warning("webhooks/yookassa: request from untrusted IP %s rejected", real_ip)

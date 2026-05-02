@@ -236,7 +236,7 @@ def renew_subscriptions_task(self) -> dict:
                 select(Subscription)
                 .where(
                     and_(
-                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.plan.in_([PlanType.personal, PlanType.pro, PlanType.team]),
                         Subscription.status == SubscriptionStatus.active,
                         Subscription.period_end.isnot(None),
                         Subscription.period_end <= renewal_cutoff,
@@ -285,7 +285,7 @@ def renew_subscriptions_task(self) -> dict:
                 select(Subscription)
                 .where(
                     and_(
-                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.plan.in_([PlanType.personal, PlanType.pro, PlanType.team]),
                         Subscription.status == SubscriptionStatus.past_due,
                         Subscription.period_end.isnot(None),
                         Subscription.period_end > grace_cutoff,
@@ -331,10 +331,11 @@ def renew_subscriptions_task(self) -> dict:
                 select(Subscription)
                 .where(
                     and_(
-                        Subscription.plan.in_([PlanType.pro, PlanType.team]),
+                        Subscription.plan.in_([PlanType.personal, PlanType.pro, PlanType.team]),
                         Subscription.period_end.isnot(None),
                         Subscription.period_end <= grace_cutoff,
                         or_(
+                            Subscription.status == SubscriptionStatus.active,
                             Subscription.status == SubscriptionStatus.past_due,
                             Subscription.status == SubscriptionStatus.cancelled,
                         ),
@@ -345,13 +346,13 @@ def renew_subscriptions_task(self) -> dict:
             log.info("renew_subscriptions: found %d expired subscriptions to downgrade", len(expired_subs))
 
             for sub in expired_subs:
-                sub.plan = PlanType.starter
+                sub.plan = PlanType.free
                 sub.status = SubscriptionStatus.active
                 sub.period_end = None
                 sub.yookassa_payment_method_id = None
                 sub.yookassa_subscription_id = None
                 downgraded += 1
-                log.info("renew: downgraded to starter user_id=%s", sub.user_id)
+                log.info("renew: downgraded to free user_id=%s", sub.user_id)
 
             await db.commit()
 

@@ -8,6 +8,7 @@ from app.models.guest import GuestSession
 from app.models.personalized_persona import PersonalizedPersona
 from app.models.draft import SpeechDraft
 from app.models.simulation import ArtifactType, SessionArtifact, SessionStatus, SimulationSession
+from app.services.limits import get_usage_counter
 from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import SimulationTurn, SkillEvaluation
 from .conftest import TEST_USER_ID
@@ -68,6 +69,7 @@ async def _mock_generate_question_error(**kw) -> SimulationTurn:
 @pytest.fixture(autouse=True)
 def mock_ai(monkeypatch):
     monkeypatch.setattr("app.routers.simulation.generate_question", _mock_generate_question)
+    monkeypatch.setattr("app.routers.guest_simulation.generate_question", _mock_generate_question)
     monkeypatch.setattr("app.routers.simulation.evaluate_session", _mock_evaluate_session)
     monkeypatch.setattr("app.routers.simulation.generate_prep_card", _mock_generate_prep_card)
 
@@ -87,6 +89,34 @@ async def session_id(client: AsyncClient, draft_id: str) -> str:
     resp = await client.post("/simulation/start", json=payload)
     assert resp.status_code == 201
     return resp.json()["id"]
+
+
+@pytest.mark.asyncio
+async def test_guest_start_creates_session(client: AsyncClient) -> None:
+    resp = await client.post("/simulation/guest-start", json={
+        "text": "Нужно защитить бюджет внедрения перед CFO и показать риски сокращения.",
+        "persona": "cfo",
+        "difficulty": 5,
+    })
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["first_question"] == MOCK_TURN.question
+    assert data["turn"] == 1
+    assert data["max_turns"] == 3
+    assert data["remaining_turns"] == 2
+
+
+@pytest.mark.asyncio
+async def test_guest_start_rejects_missing_required_field(client: AsyncClient) -> None:
+    resp = await client.post("/simulation/guest-start", json={
+        "persona": "cfo",
+        "difficulty": 3,
+    })
+    assert resp.status_code == 422
+    assert any(
+        error["type"] == "missing" and error["loc"][-1] == "text"
+        for error in resp.json()["detail"]
+    )
 
 
 @pytest.mark.asyncio
@@ -137,6 +167,10 @@ async def test_start_from_guest_uses_public_token_and_active_status(
     db_session.add(guest)
     await db_session.commit()
 
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 1
+    await db_session.commit()
+
     resp = await client.post("/simulation/from-guest", json={
         "guest_session_id": token,
         "difficulty": 3,
@@ -146,10 +180,15 @@ async def test_start_from_guest_uses_public_token_and_active_status(
     session = await db_session.get(SimulationSession, uuid.UUID(resp.json()["id"]))
     assert session is not None
     assert session.status == SessionStatus.active
+    assert session.persona_config["paid_access"] is True
     assert session.draft_id is not None
     draft = await db_session.get(SpeechDraft, session.draft_id)
     assert draft is not None
     assert draft.raw_text == guest.text
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    await db_session.refresh(counter)
+    assert counter.session_credits == 0
 
 
 @pytest.fixture
