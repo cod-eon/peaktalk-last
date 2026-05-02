@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "0019_add_utm"
-down_revision = "603c38a86660"
+down_revision = "0018_launch_blocker_indexes"
 branch_labels = None
 depends_on = None
 
