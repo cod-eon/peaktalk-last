@@ -33,13 +33,6 @@ const PLAN_DISPLAY: Array<{
   features: string[];
 }> = [
   {
-    id: 'per_session',
-    name: 'РАЗОВАЯ',
-    price: '299 ₽',
-    badge: 'без подписки',
-    features: ['1 полноценная сессия', 'Любая персона', 'PDF-отчёт', 'Шпаргалка'],
-  },
-  {
     id: 'personal',
     name: 'PERSONAL',
     price: '790 ₽/мес',
@@ -57,7 +50,7 @@ const PLAN_DISPLAY: Array<{
     id: 'team',
     name: 'TEAM',
     price: '4 990 ₽/мес',
-    badge: 'для команд',
+    badge: 'в разработке',
     features: ['5 мест', 'Всё из PRO', 'Командный dashboard', 'Общая библиотека документов'],
   },
 ];
@@ -136,13 +129,19 @@ function StatusBadge({ status }: { status?: string }) {
   if (status === 'active') {
     return <span className="inline-flex items-center gap-1.5 border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 rounded-none"><span className="h-1.5 w-1.5 bg-emerald-500" />Активна</span>;
   }
+  if (status === 'trialing') {
+    return <span className="inline-flex border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 rounded-none">Пробный период</span>;
+  }
   if (status === 'cancelled') {
     return <span className="inline-flex border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-500 rounded-none">Отменена</span>;
   }
   if (status === 'past_due') {
     return <span className="inline-flex border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 rounded-none">Проблема оплаты</span>;
   }
-  return <span className="inline-flex border border-neutral-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-500 rounded-none">Не активна</span>;
+  if (status === 'incomplete') {
+    return <span className="inline-flex border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 rounded-none">Требует подтверждения оплаты</span>;
+  }
+  return <span className="inline-flex border border-neutral-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-500 rounded-none">{status ?? 'Нет подписки'}</span>;
 }
 
 export default function BillingPage() {
@@ -154,7 +153,8 @@ export default function BillingPage() {
 }
 
 function BillingContent() {
-  const { status, isLoading, isPro } = useBillingStore();
+  const { status, isLoading } = useBillingStore();
+  const isPro = useBillingStore((s) => s.isPro());
   const { refetch } = useBilling();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -244,7 +244,7 @@ function BillingContent() {
         <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8600A]">billing control</div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#111827]">Подписка и лимиты</h1>
         <p className="max-w-2xl text-sm text-[#73706A]">
-          Оплата должна помогать подготовке к сложной встрече, а не превращаться в отдельный квест.
+          Оплата должна оставаться понятной частью подготовки к сложной встрече.
         </p>
       </div>
 
@@ -396,7 +396,7 @@ function BillingContent() {
               {PLAN_DISPLAY.map((p) => {
                 const isCurrent = p.id === plan;
                 const isDowngrade = PLAN_RANK[p.id] < PLAN_RANK[plan];
-                const canUpgradeToPlan = paymentsEnabled && !isCurrent && !isDowngrade && PLAN_RANK[p.id] > PLAN_RANK[plan];
+                const canUpgradeToPlan = paymentsEnabled && p.id !== 'team' && !isCurrent && !isDowngrade && PLAN_RANK[p.id] > PLAN_RANK[plan];
 
                 return (
                   <div
@@ -429,7 +429,8 @@ function BillingContent() {
                         </button>
                       )}
                       {!isCurrent && !paymentsEnabled && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">Скоро</div>}
-                      {isDowngrade && !isCurrent && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">Ваш тариф выше</div>}
+                      {p.id === 'team' && !isCurrent && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">В разработке</div>}
+                      {isDowngrade && !isCurrent && p.id !== 'team' && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">Ваш тариф выше</div>}
                       {isCurrent && <div className="w-full border border-[#111827] bg-[#111827] px-3 py-2.5 text-center text-sm font-bold text-white">Активирован</div>}
                     </div>
                   </div>

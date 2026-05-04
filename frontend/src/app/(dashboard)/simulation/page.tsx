@@ -230,6 +230,7 @@ function SimulationPageContent() {
     const [docSearch, setDocSearch] = useState('');
     const docDropdownRef = useRef<HTMLDivElement>(null);
     const docTriggerRef = useRef<HTMLButtonElement>(null);
+    const sessionRequestIdRef = useRef(0);
 
     // Step section refs for auto-scroll on mobile
     const step2Ref = useRef<HTMLElement>(null);
@@ -246,11 +247,13 @@ function SimulationPageContent() {
 
 
     const fetchSessionPage = useCallback(async (page: number, opts?: { scroll?: boolean }) => {
+        const requestId = ++sessionRequestIdRef.current;
         const safePage = Math.max(1, page);
         setSessionsPageLoading(true);
         try {
             const offset = (safePage - 1) * SESSION_PAGE_SIZE;
             const res = await api.get(`/simulation?limit=${SESSION_PAGE_SIZE}&offset=${offset}`);
+            if (requestId !== sessionRequestIdRef.current) return;
             const items: SessionItem[] = res?.items ?? [];
             const total = Number(res?.total ?? items.length);
             setSessions(items);
@@ -261,28 +264,32 @@ function SimulationPageContent() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch {
-            toast.error('Не удалось загрузить историю симуляций');
+            if (requestId === sessionRequestIdRef.current) {
+                toast.error('Не удалось загрузить историю симуляций');
+            }
         } finally {
-            setSessionsLoading(false);
-            setSessionsPageLoading(false);
+            if (requestId === sessionRequestIdRef.current) {
+                setSessionsLoading(false);
+                setSessionsPageLoading(false);
+            }
         }
     }, []);
 
     // Load sessions, personas and documents on mount
     useEffect(() => {
         async function fetchAll() {
-            const [sessionsRes, personasRes, docsRes, statsRes] = await Promise.allSettled([
-                api.get(`/simulation?limit=${SESSION_PAGE_SIZE}&offset=0`),
+            const [sessionsRes, personasRes, docsRes] = await Promise.allSettled([
+                api.get(`/simulation?limit=${STATS_SAMPLE_SIZE}&offset=0`),
                 api.get('/simulation/personas'),
                 api.get('/documents?limit=200'),
-                api.get(`/simulation?limit=${STATS_SAMPLE_SIZE}&offset=0`),
             ]);
 
             // Sessions
             if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.items) {
                 const items: SessionItem[] = sessionsRes.value.items;
                 const total = Number(sessionsRes.value.total ?? items.length);
-                setSessions(items);
+                setStatsSessions(items);
+                setSessions(items.slice(0, SESSION_PAGE_SIZE));
                 setSessionTotal(total);
                 setSessionPage(1);
                 setView(total > 0 ? 'history' : 'setup');
@@ -290,12 +297,6 @@ function SimulationPageContent() {
                 setView('setup');
             }
             setSessionsLoading(false);
-
-            if (statsRes.status === 'fulfilled' && statsRes.value?.items) {
-                setStatsSessions(statsRes.value.items as SessionItem[]);
-            } else if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.items) {
-                setStatsSessions(sessionsRes.value.items as SessionItem[]);
-            }
 
             // Personas
             if (personasRes.status === 'fulfilled' && personasRes.value?.personas) {
@@ -575,6 +576,7 @@ function SimulationPageContent() {
                         : null;
                     const delta = avgRecent != null && prevAvg != null ? avgRecent - prevAvg : null;
                     const lastScore = scores10.length ? scores10[scores10.length - 1] : null;
+                    const sampleCount = sample.length;
                     const completedCount = completedForStats.length;
                     const activeCount = sample.filter(s => s.status === 'active').length;
                     const cancelledCount = sample.filter(s => s.status === 'cancelled').length;
@@ -689,7 +691,7 @@ function SimulationPageContent() {
 
                             <div className={kpi}>
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Практика</span>
+                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Последние {sampleCount}</span>
                                     <BarChart3 size={16} className="text-[#111827]" />
                                 </div>
                                 <div>
@@ -708,7 +710,7 @@ function SimulationPageContent() {
                                         </div>
                                     </div>
                                     <p className="mt-3 text-xs leading-relaxed text-[#73706A]">
-                                        {lastScore != null ? `Последняя оценка: ${lastScore}/10.` : 'Начните первую завершённую сессию.'}
+                                        {lastScore != null ? `Срез по последним ${sampleCount} сессиям. Последняя оценка: ${lastScore}/10.` : `Срез по последним ${sampleCount} сессиям.`}
                                     </p>
                                 </div>
                             </div>

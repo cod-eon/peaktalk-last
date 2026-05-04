@@ -8,7 +8,6 @@ import {
   Minus,
   BarChart2,
   Loader2,
-  Zap,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -181,19 +180,22 @@ function ProgressContent() {
   const trendEntries = Object.entries(data.metric_trends);
 
   return (
-    <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
+    <div className="pb-16 pt-6 sm:pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Прогресс</h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
-            Динамика навыков по результатам ваших симуляций.
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
+            readiness trend
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Прогресс</h1>
+          <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
+            Динамика устойчивости аргументации по завершённым стресс-тестам.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200">
-          <Zap size={16} className="text-neutral-600" />
-          <span className="text-sm font-semibold text-neutral-900">{data.total_sessions}</span>
-          <span className="text-sm text-neutral-500">
+        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#D9D5CC]">
+          <BarChart2 size={16} className="text-[#73706A]" />
+          <span className="text-sm font-semibold text-[#111827]">{data.total_sessions}</span>
+          <span className="text-sm text-[#73706A]">
             {data.total_sessions === 1 ? 'сессия' : data.total_sessions < 5 ? 'сессии' : 'сессий'}
           </span>
         </div>
@@ -206,9 +208,9 @@ function ProgressContent() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.03 }}
-          className="bg-white rounded-none border border-neutral-200 p-6"
+          className="bg-white rounded-none border border-[#D9D5CC] p-6"
         >
-          <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
+          <h2 className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-5">
             Динамика по метрикам
           </h2>
 
@@ -261,9 +263,9 @@ function ProgressContent() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.06 }}
-          className="bg-white rounded-none border border-neutral-200 p-6"
+          className="bg-white rounded-none border border-[#D9D5CC] p-6"
         >
-          <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-4">
+          <h2 className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-4">
             Последние сессии
           </h2>
           <LastSessions trajectory={data.trajectory} />
