@@ -77,3 +77,8 @@ frontend/tsconfig.tsbuildinfo
 
 # ── Claude internal ───────────────────────────────────────────────────────────
 .claude/
+
+# Build artifacts & tooling cache
+.next/
+.playwright-mcp/
+.mcp.json
