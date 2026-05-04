@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, FileText, Type, Terminal, Activity, Zap, CheckCircle2, Sparkles } from 'lucide-react';
+import { UploadCloud, FileText, Type, Terminal, Activity, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -155,15 +155,18 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="flex w-full flex-col justify-start px-4 sm:px-6 py-8 sm:py-12 md:py-20 max-w-4xl mx-auto relative z-10 box-border">
+        <div className="flex w-full flex-col justify-start px-4 sm:px-6 pt-6 sm:pt-10 pb-20 max-w-4xl mx-auto relative z-10 box-border font-inter">
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-10">
-                <h1 className="text-2xl sm:text-3xl md:text-5xl font-inter font-bold text-neutral-900 mb-3 sm:mb-4 tracking-tight">
-                    Прокачай свой материал
+                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
+                    material intake
+                </div>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-inter font-black text-[#111827] mb-3 sm:mb-4 tracking-tight">
+                    Проверить материал
                 </h1>
-                <p className="text-neutral-500 text-sm md:text-base max-w-lg mx-auto leading-relaxed px-2">
-                    Загрузи сценарий или черновик. Мы проверим его на прочность, найдем логические дыры и подготовим вопросы для стресс-теста.
+                <p className="text-[#73706A] text-sm md:text-base max-w-lg mx-auto leading-relaxed px-2">
+                    Загрузите сценарий или черновик. PeakTalk проверит аргументацию, найдёт логические разрывы и подготовит вопросы для стресс-теста.
                 </p>
             </div>
 
@@ -248,8 +251,8 @@ export default function UploadPage() {
                                                         <div className={`p-4 rounded-none mb-4 transition-colors ${isDragging ? 'bg-neutral-100 text-neutral-900' : 'bg-neutral-50 border border-neutral-200 text-neutral-500'}`}>
                                                             <UploadCloud size={28} strokeWidth={1.5} />
                                                         </div>
-                                                        <h3 className="text-neutral-900 font-medium mb-1">Брось черновик сюда</h3>
-                                                        <p className="text-neutral-400 text-xs mb-6 text-center max-w-[240px]">(AI разберется, или просто кликни)</p>
+                                                        <h3 className="text-neutral-900 font-medium mb-1">Загрузите черновик</h3>
+                                                        <p className="text-neutral-400 text-xs mb-6 text-center max-w-[240px]">Перетащите файл сюда или выберите его вручную</p>
 
                                                         <div className="flex gap-2 flex-wrap justify-center">
                                                             {['PDF', 'DOCX', 'TXT'].map((ext) => (
@@ -313,11 +316,11 @@ export default function UploadPage() {
                                         className="w-full sm:w-auto bg-[#171717] hover:bg-black text-white font-medium relative rounded-none px-6 py-2.5 min-h-[44px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         <span className="flex items-center gap-2 justify-center">
-                                            <Zap size={16} /> Сделать текст сильнее
+                                            <ShieldCheck size={16} /> Запустить проверку
                                         </span>
                                     </button>
                                     <span className="text-[10px] text-neutral-400 font-medium flex items-center gap-1">
-                                        <Sparkles size={10} className="text-neutral-400" />
+                                        <ShieldCheck size={10} className="text-neutral-400" />
                                         Потребует 1 анализ
                                     </span>
                                 </div>

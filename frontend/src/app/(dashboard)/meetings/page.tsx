@@ -353,12 +353,12 @@ function MeetingCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.2 }}
-      className="bg-white border border-neutral-200 p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-neutral-400 transition-colors group"
+      className="bg-white border border-[#D9D5CC] p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-[#111827] transition-colors group"
     >
       {/* Date column */}
       <div className="flex sm:flex-col items-center sm:items-start gap-1.5 sm:w-[72px] shrink-0">
-        <div className="w-10 h-10 flex items-center justify-center bg-neutral-50 border border-neutral-200">
-          <CalendarDays size={18} className="text-neutral-400" />
+        <div className="w-10 h-10 flex items-center justify-center bg-[#FAF8F4] border border-[#D9D5CC]">
+          <CalendarDays size={18} className="text-[#73706A]" />
         </div>
         <div className="sm:hidden flex flex-col">
           <span className="text-[12px] font-inter text-neutral-900 font-medium">
@@ -384,7 +384,7 @@ function MeetingCard({
       {/* Info column */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
-          <h3 className="font-inter text-[14px] font-semibold text-neutral-900 truncate">
+          <h3 className="font-inter text-[14px] font-bold text-[#111827] truncate">
             {meeting.title}
           </h3>
           <span
@@ -428,7 +428,7 @@ function MeetingCard({
         {(meeting.status === "upcoming" || meeting.status === "prepared") && (
           <button
             onClick={() => onStartSimulation(meeting.id)}
-            className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white text-[12px] font-semibold px-4 py-2 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#111827] hover:bg-black text-white text-[12px] font-semibold px-4 py-2 transition-colors cursor-pointer"
           >
             <Zap size={12} />
             <span className="hidden sm:inline">{hasActivePreparation ? "Продолжить подготовку" : "Подготовиться"}</span>
@@ -576,15 +576,18 @@ export default function MeetingsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="pb-16 pt-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
+    <div className="pb-16 pt-6 sm:pt-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 font-inter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
+            meeting pipeline
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">
             Встречи
           </h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
-            Ближайшие встречи и подготовка к защите.
+          <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
+            Ближайшие разговоры, дедлайны и подготовка к защите решений.
           </p>
         </div>
         <button
@@ -630,7 +633,7 @@ export default function MeetingsPage() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25 }}
-              className="flex items-center gap-6 mb-6 px-4 py-3 bg-neutral-50 border border-neutral-200"
+              className="flex items-center gap-6 mb-6 px-4 py-3 bg-white border border-[#D9D5CC]"
             >
               <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-inter">
                 <CalendarDays size={13} className="text-neutral-400" />

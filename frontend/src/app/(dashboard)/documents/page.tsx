@@ -22,6 +22,7 @@ type Doc = {
 type DocListResponse = { items: Doc[]; total: number };
 
 const FILTERS = ['Все', 'Файлы', 'Тексты'] as const;
+const DOCUMENTS_PAGE_SIZE = 12;
 type Filter = (typeof FILTERS)[number];
 
 function getExtBadgeClass(doc: Doc): string {
@@ -52,11 +53,12 @@ export default function DocumentsPage() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<Filter>('Все');
+    const [currentPage, setCurrentPage] = useState(1);
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
     const { data, isLoading, error, refetch } = useQuery<DocListResponse>({
         queryKey: ['documents'],
-        queryFn: () => api.get('/documents'),
+        queryFn: () => api.get('/documents?limit=200'),
     });
 
     const deleteMutation = useMutation({
@@ -81,6 +83,11 @@ export default function DocumentsPage() {
             return matchSearch && matchFilter;
         });
     }, [data, search, activeFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / DOCUMENTS_PAGE_SIZE));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const pageStart = (safeCurrentPage - 1) * DOCUMENTS_PAGE_SIZE;
+    const pagedDocuments = filtered.slice(pageStart, pageStart + DOCUMENTS_PAGE_SIZE);
 
     const hasDocuments = (data?.items?.length ?? 0) > 0;
 
@@ -112,7 +119,10 @@ export default function DocumentsPage() {
                     <input
                         type="text"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }}
                         placeholder="Поиск по названию..."
                         className="w-full bg-white border border-neutral-200 rounded-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200 py-2.5 pl-9 pr-8 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors min-h-[44px]"
                     />
@@ -122,7 +132,10 @@ export default function DocumentsPage() {
                         </kbd>
                     )}
                     {search && (
-                        <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <button onClick={() => {
+                            setSearch('');
+                            setCurrentPage(1);
+                        }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <X size={13} />
                         </button>
                     )}
@@ -133,7 +146,10 @@ export default function DocumentsPage() {
                         {FILTERS.map((f) => (
                             <button
                                 key={f}
-                                onClick={() => setActiveFilter(f)}
+                                onClick={() => {
+                                    setActiveFilter(f);
+                                    setCurrentPage(1);
+                                }}
                                 className={`px-3 py-1.5 rounded-none text-sm transition-all min-h-[36px] ${
                                     activeFilter === f
                                         ? 'bg-white shadow-sm text-gray-900 font-medium'
@@ -146,7 +162,9 @@ export default function DocumentsPage() {
                     </div>
 
                     {data && (
-                        <span className="text-xs text-neutral-400 sm:ml-auto">{filtered.length} / {data.total}</span>
+                        <span className="text-xs text-neutral-400 sm:ml-auto">
+                            {filtered.length ? `${pageStart + 1}–${Math.min(pageStart + DOCUMENTS_PAGE_SIZE, filtered.length)} из ${filtered.length}` : `0 из ${data.total}`}
+                        </span>
                     )}
                 </div>
             </div>
@@ -180,12 +198,18 @@ export default function DocumentsPage() {
                     {search ? (
                         <>
                             <p className="text-sm text-neutral-400">Ничего не найдено по «{search}»</p>
-                            <button onClick={() => setSearch('')} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Сбросить поиск</button>
+                            <button onClick={() => {
+                                setSearch('');
+                                setCurrentPage(1);
+                            }} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Сбросить поиск</button>
                         </>
                     ) : (
                         <>
                             <p className="text-sm text-neutral-400">В этой категории нет документов</p>
-                            <button onClick={() => setActiveFilter('Все')} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Показать все</button>
+                            <button onClick={() => {
+                                setActiveFilter('Все');
+                                setCurrentPage(1);
+                            }} className="mt-2 text-xs text-neutral-600 hover:text-neutral-900 hover:underline">Показать все</button>
                         </>
                     )}
                 </div>
@@ -201,7 +225,7 @@ export default function DocumentsPage() {
                         </div>
 
                         {/* Rows */}
-                        {filtered.map((doc) => {
+                        {pagedDocuments.map((doc) => {
                             const ext = getExt(doc);
                             const isDeleting = deleteMutation.isPending && deleteMutation.variables === doc.id;
 
@@ -303,6 +327,51 @@ export default function DocumentsPage() {
                             );
                         })}
                     </div>
+                    {filtered.length > DOCUMENTS_PAGE_SIZE && (
+                        <div className="mt-4 border border-neutral-200 bg-white p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-neutral-400">
+                                {pageStart + 1}–{Math.min(pageStart + DOCUMENTS_PAGE_SIZE, filtered.length)} из {filtered.length}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    disabled={safeCurrentPage <= 1}
+                                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                    className="min-h-[40px] border border-neutral-200 px-3 text-sm font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 hover:border-neutral-900 hover:text-neutral-900 transition-colors"
+                                >
+                                    Назад
+                                </button>
+                                <div className="hidden sm:flex items-center gap-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                        .filter((page) => page === 1 || page === totalPages || Math.abs(page - safeCurrentPage) <= 1)
+                                        .map((page, index, pages) => (
+                                            <React.Fragment key={page}>
+                                                {index > 0 && page - pages[index - 1] > 1 && <span className="px-2 text-neutral-400">…</span>}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`min-w-10 min-h-[40px] border px-3 font-mono text-[11px] font-bold transition-colors ${
+                                                        page === safeCurrentPage
+                                                            ? 'border-neutral-900 bg-neutral-900 text-white'
+                                                            : 'border-neutral-200 text-neutral-500 hover:border-neutral-900 hover:text-neutral-900'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            </React.Fragment>
+                                        ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={safeCurrentPage >= totalPages}
+                                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                    className="min-h-[40px] border border-neutral-200 px-3 text-sm font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 hover:border-neutral-900 hover:text-neutral-900 transition-colors"
+                                >
+                                    Далее
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
 

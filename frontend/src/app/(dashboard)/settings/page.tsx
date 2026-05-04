@@ -143,21 +143,24 @@ export default function SettingsPage() {
     }
   };
 
-  const inputClasses = "w-full bg-white border border-neutral-200 text-neutral-900 rounded-none py-2.5 px-3.5 text-sm focus:outline-none focus:ring-0 focus:border-neutral-900 transition-all font-inter ";
+  const inputClasses = "w-full bg-white border border-[#D9D5CC] text-[#111827] rounded-none py-2.5 px-3.5 text-sm focus:outline-none focus:ring-0 focus:border-[#111827] transition-all font-inter ";
 
   return (
-    <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 font-inter bg-white min-h-screen">
+    <div className="pb-16 pt-6 sm:pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 font-inter">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Настройки</h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">Управление профилем и безопасностью аккаунта.</p>
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
+            account control
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Настройки</h1>
+          <p className="text-sm font-medium text-[#73706A] mt-1">Профиль, доступ и рабочие уведомления аккаунта.</p>
         </div>
         <button
           onClick={handleSignOut}
           disabled={isLoggingOut}
-          className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-neutral-200 text-neutral-700 text-sm font-semibold rounded-none hover:border-neutral-400 hover:text-red-600 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-[#D9D5CC] text-[#111827] text-sm font-semibold rounded-none hover:border-[#111827] hover:text-red-600 transition-colors disabled:opacity-50"
         >
           {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
           Выйти из аккаунта
@@ -165,7 +168,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-neutral-200 flex gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="border-b border-[#D9D5CC] flex gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -191,7 +194,7 @@ export default function SettingsPage() {
         <div className="w-full relative mt-6">
           
           {activeTab === 'profile' && (
-            <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
+            <div className="bg-white border border-[#D9D5CC] rounded-none p-6 md:p-8 space-y-8">
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-neutral-200">
                 <div className="w-16 h-16 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-none border border-neutral-300 flex items-center justify-center shrink-0 ">

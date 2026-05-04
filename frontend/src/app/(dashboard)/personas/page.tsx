@@ -109,8 +109,8 @@ function PersonaForm({
   };
 
   const inputClass =
-    'w-full bg-white border border-neutral-200 text-neutral-900 text-sm rounded-none px-3 py-2 focus:outline-none focus:border-neutral-900 transition-colors placeholder:text-neutral-300';
-  const labelClass = 'block text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1.5';
+    'w-full bg-white border border-[#D9D5CC] text-[#111827] text-sm rounded-none px-3 py-2 focus:outline-none focus:border-[#111827] transition-colors placeholder:text-neutral-300';
+  const labelClass = 'block font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-1.5';
 
   return (
     <motion.form
@@ -119,10 +119,10 @@ function PersonaForm({
       exit={{ opacity: 0, y: 8 }}
       transition={{ duration: 0.2 }}
       onSubmit={handleSubmit}
-      className="bg-white rounded-none border border-neutral-200 p-6"
+      className="bg-white rounded-none border border-[#D9D5CC] p-6"
     >
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
+        <h2 className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase">
           {initial.name ? 'Редактирование' : 'Новая персона'}
         </h2>
         <button
@@ -297,16 +297,16 @@ function PersonaCard({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="bg-white rounded-none border border-neutral-200 p-4 hover:border-neutral-300 transition-colors"
+      className="bg-white rounded-none border border-[#D9D5CC] p-4 hover:border-[#111827] transition-colors"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-            <Bot size={18} className="text-neutral-600" />
+          <div className="w-10 h-10 rounded-none bg-[#FAF8F4] border border-[#D9D5CC] flex items-center justify-center shrink-0">
+            <Bot size={18} className="text-[#111827]" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-bold text-neutral-900 truncate">{persona.name}</div>
-            <div className="text-[12px] text-neutral-500">{persona.role}</div>
+            <div className="text-sm font-bold text-[#111827] truncate">{persona.name}</div>
+            <div className="text-[12px] text-[#73706A]">{persona.role}</div>
           </div>
         </div>
 
@@ -353,7 +353,7 @@ function PersonaCard({
         {/* Use in simulation button */}
         <button
           onClick={() => router.push(`/simulation?persona=${persona.id}`)}
-          className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#D4570A] bg-[#FEF3E8] border border-[#F9BD8E] px-2.5 py-1 rounded-none ml-auto hover:bg-[#FDDEC4] transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8600A] bg-[#FEF3E8] border border-[#F9BD8E] px-2.5 py-1 rounded-none ml-auto hover:bg-[#FDDEC4] transition-colors cursor-pointer"
         >
           <Play size={9} />
           Использовать в симуляции
@@ -535,13 +535,16 @@ function PersonasContent() {
   const isFormOpen = showForm || editingPersona !== null;
 
   return (
-    <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
+    <div className="pb-16 pt-6 sm:pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Персоны</h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
-            Ваши персонализированные персонажи для симуляций.
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
+            persona bench
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Персоны</h1>
+          <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
+            Управляйте ролями оппонентов для стресс-тестов: инвестор, клиент, руководитель или стейкхолдер.
           </p>
         </div>
         {!isFormOpen && (

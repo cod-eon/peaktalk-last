@@ -44,18 +44,18 @@ export default function BillingSuccessPage() {
   }, [fetchStatus, isConfirmed]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 font-inter bg-white min-h-screen">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
-          <div className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-2">
-            Платежи
+          <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
+            billing control
           </div>
-          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">
             {isConfirmed ? 'Подписка подключена' : 'Платёж получен'}
           </h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
+          <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
             {isConfirmed
-              ? 'Биллинг подтвердил активацию тарифа. Можно возвращаться к тренировкам.'
+              ? 'Биллинг подтвердил активацию тарифа. Можно возвращаться к симуляциям.'
               : 'Ждём подтверждение от платёжного провайдера и синхронизацию статуса.'}
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function BillingSuccessPage() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="bg-white border border-neutral-200 rounded-none p-6 md:p-8"
+          className="bg-white border border-[#D9D5CC] rounded-none p-6 md:p-8"
         >
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)] gap-6 items-start">
             <div className="flex flex-col gap-6">
@@ -91,8 +91,8 @@ export default function BillingSuccessPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-neutral-200 bg-neutral-50 p-4">
-                  <div className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-2">
+                <div className="border border-[#D9D5CC] bg-[#FAF8F4] p-4">
+                  <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
                     Тариф
                   </div>
                   <div className="text-lg font-bold text-neutral-900 tracking-tight">
@@ -103,8 +103,8 @@ export default function BillingSuccessPage() {
                   </div>
                 </div>
 
-                <div className="border border-neutral-200 bg-neutral-50 p-4">
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-2">
+                <div className="border border-[#D9D5CC] bg-[#FAF8F4] p-4">
+                  <div className="flex items-center gap-2 font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
                     <CreditCard size={12} />
                     Биллинг
                   </div>
@@ -120,9 +120,9 @@ export default function BillingSuccessPage() {
               </div>
             </div>
 
-            <div className="border border-neutral-200 bg-white p-5 flex flex-col gap-3">
+            <div className="border border-[#D9D5CC] bg-white p-5 flex flex-col gap-3">
               <div>
-                <div className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-2">
+                <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
                   Следующее действие
                 </div>
                 <p className="text-sm text-neutral-600 leading-relaxed">
