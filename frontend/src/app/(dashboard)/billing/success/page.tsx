@@ -15,7 +15,7 @@ export default function BillingSuccessPage() {
   const isConfirmed = Boolean(
     status?.subscription.status === 'active' && (isPaidPlan || hasSessionCredit),
   );
-  const planLabel = hasSessionCredit && !isPaidPlan ? 'РАЗОВАЯ СЕССИЯ' : (activePlan ?? 'pro').toUpperCase();
+  const planLabel = hasSessionCredit && !isPaidPlan ? 'Разовая сессия' : (activePlan ?? 'pro').toUpperCase();
   const periodEnd = status?.subscription.period_end
     ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
         day: 'numeric',
@@ -48,7 +48,7 @@ export default function BillingSuccessPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
           <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
-            billing control
+            Подписка
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">
             {isConfirmed ? 'Подписка подключена' : 'Платёж получен'}

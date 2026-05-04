@@ -184,9 +184,6 @@ function ProgressContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
-            readiness trend
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Прогресс</h1>
           <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
             Динамика устойчивости аргументации по завершённым стресс-тестам.

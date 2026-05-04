@@ -16,7 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
@@ -157,7 +157,6 @@ function BillingContent() {
   const isPro = useBillingStore((s) => s.isPro());
   const { refetch } = useBilling();
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const planParam = searchParams.get('plan');
   const returnPath = searchParams.get('return') ?? undefined;
@@ -241,7 +240,6 @@ function BillingContent() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
       <div className="mb-6 sm:mb-8 flex flex-col gap-2">
-        <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8600A]">billing control</div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#111827]">Подписка и лимиты</h1>
         <p className="max-w-2xl text-sm text-[#73706A]">
           Оплата должна оставаться понятной частью подготовки к сложной встрече.
@@ -291,7 +289,7 @@ function BillingContent() {
             </motion.div>
           )}
 
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className={`grid grid-cols-1 gap-5 ${!isPaidPlan ? "xl:grid-cols-[minmax(0,1fr)_360px]" : ""}`}>
             <motion.section
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -314,14 +312,6 @@ function BillingContent() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {paymentsEnabled && !isPaidPlan && (
-                      <button
-                        onClick={() => router.push('/billing?plan=per_session')}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#111827] px-4 text-sm font-bold text-white hover:bg-black rounded-none"
-                      >
-                        <Zap size={14} /> Разовая сессия
-                      </button>
-                    )}
                     {paymentsEnabled && isPaidPlan && subStatus === 'active' && (
                       <button
                         onClick={handleCancel}
@@ -375,7 +365,7 @@ function BillingContent() {
               )}
             </motion.section>
 
-            <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />
+            {!isPaidPlan && <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />}
           </div>
 
           <motion.section

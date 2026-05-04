@@ -245,11 +245,12 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       break;
   }
 
-  const simulationsLeft = billing?.simulationsLeft ?? 0;
-  const plan: PlanId = billing?.status?.subscription.plan === 'per_session' ? 'per_session' : 'free';
+  const simulationsLeft = billing?.simulationsLeft;
+  const plan: PlanId = (billing?.status?.subscription.plan as PlanId) ?? 'free';
+  const isUnlimited = simulationsLeft === null && ['pro', 'team'].includes(plan);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -257,9 +258,15 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
     >
       <div className="flex items-center gap-3 mb-6">
         <PlanBadge plan={plan} />
-        <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
-          Осталось симуляций: {simulationsLeft}
-        </span>
+        {isUnlimited ? (
+          <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
+            Безлимитные симуляции
+          </span>
+        ) : (
+          <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
+            Осталось симуляций: {simulationsLeft ?? 0}
+          </span>
+        )}
       </div>
       
       <h1 className="text-3xl sm:text-5xl font-black text-[#111827] tracking-tight mb-4">

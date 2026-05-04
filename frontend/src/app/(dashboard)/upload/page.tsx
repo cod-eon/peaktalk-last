@@ -159,9 +159,6 @@ export default function UploadPage() {
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-10">
-                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
-                    material intake
-                </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-inter font-black text-[#111827] mb-3 sm:mb-4 tracking-tight">
                     Проверить материал
                 </h1>

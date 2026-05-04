@@ -24,20 +24,36 @@ export function useBilling() {
     }
   }, [data]);
 
+  const effectiveStatus = status ?? data ?? null;
+
+  const getSimulationsLeft = () => {
+    if (!effectiveStatus) return null;
+    const limit = effectiveStatus.limits.simulations_per_month;
+    if (limit === null) return null;
+    return Math.max(0, limit - effectiveStatus.usage.simulations_used);
+  };
+
+  const getDocumentsLeft = () => {
+    if (!effectiveStatus) return null;
+    const limit = effectiveStatus.limits.documents_total;
+    if (limit === null) return null;
+    return Math.max(0, limit - effectiveStatus.usage.documents_uploaded);
+  };
+
   const openUpgrade = useCallback(
     (reason: UpgradeReason) => openUpgradeModal(reason),
     [openUpgradeModal],
   );
 
   return {
-    status: status ?? data ?? null,
+    status: effectiveStatus,
     isLoading: isLoading || queryLoading,
     isPro: isPro(),
     isStarter: isStarter(),
-    simulationsLeft: simulationsLeft(),
-    documentsLeft: documentsLeft(),
-    canStartSimulation: status?.can_start_simulation ?? true,
-    canUploadDocument: status?.can_upload_document ?? true,
+    simulationsLeft: status ? simulationsLeft() : getSimulationsLeft(),
+    documentsLeft: status ? documentsLeft() : getDocumentsLeft(),
+    canStartSimulation: effectiveStatus?.can_start_simulation ?? true,
+    canUploadDocument: effectiveStatus?.can_upload_document ?? true,
     openUpgrade,
     refetch: fetchStatus,
   };

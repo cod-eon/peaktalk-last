@@ -580,9 +580,6 @@ export default function MeetingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] mb-2">
-            meeting pipeline
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">
             Встречи
           </h1>
