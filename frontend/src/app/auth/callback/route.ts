@@ -5,7 +5,13 @@ import { cookies } from 'next/headers';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/dashboard';
+  const requestedNext = searchParams.get('next');
+  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
+    ? requestedNext
+    : '/dashboard';
+  const onboardingRedirect = next.startsWith('/onboarding')
+    ? next
+    : `/onboarding?return=${encodeURIComponent(next)}`;
 
   // Reconstruct public origin from forwarded headers set by Nginx.
   // request.url contains the internal Docker hostname, not the public domain.
@@ -43,7 +49,7 @@ export async function GET(request: Request) {
         if (meRes.ok) {
           const me = await meRes.json();
           if (!me?.onboarding_profile) {
-            return NextResponse.redirect(`${origin}${next}`);
+            return NextResponse.redirect(`${origin}${onboardingRedirect}`);
           }
         }
       } catch {

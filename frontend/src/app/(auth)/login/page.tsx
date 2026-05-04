@@ -18,6 +18,20 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const getReturnUrl = () => {
+    const returnUrl = searchParams.get('return');
+
+    return returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/dashboard';
+  };
+
+  const getOnboardingUrl = (returnUrl: string) => {
+    if (returnUrl.startsWith('/onboarding')) {
+      return returnUrl;
+    }
+
+    return `/onboarding?return=${encodeURIComponent(returnUrl)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -39,7 +53,29 @@ function LoginForm() {
       return;
     }
 
-    const returnUrl = searchParams.get('return') || '/dashboard';
+    const returnUrl = getReturnUrl();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const meRes = await fetch(`${apiUrl}/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+
+        if (meRes.ok) {
+          const me = await meRes.json();
+          router.push(me?.onboarding_profile ? returnUrl : getOnboardingUrl(returnUrl));
+          router.refresh();
+          return;
+        }
+      } catch {
+        // Keep the existing redirect if the profile check is unavailable.
+      }
+    }
+
     router.push(returnUrl);
     router.refresh();
   };
@@ -134,10 +170,14 @@ function LoginForm() {
         <button
           type="button"
           onClick={async () => {
+            const returnUrl = getReturnUrl();
+            const nextParam = returnUrl
+              ? `?next=${encodeURIComponent(getOnboardingUrl(returnUrl))}`
+              : '';
             const supabase = createClient();
             await supabase.auth.signInWithOAuth({
               provider: 'google',
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
+              options: { redirectTo: `${window.location.origin}/auth/callback${nextParam}` },
             });
           }}
           className="flex-1 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-none py-2.5 flex items-center justify-center gap-2 transition-colors"
