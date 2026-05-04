@@ -1,0 +1,102 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "PeakTalk PeakTalk" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img "PeakTalk" [ref=e6]
+          - generic [ref=e7]: PeakTalk
+        - generic [ref=e9]: 3 вопроса
+    - main [ref=e10]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - text: бесплатный запуск
+              - heading "Проверьте ответ до встречи" [level=1] [ref=e19]
+              - paragraph [ref=e20]: Вставьте материал, выберите оппонента и получите 3 вопроса, которые проверят аргументацию под давлением.
+              - generic [ref=e21]:
+                - generic [ref=e22]: без регистрации
+                - generic [ref=e23]: без карты
+                - generic [ref=e24]: на своём кейсе
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: материал встречи
+                - generic [ref=e28]: 0/8000
+              - textbox "материал встречи" [ref=e29]:
+                - /placeholder: Вставьте тезисы, КП, письмо клиенту, план защиты бюджета или структуру презентации...
+              - generic [ref=e30]:
+                - button "вставить пример" [ref=e31] [cursor=pointer]
+                - generic [ref=e32]: минимум 20 символов
+          - generic [ref=e33]:
+            - generic [ref=e34]:
+              - generic [ref=e35]: кто будет проверять
+              - generic [ref=e36]:
+                - button "Финансы руководитель / финдир Давит на окупаемость, сроки, цену задержки и слабые допущения." [ref=e37] [cursor=pointer]:
+                  - generic [ref=e38]:
+                    - img [ref=e40]
+                    - generic [ref=e42]:
+                      - generic [ref=e43]: Финансы
+                      - generic [ref=e44]: руководитель / финдир
+                      - paragraph [ref=e45]: Давит на окупаемость, сроки, цену задержки и слабые допущения.
+                - button "Инвестор раунд / встреча Проверяет рынок, рост, риски и реалистичность модели." [ref=e46] [cursor=pointer]:
+                  - generic [ref=e47]:
+                    - img [ref=e49]
+                    - generic [ref=e52]:
+                      - generic [ref=e53]: Инвестор
+                      - generic [ref=e54]: раунд / встреча
+                      - paragraph [ref=e55]: Проверяет рынок, рост, риски и реалистичность модели.
+                - button "Руководство приоритеты / ресурсы Спрашивает про trade-offs, ответственность и цену переноса." [ref=e56] [cursor=pointer]:
+                  - generic [ref=e57]:
+                    - img [ref=e59]
+                    - generic [ref=e64]:
+                      - generic [ref=e65]: Руководство
+                      - generic [ref=e66]: приоритеты / ресурсы
+                      - paragraph [ref=e67]: Спрашивает про trade-offs, ответственность и цену переноса.
+                - button "Клиент продление / эскалация Требует доказать ценность, результат и следующий шаг." [ref=e68] [cursor=pointer]:
+                  - generic [ref=e69]:
+                    - img [ref=e71]
+                    - generic [ref=e74]:
+                      - generic [ref=e75]: Клиент
+                      - generic [ref=e76]: продление / эскалация
+                      - paragraph [ref=e77]: Требует доказать ценность, результат и следующий шаг.
+            - generic [ref=e78]:
+              - generic [ref=e79]: давление
+              - generic [ref=e80]:
+                - button "Мягко проверка логики" [ref=e81] [cursor=pointer]:
+                  - generic [ref=e82]: Мягко
+                  - generic [ref=e83]: проверка логики
+                - button "Стандартно рабочее давление" [ref=e84] [cursor=pointer]:
+                  - generic [ref=e85]: Стандартно
+                  - generic [ref=e86]: рабочее давление
+                - button "Жёстко как на встрече" [ref=e87] [cursor=pointer]:
+                  - generic [ref=e88]: Жёстко
+                  - generic [ref=e89]: как на встрече
+          - generic [ref=e90]:
+            - paragraph [ref=e91]: "выбран: Финансы / Стандартно"
+            - button "Запустить 3 вопроса" [disabled] [ref=e92]:
+              - text: Запустить 3 вопроса
+              - img [ref=e93]
+        - complementary [ref=e95]:
+          - generic [ref=e96]:
+            - text: что будет внутри
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - generic [ref=e99]: "01"
+                - generic [ref=e100]: Вопрос оппонента
+                - paragraph [ref=e101]: Сразу по слабому месту, без разогрева.
+              - generic [ref=e102]:
+                - generic [ref=e103]: "02"
+                - generic [ref=e104]: Ваш ответ
+                - paragraph [ref=e105]: Коротко, по делу, с таймером 90 секунд.
+              - generic [ref=e106]:
+                - generic [ref=e107]: "03"
+                - generic [ref=e108]: Переход к разбору
+                - paragraph [ref=e109]: После 3 вопросов можно сохранить сессию.
+          - generic [ref=e111]:
+            - img [ref=e112]
+            - paragraph [ref=e114]: Бесплатный режим не требует карты и не включает автоподписку.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e120] [cursor=pointer]:
+    - img [ref=e121]
+  - alert [ref=e124]

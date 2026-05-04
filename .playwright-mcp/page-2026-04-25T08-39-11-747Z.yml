@@ -1,0 +1,53 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "PeakTalk PeakTalk" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img "PeakTalk" [ref=e6]
+          - generic [ref=e7]: PeakTalk
+        - generic [ref=e8]: guest mode
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - heading "Проверка аргументов" [level=1] [ref=e12]
+          - paragraph [ref=e13]: Вставьте материал, выберите оппонента и запустите 3 вопроса.
+        - generic [ref=e14]: без регистрации / без карты
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]: Материал встречи
+            - generic [ref=e20]: 0/8000
+          - textbox "Материал встречи" [ref=e21]:
+            - /placeholder: Тезисы, КП, письмо клиенту, план защиты бюджета...
+          - button "Вставить пример" [ref=e22] [cursor=pointer]
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: Оппонент
+            - generic [ref=e26]:
+              - button "Руководитель бюджет, ресурсы, сроки" [ref=e27] [cursor=pointer]:
+                - generic [ref=e28]:
+                  - generic [ref=e29]: Руководитель
+                  - generic [ref=e30]: бюджет, ресурсы, сроки
+              - button "Клиент ценность, доверие, продление" [ref=e32] [cursor=pointer]:
+                - generic [ref=e33]:
+                  - generic [ref=e34]: Клиент
+                  - generic [ref=e35]: ценность, доверие, продление
+              - button "Инвестор рост, рынок, риски" [ref=e37] [cursor=pointer]:
+                - generic [ref=e38]:
+                  - generic [ref=e39]: Инвестор
+                  - generic [ref=e40]: рост, рынок, риски
+          - generic [ref=e42]:
+            - generic [ref=e43]: Давление
+            - generic [ref=e44]:
+              - button "Спокойно" [ref=e45] [cursor=pointer]
+              - button "Рабоче" [ref=e46] [cursor=pointer]
+              - button "Жёстко" [ref=e47] [cursor=pointer]
+          - button "Запустить" [disabled] [ref=e48]:
+            - text: Запустить
+            - img [ref=e49]
+          - paragraph [ref=e51]: "Выбрано: Руководитель, рабоче."
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e57] [cursor=pointer]:
+    - img [ref=e58]
+  - alert [ref=e61]

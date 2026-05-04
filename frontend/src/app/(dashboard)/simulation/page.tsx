@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
     Clock, Trophy, Plus, TrendingUp, TrendingDown, Mic, Target, ArrowLeft,
-    Loader2, Zap, Ban, FileText, ChevronDown, Search,
+    Loader2, Zap, Ban, FileText, ChevronDown, Search, ShieldAlert, BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -39,6 +39,9 @@ type MeetingContext = {
     meeting_date: string;
     meeting_type: string;
 };
+
+const SESSION_PAGE_SIZE = 12;
+const STATS_SAMPLE_SIZE = 200;
 
 import {
     SessionItem,
@@ -196,6 +199,10 @@ function SimulationPageContent() {
 
     // Sessions history
     const [sessions, setSessions] = useState<SessionItem[]>([]);
+    const [sessionTotal, setSessionTotal] = useState(0);
+    const [sessionPage, setSessionPage] = useState(1);
+    const [sessionsPageLoading, setSessionsPageLoading] = useState(false);
+    const [statsSessions, setStatsSessions] = useState<SessionItem[]>([]);
     const [, setSessionsLoading] = useState(true);
 
     const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
@@ -237,24 +244,58 @@ function SimulationPageContent() {
         }
     };
 
+
+    const fetchSessionPage = useCallback(async (page: number, opts?: { scroll?: boolean }) => {
+        const safePage = Math.max(1, page);
+        setSessionsPageLoading(true);
+        try {
+            const offset = (safePage - 1) * SESSION_PAGE_SIZE;
+            const res = await api.get(`/simulation?limit=${SESSION_PAGE_SIZE}&offset=${offset}`);
+            const items: SessionItem[] = res?.items ?? [];
+            const total = Number(res?.total ?? items.length);
+            setSessions(items);
+            setSessionTotal(total);
+            setSessionPage(safePage);
+            setView(total > 0 ? 'history' : 'setup');
+            if (opts?.scroll && typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch {
+            toast.error('Не удалось загрузить историю симуляций');
+        } finally {
+            setSessionsLoading(false);
+            setSessionsPageLoading(false);
+        }
+    }, []);
+
     // Load sessions, personas and documents on mount
     useEffect(() => {
         async function fetchAll() {
-            const [sessionsRes, personasRes, docsRes] = await Promise.allSettled([
-                api.get('/simulation?limit=50'),
+            const [sessionsRes, personasRes, docsRes, statsRes] = await Promise.allSettled([
+                api.get(`/simulation?limit=${SESSION_PAGE_SIZE}&offset=0`),
                 api.get('/simulation/personas'),
                 api.get('/documents?limit=200'),
+                api.get(`/simulation?limit=${STATS_SAMPLE_SIZE}&offset=0`),
             ]);
 
             // Sessions
             if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.items) {
                 const items: SessionItem[] = sessionsRes.value.items;
+                const total = Number(sessionsRes.value.total ?? items.length);
                 setSessions(items);
-                setView(items.length > 0 ? 'history' : 'setup');
+                setSessionTotal(total);
+                setSessionPage(1);
+                setView(total > 0 ? 'history' : 'setup');
             } else {
                 setView('setup');
             }
             setSessionsLoading(false);
+
+            if (statsRes.status === 'fulfilled' && statsRes.value?.items) {
+                setStatsSessions(statsRes.value.items as SessionItem[]);
+            } else if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.items) {
+                setStatsSessions(sessionsRes.value.items as SessionItem[]);
+            }
 
             // Personas
             if (personasRes.status === 'fulfilled' && personasRes.value?.personas) {
@@ -482,7 +523,7 @@ function SimulationPageContent() {
                             Симуляции
                         </h1>
                         <p className="font-inter text-neutral-500 text-xs sm:text-sm">
-                            {sessions.length} {sessions.length === 1 ? 'сессия' : sessions.length < 5 ? 'сессии' : 'сессий'} · нажми на любую, чтобы открыть
+                            {sessionTotal} {sessionTotal === 1 ? 'сессия' : sessionTotal < 5 ? 'сессии' : 'сессий'} · история стресс-тестов
                         </p>
                         {(activeSessions.length > 0 || completedSessions.length > 0) && (
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -511,225 +552,165 @@ function SimulationPageContent() {
                         className="inline-flex items-center bg-[#171717] hover:bg-black text-white font-medium shrink-0 gap-2 px-3 sm:px-5 py-2.5 text-sm min-h-[44px] transition-colors"
                     >
                         <Plus size={16} />
-                        <span className="hidden sm:inline">Новая тренировка</span>
+                        <span className="hidden sm:inline">Новый стресс-тест</span>
                         <span className="sm:hidden">Новая</span>
                     </button>
                 </div>
 
                 {/* Stats strip */}
-                {sessions.length > 0 && (() => {
-                    const scores = completedSessions
-                        .filter(s => s.avg_score != null)
-                        .map(s => s.avg_score!);
-                    const avgScoreRaw = scores.length
-                        ? scores.reduce((a, b) => a + b, 0) / scores.length
-                        : null;
-                    const avgScore10 = avgScoreRaw != null ? Math.round(avgScoreRaw * 10) : null;
-                    const bestScore10 = scores.length ? Math.round(Math.max(...scores) * 10) : null;
-
-                    // Прогресс: последняя сессия vs первая (хронологически)
-                    const scoredByDate = completedSessions
+                {sessionTotal > 0 && (() => {
+                    const sample = statsSessions.length > 0 ? statsSessions : sessions;
+                    const completedForStats = sample.filter(s => s.status === 'completed');
+                    const scoredByDate = completedForStats
                         .filter(s => s.avg_score != null)
                         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-                    const progressDelta = scoredByDate.length >= 2
-                        ? Math.round(scoredByDate[scoredByDate.length - 1].avg_score! * 10)
-                          - Math.round(scoredByDate[0].avg_score! * 10)
+                    const scores10 = scoredByDate.map(s => Math.round(s.avg_score! * 10));
+                    const recentScores = scores10.slice(-5);
+                    const avgRecent = recentScores.length
+                        ? Math.round(recentScores.reduce((a, b) => a + b, 0) / recentScores.length)
                         : null;
+                    const prevWindow = scores10.slice(-10, -5);
+                    const prevAvg = prevWindow.length
+                        ? Math.round(prevWindow.reduce((a, b) => a + b, 0) / prevWindow.length)
+                        : null;
+                    const delta = avgRecent != null && prevAvg != null ? avgRecent - prevAvg : null;
+                    const lastScore = scores10.length ? scores10[scores10.length - 1] : null;
+                    const completedCount = completedForStats.length;
+                    const activeCount = sample.filter(s => s.status === 'active').length;
+                    const cancelledCount = sample.filter(s => s.status === 'cancelled').length;
 
-                    // Сложнее всего: роль с наименьшим средним баллом
-                    const roleMap: Record<string, number[]> = {};
-                    completedSessions.forEach(s => {
-                        if (s.avg_score != null) {
-                            const r = s.persona_config.source_type === 'custom'
-                                ? `custom:${s.persona_config.persona_name ?? s.persona_config.role ?? 'custom'}`
-                                : (s.persona_config.role ?? 'unknown');
-                            roleMap[r] = [...(roleMap[r] ?? []), s.avg_score];
-                        }
+                    const roleMap: Record<string, { scores: number[]; label: string }> = {};
+                    completedForStats.forEach(s => {
+                        if (s.avg_score == null) return;
+                        const roleKey = s.persona_config.source_type === 'custom'
+                            ? `custom:${s.persona_config.persona_name ?? s.persona_config.role ?? 'custom'}`
+                            : (s.persona_config.role ?? 'unknown');
+                        roleMap[roleKey] = roleMap[roleKey] ?? {
+                            scores: [],
+                            label: getPersonaDisplayLabel({
+                                source_type: roleKey.startsWith('custom:') ? 'custom' : 'system',
+                                role: roleKey.replace(/^custom:/, ''),
+                                persona_name: roleKey.replace(/^custom:/, ''),
+                                industry: 'general',
+                                difficulty: 3,
+                            }),
+                        };
+                        roleMap[roleKey].scores.push(Math.round(s.avg_score * 10));
                     });
-                    const hardestRole = Object.entries(roleMap)
-                        .map(([role, sc]) => ({
-                            role,
-                            avg: Math.round((sc.reduce((a, b) => a + b, 0) / sc.length) * 10),
+                    const riskRole = Object.values(roleMap)
+                        .filter(r => r.scores.length >= 1)
+                        .map(r => ({
+                            label: r.label,
+                            avg: Math.round(r.scores.reduce((a, b) => a + b, 0) / r.scores.length),
+                            count: r.scores.length,
                         }))
                         .sort((a, b) => a.avg - b.avg)[0] ?? null;
 
-                    const readinessSub = avgScore10 == null ? 'Пройди симуляцию'
-                        : avgScore10 >= 8 ? 'Готов к спичу'
-                        : avgScore10 >= 6 ? 'Есть потенциал'
-                        : avgScore10 >= 4 ? 'Нужна практика'
-                        : 'Серьёзная работа';
-
-                    const TrendIcon = progressDelta != null && progressDelta < 0 ? TrendingDown : TrendingUp;
-                    const trendSub = progressDelta == null
-                        ? 'Пройди ещё один тест, чтобы увидеть динамику'
-                        : progressDelta > 0 ? 'Ты растёшь!'
-                        : progressDelta < 0 ? 'Бывает — встряхнись'
-                        : 'Нет изменений';
-
-                    // Sparkline: последние 7 scored сессий
-                    const sparkScores = scoredByDate.slice(-7).map(s => Math.round(s.avg_score! * 10));
-                    // y: 3 (score=10, top) → 23 (score=0, bottom) — 3px padding for r=2.5 dots
-                    const sparkY = (s: number) => 3 + (1 - s / 10) * 20;
-                    const sparkPoints = sparkScores.length >= 2
-                        ? sparkScores.map((s, i) => {
-                            const x = (i / (sparkScores.length - 1)) * 80;
-                            const y = sparkY(s);
-                            return `${x},${y}`;
-                        }).join(' ')
-                        : null;
-
-                    const hardestVisual = hardestRole
-                        ? getPersonaVisual(
-                            hardestRole.role.startsWith('custom:')
-                                ? {
-                                    source_type: 'custom',
-                                    role: hardestRole.role.replace(/^custom:/, ''),
-                                    persona_name: hardestRole.role.replace(/^custom:/, ''),
-                                    industry: 'general',
-                                    difficulty: 3,
-                                }
-                                : {
-                                    source_type: 'system',
-                                    role: hardestRole.role,
-                                    industry: 'general',
-                                    difficulty: 3,
-                                }
-                        )
-                        : DEFAULT_VISUAL;
-                    const HardestIcon = hardestVisual.icon;
-
-                    const kpiCard = "relative overflow-hidden bg-white border border-neutral-200 p-3 sm:p-4 lg:p-5 transition-all duration-200 flex flex-col";
+                    const readinessLabel = avgRecent == null
+                        ? 'Нет завершённых сессий'
+                        : avgRecent >= 8 ? 'Можно защищать'
+                        : avgRecent >= 6 ? 'Нужна доводка'
+                        : 'Высокий риск';
+                    const readinessTone = avgRecent == null
+                        ? 'bg-neutral-100 text-neutral-500 border-neutral-200'
+                        : avgRecent >= 8 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : avgRecent >= 6 ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-[#FEF3E8] text-[#B04A08] border-[#F9BD8E]';
+                    const DeltaIcon = delta != null && delta < 0 ? TrendingDown : TrendingUp;
+                    const kpi = 'bg-white border border-[#D9D5CC] rounded-none p-4 sm:p-5 min-h-[154px] flex flex-col justify-between';
 
                     return (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-
-                            {/* Индекс готовности */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Готовность</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-neutral-100 flex items-center justify-center">
-                                        <Target size={14} className="text-neutral-500 sm:hidden" />
-                                        <Target size={16} className="text-neutral-500 hidden sm:block" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div className={kpi}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Индекс защиты</span>
+                                    <Target size={16} className="text-[#111827]" />
+                                </div>
+                                <div>
+                                    <div className="flex items-baseline gap-1 text-[#111827]">
+                                        <span className="text-4xl font-black tracking-tight">{avgRecent ?? '—'}</span>
+                                        {avgRecent != null && <span className="text-lg font-semibold text-[#73706A]">/10</span>}
                                     </div>
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {avgScore10 != null ? (
-                                        <>{avgScore10}<span className="text-lg sm:text-xl font-semibold text-gray-400">/10</span></>
-                                    ) : '—'}
-                                </div>
-                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">{readinessSub}</p>
-                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
-                                    <div
-                                        className="h-full bg-neutral-900 rounded-none transition-all duration-700"
-                                        style={{ width: `${(avgScore10 ?? 0) * 10}%` }}
-                                    />
+                                    <div className={`mt-3 inline-flex border px-2.5 py-1 text-[11px] font-semibold rounded-none ${readinessTone}`}>
+                                        {readinessLabel}
+                                    </div>
+                                    <p className="mt-2 text-xs leading-relaxed text-[#73706A]">
+                                        Среднее по последним {recentScores.length || 0} завершённым стресс-тестам.
+                                    </p>
                                 </div>
                             </div>
 
-                            {/* Тренд роста */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Тренд роста</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center bg-neutral-100`}>
-                                        <TrendIcon size={14} className={`text-neutral-500 sm:hidden`} />
-                                        <TrendIcon size={16} className={`text-neutral-500 hidden sm:block`} />
+                            <div className={kpi}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Последняя динамика</span>
+                                    <DeltaIcon size={16} className="text-[#111827]" />
+                                </div>
+                                <div>
+                                    <div className="text-4xl font-black tracking-tight text-[#111827]">
+                                        {delta == null ? '—' : delta === 0 ? '0' : `${delta > 0 ? '+' : ''}${delta}`}
+                                        {delta != null && <span className="text-lg font-semibold text-[#73706A]"> п.</span>}
                                     </div>
-                                </div>
-                                <div className={`text-2xl sm:text-3xl font-bold text-neutral-900`} style={{ letterSpacing: '-0.02em' }}>
-                                    {progressDelta == null ? '—'
-                                        : progressDelta === 0 ? '= 0'
-                                        : `${progressDelta > 0 ? '+' : ''}${progressDelta}б`}
-                                </div>
-                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
-                                    {progressDelta == null ? (
-                                        <span className="text-neutral-500 font-medium">Пройди ещё один тест, чтобы увидеть динамику</span>
-                                    ) : trendSub}
-                                </p>
-                                {sparkPoints && (
-                                    <div className="mt-auto">
-                                        <svg viewBox="0 0 80 26" className="w-full h-8" preserveAspectRatio="none">
-                                            <polyline
-                                                points={sparkPoints}
-                                                fill="none"
-                                                stroke="#171717"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                opacity="0.8"
-                                            />
-                                            {sparkScores.map((s, i) => (
-                                                <circle
-                                                    key={i}
-                                                    cx={(i / (sparkScores.length - 1)) * 80}
-                                                    cy={sparkY(s)}
-                                                    r={i === sparkScores.length - 1 ? 2.5 : 1.5}
-                                                    fill="#171717"
-                                                    opacity={i === sparkScores.length - 1 ? 1 : 0.5}
-                                                />
-                                            ))}
-                                        </svg>
+                                    <p className="mt-2 text-xs leading-relaxed text-[#73706A]">
+                                        {delta == null
+                                            ? 'Появится после нескольких завершённых сессий.'
+                                            : 'Сравнение последних пяти сессий с предыдущими пятью.'}
+                                    </p>
+                                    <div className="mt-3 flex gap-1.5">
+                                        {recentScores.length ? recentScores.map((score, i) => (
+                                            <div key={`${score}-${i}`} className="flex-1 bg-neutral-100 h-7 flex items-end">
+                                                <div className="w-full bg-[#111827]" style={{ height: `${score * 10}%` }} />
+                                            </div>
+                                        )) : <div className="h-7 w-full bg-neutral-100" />}
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Личный рекорд */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Рекорд</span>
-                                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-neutral-100 flex items-center justify-center">
-                                        <Trophy size={14} className="text-neutral-500 sm:hidden" />
-                                        <Trophy size={16} className="text-neutral-500 hidden sm:block" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
-                                    {bestScore10 != null ? (
-                                        <>{bestScore10}<span className="text-lg sm:text-xl font-semibold text-gray-400">/10</span></>
-                                    ) : '—'}
-                                </div>
-                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1 mb-2 sm:mb-3">
-                                    {bestScore10 != null ? 'Личный рекорд' : 'Пройди симуляцию'}
-                                </p>
-                                <div className="mt-auto h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
-                                    <div
-                                        className="h-full bg-neutral-900 rounded-none transition-all duration-700"
-                                        style={{ width: `${(bestScore10 ?? 0) * 10}%` }}
-                                    />
                                 </div>
                             </div>
 
-                            {/* Сложнее всего */}
-                            <div className={kpiCard}>
-                                <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-widest uppercase">Сложнее всего</span>
-                                    <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-none flex items-center justify-center bg-neutral-100`}>
-                                        <HardestIcon size={14} className={`text-neutral-500 sm:hidden`} />
-                                        <HardestIcon size={16} className={`text-neutral-500 hidden sm:block`} />
-                                    </div>
+                            <div className={kpi}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Зона риска</span>
+                                    <ShieldAlert size={16} className="text-[#E8600A]" />
                                 </div>
-                                <div className="text-sm sm:text-lg font-bold text-gray-900 leading-snug flex-1" style={{ letterSpacing: '-0.01em' }}>
-                                    {hardestRole
-                                        ? getPersonaDisplayLabel({
-                                              source_type: hardestRole.role.startsWith('custom:') ? 'custom' : 'system',
-                                              role: hardestRole.role.replace(/^custom:/, ''),
-                                              persona_name: hardestRole.role.replace(/^custom:/, ''),
-                                              industry: 'general',
-                                              difficulty: 3,
-                                          })
-                                        : '—'}
-                                </div>
-                                <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
-                                    {hardestRole
-                                        ? `Ср. балл ${hardestRole.avg}/10`
-                                        : 'Пройди симуляцию'}
-                                </p>
-                                {hardestRole && (
-                                    <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-none overflow-hidden">
-                                        <div
-                                            className="h-full bg-neutral-300 rounded-none transition-all duration-700"
-                                            style={{ width: `${hardestRole.avg * 10}%` }}
-                                        />
+                                <div>
+                                    <div className="text-lg font-black leading-tight text-[#111827] line-clamp-2">
+                                        {riskRole?.label ?? '—'}
                                     </div>
-                                )}
+                                    <p className="mt-2 text-xs leading-relaxed text-[#73706A]">
+                                        {riskRole
+                                            ? `Средний балл ${riskRole.avg}/10 по ${riskRole.count} сесс.`
+                                            : 'Недостаточно завершённых сессий для риска.'}
+                                    </p>
+                                    {riskRole && (
+                                        <div className="mt-3 h-1.5 bg-neutral-100">
+                                            <div className="h-full bg-[#E8600A]" style={{ width: `${riskRole.avg * 10}%` }} />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className={kpi}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Практика</span>
+                                    <BarChart3 size={16} className="text-[#111827]" />
+                                </div>
+                                <div>
+                                    <div className="grid grid-cols-3 border border-[#D9D5CC] divide-x divide-[#D9D5CC] text-center">
+                                        <div className="p-2">
+                                            <div className="text-xl font-black text-[#111827]">{completedCount}</div>
+                                            <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#73706A]">зав.</div>
+                                        </div>
+                                        <div className="p-2">
+                                            <div className="text-xl font-black text-[#111827]">{activeCount}</div>
+                                            <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#73706A]">акт.</div>
+                                        </div>
+                                        <div className="p-2">
+                                            <div className="text-xl font-black text-[#111827]">{cancelledCount}</div>
+                                            <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#73706A]">прерв.</div>
+                                        </div>
+                                    </div>
+                                    <p className="mt-3 text-xs leading-relaxed text-[#73706A]">
+                                        {lastScore != null ? `Последняя оценка: ${lastScore}/10.` : 'Начните первую завершённую сессию.'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     );
@@ -773,6 +754,61 @@ function SimulationPageContent() {
                         </div>
                     </div>
                 )}
+
+                {sessionTotal > SESSION_PAGE_SIZE && (() => {
+                    const pages = Math.max(1, Math.ceil(sessionTotal / SESSION_PAGE_SIZE));
+                    const startItem = (sessionPage - 1) * SESSION_PAGE_SIZE + 1;
+                    const endItem = Math.min(sessionPage * SESSION_PAGE_SIZE, sessionTotal);
+                    const pageNumbers = Array.from({ length: pages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === pages || Math.abs(p - sessionPage) <= 1);
+                    return (
+                        <div className="mt-8 border border-[#D9D5CC] bg-white p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#73706A]">
+                                {startItem}–{endItem} из {sessionTotal}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    disabled={sessionPage <= 1 || sessionsPageLoading}
+                                    onClick={() => fetchSessionPage(sessionPage - 1, { scroll: true })}
+                                    className="min-h-[40px] border border-[#D9D5CC] px-3 text-sm font-semibold text-[#111827] disabled:cursor-not-allowed disabled:opacity-40 hover:border-[#111827] transition-colors"
+                                >
+                                    Назад
+                                </button>
+                                <div className="hidden sm:flex items-center gap-1">
+                                    {pageNumbers.map((p, index) => {
+                                        const prev = pageNumbers[index - 1];
+                                        return (
+                                            <React.Fragment key={p}>
+                                                {prev && p - prev > 1 && <span className="px-2 text-[#73706A]">…</span>}
+                                                <button
+                                                    type="button"
+                                                    disabled={sessionsPageLoading}
+                                                    onClick={() => fetchSessionPage(p, { scroll: true })}
+                                                    className={`min-w-10 min-h-[40px] border px-3 font-mono text-[11px] font-bold transition-colors ${
+                                                        p === sessionPage
+                                                            ? 'border-[#111827] bg-[#111827] text-white'
+                                                            : 'border-[#D9D5CC] text-[#73706A] hover:border-[#111827] hover:text-[#111827]'
+                                                    }`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={sessionPage >= pages || sessionsPageLoading}
+                                    onClick={() => fetchSessionPage(sessionPage + 1, { scroll: true })}
+                                    className="min-h-[40px] border border-[#D9D5CC] px-3 text-sm font-semibold text-[#111827] disabled:cursor-not-allowed disabled:opacity-40 hover:border-[#111827] transition-colors"
+                                >
+                                    Далее
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })()}
                 </div>
             </div>
         );

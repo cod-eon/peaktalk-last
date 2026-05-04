@@ -1,0 +1,274 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link "PeakTalk" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]:
+            - img "PeakTalk Logo" [ref=e7]
+            - generic [ref=e8]: PeakTalk
+        - generic [ref=e9]:
+          - button "Как работает" [ref=e10] [cursor=pointer]
+          - button "Сценарии" [ref=e11] [cursor=pointer]
+          - button "Что бесплатно" [ref=e12] [cursor=pointer]
+          - button "Вопросы" [ref=e13] [cursor=pointer]
+        - generic [ref=e14]:
+          - link "Вход" [ref=e15] [cursor=pointer]:
+            - /url: /login
+          - link "Запустить 3 вопроса бесплатно" [ref=e16] [cursor=pointer]:
+            - /url: /simulation/guest
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: подготовка к сложной рабочей встрече
+        - heading "Проверьте аргументы перед важной встречей" [level=1] [ref=e24]
+        - paragraph [ref=e25]: Вставьте тезисы или план разговора. PeakTalk задаст 3 неудобных вопроса как руководитель, клиент или инвестор и покажет, где ответ не выдерживает давления.
+        - paragraph [ref=e26]: Для защиты бюджета, клиентской эскалации, инвест-питча и внутренних стратегических защит.
+        - generic [ref=e27]:
+          - link "Запустить 3 вопроса бесплатно" [ref=e28] [cursor=pointer]:
+            - /url: /simulation/guest
+            - text: Запустить 3 вопроса бесплатно
+            - img [ref=e29]
+          - button "Посмотреть сценарии" [ref=e31] [cursor=pointer]
+        - generic [ref=e32]:
+          - generic [ref=e33]: без регистрации
+          - generic [ref=e34]: 3 вопроса
+          - generic [ref=e35]: на своём кейсе
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: PT
+            - generic [ref=e44]:
+              - generic [ref=e45]: рабочая сессия
+              - heading "Защита бюджета перед руководителем" [level=3] [ref=e46]
+          - generic [ref=e47]:
+            - img [ref=e48]
+            - text: Руководитель
+        - generic [ref=e51]:
+          - complementary [ref=e52]:
+            - generic [ref=e53]: навигация
+            - generic [ref=e54]: Документы
+            - generic [ref=e55]: Симуляция
+            - generic [ref=e56]: Отчёт
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - generic [ref=e59]:
+                - generic [ref=e60]:
+                  - img [ref=e61]
+                  - generic [ref=e64]: материал
+                - paragraph [ref=e65]: Релиз сдвинется на месяц, если бюджет сократят на 30%.
+              - generic [ref=e66]:
+                - generic [ref=e67]: раунд
+                - generic [ref=e68]: 01/03
+              - generic [ref=e69]:
+                - generic [ref=e70]: давление
+                - generic [ref=e71]: 7/10
+            - generic [ref=e72]:
+              - generic [ref=e73]:
+                - generic [ref=e74]:
+                  - img [ref=e75]
+                  - generic [ref=e77]: входящий вопрос
+                - generic [ref=e78]: руководитель
+              - paragraph [ref=e79]: Почему это решение важнее двух альтернатив, которые уже стоят в плане?
+            - generic [ref=e80]:
+              - generic [ref=e81]:
+                - generic [ref=e82]: черновик ответа
+                - paragraph [ref=e83]: Бюджет нужен, чтобы удержать срок и не потерять клиента. Мы можем сократить второстепенный запуск...
+                - generic [ref=e84]:
+                  - generic [ref=e85]: ответ готов
+                  - generic [ref=e86]:
+                    - text: Ответить
+                    - img [ref=e87]
+              - generic [ref=e89]:
+                - generic [ref=e90]:
+                  - img [ref=e91]
+                  - generic [ref=e93]: слабое место
+                - generic [ref=e94]:
+                  - generic [ref=e95]: Нет цены задержки
+                  - paragraph [ref=e96]: Нужно связать срок с деньгами и риском клиента.
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e101]: что на выходе
+          - heading "Слабое место лучше увидеть на экране, а не за столом переговоров." [level=2] [ref=e102]
+        - paragraph [ref=e103]: PeakTalk не пишет красивый текст вместо Вас. Он быстро показывает, какой вопрос прилетит, где ответ ломается и как усилить формулировку до встречи.
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]: "01"
+          - heading "Вопрос оппонента" [level=3] [ref=e107]
+          - paragraph [ref=e108]: Почему это решение важнее двух альтернатив, которые уже стоят в плане?
+        - generic [ref=e109]:
+          - generic [ref=e110]: "02"
+          - heading "Слабое место" [level=3] [ref=e111]
+          - paragraph [ref=e112]: Вы называете срок, но не показываете зависимость от ресурсов и владельца решения.
+        - generic [ref=e113]:
+          - generic [ref=e114]: "03"
+          - heading "Памятка перед встречей" [level=3] [ref=e115]
+          - paragraph [ref=e116]: Начните с цены задержки, затем назовите компромисс и условия, при которых план меняется.
+    - generic [ref=e118]:
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - generic [ref=e121]: как работает
+          - heading "Один материал превращается в три неудобных вопроса и план ответа." [level=2] [ref=e122]
+        - paragraph [ref=e123]: "Короткий контур подготовки без лишних экранов: контекст, давление, усиление ответа."
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]: материал встречи
+              - heading "Вставьте контекст" [level=3] [ref=e129]
+            - generic [ref=e130]: "01"
+          - paragraph [ref=e131]: Тезисы, коммерческое предложение, письмо клиенту или план защиты бюджета.
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - generic [ref=e136]: проверка
+              - heading "Ответьте на 3 вопроса" [level=3] [ref=e137]
+            - generic [ref=e138]: "02"
+          - paragraph [ref=e139]: Оппонент давит по ценности, рискам, срокам и компромиссам.
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - generic [ref=e143]:
+              - generic [ref=e144]: усиление
+              - heading "Заберите план ответа" [level=3] [ref=e145]
+            - generic [ref=e146]: "03"
+          - paragraph [ref=e147]: Получите слабые места, точные формулировки и следующий рабочий шаг.
+    - generic [ref=e150]:
+      - generic [ref=e151]:
+        - generic [ref=e152]:
+          - generic [ref=e153]: сценарии встреч
+          - heading "Начните не с “переговоров вообще”, а с разговора, который уже стоит в календаре." [level=2] [ref=e154]
+        - link "Все сценарии" [ref=e155] [cursor=pointer]:
+          - /url: /scenarios
+          - text: Все сценарии
+          - img [ref=e156]
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - generic [ref=e161]: Бюджет
+            - generic [ref=e162]: "01"
+          - generic [ref=e164]: "01"
+          - heading "Защитить бюджет перед руководителем" [level=3] [ref=e165]
+          - paragraph [ref=e166]: Когда просят сократить расходы, а Вам нужно доказать, что решение влияет на результат.
+          - link "Разобрать сценарий" [ref=e167] [cursor=pointer]:
+            - /url: /scenarios/budget-cut-q3
+            - text: Разобрать сценарий
+            - img [ref=e168]
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - generic [ref=e172]: Клиент
+            - generic [ref=e173]: "02"
+          - generic [ref=e175]: "02"
+          - heading "Подготовиться к разговору с клиентом" [level=3] [ref=e176]
+          - paragraph [ref=e177]: Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.
+          - link "Разобрать сценарий" [ref=e178] [cursor=pointer]:
+            - /url: /scenarios/client-escalation
+            - text: Разобрать сценарий
+            - img [ref=e179]
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e183]: Инвестор
+            - generic [ref=e184]: "03"
+          - generic [ref=e186]: "03"
+          - heading "Выдержать вопросы инвестора" [level=3] [ref=e187]
+          - paragraph [ref=e188]: Когда будут давить на рынок, рост, экономику сделки и реалистичность плана.
+          - link "Разобрать сценарий" [ref=e189] [cursor=pointer]:
+            - /url: /scenarios/series-a-pitch
+            - text: Разобрать сценарий
+            - img [ref=e190]
+    - generic [ref=e193]:
+      - generic [ref=e194]:
+        - generic [ref=e195]: бесплатно / полностью
+        - heading "Бесплатно — первые 3 вопроса. Полная сессия — когда нужно сохранить разбор." [level=2] [ref=e196]
+        - paragraph [ref=e197]: "Мы не прячем границу: бесплатный режим показывает механику на Вашем материале. Отчёт, расшифровка и памятка перед встречей открываются в полной сессии."
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - generic [ref=e200]: бесплатная проверка
+          - generic [ref=e201]: 0 ₽
+          - paragraph [ref=e202]: Материал встречи, выбранный оппонент и первые 3 вопроса без регистрации.
+          - list [ref=e204]:
+            - listitem [ref=e205]: Без регистрации
+            - listitem [ref=e207]: Без карты
+            - listitem [ref=e209]: На тезисах, документе или плане разговора
+          - link "Запустить 3 вопроса бесплатно" [ref=e211] [cursor=pointer]:
+            - /url: /simulation/guest
+        - generic [ref=e212]:
+          - generic [ref=e213]: полная сессия
+          - generic [ref=e214]:
+            - generic [ref=e215]: "299"
+            - generic [ref=e216]: ₽
+            - generic [ref=e217]: / сессия
+          - paragraph [ref=e218]: Полная симуляция для подготовки к конкретному разговору, с сохранением материалов.
+          - list [ref=e220]:
+            - listitem [ref=e221]: История вопросов и ответов
+            - listitem [ref=e223]: Разбор слабых мест
+            - listitem [ref=e225]: Памятка и отчёт перед встречей
+          - link "Открыть полную сессию" [ref=e227] [cursor=pointer]:
+            - /url: /billing
+    - generic [ref=e229]:
+      - generic [ref=e230]:
+        - generic [ref=e231]: доверие / вопросы
+        - heading "Для разговоров, где общие формулировки не проходят." [level=2] [ref=e232]
+        - generic [ref=e233]:
+          - generic [ref=e234]:
+            - img [ref=e235]
+            - generic [ref=e239]:
+              - generic [ref=e240]: Конкретный материал
+              - paragraph [ref=e241]: Вопросы строятся вокруг текста, который Вы вставили.
+          - generic [ref=e242]:
+            - img [ref=e243]
+            - generic [ref=e245]:
+              - generic [ref=e246]: Неприятная роль
+              - paragraph [ref=e247]: Оппонент давит по цифрам, срокам, рискам и компромиссам.
+          - generic [ref=e248]:
+            - img [ref=e249]
+            - generic [ref=e252]:
+              - generic [ref=e253]: Перед встречей
+              - paragraph [ref=e254]: Формат рассчитан на подготовку, когда времени мало.
+          - generic [ref=e255]:
+            - img [ref=e256]
+            - generic [ref=e259]:
+              - generic [ref=e260]: Без карты на старте
+              - paragraph [ref=e261]: Бесплатный режим запускается без оплаты и регистрации.
+      - generic [ref=e262]:
+        - generic [ref=e263]:
+          - button "Что такое PeakTalk?" [expanded] [ref=e264] [cursor=pointer]:
+            - text: Что такое PeakTalk?
+            - img [ref=e265]
+          - paragraph [ref=e267]: PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.
+        - button "Нужна ли регистрация?" [ref=e269] [cursor=pointer]:
+          - text: Нужна ли регистрация?
+          - img [ref=e270]
+        - button "Что можно вставить вместо документа?" [ref=e273] [cursor=pointer]:
+          - text: Что можно вставить вместо документа?
+          - img [ref=e274]
+        - button "Это тренажёр публичных выступлений?" [ref=e277] [cursor=pointer]:
+          - text: Это тренажёр публичных выступлений?
+          - img [ref=e278]
+    - generic [ref=e280]:
+      - generic [ref=e284]:
+        - generic [ref=e285]: финальная проверка
+        - heading "Не несите слабый ответ на сильную встречу." [level=2] [ref=e286]
+        - paragraph [ref=e287]: Запустите 3 вопроса на своём материале и посмотрите, где аргументация требует усиления.
+        - link "Запустить 3 вопроса бесплатно" [ref=e289] [cursor=pointer]:
+          - /url: /simulation/guest
+          - text: Запустить 3 вопроса бесплатно
+          - img [ref=e290]
+        - paragraph [ref=e292]: без регистрации / без карты / на своём кейсе
+      - generic [ref=e294]:
+        - generic [ref=e295]:
+          - generic [ref=e297]:
+            - img "PeakTalk Logo" [ref=e298]
+            - generic [ref=e299]: PeakTalk
+          - generic [ref=e300]: проверка перед встречей
+        - generic [ref=e301]:
+          - link "Сценарии" [ref=e302] [cursor=pointer]:
+            - /url: /scenarios
+          - link "Контакты" [ref=e303] [cursor=pointer]:
+            - /url: /contacts
+          - link "Оферта" [ref=e304] [cursor=pointer]:
+            - /url: /personal-data
+          - link "Конфиденциальность" [ref=e305] [cursor=pointer]:
+            - /url: /privacy
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e311] [cursor=pointer]:
+    - img [ref=e312]
