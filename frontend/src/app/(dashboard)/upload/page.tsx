@@ -155,7 +155,7 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="flex w-full flex-col justify-start px-4 sm:px-6 pt-6 sm:pt-10 pb-20 max-w-4xl mx-auto relative z-10 box-border font-inter">
+        <div className="flex w-full flex-col justify-start px-4 sm:px-6 pt-6 sm:pt-10 pb-20 max-w-6xl mx-auto relative z-10 box-border font-inter">
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-10">

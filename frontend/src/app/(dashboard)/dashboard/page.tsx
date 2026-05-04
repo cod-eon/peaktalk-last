@@ -347,9 +347,6 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 border-b border-[#D9D5CC] pb-6">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#E8600A] mb-2">
-            Панель подготовки к сложной встрече
-          </p>
           <h1 className="text-3xl font-black text-[#111827] tracking-tight">Сводка аналитики</h1>
           <p className="text-sm font-medium text-[#73706A] mt-1">
             Устойчивость аргументации, уязвимости и история последних защит.

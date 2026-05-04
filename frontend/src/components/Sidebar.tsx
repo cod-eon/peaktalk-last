@@ -210,7 +210,6 @@ export function Sidebar() {
                                 <span className="text-[12px] text-neutral-500 font-inter truncate leading-none">
                                     {displayName}
                                 </span>
-                                <PlanBadge plan={currentPlan} />
                             </div>
                         </motion.div>
                     )}

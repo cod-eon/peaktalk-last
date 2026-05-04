@@ -513,7 +513,7 @@ function SimulationPageContent() {
         const cancelledSessions = sessions.filter(s => s.status === 'cancelled');
 
         return (
-            <div className="pb-10 pt-0 sm:pt-0 w-full max-w-5xl mx-auto">
+            <div className="pb-10 pt-0 sm:pt-0 w-full max-w-6xl mx-auto">
                 <UpgradeModal isOpen={upgradeModalOpen} onClose={closeUpgradeModal} reason={upgradeModalReason} />
                 {simulationsLeft !== null && simulationsLeft <= 1 && <UpgradeBanner />}
                 <div className="px-4 sm:px-6 lg:px-10 pt-4 sm:pt-8">
@@ -819,7 +819,7 @@ function SimulationPageContent() {
     // ── Setup view ───────────────────────────────────────────────────────────
 
     return (
-        <div className="pb-48 pt-4 sm:pt-8 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="pb-48 pt-4 sm:pt-8 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-10">
             <div className="flex flex-col gap-6 mb-10 sm:mb-14">
                 <div className="flex items-start gap-3">
                     {sessions.length > 0 && (

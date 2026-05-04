@@ -92,7 +92,7 @@ export default function DocumentsPage() {
     const hasDocuments = (data?.items?.length ?? 0) > 0;
 
     return (
-        <div className="pt-6 sm:pt-8 pb-20 w-full max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="pt-6 sm:pt-10 pb-16 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Header */}
             <div className="flex items-start justify-between gap-3 mb-6 sm:mb-8">
@@ -247,7 +247,7 @@ export default function DocumentsPage() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-none ${getExtBadgeClass(doc)}`}>
+                                                <span className="text-[11px] font-medium text-neutral-400 uppercase">
                                                     {ext}
                                                 </span>
                                                 <span className="text-[11px] text-neutral-400">

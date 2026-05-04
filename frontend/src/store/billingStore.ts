@@ -51,7 +51,7 @@ export const useBillingStore = create<BillingStore>((set, get) => ({
 
   isStarter: () => {
     const { status } = get();
-    if (!status) return true;
+    if (!status) return false; // Don't assume starter if loading
     return ['free', 'starter', 'personal'].includes(status.subscription.plan);
   },
 

@@ -365,7 +365,7 @@ function BillingContent() {
               )}
             </motion.section>
 
-            {!isPaidPlan && <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />}
+
           </div>
 
           <motion.section
