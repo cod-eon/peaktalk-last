@@ -1,19 +1,18 @@
 'use client';
 
-import React, { Suspense, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
-  AlertCircle,
-  Check,
   CreditCard,
-  FileText,
+  Zap,
+  Check,
   Infinity,
+  AlertCircle,
   Loader2,
-  ReceiptText,
-  ShieldCheck,
+  Users,
+  FileText,
   TrendingUp,
   X,
-  Zap,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -25,6 +24,8 @@ import { SessionCreditsDisplay } from '@/components/billing/SessionCreditsDispla
 import type { Payment, PaymentMethodSummary } from '@/types/billing';
 import { toast } from 'sonner';
 
+// ─── Plan comparison data ──────────────────────────────────────────────────────
+
 const PLAN_DISPLAY: Array<{
   id: 'per_session' | 'personal' | 'pro' | 'team';
   name: string;
@@ -34,68 +35,76 @@ const PLAN_DISPLAY: Array<{
 }> = [
   {
     id: 'per_session',
-    name: 'РАЗОВАЯ',
+    name: 'РАЗОВАЯ СЕССИЯ',
     price: '299 ₽',
     badge: 'без подписки',
-    features: ['1 полноценная сессия', 'Любая персона', 'PDF-отчёт', 'Шпаргалка'],
+    features: [
+      '1 полноценная сессия',
+      'Выбор любой персоны',
+      'PDF-отчёт',
+      'Шпаргалка',
+    ],
   },
   {
     id: 'personal',
     name: 'PERSONAL',
     price: '790 ₽/мес',
-    badge: 'частая практика',
-    features: ['10 сессий в месяц', 'Все персоны', 'PDF-отчёты', 'Шпаргалки'],
+    badge: 'популярный',
+    features: [
+      '10 сессий в месяц',
+      'Все персоны',
+      'PDF-отчёты',
+      'Шпаргалка к каждой сессии',
+    ],
   },
   {
     id: 'pro',
     name: 'PRO',
     price: '1 490 ₽/мес',
     badge: 'рекомендуемый',
-    features: ['Безлимитные сессии', 'Расширенная аналитика', 'PDF-отчёты', 'Приоритетная поддержка'],
+    features: [
+      'Безлимитные сессии',
+      'Все персоны',
+      'PDF-отчёты',
+      'Шпаргалки',
+      'Расширенная аналитика',
+      'Приоритетная поддержка',
+    ],
   },
   {
     id: 'team',
     name: 'TEAM',
     price: '4 990 ₽/мес',
     badge: 'для команд',
-    features: ['5 мест', 'Всё из PRO', 'Командный dashboard', 'Общая библиотека документов'],
+    features: [
+      '5 мест',
+      'Всё из PRO',
+      'Командный dashboard',
+      'Общая библиотека документов',
+      'Выделенная поддержка',
+    ],
   },
 ];
 
-const PLAN_NAMES: Record<string, string> = {
-  free: 'Free',
-  starter: 'Starter',
-  per_session: 'За сессию',
-  personal: 'Personal',
-  pro: 'Pro',
-  team: 'Team',
-};
-
-const PLAN_RANK: Record<string, number> = {
-  free: 0,
-  starter: 0,
-  per_session: 0,
-  personal: 1,
-  pro: 2,
-  team: 3,
-};
+// ─── Payment status badge ──────────────────────────────────────────────────────
 
 function PaymentStatusBadge({ status }: { status: string }) {
   const cfg =
     status === 'succeeded'
-      ? { label: 'Оплачен', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+      ? { label: 'Оплачен', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' }
       : status === 'pending'
-        ? { label: 'Ожидание', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+        ? { label: 'Ожидание', cls: 'bg-amber-50 text-amber-700 border border-amber-200' }
         : status === 'failed'
-          ? { label: 'Ошибка', cls: 'bg-red-50 text-red-600 border-red-200' }
-          : { label: 'Отменён', cls: 'bg-neutral-100 text-neutral-500 border-neutral-200' };
-
+          ? { label: 'Ошибка', cls: 'bg-red-50 text-red-600 border border-red-200' }
+          : { label: 'Отменён', cls: 'bg-neutral-100 text-neutral-500' };
   return (
-    <span className={`inline-flex items-center border px-2.5 py-1 text-[11px] font-semibold rounded-none ${cfg.cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-none text-[11px] font-medium ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
 }
+
+// ─── Progress bar ──────────────────────────────────────────────────────────────
 
 function UsageBar({ used, limit, label, icon }: { used: number; limit: number | null; label: string; icon: React.ReactNode }) {
   const isUnlimited = limit === null;
@@ -104,50 +113,49 @@ function UsageBar({ used, limit, label, icon }: { used: number; limit: number | 
   const full = !isUnlimited && pct >= 100;
 
   return (
-    <div className="border border-[#D9D5CC] bg-white p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-neutral-600 text-sm">
           {icon}
           <span>{label}</span>
         </div>
-        <span className="font-mono text-[11px] text-[#73706A]">
+        <span className="text-neutral-500 text-xs font-mono">
           {isUnlimited ? (
-            <span className="flex items-center gap-1 font-bold text-[#111827]"><Infinity size={11} /> Безлимит</span>
+            <span className="text-neutral-900 font-semibold flex items-center gap-1"><Infinity size={11} /> Безлимит</span>
           ) : (
-            <span className={full ? 'font-bold text-red-600' : almostFull ? 'font-bold text-amber-700' : ''}>
+            <span className={full ? 'text-red-500 font-semibold' : almostFull ? 'text-amber-600 font-medium' : ''}>
               {used} / {limit}
             </span>
           )}
         </span>
       </div>
-      <div className="h-1.5 bg-neutral-100">
+      <div className="h-1.5 bg-neutral-100 overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className={`h-full ${isUnlimited ? 'bg-[#111827]' : full ? 'bg-red-500' : almostFull ? 'bg-[#E8600A]' : 'bg-[#111827]'}`}
+          className={`h-full ${
+            isUnlimited
+              ? 'bg-neutral-800'
+              : full
+                ? 'bg-red-500'
+                : almostFull
+                  ? 'bg-amber-400'
+                  : 'bg-neutral-900'
+          }`}
         />
       </div>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status?: string }) {
-  if (status === 'active') {
-    return <span className="inline-flex items-center gap-1.5 border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 rounded-none"><span className="h-1.5 w-1.5 bg-emerald-500" />Активна</span>;
-  }
-  if (status === 'cancelled') {
-    return <span className="inline-flex border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-500 rounded-none">Отменена</span>;
-  }
-  if (status === 'past_due') {
-    return <span className="inline-flex border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 rounded-none">Проблема оплаты</span>;
-  }
-  return <span className="inline-flex border border-neutral-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-500 rounded-none">Не активна</span>;
-}
+// ─── Main page ─────────────────────────────────────────────────────────────────
+
+import { Suspense } from 'react';
 
 export default function BillingPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-neutral-400" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>}>
       <BillingContent />
     </Suspense>
   );
@@ -161,9 +169,25 @@ function BillingContent() {
 
   const planParam = searchParams.get('plan');
   const returnPath = searchParams.get('return') ?? undefined;
+
   const highlightPerSession = planParam === 'per_session';
+
   const paymentsEnabled = status?.payments_enabled ?? true;
   const sessionCredits = status?.usage.session_credits ?? 0;
+
+  const handleTestSetPlan = useCallback(
+    async (plan: 'free' | 'personal' | 'pro' | 'team', periodDays?: number) => {
+      try {
+        await api.post('/billing/test/set-plan', { plan, period_days: periodDays ?? 30 });
+        toast.success(`Тест: план изменён на ${plan.toUpperCase()}`);
+        await refetch();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Ошибка';
+        toast.error(message);
+      }
+    },
+    [refetch],
+  );
 
   const { data: payments, isLoading: paymentsLoading } = useQuery<Payment[]>({
     queryKey: ['billing-payments'],
@@ -184,320 +208,523 @@ function BillingContent() {
     enabled: paymentsEnabled,
   });
 
-  const handleTestSetPlan = useCallback(
-    async (plan: 'free' | 'personal' | 'pro' | 'team', periodDays?: number) => {
-      try {
-        await api.post('/billing/test/set-plan', { plan, period_days: periodDays ?? 30 });
-        toast.success(`Тест: план изменён на ${plan.toUpperCase()}`);
-        await refetch();
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Ошибка');
-      }
-    },
-    [refetch],
-  );
-
   const handleUpgrade = useCallback(
     async (plan: string) => {
       try {
         const successPath = returnPath ?? '/billing/success';
         const returnUrl = `${window.location.origin}${successPath}`;
         const res = await api.post('/billing/payment', { plan, return_url: returnUrl });
-        if (res?.payment_url) window.location.href = res.payment_url;
+        if (res?.payment_url) {
+          window.location.href = res.payment_url;
+        }
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Ошибка оплаты');
+        const message = err instanceof Error ? err.message : 'Ошибка оплаты';
+        toast.error(message);
       }
     },
     [returnPath],
   );
 
   const handleCancel = useCallback(async () => {
-    if (!window.confirm('Вы уверены, что хотите отменить подписку? Доступ сохранится до конца оплаченного периода.')) return;
+    if (!window.confirm('Вы уверены, что хотите отменить подписку? Доступ к PRO функциям сохранится до конца оплаченного периода.')) return;
     try {
       await api.post('/billing/cancel', {});
       toast.success('Подписка отменена');
       await refetch();
       await refetchPaymentMethod();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Ошибка');
+      const message = err instanceof Error ? err.message : 'Ошибка';
+      toast.error(message);
     }
   }, [refetch, refetchPaymentMethod]);
 
   const plan = status?.subscription.plan ?? 'free';
-  const subStatus = status?.subscription.status;
   const isPaidPlan = ['personal', 'pro', 'team'].includes(plan);
   const periodEnd = status?.subscription.period_end
-    ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    ? new Date(status.subscription.period_end).toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
     : null;
-  const paymentMethodLabel = paymentMethod?.display_label ?? (paymentMethod?.is_bound ? 'Привязанный способ оплаты' : null);
-  const autoRenewEnabled = paymentMethod?.auto_renew_enabled ?? false;
 
+  const subStatus = status?.subscription.status;
+  const autoRenewEnabled = paymentMethod?.auto_renew_enabled ?? false;
+  const paymentMethodLabel = paymentMethod?.display_label ?? (paymentMethod?.is_bound ? 'Привязанный способ оплаты' : null);
+
+  const PLAN_NAMES: Record<string, string> = {
+    free: 'Free',
+    starter: 'Starter',
+    per_session: 'За сессию',
+    personal: 'Personal',
+    pro: 'Pro',
+    team: 'Team',
+  };
+
+  // Handle ?return param — redirect after successful payment
   useEffect(() => {
     if (returnPath && typeof window !== 'undefined') {
+      // Store for post-payment redirect (consumed by /billing/success)
       sessionStorage.setItem('billing_return_path', returnPath);
     }
   }, [returnPath]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
-      <div className="mb-6 sm:mb-8 flex flex-col gap-2">
-        <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8600A]">billing control</div>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#111827]">Подписка и лимиты</h1>
-        <p className="max-w-2xl text-sm text-[#73706A]">
-          Оплата должна помогать подготовке к сложной встрече, а не превращаться в отдельный квест.
-        </p>
+    <div className="pb-16 pt-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-inter bg-white min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Подписка</h1>
+          <p className="text-sm font-medium text-neutral-500 mt-1">Управление планом и история платежей.</p>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center border border-[#D9D5CC] bg-white py-20">
-          <Loader2 size={28} className="animate-spin text-[#111827]" />
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={28} className="animate-spin text-neutral-900" />
         </div>
-      ) : (
-        <div className="space-y-5">
-          {!paymentsEnabled && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border border-dashed border-[#D9D5CC] bg-white p-4"
+      )}
+
+      {!isLoading && !paymentsEnabled && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-start gap-3 p-4 rounded-none border border-neutral-200 bg-neutral-50 text-sm text-neutral-700 mb-4"
+        >
+          <AlertCircle size={16} className="shrink-0 mt-0.5 text-neutral-500" />
+          <p>
+            <span className="font-semibold">Платёжная система скоро заработает.</span>{' '}
+            На время запуска все функции доступны без ограничений. Подписки будут активированы позже.
+          </p>
+        </motion.div>
+      )}
+
+      {!isLoading && !paymentsEnabled && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="border border-dashed border-neutral-300 rounded-none bg-neutral-50 p-4 mb-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-neutral-900 animate-pulse" />
+            <span className="text-xs font-bold tracking-widest uppercase text-neutral-600 font-mono">
+              Тест-режим
+            </span>
+          </div>
+          <p className="text-xs text-neutral-500 mb-3">
+            Платёжная система отключена. Переключайте план вручную, чтобы тестировать лимиты и интерфейс.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['free', 'personal', 'pro', 'team'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => handleTestSetPlan(p, p === 'free' ? undefined : 30)}
+                className={`px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded-none border ${
+                  plan === p
+                    ? 'bg-neutral-900 text-white border-neutral-900'
+                    : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100'
+                }`}
+              >
+                {plan === p ? '✓ ' : ''}{p.toUpperCase()}
+              </button>
+            ))}
+            <button
+              onClick={() => handleTestSetPlan('pro', -1)}
+              className="px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded-none border bg-white text-amber-700 border-amber-300 hover:bg-amber-50"
             >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-start gap-3 text-sm text-[#73706A]">
-                  <AlertCircle size={16} className="mt-0.5 shrink-0 text-[#111827]" />
-                  <div>
-                    <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#111827]">Тест-режим платежей</div>
-                    <p className="mt-1">Платёжная система отключена. Лимиты и тарифы можно переключать вручную.</p>
+              PRO (истёк вчера)
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {!isLoading && (
+        <div className="flex flex-col gap-6">
+
+          {/* ─── Current plan card ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-none border border-neutral-200 p-6"
+          >
+            <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
+              Текущий план
+            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                  {false ? (
+                    <Users size={22} className="text-neutral-700" />
+                  ) : false || false ? (
+                    <Zap size={22} className="text-neutral-700" />
+                  ) : (
+                    <CreditCard size={22} className="text-neutral-400" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-bold text-neutral-900 tracking-tight">
+                      {PLAN_NAMES[plan] ?? plan}
+                    </div>
+                    {sessionCredits > 0 && (
+                      <SessionCreditsDisplay credits={sessionCredits} />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {subStatus === 'active' && (
+                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-none px-2.5 py-1">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 animate-pulse" />
+                        Активна
+                      </span>
+                    )}
+                    {subStatus === 'cancelled' && (
+                      <span className="inline-flex items-center text-xs text-neutral-500 bg-neutral-100 rounded-none px-2.5 py-1">
+                        Отменена
+                      </span>
+                    )}
+                    {periodEnd && (
+                      <span className="text-xs text-neutral-500">
+                        {subStatus === 'cancelled' ? 'Доступ до' : 'Следующее списание'}: {periodEnd}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(['free', 'personal', 'pro', 'team'] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => handleTestSetPlan(p, p === 'free' ? undefined : 30)}
-                      className={`border px-3 py-1.5 text-xs font-semibold transition-colors rounded-none ${
-                        plan === p ? 'border-[#111827] bg-[#111827] text-white' : 'border-[#D9D5CC] bg-white text-[#111827] hover:border-[#111827]'
-                      }`}
-                    >
-                      {p.toUpperCase()}
-                    </button>
-                  ))}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {paymentsEnabled && !isPaidPlan && (
                   <button
-                    onClick={() => handleTestSetPlan('pro', -1)}
-                    className="border border-[#F9BD8E] bg-[#FEF3E8] px-3 py-1.5 text-xs font-semibold text-[#B04A08] rounded-none"
+                    onClick={() => router.push('/billing?plan=per_session')}
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
                   >
-                    PRO истёк
+                    <Zap size={14} />
+                    Начать сессию за 299 ₽
                   </button>
+                )}
+                {!paymentsEnabled && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-neutral-200 bg-neutral-50 text-neutral-600 text-xs font-medium">
+                    <Zap size={11} />
+                    Скоро
+                  </span>
+                )}
+                {paymentsEnabled && false && (
+                  <button
+                    onClick={() => handleUpgrade('pro')}
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                  >
+                    <Zap size={14} />
+                    Апгрейд до PRO
+                  </button>
+                )}
+                {paymentsEnabled && false && (
+                  <button
+                    onClick={() => handleUpgrade('team')}
+                    className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                  >
+                    <Users size={14} />
+                    Апгрейд до TEAM
+                  </button>
+                )}
+                {paymentsEnabled && isPaidPlan && subStatus === 'active' && (
+                  <button
+                    onClick={handleCancel}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-none border border-neutral-200 text-neutral-500 text-sm hover:border-red-200 hover:text-red-500 transition-colors cursor-pointer"
+                  >
+                    <X size={13} />
+                    Отключить автопродление
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ─── Renewal and payment method ─── */}
+          {paymentsEnabled && isPaidPlan && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.03 }}
+              className="bg-white rounded-none border border-neutral-200 p-6"
+            >
+              <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
+                Списание и автопродление
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-neutral-500 mb-2">
+                    <CreditCard size={12} />
+                    Способ оплаты
+                  </div>
+                  {paymentMethodLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-neutral-500">
+                      <Loader2 size={14} className="animate-spin" />
+                      Загружаем способ оплаты...
+                    </div>
+                  ) : paymentMethodLabel ? (
+                    <div className="text-sm font-semibold text-neutral-900">{paymentMethodLabel}</div>
+                  ) : (
+                    <div className="text-sm text-neutral-500">Привязанный способ оплаты пока не найден</div>
+                  )}
+                </div>
+
+                <div className="border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-neutral-500 mb-2">
+                    <Zap size={12} />
+                    Автопродление
+                  </div>
+                  {subStatus === 'cancelled' ? (
+                    <div className="text-sm text-neutral-700">
+                      Отключено{periodEnd ? `, доступ сохранится до ${periodEnd}` : ''}
+                    </div>
+                  ) : subStatus === 'past_due' ? (
+                    <div className="text-sm text-red-600">Есть проблема со списанием</div>
+                  ) : autoRenewEnabled ? (
+                    <div className="text-sm font-semibold text-emerald-700">
+                      Включено{periodEnd ? `, следующее списание ${periodEnd}` : ''}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-neutral-500">Не настроено</div>
+                  )}
                 </div>
               </div>
             </motion.div>
           )}
 
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <motion.section
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border border-[#D9D5CC] bg-white"
-            >
-              <div className="border-b border-[#D9D5CC] p-5 sm:p-6">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Текущий план</div>
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <div className="text-4xl font-black tracking-tight text-[#111827]">{PLAN_NAMES[plan] ?? plan}</div>
-                      <StatusBadge status={subStatus} />
-                      {sessionCredits > 0 && <SessionCreditsDisplay credits={sessionCredits} />}
-                    </div>
-                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#73706A]">
-                      {periodEnd
-                        ? `${subStatus === 'cancelled' ? 'Доступ сохранится до' : 'Следующее списание'}: ${periodEnd}.`
-                        : 'План без даты списания. Подходит для разовой подготовки или тестового режима.'}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {paymentsEnabled && !isPaidPlan && (
-                      <button
-                        onClick={() => router.push('/billing?plan=per_session')}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#111827] px-4 text-sm font-bold text-white hover:bg-black rounded-none"
-                      >
-                        <Zap size={14} /> Разовая сессия
-                      </button>
-                    )}
-                    {paymentsEnabled && isPaidPlan && subStatus === 'active' && (
-                      <button
-                        onClick={handleCancel}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#D9D5CC] px-4 text-sm font-semibold text-[#73706A] hover:border-red-200 hover:text-red-600 rounded-none"
-                      >
-                        <X size={13} /> Отключить автопродление
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 p-5 sm:p-6 lg:grid-cols-2">
-                {status ? (
-                  <>
-                    <UsageBar used={status.usage.simulations_used} limit={status.limits.simulations_per_month} label="Симуляции" icon={<Zap size={14} />} />
-                    <UsageBar used={status.usage.documents_uploaded} limit={status.limits.documents_total} label="Документы" icon={<FileText size={14} />} />
-                  </>
-                ) : (
-                  <div className="text-sm text-[#73706A]">Нет данных по использованию</div>
-                )}
-              </div>
-
-              {paymentsEnabled && isPaidPlan && (
-                <div className="grid grid-cols-1 border-t border-[#D9D5CC] lg:grid-cols-2 lg:divide-x lg:divide-[#D9D5CC]">
-                  <div className="p-5 sm:p-6">
-                    <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#73706A]">
-                      <CreditCard size={12} /> Способ оплаты
-                    </div>
-                    {paymentMethodLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-[#73706A]"><Loader2 size={14} className="animate-spin" />Загружаем...</div>
-                    ) : (
-                      <div className="text-sm font-semibold text-[#111827]">{paymentMethodLabel ?? 'Способ оплаты пока не найден'}</div>
-                    )}
-                  </div>
-                  <div className="p-5 sm:p-6">
-                    <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#73706A]">
-                      <ShieldCheck size={12} /> Автопродление
-                    </div>
-                    <div className={`text-sm font-semibold ${subStatus === 'past_due' ? 'text-red-600' : autoRenewEnabled ? 'text-emerald-700' : 'text-[#73706A]'}`}>
-                      {subStatus === 'cancelled'
-                        ? `Отключено${periodEnd ? `, доступ до ${periodEnd}` : ''}`
-                        : subStatus === 'past_due'
-                          ? 'Есть проблема со списанием'
-                          : autoRenewEnabled
-                            ? `Включено${periodEnd ? `, следующее списание ${periodEnd}` : ''}`
-                            : 'Не настроено'}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.section>
-
-            <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />
-          </div>
-
-          <motion.section
+          {/* ─── Usage bars ─── */}
+          <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05 }}
-            className="border border-[#D9D5CC] bg-white p-5 sm:p-6"
+            className="bg-white rounded-none border border-neutral-200 p-6"
           >
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Тарифы</div>
-                <h2 className="mt-2 text-xl font-black tracking-tight text-[#111827]">Выберите режим подготовки</h2>
-              </div>
-              <p className="max-w-md text-sm text-[#73706A]">Разовая покупка — для одной защиты. Подписка — для регулярных QBR, бюджетов и клиентских эскалаций.</p>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase">
+                Использование в этом месяце
+              </h2>
+              {sessionCredits > 0 && (
+                <SessionCreditsDisplay credits={sessionCredits} />
+              )}
             </div>
+            {status ? (
+              <div className="flex flex-col gap-5">
+                <UsageBar
+                  used={status.usage.simulations_used}
+                  limit={status.limits.simulations_per_month}
+                  label="Симуляции"
+                  icon={<Zap size={14} />}
+                />
+                <UsageBar
+                  used={status.usage.documents_uploaded}
+                  limit={status.limits.documents_total}
+                  label="Документы"
+                  icon={<FileText size={14} />}
+                />
+              </div>
+            ) : (
+              <div className="text-sm text-neutral-500">Нет данных</div>
+            )}
+          </motion.div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {/* ─── Per-session spotlight ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.08 }}
+          >
+            <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />
+          </motion.div>
+
+          {/* ─── Subscription plans ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="bg-white rounded-none border border-neutral-200 p-6"
+          >
+            <p className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">
+              Или выберите подписку для регулярной подготовки
+            </p>
+            <p className="text-sm text-neutral-500 mb-6">
+              Ежемесячный доступ — выгоднее при частых защитах и переговорах.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PLAN_DISPLAY.map((p) => {
                 const isCurrent = p.id === plan;
-                const isDowngrade = PLAN_RANK[p.id] < PLAN_RANK[plan];
-                const canUpgradeToPlan = paymentsEnabled && !isCurrent && !isDowngrade && PLAN_RANK[p.id] > PLAN_RANK[plan];
+                const planRank: Record<string, number> = {
+                  free: 0,
+                  starter: 0,
+                  per_session: 0,
+                  personal: 1,
+                  pro: 2,
+                  team: 3,
+                };
+                const isDowngrade = planRank[p.id] < planRank[plan];
+                const canUpgradeToPlan =
+                  paymentsEnabled &&
+                  !isCurrent &&
+                  !isDowngrade &&
+                  planRank[p.id] > planRank[plan];
 
                 return (
                   <div
                     key={p.id}
-                    className={`relative flex min-h-[250px] flex-col border p-4 transition-colors ${
-                      isCurrent ? 'border-[#111827] bg-[#FAF8F4]' : 'border-[#D9D5CC] bg-white hover:border-[#111827]'
+                    className={`relative rounded-none border p-4 transition-all ${
+                      isCurrent
+                        ? 'border-neutral-900 bg-neutral-50'
+                        : false
+                          ? 'border-neutral-400 bg-white hover:border-neutral-600'
+                          : 'border-neutral-200 bg-white hover:border-neutral-400'
                     }`}
                   >
+                    {/* Badge */}
                     {p.badge && (
-                      <span className="absolute right-3 top-3 border border-[#D9D5CC] bg-white px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[#73706A] rounded-none">
-                        {isCurrent ? 'активен' : p.badge}
+                      <span className={`absolute top-3 right-3 text-[9px] font-bold tracking-widest rounded-none px-2 py-1 border uppercase ${
+                        isCurrent
+                          ? 'text-neutral-500 bg-white border-neutral-200'
+                          : false
+                            ? 'text-neutral-900 bg-neutral-100 border-neutral-300'
+                            : 'text-neutral-400 bg-white border-neutral-200'
+                      }`}>
+                        {isCurrent ? 'Активирован' : p.badge}
                       </span>
                     )}
-                    <div className="mb-5 pr-20">
-                      <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-[#111827]">{p.name}</div>
-                      <div className="mt-2 text-2xl font-black tracking-tight text-[#111827]">{p.price}</div>
+
+                    <div className="mb-4 mt-1">
+                      <div className="text-sm font-bold tracking-wider text-neutral-900">
+                        {p.name}
+                      </div>
+                      <div className="text-neutral-600 text-base font-semibold mt-0.5">
+                        {p.price}
+                      </div>
                     </div>
-                    <ul className="mb-5 space-y-2">
+                    <ul className="space-y-2 mb-4">
                       {p.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2 text-[13px] leading-snug text-[#73706A]">
-                          <Check size={12} className="mt-0.5 shrink-0 text-[#111827]" />
+                        <li key={f} className="flex items-start gap-2 text-[12px] text-neutral-600">
+                          <Check size={10} className="mt-1 shrink-0 text-neutral-900" />
                           {f}
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-auto">
-                      {canUpgradeToPlan && (
-                        <button onClick={() => handleUpgrade(p.id)} className="w-full bg-[#111827] px-3 py-2.5 text-sm font-bold text-white hover:bg-black rounded-none">
-                          Выбрать
-                        </button>
-                      )}
-                      {!isCurrent && !paymentsEnabled && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">Скоро</div>}
-                      {isDowngrade && !isCurrent && <div className="w-full border border-[#D9D5CC] bg-neutral-50 px-3 py-2.5 text-center text-sm font-semibold text-[#73706A]">Ваш тариф выше</div>}
-                      {isCurrent && <div className="w-full border border-[#111827] bg-[#111827] px-3 py-2.5 text-center text-sm font-bold text-white">Активирован</div>}
-                    </div>
+                    {canUpgradeToPlan && (
+                      <button
+                        onClick={() => handleUpgrade(p.id)}
+                        className="w-full py-2 rounded-none text-[12px] font-semibold bg-[#171717] hover:bg-black text-white transition-all cursor-pointer"
+                      >
+                        Выбрать {p.name}
+                      </button>
+                    )}
+                    {!isCurrent && !paymentsEnabled && (
+                      <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
+                        Скоро
+                      </div>
+                    )}
+                    {isDowngrade && !isCurrent && (
+                      <div className="w-full py-2 rounded-none text-[12px] font-semibold text-center text-neutral-500 bg-neutral-50 border border-neutral-200">
+                        Ваш тариф выше
+                      </div>
+                    )}
+                    {isCurrent && (
+                      <div className="text-[11px] text-neutral-500 text-center pt-1">
+                        Уже активирован
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          </motion.section>
+          </motion.div>
 
-          <motion.section
+          {/* ─── Payment history ─── */}
+          <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.08 }}
-            className="border border-[#D9D5CC] bg-white"
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="bg-white rounded-none border border-neutral-200 p-6"
           >
-            <div className="flex items-center justify-between border-b border-[#D9D5CC] p-5 sm:p-6">
-              <div>
-                <div className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#73706A]">Платежи</div>
-                <h2 className="mt-2 text-xl font-black tracking-tight text-[#111827]">История операций</h2>
-              </div>
-              <ReceiptText size={18} className="text-[#111827]" />
-            </div>
+            <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-5">
+              История платежей
+            </h2>
 
             {paymentsLoading ? (
-              <div className="flex items-center justify-center py-10"><Loader2 size={20} className="animate-spin text-[#73706A]" /></div>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 size={20} className="animate-spin text-neutral-500" />
+              </div>
             ) : payments && payments.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px] text-sm">
+              <div className="overflow-x-auto -mx-2">
+                <table className="w-full min-w-[520px] text-sm">
                   <thead>
-                    <tr className="border-b border-[#D9D5CC] bg-[#FAF8F4]">
-                      <th className="px-5 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#73706A]">Дата</th>
-                      <th className="px-5 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#73706A]">Описание</th>
-                      <th className="px-5 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#73706A]">Сумма</th>
-                      <th className="px-5 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#73706A]">Статус</th>
+                    <tr className="border-b border-neutral-200">
+                      <th className="text-left py-2 px-2 text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+                        Дата
+                      </th>
+                      <th className="text-left py-2 px-2 text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+                        Описание
+                      </th>
+                      <th className="text-right py-2 px-2 text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+                        Сумма
+                      </th>
+                      <th className="text-right py-2 px-2 text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+                        Статус
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
-                    {payments.slice(0, 8).map((p) => (
-                      <tr key={p.id} className="hover:bg-[#FAF8F4]">
-                        <td className="whitespace-nowrap px-5 py-3 font-mono text-[12px] text-[#73706A]">
-                          {new Date(p.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {payments.map((p) => (
+                      <tr key={p.id} className="hover:bg-neutral-50 transition-colors">
+                        <td className="py-3 px-2 text-neutral-500 text-[12px] font-mono whitespace-nowrap">
+                          {new Date(p.created_at).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
                         </td>
-                        <td className="px-5 py-3 text-[13px] font-medium text-[#111827]">{p.description}</td>
-                        <td className="whitespace-nowrap px-5 py-3 text-right font-mono text-[13px] font-bold text-[#111827]">
+                        <td className="py-3 px-2 text-neutral-900 text-[13px]">{p.description}</td>
+                        <td className="py-3 px-2 text-right text-neutral-900 text-[13px] font-medium font-mono whitespace-nowrap">
                           {p.amount.toLocaleString('ru-RU')} {p.currency}
                         </td>
-                        <td className="px-5 py-3 text-right"><PaymentStatusBadge status={p.status} /></td>
+                        <td className="py-3 px-2 text-right">
+                          <PaymentStatusBadge status={p.status} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-2 py-10 text-[#73706A]">
+              <div className="flex flex-col items-center justify-center py-8 gap-2 text-neutral-400">
                 <TrendingUp size={24} className="opacity-40" />
                 <p className="text-sm">Платежей пока нет</p>
               </div>
             )}
-          </motion.section>
+          </motion.div>
 
+          {/* Notice */}
           {!isPro && paymentsEnabled && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-start gap-3 border border-[#F9BD8E] bg-[#FEF3E8] p-4 text-sm text-[#B04A08]"
+              transition={{ delay: 0.2 }}
+              className="flex items-start gap-3 p-4 rounded-none border border-amber-200 bg-amber-50 text-sm text-amber-800"
             >
-              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
               <p>
-                Бесплатный план ограничен по симуляциям и документам. Можно купить одну подготовку за 299 ₽ или перейти на регулярный план от 790 ₽/мес.
+                Вы используете бесплатный план. При достижении лимитов симуляции и загрузка документов будут
+                заблокированы.{' '}
+                <button
+                  onClick={() => router.push('/billing?plan=per_session')}
+                  className="underline font-medium cursor-pointer hover:text-amber-900"
+                >
+                  Продолжить сессию — 299 ₽
+                </button>
+                {' или '}
+                <button
+                  onClick={() => handleUpgrade('personal')}
+                  className="underline font-medium cursor-pointer hover:text-amber-900"
+                >
+                  подписка от 790 ₽/мес
+                </button>
               </p>
             </motion.div>
           )}

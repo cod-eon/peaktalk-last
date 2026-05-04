@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import { FileText, Zap, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -45,10 +45,10 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={[
-        'relative rounded-none border border-[#111827] p-5 sm:p-6 bg-[#111827] text-white transition-all min-h-full flex flex-col',
+        'relative rounded-none border-2 p-6 bg-white transition-all',
         highlighted
-          ? 'animate-pulse-border'
-          : '',
+          ? 'border-neutral-900 animate-pulse-border'
+          : 'border-neutral-900',
       ].join(' ')}
     >
       {highlighted && (
@@ -63,39 +63,41 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
         `}</style>
       )}
 
-      <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-white/55 mb-4 font-mono">
-        Разовая подготовка
+      <p className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4">
+        Нужна одна подготовка?
       </p>
 
       <div className="flex items-baseline gap-2 mb-1">
-        <span className="text-5xl font-black text-white tracking-tight">299 ₽</span>
-        <span className="text-sm text-white/55 font-medium">разово</span>
+        <span className="text-4xl font-extrabold text-neutral-900 tracking-tight">299 ₽</span>
+        <span className="text-sm text-neutral-500 font-medium">разово</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 mt-5 mb-6 text-sm text-white/75">
+      <div className="flex flex-wrap items-center gap-3 mt-4 mb-6 text-sm text-neutral-600">
         <span className="flex items-center gap-1.5">
-          <Zap size={13} className="text-[#E8600A]" />
+          <Zap size={13} className="text-neutral-500" />
           1 полная сессия
         </span>
+        <span className="w-px h-3.5 bg-neutral-200" />
         <span className="flex items-center gap-1.5">
-          <FileText size={13} className="text-[#E8600A]" />
+          <FileText size={13} className="text-neutral-500" />
           PDF-отчёт
         </span>
+        <span className="w-px h-3.5 bg-neutral-200" />
         <span className="flex items-center gap-1.5">
-          <ShieldCheck size={13} className="text-[#E8600A]" />
+          <FileText size={13} className="text-neutral-500" />
           Шпаргалка
         </span>
       </div>
 
       <button
         onClick={handleBuy}
-        className="mt-auto w-full h-12 bg-white hover:bg-[#FAF8F4] text-[#111827] font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-none"
+        className="w-full h-12 bg-neutral-900 hover:bg-black text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-none"
       >
         Начать сессию за 299 ₽
         <ArrowRight size={15} />
       </button>
 
-      <p className="text-[11px] text-white/45 mt-3 text-center">
+      <p className="text-[11px] text-neutral-400 mt-3 text-center">
         Без подписки. Оплата один раз.
       </p>
     </motion.div>
