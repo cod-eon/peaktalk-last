@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 
-const CTA_LABEL = 'Запустить 3 вопроса бесплатно';
+const CTA_LABEL = 'Запустить демо бесплатно';
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
@@ -274,19 +274,19 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#faf8f4] pt-12 sm:pt-16 lg:pt-20">
+    <section className="relative overflow-hidden bg-[#faf8f4] pt-24 lg:pt-20">
       <div className="absolute inset-0 opacity-[0.35]" aria-hidden="true">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:64px_64px]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,#faf8f4_86%)]" />
       </div>
 
-      <div className="container-custom relative z-10 grid items-center gap-10 pb-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(500px,1.2fr)] lg:gap-16 lg:pb-24">
+      <div className="container-custom relative z-10 grid items-center gap-8 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.74fr)_minmax(520px,1.26fr)] lg:gap-14 lg:pb-24">
         <div className="max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-6 inline-flex max-w-full border border-neutral-200 bg-white/80 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-600 shadow-sm rounded-none"
+            className="mb-5 inline-flex max-w-full border border-neutral-200 bg-white/80 px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-600 shadow-sm rounded-none sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]"
           >
             подготовка к сложной рабочей встрече
           </motion.div>
@@ -295,30 +295,41 @@ function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-[720px] font-display text-[38px] font-black leading-[1.05] text-neutral-950 sm:text-[58px] lg:text-[66px] xl:text-[72px]"
+            className="max-w-[780px] font-display text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[52px] lg:text-[54px] xl:text-[56px]"
           >
-            Проверьте аргументы до встречи
+            Проверка аргументов <span className="whitespace-nowrap">под давлением</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 max-w-[580px] text-[18px] leading-[1.7] text-neutral-600 sm:text-[20px]"
+            className="mt-6 max-w-[620px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-8 sm:text-[20px] sm:leading-[1.65]"
           >
-            Вставьте тезисы или план разговора. PeakTalk задаст 3 неудобных вопроса как руководитель,
-            клиент или инвестор и покажет, где ответ не выдерживает давления.
+            Перед важной встречей вставьте тезисы, КП или план разговора. PeakTalk
+            сыграет руководителя, клиента или инвестора, задаст неудобные вопросы
+            и покажет, где позиция не выдерживает давления.
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={safariMotionStyle}
+            className="mt-7 md:hidden"
+          >
+            <HeroVisual compact />
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.23, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-10 grid gap-4 sm:flex sm:items-center"
+            transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 grid gap-3 sm:mt-10 sm:flex sm:items-center sm:gap-4"
           >
             <Link
               href="/simulation/guest"
-              className="inline-flex min-h-[56px] cursor-pointer items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-8 text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none"
+              className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none sm:min-h-[56px] sm:px-8 sm:text-[15px]"
             >
               {CTA_LABEL}
               <ArrowRight size={18} />
@@ -326,7 +337,7 @@ function Hero() {
             <button
               type="button"
               onClick={() => smoothScroll('#scenarios')}
-              className="inline-flex min-h-[56px] cursor-pointer items-center justify-center px-4 text-[15px] font-bold text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:px-6"
+              className="inline-flex min-h-[48px] cursor-pointer items-center justify-center px-4 text-[15px] font-bold text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6"
             >
               Посмотреть сценарии
             </button>
@@ -335,11 +346,11 @@ function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.32 }}
-            className="mt-8 flex max-w-[680px] flex-wrap gap-x-6 gap-y-3 font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400"
+            transition={{ duration: 0.5, delay: 0.34 }}
+            className="mt-7 flex max-w-[680px] flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400 sm:mt-8 sm:gap-x-6 sm:gap-y-3 sm:text-[11px] sm:tracking-[0.16em]"
           >
             <span>без регистрации</span>
-            <span className="text-[#E8600A] font-medium">3 вопроса</span>
+            <span className="text-[#E8600A] font-medium">демо: 3 вопроса</span>
             <span>на своём кейсе</span>
           </motion.div>
         </div>
@@ -375,9 +386,62 @@ function PressureGap() {
   ];
 
   return (
-    <section className="bg-white py-[clamp(80px,12vw,140px)]">
+    <section className="bg-white py-[clamp(76px,12vw,140px)]">
+      <div className="md:hidden">
+        <div className="container-custom">
+          <RevealDiv className="overflow-hidden border border-neutral-950 bg-neutral-950 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)]">
+            <div className="border-b border-white/10 px-5 py-5">
+              <SectionLabel dark>живой фрагмент</SectionLabel>
+              <h2 className="mt-4 text-[28px] font-bold leading-[1.08] text-white text-balance">
+                Не презентация. Проверка, где позиция треснет.
+              </h2>
+              <p className="mt-4 text-[15px] leading-relaxed text-white/62 text-pretty">
+                Вместо абстрактных советов PeakTalk показывает конкретный момент, где собеседник начнёт давить.
+              </p>
+            </div>
+
+            <div className="grid gap-px bg-white/10">
+              <div className="bg-neutral-950 px-5 py-5">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">вопрос CFO</div>
+                  <div className="font-mono text-[10px] tabular-nums text-white/36">01 / 03</div>
+                </div>
+                <p className="text-[18px] font-semibold leading-[1.35] text-white text-pretty">
+                  Если бюджет режут на 30%, что Вы убираете первым — и какая метрика не должна просесть?
+                </p>
+              </div>
+
+              <div className="bg-[#f7f3eb] px-5 py-5 text-neutral-950">
+                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">ваш ответ</div>
+                <p className="text-[15px] leading-relaxed text-neutral-600 text-pretty">
+                  “Мы постараемся сохранить ключевые активности и пересобрать план без потери результата…”
+                </p>
+              </div>
+
+              <div className="bg-white px-5 py-5 text-neutral-950">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-1 size-2 shrink-0 bg-[#E8600A]" />
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">слабое место</div>
+                    <p className="mt-2 text-[17px] font-bold leading-snug text-neutral-950">
+                      Нет выбора, цены компромисса и владельца решения.
+                    </p>
+                  </div>
+                </div>
+                <div className="border-l-2 border-[#E8600A] pl-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">prep-card</div>
+                  <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 text-pretty">
+                    Начните с того, что можно отложить. Затем назовите риск, метрику и условие, при котором план меняется.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </RevealDiv>
+        </div>
+      </div>
+
       <div className="container-custom">
-        <RevealDiv className="mb-14 grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <RevealDiv className="mb-14 mt-16 grid gap-6 md:mt-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
             <SectionLabel>что на выходе</SectionLabel>
             <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
@@ -417,7 +481,7 @@ function ActionFlowPipeline() {
       id: '2',
       label: 'давление',
       title: 'Пройдите симуляцию',
-      body: 'Ответьте на 3 вопроса, которые проверяют ценность, риски и компромиссы.',
+      body: 'Ответьте на вопросы оппонента, которые проверяют ценность, риски и компромиссы.',
       result: 'проверенная аргументация',
     },
     {
@@ -436,7 +500,7 @@ function ActionFlowPipeline() {
           <div>
             <SectionLabel>как работает</SectionLabel>
             <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Один материал → три неудобных вопроса → рабочий план ответа.
+              Один материал → неудобные вопросы → рабочий план ответа.
             </h2>
           </div>
           <p className="max-w-md text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
@@ -695,7 +759,7 @@ function FooterCTA() {
             Не несите слабый ответ на сильную встречу.
           </h2>
           <p className="mx-auto mt-8 max-w-2xl text-[18px] leading-relaxed text-white/70">
-            Запустите 3 вопроса на своём материале и посмотрите, где аргументация требует усиления.
+            Запустите бесплатное демо на своём материале и посмотрите, где аргументация требует усиления.
           </p>
           <div className="mt-10 flex justify-center">
             <Link href="/simulation/guest" className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white rounded-none">
@@ -754,7 +818,7 @@ function JsonLd() {
         '@type': 'SoftwareApplication',
         name: 'PeakTalk',
         url: 'https://peaktalk.ru',
-        description: 'Сервис подготовки к сложным рабочим встречам: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места аргументации.',
+        description: 'AI-стресс-тест аргументов перед сложной рабочей встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места позиции.',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: [
