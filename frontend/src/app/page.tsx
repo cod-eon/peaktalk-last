@@ -7,11 +7,8 @@ import Link from 'next/link';
 import {
   ArrowRight,
   ChevronDown,
-  ClipboardCheck,
-  FileText,
   Lock,
   Menu,
-  MessageSquare,
   ShieldAlert,
   Target,
   Timer,
@@ -291,7 +288,7 @@ function Hero() {
             transition={{ duration: 0.4 }}
             className="mb-5 inline-flex max-w-full border border-neutral-200 bg-white/80 px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-600 shadow-sm rounded-none sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]"
           >
-            pressure-test перед рабочей встречей
+            подготовка к сложной рабочей встрече
           </motion.div>
 
           <motion.h1
@@ -300,7 +297,7 @@ function Hero() {
             transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-[780px] font-display text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[52px] lg:text-[54px] xl:text-[56px]"
           >
-            Проверьте позицию до встречи, где будут давить
+            Проверка аргументов <span className="whitespace-nowrap">под давлением</span>
           </motion.h1>
 
           <motion.p
@@ -309,9 +306,20 @@ function Hero() {
             transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="mt-6 max-w-[620px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-8 sm:text-[20px] sm:leading-[1.65]"
           >
-            Вставьте тезисы, КП или план защиты. PeakTalk сыграет руководителя,
-            клиента или инвестора, задаст неудобные вопросы и покажет слабые места ответа.
+            Перед важной встречей вставьте тезисы, КП или план разговора. PeakTalk
+            сыграет руководителя, клиента или инвестора, задаст неудобные вопросы
+            и покажет, где позиция не выдерживает давления.
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={safariMotionStyle}
+            className="mt-7 md:hidden"
+          >
+            <HeroVisual compact />
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -345,16 +353,6 @@ function Hero() {
             <span className="text-[#E8600A] font-medium">демо: 3 вопроса</span>
             <span>на своём кейсе</span>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            style={safariMotionStyle}
-            className="mt-7 md:hidden"
-          >
-            <HeroVisual compact />
-          </motion.div>
         </div>
 
         <motion.div
@@ -372,94 +370,99 @@ function Hero() {
 }
 
 function PressureGap() {
-  const outcomes = [
+  const items = [
     {
-      title: 'Вопрос',
-      body: 'Оппонент бьёт по приоритету, срокам и цене компромисса.',
+      title: 'Вопрос оппонента',
+      body: 'Почему это решение важнее двух альтернатив, которые уже лежат в backlog?',
     },
     {
       title: 'Слабое место',
-      body: 'PeakTalk подсвечивает не общую “уверенность”, а дыру в логике.',
+      body: 'Вы называете срок, но не показываете зависимость от ресурсов и владельца решения.',
     },
     {
       title: 'Prep-card',
-      body: 'Короткая карточка: как перестроить ответ до реальной встречи.',
+      body: 'Начните с цены задержки, затем назовите компромисс и условия, при которых план меняется.',
     },
   ];
 
   return (
-    <section className="bg-white py-[clamp(72px,10vw,126px)]">
-      <div className="container-custom grid gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] lg:items-center lg:gap-16">
-        <RevealDiv>
-          <SectionLabel>что на выходе</SectionLabel>
-          <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.1] text-neutral-950 text-balance sm:text-[46px]">
-            Меньше объяснений. Больше доказательства, где ответ ломается.
-          </h2>
-          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-500 text-pretty">
-            PeakTalk не “улучшает выступление”. Он прогоняет Ваш материал через оппонента и
-            возвращает рабочие правки: вопрос, слабое место, следующий ответ.
-          </p>
-
-          <div className="mt-9 grid gap-px border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
-            {outcomes.map((item, index) => (
-              <div key={item.title} className="bg-white p-5">
-                <div className="font-mono text-[11px] font-medium uppercase text-[#E8600A]">0{index + 1}</div>
-                <h3 className="mt-4 text-[18px] font-bold leading-tight text-neutral-950">{item.title}</h3>
-                <p className="mt-3 text-[14px] leading-relaxed text-neutral-500 text-pretty">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </RevealDiv>
-
-        <RevealDiv delay={0.06} className="border border-neutral-950 bg-[#f4f1ea] shadow-xl shadow-black/10">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white p-4 sm:p-5">
-            <div className="font-mono text-[10px] uppercase text-neutral-400">живой фрагмент разбора</div>
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-neutral-600">
-              <Timer size={15} className="text-[#E8600A]" />
-              <span className="tabular-nums">03:12 до встречи</span>
-            </div>
-          </div>
-
-          <div className="grid gap-px bg-neutral-200 p-px">
-            <div className="bg-neutral-950 p-5 text-white sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-                <div className="font-mono text-[10px] uppercase text-[#FF8A3D]">вопрос руководителя</div>
-                <div className="font-mono text-[10px] tabular-nums text-white/35">01 / 03</div>
-              </div>
-              <p className="text-[20px] font-bold leading-[1.32] text-white text-pretty sm:text-[26px]">
-                Если ресурс режется на 20%, что Вы убираете первым и какая метрика не должна просесть?
+    <section className="bg-white py-[clamp(76px,12vw,140px)]">
+      <div className="md:hidden">
+        <div className="container-custom">
+          <RevealDiv className="overflow-hidden border border-neutral-950 bg-neutral-950 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)]">
+            <div className="border-b border-white/10 px-5 py-5">
+              <SectionLabel dark>живой фрагмент</SectionLabel>
+              <h2 className="mt-4 text-[28px] font-bold leading-[1.08] text-white text-balance">
+                Не презентация. Проверка, где позиция треснет.
+              </h2>
+              <p className="mt-4 text-[15px] leading-relaxed text-white/62 text-pretty">
+                Вместо абстрактных советов PeakTalk показывает конкретный момент, где собеседник начнёт давить.
               </p>
             </div>
 
-            <div className="grid gap-px bg-neutral-200 md:grid-cols-2">
-              <div className="bg-white p-5 sm:p-6">
-                <div className="font-mono text-[10px] uppercase text-neutral-400">ваш черновик</div>
-                <p className="mt-4 text-[16px] leading-relaxed text-neutral-600 text-pretty">
+            <div className="grid gap-px bg-white/10">
+              <div className="bg-neutral-950 px-5 py-5">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">вопрос CFO</div>
+                  <div className="font-mono text-[10px] tabular-nums text-white/36">01 / 03</div>
+                </div>
+                <p className="text-[18px] font-semibold leading-[1.35] text-white text-pretty">
+                  Если бюджет режут на 30%, что Вы убираете первым — и какая метрика не должна просесть?
+                </p>
+              </div>
+
+              <div className="bg-[#f7f3eb] px-5 py-5 text-neutral-950">
+                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">ваш ответ</div>
+                <p className="text-[15px] leading-relaxed text-neutral-600 text-pretty">
                   “Мы постараемся сохранить ключевые активности и пересобрать план без потери результата…”
                 </p>
               </div>
-              <div className="bg-white p-5 sm:p-6">
+
+              <div className="bg-white px-5 py-5 text-neutral-950">
                 <div className="mb-4 flex items-start gap-3">
-                  <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center bg-[#E8600A]/10 text-[#E8600A]">
-                    <ShieldAlert size={17} />
-                  </div>
+                  <div className="mt-1 size-2 shrink-0 bg-[#E8600A]" />
                   <div>
-                    <div className="font-mono text-[10px] uppercase text-[#E8600A]">слабое место</div>
-                    <p className="mt-1 text-[18px] font-bold leading-tight text-neutral-950">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">слабое место</div>
+                    <p className="mt-2 text-[17px] font-bold leading-snug text-neutral-950">
                       Нет выбора, цены компромисса и владельца решения.
                     </p>
                   </div>
                 </div>
                 <div className="border-l-2 border-[#E8600A] pl-4">
-                  <div className="font-mono text-[10px] uppercase text-neutral-400">prep-card</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">prep-card</div>
                   <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 text-pretty">
                     Начните с того, что можно отложить. Затем назовите риск, метрику и условие, при котором план меняется.
                   </p>
                 </div>
               </div>
             </div>
+          </RevealDiv>
+        </div>
+      </div>
+
+      <div className="container-custom">
+        <RevealDiv className="mb-14 mt-16 grid gap-6 md:mt-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <SectionLabel>что на выходе</SectionLabel>
+            <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
+              Слабое место лучше увидеть на экране, а не за столом переговоров.
+            </h2>
           </div>
+          <p className="max-w-xl text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
+            PeakTalk не пишет красивый текст вместо Вас. Он быстро показывает, какой вопрос прилетит,
+            где ответ ломается и как усилить формулировку до встречи.
+          </p>
         </RevealDiv>
+
+        <div className="grid gap-8 border-t border-neutral-100 pt-10 lg:grid-cols-3 lg:gap-14 lg:pt-14">
+          {items.map((item, index) => (
+            <RevealDiv key={item.title} delay={index * 0.05} className="bg-white">
+              <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
+              <h3 className="mt-4 text-[22px] font-bold leading-tight text-neutral-950">{item.title}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{item.body}</p>
+            </RevealDiv>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -468,99 +471,73 @@ function PressureGap() {
 function ActionFlowPipeline() {
   const steps = [
     {
-      id: '01',
-      label: 'brief',
-      title: 'Материал встречи',
-      body: 'Тезисы, КП, письмо клиенту, структура презентации или план защиты бюджета.',
+      id: '1',
+      label: 'материал',
+      title: 'Загрузите спич',
+      body: 'Тезисы, КП, письмо клиенту или план защиты бюджета.',
       result: 'сценарий тренировки',
-      icon: FileText,
-      visual: ['QBR: защитить продление', 'Риск: бюджет заморожен', 'Запрос: согласовать рост'],
     },
     {
-      id: '02',
-      label: 'pressure',
-      title: 'Вопросы оппонента',
-      body: 'Симуляция давит на ценность, риски, сроки, бюджет и право на решение.',
+      id: '2',
+      label: 'давление',
+      title: 'Пройдите симуляцию',
+      body: 'Ответьте на вопросы оппонента, которые проверяют ценность, риски и компромиссы.',
       result: 'проверенная аргументация',
-      icon: MessageSquare,
-      visual: ['CFO: почему сейчас?', 'Клиент: докажите срок', 'Инвестор: покажите когорты'],
     },
     {
-      id: '03',
-      label: 'debrief',
-      title: 'План усиления',
-      body: 'Получите слабые места, точные формулировки и следующий рабочий шаг.',
-      result: 'prep-card перед встречей',
-      icon: ClipboardCheck,
-      visual: ['нет метрики', 'слабый компромисс', 'следующий ответ готов'],
+      id: '3',
+      label: 'правки',
+      title: 'План улучшений',
+      body: 'Увидьте слабые места, формулировки и следующий рабочий шаг.',
+      result: 'список правок',
     },
   ];
 
   return (
-    <section id="how" className="bg-[#faf8f4] py-[clamp(72px,10vw,126px)]">
+    <section id="how" className="bg-[#faf8f4] py-[clamp(80px,12vw,140px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+        <RevealDiv className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div>
             <SectionLabel>как работает</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 text-balance sm:text-[46px]">
-              Один короткий цикл: brief → pressure → debrief.
+            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
+              Один материал → неудобные вопросы → рабочий план ответа.
             </h2>
           </div>
-          <p className="max-w-lg text-[17px] leading-relaxed text-neutral-500 text-pretty lg:pb-2">
-            Сначала фиксируете контекст встречи. Затем PeakTalk давит ролью оппонента
-            и собирает debrief, который можно открыть прямо перед разговором.
+          <p className="max-w-md text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
+            Без учебной сцены и геймификации. Только короткий контур подготовки к разговору, где Вас будут проверять.
           </p>
         </RevealDiv>
 
-        <div className="relative grid gap-px border border-neutral-200 bg-neutral-200 md:grid-cols-3">
-          {steps.map((step, index) => {
-            const StepIcon = step.icon;
-            return (
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
+          <div className="flex flex-col justify-between rounded-none bg-neutral-950 p-8 text-white shadow-xl shadow-black/5">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#FF8A3D]">pipeline</div>
+            <p className="mt-8 text-[22px] font-bold leading-[1.2] lg:text-[26px]">
+              Материал превращается в проверку аргументов, а не в ещё один AI-текст.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {steps.map((step, index) => (
               <RevealDiv
                 key={step.title}
                 delay={index * 0.05}
-                className="group relative flex min-h-[430px] flex-col bg-white"
+                className="relative flex flex-col rounded-none border border-neutral-100 bg-white p-7 shadow-sm transition-shadow hover:shadow-md"
               >
-                {index < steps.length - 1 && (
-                  <div className="absolute -right-4 top-[118px] z-10 hidden size-8 items-center justify-center border border-neutral-200 bg-white text-neutral-400 md:flex">
-                    <ArrowRight size={16} />
-                  </div>
-                )}
-
-                <div className="relative flex h-[208px] items-center justify-center overflow-hidden border-b border-neutral-100 bg-[#f4f1ea] px-6 pt-10">
-                  <div className="absolute left-5 top-5 font-mono text-[11px] font-medium uppercase text-neutral-400">{step.label}</div>
-                  <div className="absolute right-5 top-5 font-mono text-[18px] font-black tabular-nums text-neutral-950">{step.id}</div>
-
-                  <div className="w-full max-w-[280px] border border-neutral-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:-translate-y-1">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <div className="flex size-9 items-center justify-center bg-neutral-950 text-white">
-                        <StepIcon size={18} />
-                      </div>
-                      <div className="h-2 w-16 bg-[#E8600A]" />
-                    </div>
-                    <div className="grid gap-2">
-                      {step.visual.map((line) => (
-                        <div key={line} className="flex items-center gap-2 border border-neutral-100 bg-[#faf8f4] px-3 py-2">
-                          <span className="size-1.5 shrink-0 bg-[#E8600A]" />
-                          <span className="truncate text-[12px] font-semibold text-neutral-600">{line}</span>
-                        </div>
-                      ))}
-                    </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">{step.label}</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#faf8f4] font-display text-sm font-black text-neutral-950">
+                    {step.id}
                   </div>
                 </div>
-
-                <div className="flex flex-1 flex-col p-6 sm:p-7">
-                  <h3 className="text-[22px] font-bold leading-[1.15] text-neutral-950">{step.title}</h3>
-                  <p className="mt-4 text-[15px] leading-relaxed text-neutral-500 text-pretty">{step.body}</p>
-                  <div className="mt-auto pt-7">
-                    <div className="border-t border-neutral-100 pt-4 text-[14px] font-bold text-[#E8600A]">
-                      Результат: {step.result}
-                    </div>
+                <h3 className="mt-8 text-[20px] font-bold leading-[1.15] text-neutral-950">{step.title}</h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">{step.body}</p>
+                <div className="mt-auto pt-6">
+                  <div className="inline-block rounded bg-[#E8600A]/10 px-2.5 py-1 text-[13px] font-semibold text-[#E8600A]">
+                    Результат: {step.result}
                   </div>
                 </div>
               </RevealDiv>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -571,243 +548,112 @@ function InteractiveScenarios() {
   const scenarios = [
     {
       tag: 'Бюджет',
-      title: 'Защитить бюджет',
-      desc: 'Нужно доказать приоритет, когда расходы режут и просят убрать инициативы.',
+      title: 'Защитить бюджет перед руководителем',
+      desc: 'Когда просят сократить расходы, а Вам нужно доказать, что решение влияет на результат.',
       href: '/scenarios/budget-cut-q3',
-      role: 'Руководитель',
-      stake: 'сохранить ресурс',
-      risk: 'срезать инициативу без замены',
-      metric: 'срок релиза',
-      question: 'Что Вы готовы убрать первым, если ресурс режется на 20%?',
-      output: 'Нужен компромисс: что снимаем, какую метрику защищаем, кто владелец решения.',
     },
     {
       tag: 'Клиент',
-      title: 'Разобрать эскалацию',
-      desc: 'Нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
+      title: 'Подготовиться к разговору с клиентом',
+      desc: 'Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
       href: '/scenarios/client-escalation',
-      role: 'Клиент',
-      stake: 'вернуть доверие',
-      risk: 'ещё один сорванный срок',
-      metric: 'SLA / продление',
-      question: 'Почему мы должны верить новому сроку, если предыдущий уже сорван?',
-      output: 'Нужен новый механизм доверия: причина, контрольный ритм, компенсация.',
     },
     {
       tag: 'Инвестор',
-      title: 'Выдержать инвестора',
-      desc: 'Нужно защитить рост, рынок, unit-экономику и реалистичность плана.',
+      title: 'Выдержать вопросы инвестора',
+      desc: 'Когда будут давить на рынок, рост, unit-экономику и реалистичность плана.',
       href: '/scenarios/series-a-pitch',
-      role: 'Инвестор',
-      stake: 'защитить раунд',
-      risk: 'growth story без математики',
-      metric: 'CAC / retention',
-      question: 'Откуда берётся рост, если retention уже проседает?',
-      output: 'Нужно развести CAC, retention и payback по когортам, затем назвать допущение.',
     },
   ];
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeScenario = scenarios[activeIndex];
-
   return (
-    <section id="scenarios" className="bg-white py-[clamp(72px,10vw,126px)]">
+    <section id="scenarios" className="bg-white py-[clamp(80px,12vw,140px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+        <RevealDiv className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div>
             <SectionLabel>сценарии встреч</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 text-balance sm:text-[46px]">
-              Не “публичные выступления”. Конкретная встреча в календаре.
+            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
+              Начните не с “переговоров вообще”, а с разговора, который уже стоит в календаре.
             </h2>
           </div>
-          <Link href="/scenarios" className="inline-flex min-h-[48px] w-fit items-center gap-2 bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 rounded-none">
+          <Link href="/scenarios" className="inline-flex min-h-[48px] w-fit items-center gap-2 bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 lg:pb-2 rounded-none">
             Все сценарии
             <ArrowRight size={16} />
           </Link>
         </RevealDiv>
 
-        <RevealDiv className="min-w-0 overflow-hidden border border-neutral-200 bg-neutral-200">
-          <div className="grid min-w-0 gap-px bg-neutral-200 lg:grid-cols-[340px_minmax(0,1fr)]">
-            <div className="min-w-0 bg-white">
-              <div className="flex min-w-0 gap-px overflow-x-auto bg-neutral-200 lg:block lg:overflow-visible">
-                {scenarios.map((item, index) => (
-                  <button
-                    key={item.title}
-                    type="button"
-                    onClick={() => setActiveIndex(index)}
-                    className={`relative min-w-[240px] flex-1 cursor-pointer bg-white p-5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 lg:min-w-0 lg:border-b lg:border-neutral-100 lg:p-6 ${
-                      activeIndex === index ? 'text-neutral-950' : 'text-neutral-500 hover:text-neutral-950'
-                    }`}
-                    aria-pressed={activeIndex === index}
-                  >
-                    {activeIndex === index && (
-                      <motion.div
-                        layoutId="scenarioTabIndicator"
-                        className="absolute bottom-0 left-0 right-0 h-1 bg-[#E8600A] lg:bottom-0 lg:right-auto lg:top-0 lg:h-auto lg:w-1"
-                        transition={{ duration: 0.18, ease: 'easeOut' }}
-                      />
-                    )}
-                    <div className="font-mono text-[10px] font-medium uppercase text-[#E8600A]">{item.tag}</div>
-                    <div className="mt-3 text-[18px] font-bold leading-tight">{item.title}</div>
-                    <p className="mt-3 line-clamp-2 text-[14px] leading-relaxed text-neutral-500">{item.desc}</p>
-                  </button>
-                ))}
+        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+          {scenarios.map((item, index) => (
+            <RevealDiv key={item.title} delay={index * 0.04} className="group flex min-h-[260px] flex-col rounded-none border border-neutral-100 bg-white p-7 shadow-sm transition-all duration-200 hover:shadow-lg lg:min-h-[300px] lg:p-8">
+              <div className="mb-10 flex items-center justify-between gap-4 lg:mb-14">
+                <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">{item.tag}</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 font-display text-sm font-black text-neutral-400">{index + 1}</div>
               </div>
-            </div>
-
-            <div className="min-w-0 bg-[#faf8f4] p-4 sm:p-6 lg:p-8">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeScenario.title}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="grid gap-6 lg:grid-cols-[minmax(260px,0.86fr)_minmax(0,1.14fr)] lg:items-center"
-                >
-                  <div className="relative min-h-[260px] overflow-hidden border border-neutral-200 bg-white p-5 sm:min-h-[320px]">
-                    <div className="absolute inset-x-0 top-0 h-10 border-b border-neutral-100 bg-white" />
-                    <div className="relative z-10 pt-8">
-                      <div className="font-mono text-[10px] uppercase text-neutral-400">meeting brief</div>
-                      <h3 className="mt-3 text-[28px] font-bold leading-[1.05] text-neutral-950 text-balance">
-                        {activeScenario.title}
-                      </h3>
-
-                      <div className="mt-6 grid gap-px bg-neutral-200 sm:grid-cols-3">
-                        {[
-                          ['роль', activeScenario.role],
-                          ['ставка', activeScenario.stake],
-                          ['метрика', activeScenario.metric],
-                        ].map(([label, value]) => (
-                          <div key={label} className="bg-[#faf8f4] p-4">
-                            <div className="font-mono text-[9px] uppercase text-neutral-400">{label}</div>
-                            <div className="mt-2 text-[15px] font-bold leading-snug text-neutral-950">{value}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-5 border border-neutral-200 bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                          <div className="font-mono text-[10px] uppercase text-[#E8600A]">risk map</div>
-                          <div className="font-mono text-[10px] tabular-nums text-neutral-400">pressure 78</div>
-                        </div>
-                        <div className="h-2 bg-neutral-100">
-                          <div className="h-full w-[78%] bg-[#E8600A]" />
-                        </div>
-                        <p className="mt-4 text-[15px] font-semibold leading-relaxed text-neutral-600 text-pretty">
-                          {activeScenario.risk}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3">
-                    <div className="bg-neutral-950 p-5 text-white sm:p-6">
-                      <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-                        <div className="font-mono text-[10px] uppercase text-[#FF8A3D]">пример давления</div>
-                        <div className="font-mono text-[10px] uppercase text-white/35">{activeScenario.tag}</div>
-                      </div>
-                      <p className="text-[21px] font-bold leading-[1.3] text-white text-pretty sm:text-[26px]">
-                        {activeScenario.question}
-                      </p>
-                    </div>
-
-                    <div className="border border-neutral-200 bg-white p-5 sm:p-6">
-                      <div className="font-mono text-[10px] uppercase text-[#E8600A]">debrief</div>
-                      <p className="mt-3 text-[17px] font-bold leading-snug text-neutral-950 text-pretty">{activeScenario.output}</p>
-                      <Link
-                        href={activeScenario.href}
-                        className="mt-6 inline-flex min-h-11 w-fit items-center gap-2 bg-neutral-950 px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 rounded-none"
-                      >
-                        Разобрать сценарий
-                        <ArrowRight size={15} />
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </RevealDiv>
+              <h3 className="text-[22px] font-bold leading-[1.15] text-neutral-950 lg:text-[24px]">{item.title}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-neutral-500">{item.desc}</p>
+              <Link
+                href={item.href}
+                className="mt-auto inline-flex w-fit items-center gap-2 pt-6 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 lg:pt-8"
+              >
+                Разобрать сценарий
+                <ArrowRight size={16} />
+              </Link>
+            </RevealDiv>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
 function PricingCTA() {
-  const plans = [
-    {
-      label: 'бесплатный стресс-тест',
-      price: '0 ₽',
-      note: '3 вопроса без регистрации и карты',
-      href: '/simulation/guest',
-      cta: CTA_LABEL,
-      tone: 'light',
-      points: ['свой материал', 'роль оппонента', 'первые слабые места'],
-    },
-    {
-      label: 'полная сессия',
-      price: '299 ₽',
-      note: 'полный разбор, отчёт и prep-card',
-      href: '/billing',
-      cta: 'Открыть полную сессию',
-      tone: 'dark',
-      points: ['история ответов', 'debrief', 'карточка перед встречей'],
-    },
-  ];
-
   return (
-    <section id="pricing" className="bg-[#faf8f4] py-[clamp(72px,10vw,126px)]">
+    <section id="pricing" className="bg-[#faf8f4] py-[clamp(80px,12vw,140px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(420px,1fr)] lg:items-end">
-          <div>
+        <RevealDiv className="mx-auto mb-14 max-w-3xl text-center">
           <SectionLabel>бесплатно / полностью</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 text-balance sm:text-[46px]">
-              Попробуйте механику бесплатно. Платите только за полный разбор.
+          <h2 className="mt-5 text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
+            Бесплатно — первые 3 вопроса.<br className="hidden sm:block" /> Полная сессия — когда нужно сохранить разбор.
           </h2>
-          </div>
-          <p className="max-w-lg text-[17px] leading-relaxed text-neutral-500 text-pretty lg:pb-2">
-            Граница честная: бесплатный режим показывает давление на Вашем кейсе.
-            Полная сессия нужна, когда важно сохранить debrief и вернуться к нему перед встречей.
+          <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-neutral-500">
+            Мы не прячем границу: бесплатный режим показывает механику на Вашем материале. Отчёт, расшифровка и prep-card открываются в полной сессии.
           </p>
         </RevealDiv>
 
-        <div className="grid gap-px border border-neutral-200 bg-neutral-200 md:grid-cols-2">
-          {plans.map((plan, index) => {
-            const isDark = plan.tone === 'dark';
-            return (
-              <RevealDiv
-                key={plan.label}
-                delay={index * 0.06}
-                className={`flex min-h-[360px] flex-col p-7 sm:p-8 lg:p-10 ${isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-950'}`}
-              >
-                <div className={`font-mono text-[11px] font-medium uppercase ${isDark ? 'text-[#FF8A3D]' : 'text-neutral-400'}`}>
-                  {plan.label}
-                </div>
-                <div className="mt-5 text-[48px] font-black leading-none tabular-nums">{plan.price}</div>
-                <p className={`mt-4 text-[16px] leading-relaxed text-pretty ${isDark ? 'text-white/68' : 'text-neutral-600'}`}>{plan.note}</p>
-                <div className={`my-7 h-px ${isDark ? 'bg-white/10' : 'bg-neutral-100'}`} />
-                <div className="mb-8 flex flex-wrap gap-2">
-                  {plan.points.map((point) => (
-                    <span
-                      key={point}
-                      className={`border px-3 py-1.5 text-[13px] font-semibold ${isDark ? 'border-white/12 bg-white/5 text-white/80' : 'border-neutral-200 bg-[#faf8f4] text-neutral-700'}`}
-                    >
-                      {point}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href={plan.href}
-                  className={`mt-auto flex min-h-[56px] items-center justify-center px-6 text-[15px] font-bold transition-colors rounded-none ${
-                    isDark ? 'bg-white text-neutral-950 hover:bg-neutral-100' : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </RevealDiv>
-            );
-          })}
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2 lg:gap-8">
+          <RevealDiv className="flex flex-col rounded-none border border-neutral-200 bg-white p-8 shadow-sm lg:p-10">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">бесплатный стресс-тест</div>
+            <div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div>
+            <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Материал встречи, выбранный оппонент и первые 3 вопроса без регистрации.</p>
+            <div className="my-6 h-px bg-neutral-100" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">
+              {['Без регистрации', 'Без карты', 'На тезисах, документе или плане разговора'].map((item) => (
+                <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E8600A]" />{item}</li>
+              ))}
+            </ul>
+            <Link href="/simulation/guest" className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 rounded-none">
+              {CTA_LABEL}
+            </Link>
+          </RevealDiv>
+
+          <RevealDiv delay={0.08} className="flex flex-col rounded-none bg-neutral-950 p-8 text-white shadow-xl lg:p-10">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#FF8A3D]">полная сессия</div>
+            <div className="mt-4 flex items-end gap-2 text-[48px] font-black leading-none text-white">
+              <span className="text-[#FF8A3D]">299</span>
+              <span>₽</span>
+              <span className="pb-1.5 text-lg font-medium text-white/50">/ сессия</span>
+            </div>
+            <p className="mt-4 text-[15px] leading-relaxed text-white/70">Полная симуляция для подготовки к конкретному разговору, с сохранением материалов.</p>
+            <div className="my-6 h-px bg-white/10" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-white/90">
+              {['История вопросов и ответов', 'Разбор слабых мест', 'Prep-card и отчёт перед встречей'].map((item) => (
+                <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF8A3D]" />{item}</li>
+              ))}
+            </ul>
+            <Link href="/billing" className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-[15px] font-bold text-neutral-950 transition-colors hover:bg-neutral-100 rounded-none">
+              Открыть полную сессию
+            </Link>
+          </RevealDiv>
         </div>
       </div>
     </section>
@@ -818,43 +664,43 @@ function FAQAndTrust() {
   const faqs = [
     {
       q: 'Что такое PeakTalk?',
-      a: 'Сервис подготовки к сложным рабочим встречам: вставляете материал, выбираете оппонента и отвечаете на вопросы, которые проверяют аргументацию.',
+      a: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
     },
     {
       q: 'Нужна ли регистрация?',
-      a: 'Для первых трёх вопросов — нет. Аккаунт нужен для сохранения полной сессии, отчёта и prep-card.',
+      a: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора, отчёта и prep-card.',
     },
     {
       q: 'Что можно вставить вместо документа?',
-      a: 'Тезисы, план разговора, КП, письмо клиенту, структура презентации или любой текст, который нужно защитить.',
+      a: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
     },
     {
       q: 'Это заменяет коуча или курс?',
-      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного материала перед конкретной встречей.',
+      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного материала перед конкретным разговором.',
     },
   ];
 
   const signals = [
-    { icon: Target, title: 'PM / Product Lead', desc: 'Защита roadmap, ресурсов и приоритетов.' },
-    { icon: ShieldAlert, title: 'Founder / CEO', desc: 'Инвестор, board update, стратегическая защита.' },
-    { icon: Timer, title: 'CS / Account Lead', desc: 'Клиентская эскалация и продление контракта.' },
-    { icon: Lock, title: 'Без карты на старте', desc: 'Первые вопросы запускаются без оплаты.' },
+    { icon: Target, title: 'Конкретный материал', desc: 'Вопросы строятся вокруг текста, который Вы вставили.' },
+    { icon: ShieldAlert, title: 'Неприятная роль', desc: 'Оппонент давит по цифрам, срокам, рискам и компромиссам.' },
+    { icon: Timer, title: 'Перед встречей', desc: 'Формат рассчитан на подготовку, когда времени мало.' },
+    { icon: Lock, title: 'Без карты на старте', desc: 'Бесплатный режим запускается без оплаты и регистрации.' },
   ];
 
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="bg-white py-[clamp(72px,10vw,126px)]">
+    <section id="faq" className="bg-white py-[clamp(80px,12vw,140px)]">
       <div className="container-custom grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1fr)] lg:gap-20">
         <RevealDiv>
           <SectionLabel>trust / faq</SectionLabel>
-          <h2 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.1] text-neutral-950 text-balance sm:text-[46px]">
-            Для ролей, которым нужно защищать решение, а не красиво выступать.
+          <h2 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
+            Для разговоров, где общие формулировки не проходят.
           </h2>
-          <div className="mt-10 grid gap-4">
+          <div className="mt-10 grid gap-6">
             {signals.map((signal) => (
-              <div key={signal.title} className="flex gap-4 border border-neutral-100 bg-[#faf8f4] p-4">
-                <div className="flex size-10 shrink-0 items-center justify-center bg-white">
+              <div key={signal.title} className="flex gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8600A]/10">
                   <signal.icon size={20} className="text-[#E8600A]" />
                 </div>
                 <div>
