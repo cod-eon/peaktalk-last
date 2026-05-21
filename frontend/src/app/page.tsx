@@ -15,12 +15,6 @@ import {
   X,
 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
-import {
-  ArtifactPreview,
-  HeroLiveFrame,
-  PressureDrillFrame,
-  ScenarioBrowser,
-} from '@/components/landing/AnimatedLandingFrames';
 
 const CTA_LABEL = 'Запустить демо бесплатно';
 
@@ -312,8 +306,9 @@ function Hero() {
             transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="mt-6 max-w-[620px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-8 sm:text-[20px] sm:leading-[1.65]"
           >
-            Вставьте тезисы, КП или план разговора. PeakTalk сыграет CFO,
-            клиента или инвестора и покажет, где позиция не выдерживает давления.
+            Перед важной встречей вставьте тезисы, КП или план разговора. PeakTalk
+            сыграет руководителя, клиента или инвестора, задаст неудобные вопросы
+            и покажет, где позиция не выдерживает давления.
           </motion.p>
 
           <motion.div
@@ -358,15 +353,6 @@ function Hero() {
             <span className="text-[#E8600A] font-medium">демо: 3 вопроса</span>
             <span>на своём кейсе</span>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 hidden sm:block"
-          >
-            <HeroLiveFrame />
-          </motion.div>
         </div>
 
         <motion.div
@@ -387,37 +373,88 @@ function PressureGap() {
   const items = [
     {
       title: 'Вопрос оппонента',
-      body: 'Конкретная реплика CFO, клиента или инвестора, а не общий совет.',
+      body: 'Почему это решение важнее двух альтернатив, которые уже лежат в backlog?',
     },
     {
       title: 'Слабое место',
-      body: 'PeakTalk подсвечивает, где не хватает факта, trade-off или владельца.',
+      body: 'Вы называете срок, но не показываете зависимость от ресурсов и владельца решения.',
     },
     {
       title: 'Prep-card',
-      body: 'На выходе — короткая карточка, с которой можно идти на встречу.',
+      body: 'Начните с цены задержки, затем назовите компромисс и условия, при которых план меняется.',
     },
   ];
 
   return (
-    <section className="bg-white py-[clamp(80px,12vw,140px)]">
+    <section className="bg-white py-[clamp(76px,12vw,140px)]">
+      <div className="md:hidden">
+        <div className="container-custom">
+          <RevealDiv className="overflow-hidden border border-neutral-950 bg-neutral-950 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)]">
+            <div className="border-b border-white/10 px-5 py-5">
+              <SectionLabel dark>живой фрагмент</SectionLabel>
+              <h2 className="mt-4 text-[28px] font-bold leading-[1.08] text-white text-balance">
+                Не презентация. Проверка, где позиция треснет.
+              </h2>
+              <p className="mt-4 text-[15px] leading-relaxed text-white/62 text-pretty">
+                Вместо абстрактных советов PeakTalk показывает конкретный момент, где собеседник начнёт давить.
+              </p>
+            </div>
+
+            <div className="grid gap-px bg-white/10">
+              <div className="bg-neutral-950 px-5 py-5">
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">вопрос CFO</div>
+                  <div className="font-mono text-[10px] tabular-nums text-white/36">01 / 03</div>
+                </div>
+                <p className="text-[18px] font-semibold leading-[1.35] text-white text-pretty">
+                  Если бюджет режут на 30%, что Вы убираете первым — и какая метрика не должна просесть?
+                </p>
+              </div>
+
+              <div className="bg-[#f7f3eb] px-5 py-5 text-neutral-950">
+                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">ваш ответ</div>
+                <p className="text-[15px] leading-relaxed text-neutral-600 text-pretty">
+                  “Мы постараемся сохранить ключевые активности и пересобрать план без потери результата…”
+                </p>
+              </div>
+
+              <div className="bg-white px-5 py-5 text-neutral-950">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-1 size-2 shrink-0 bg-[#E8600A]" />
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">слабое место</div>
+                    <p className="mt-2 text-[17px] font-bold leading-snug text-neutral-950">
+                      Нет выбора, цены компромисса и владельца решения.
+                    </p>
+                  </div>
+                </div>
+                <div className="border-l-2 border-[#E8600A] pl-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">prep-card</div>
+                  <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 text-pretty">
+                    Начните с того, что можно отложить. Затем назовите риск, метрику и условие, при котором план меняется.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </RevealDiv>
+        </div>
+      </div>
+
       <div className="container-custom">
-        <RevealDiv className="mb-12 grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+        <RevealDiv className="mb-14 mt-16 grid gap-6 md:mt-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <SectionLabel>живой фрагмент</SectionLabel>
+            <SectionLabel>что на выходе</SectionLabel>
             <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Не презентация. Проверка, где позиция треснет.
+              Слабое место лучше увидеть на экране, а не за столом переговоров.
             </h2>
           </div>
           <p className="max-w-xl text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
-            PeakTalk показывает конкретный момент давления: вопрос, слабое место,
-            усиленную формулировку и следующий drill.
+            PeakTalk не пишет красивый текст вместо Вас. Он быстро показывает, какой вопрос прилетит,
+            где ответ ломается и как усилить формулировку до встречи.
           </p>
         </RevealDiv>
 
-        <PressureDrillFrame />
-
-        <div className="mt-12 grid gap-8 border-t border-neutral-100 pt-10 lg:grid-cols-3 lg:gap-14">
+        <div className="grid gap-8 border-t border-neutral-100 pt-10 lg:grid-cols-3 lg:gap-14 lg:pt-14">
           {items.map((item, index) => (
             <RevealDiv key={item.title} delay={index * 0.05} className="bg-white">
               <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
@@ -436,23 +473,23 @@ function ActionFlowPipeline() {
     {
       id: '1',
       label: 'материал',
-      title: 'Дайте контекст',
-      body: 'Тезисы, КП, письмо клиенту или план защиты.',
+      title: 'Загрузите спич',
+      body: 'Тезисы, КП, письмо клиенту или план защиты бюджета.',
       result: 'сценарий тренировки',
     },
     {
       id: '2',
       label: 'давление',
-      title: 'Ответьте вслух',
-      body: 'Оппонент давит на ценность, риски и компромиссы.',
-      result: 'карта возражений',
+      title: 'Пройдите симуляцию',
+      body: 'Ответьте на вопросы оппонента, которые проверяют ценность, риски и компромиссы.',
+      result: 'проверенная аргументация',
     },
     {
       id: '3',
       label: 'правки',
-      title: 'Усилите ответ',
-      body: 'Получите слабые места и короткий план правок.',
-      result: 'prep-card',
+      title: 'План улучшений',
+      body: 'Увидьте слабые места, формулировки и следующий рабочий шаг.',
+      result: 'список правок',
     },
   ];
 
@@ -463,17 +500,21 @@ function ActionFlowPipeline() {
           <div>
             <SectionLabel>как работает</SectionLabel>
             <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Один материал превращается в prep-card перед встречей.
+              Один материал → неудобные вопросы → рабочий план ответа.
             </h2>
           </div>
           <p className="max-w-md text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
-            Без учебной сцены и геймификации. Только короткая проверка аргументов,
-            где Вас будут перебивать и уточнять.
+            Без учебной сцены и геймификации. Только короткий контур подготовки к разговору, где Вас будут проверять.
           </p>
         </RevealDiv>
 
-        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-8">
-          <ArtifactPreview />
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
+          <div className="flex flex-col justify-between rounded-none bg-neutral-950 p-8 text-white shadow-xl shadow-black/5">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#FF8A3D]">pipeline</div>
+            <p className="mt-8 text-[22px] font-bold leading-[1.2] lg:text-[26px]">
+              Материал превращается в проверку аргументов, а не в ещё один AI-текст.
+            </p>
+          </div>
           <div className="grid gap-6 sm:grid-cols-3">
             {steps.map((step, index) => (
               <RevealDiv
@@ -504,6 +545,27 @@ function ActionFlowPipeline() {
 }
 
 function InteractiveScenarios() {
+  const scenarios = [
+    {
+      tag: 'Бюджет',
+      title: 'Защитить бюджет перед руководителем',
+      desc: 'Когда просят сократить расходы, а Вам нужно доказать, что решение влияет на результат.',
+      href: '/scenarios/budget-cut-q3',
+    },
+    {
+      tag: 'Клиент',
+      title: 'Подготовиться к разговору с клиентом',
+      desc: 'Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
+      href: '/scenarios/client-escalation',
+    },
+    {
+      tag: 'Инвестор',
+      title: 'Выдержать вопросы инвестора',
+      desc: 'Когда будут давить на рынок, рост, unit-экономику и реалистичность плана.',
+      href: '/scenarios/series-a-pitch',
+    },
+  ];
+
   return (
     <section id="scenarios" className="bg-white py-[clamp(80px,12vw,140px)]">
       <div className="container-custom">
@@ -511,7 +573,7 @@ function InteractiveScenarios() {
           <div>
             <SectionLabel>сценарии встреч</SectionLabel>
             <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Начните с разговора, который уже стоит в календаре.
+              Начните не с “переговоров вообще”, а с разговора, который уже стоит в календаре.
             </h2>
           </div>
           <Link href="/scenarios" className="inline-flex min-h-[48px] w-fit items-center gap-2 bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 lg:pb-2 rounded-none">
@@ -520,7 +582,25 @@ function InteractiveScenarios() {
           </Link>
         </RevealDiv>
 
-        <ScenarioBrowser />
+        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+          {scenarios.map((item, index) => (
+            <RevealDiv key={item.title} delay={index * 0.04} className="group flex min-h-[260px] flex-col rounded-none border border-neutral-100 bg-white p-7 shadow-sm transition-all duration-200 hover:shadow-lg lg:min-h-[300px] lg:p-8">
+              <div className="mb-10 flex items-center justify-between gap-4 lg:mb-14">
+                <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">{item.tag}</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 font-display text-sm font-black text-neutral-400">{index + 1}</div>
+              </div>
+              <h3 className="text-[22px] font-bold leading-[1.15] text-neutral-950 lg:text-[24px]">{item.title}</h3>
+              <p className="mt-4 text-[15px] leading-relaxed text-neutral-500">{item.desc}</p>
+              <Link
+                href={item.href}
+                className="mt-auto inline-flex w-fit items-center gap-2 pt-6 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 lg:pt-8"
+              >
+                Разобрать сценарий
+                <ArrowRight size={16} />
+              </Link>
+            </RevealDiv>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -533,11 +613,10 @@ function PricingCTA() {
         <RevealDiv className="mx-auto mb-14 max-w-3xl text-center">
           <SectionLabel>бесплатно / полностью</SectionLabel>
           <h2 className="mt-5 text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-            3 вопроса бесплатно. Полная сессия — с отчётом и prep-card.
+            Бесплатно — первые 3 вопроса.<br className="hidden sm:block" /> Полная сессия — когда нужно сохранить разбор.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-neutral-500">
-            Сначала проверьте механику на своём материале. Платный режим нужен,
-            когда важно сохранить разбор перед реальной встречей.
+            Мы не прячем границу: бесплатный режим показывает механику на Вашем материале. Отчёт, расшифровка и prep-card открываются в полной сессии.
           </p>
         </RevealDiv>
 
@@ -545,7 +624,7 @@ function PricingCTA() {
           <RevealDiv className="flex flex-col rounded-none border border-neutral-200 bg-white p-8 shadow-sm lg:p-10">
             <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">бесплатный стресс-тест</div>
             <div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div>
-            <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Материал, роль оппонента и первые 3 вопроса.</p>
+            <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Материал встречи, выбранный оппонент и первые 3 вопроса без регистрации.</p>
             <div className="my-6 h-px bg-neutral-100" />
             <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">
               {['Без регистрации', 'Без карты', 'На тезисах, документе или плане разговора'].map((item) => (
@@ -564,7 +643,7 @@ function PricingCTA() {
               <span>₽</span>
               <span className="pb-1.5 text-lg font-medium text-white/50">/ сессия</span>
             </div>
-            <p className="mt-4 text-[15px] leading-relaxed text-white/70">Полная симуляция с историей ответов и итоговой карточкой.</p>
+            <p className="mt-4 text-[15px] leading-relaxed text-white/70">Полная симуляция для подготовки к конкретному разговору, с сохранением материалов.</p>
             <div className="my-6 h-px bg-white/10" />
             <ul className="mb-8 grid gap-3 text-[15px] text-white/90">
               {['История вопросов и ответов', 'Разбор слабых мест', 'Prep-card и отчёт перед встречей'].map((item) => (
@@ -585,7 +664,7 @@ function FAQAndTrust() {
   const faqs = [
     {
       q: 'Что такое PeakTalk?',
-      a: 'AI-стресс-тест аргументов перед сложной рабочей встречей. Вы даёте материал, выбираете роль оппонента и отвечаете на неудобные вопросы.',
+      a: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
     },
     {
       q: 'Нужна ли регистрация?',
@@ -593,7 +672,7 @@ function FAQAndTrust() {
     },
     {
       q: 'Что можно вставить вместо документа?',
-      a: 'Тезисы, КП, письмо клиента, структуру презентации или короткий план разговора.',
+      a: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
     },
     {
       q: 'Это заменяет коуча или курс?',
@@ -602,10 +681,10 @@ function FAQAndTrust() {
   ];
 
   const signals = [
-    { icon: Target, title: 'Конкретный материал', desc: 'Вопросы строятся вокруг Вашего текста.' },
-    { icon: ShieldAlert, title: 'Неприятная роль', desc: 'Давление по цифрам, срокам и рискам.' },
-    { icon: Timer, title: 'Перед встречей', desc: 'Формат на короткую подготовку.' },
-    { icon: Lock, title: 'Без карты на старте', desc: 'Демо запускается без оплаты.' },
+    { icon: Target, title: 'Конкретный материал', desc: 'Вопросы строятся вокруг текста, который Вы вставили.' },
+    { icon: ShieldAlert, title: 'Неприятная роль', desc: 'Оппонент давит по цифрам, срокам, рискам и компромиссам.' },
+    { icon: Timer, title: 'Перед встречей', desc: 'Формат рассчитан на подготовку, когда времени мало.' },
+    { icon: Lock, title: 'Без карты на старте', desc: 'Бесплатный режим запускается без оплаты и регистрации.' },
   ];
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
