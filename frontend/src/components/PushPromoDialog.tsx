@@ -4,12 +4,30 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellRing, X } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { usePathname } from 'next/navigation';
+
+const PUSH_PROMPT_SUPPRESSED_PREFIXES = [
+  '/analysis',
+  '/onboarding',
+  '/simulation',
+  '/upload',
+];
+
+const PUSH_PROMPT_SUPPRESSED_PATHS = new Set([
+  '/billing/success',
+]);
 
 export function PushPromoDialog() {
   const [isVisible, setIsVisible] = useState(false);
   const { permission, requestPermissionAndSubscribe } = usePushNotifications();
+  const pathname = usePathname();
+  const isSuppressedRoute =
+    PUSH_PROMPT_SUPPRESSED_PATHS.has(pathname) ||
+    PUSH_PROMPT_SUPPRESSED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
   useEffect(() => {
+    if (isSuppressedRoute) return;
+
     // If we already have permission or denied, don't show
     if (permission === 'granted' || permission === 'denied') return;
 
@@ -23,7 +41,9 @@ export function PushPromoDialog() {
     // Delay showing the prompt slightly, maybe 10 seconds after user opens app
     const timer = setTimeout(() => setIsVisible(true), 10000);
     return () => clearTimeout(timer);
-  }, [permission]);
+  }, [isSuppressedRoute, permission]);
+
+  if (isSuppressedRoute) return null;
 
   const handleDismiss = () => {
     setIsVisible(false);

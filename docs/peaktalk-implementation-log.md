@@ -16,7 +16,7 @@ Primary plan: [peaktalk-execution-map-2026-06-15.md](./peaktalk-execution-map-20
 
 ## Current state
 
-The execution map exists and core P0 implementation is underway. The only open P0 items now require real payment/auth QA rather than more speculative product work.
+The execution map exists and core P0 implementation is underway. YooKassa provider webhook delivery, backend crediting, authenticated billing-success rendering, and authenticated upload/storage are now verified; the remaining P0 work is final checkout/guest-continuation browser coverage and auth architecture replacement planning, not more speculative product work.
 
 Completed P0 slice:
 
@@ -32,6 +32,8 @@ Completed P0 slice:
 - Defense Brief wording now matches the paid promise across paywall, report artifact UI, backend artifact messages, and prep-card generation prompt.
 - A backend regression test now confirms paid sessions can access the full Defense Brief even when the user's remaining `session_credits` are already `0`.
 - YooKassa webhook event normalization now accepts the official `payment.canceled` event from the merchant dashboard while preserving legacy/internal `payment.cancelled` handling.
+- YooKassa HTTP notifications are configured and verified against production with a real `payment.succeeded` event: the backend returned `200`, created/updated the payment as `succeeded`, and incremented `session_credits` for the target user.
+- A login-capable QA account now exists for the paid YooKassa test user, and production `/api/me`, `/api/billing/status`, `/api/documents/upload`, `/api/documents`, `/billing/success`, `/billing`, and `/upload` were checked under that authenticated session.
 - Visible Google OAuth entrypoints were removed locally from login/register; email/password remains as the temporary bridge until Logto replaces Supabase Auth.
 
 Completed P1 slice:
@@ -83,6 +85,10 @@ Verification evidence from the implementation session:
 - `cd frontend && npm run lint` exited 0 after CI/lint cleanup. Existing warnings are down to 105 and remain in generated/public and unrelated files.
 - `cd frontend && npm run build` exited 0 after CI/lint cleanup.
 - `git diff --check` exited 0 after CI/lint cleanup.
+- Real YooKassa provider verification passed on production for payment `31c3c803-000f-5001-9000-1d6162e8b018`: YooKassa API returned `status=succeeded`, `paid=True`, amount `299.00 RUB`; production logs showed `POST /webhooks/yookassa`, `payment.succeeded`, source IP `77.75.153.78`, backend response `200`; production DB showed payment status `succeeded` and `session_credits=1` for `yookassa-e2e-20260616@peaktalk.ru`; `/health` returned `200` and fresh error scan found `recent_error_lines=0`.
+- Authenticated production API QA on `https://peaktalk.ru/api` returned `/me=200`, `/billing/status=200`, `/documents/upload=201`, `/documents=200`; the uploaded QA txt document parsed synchronously and stored a Supabase Storage path.
+- Headless Chrome/CDP browser QA with Supabase SSR cookies confirmed `/billing/success?return=/simulation/from-guest`, `/billing`, and `/upload` do not redirect to login. Billing success showed `Подписка подключена`, `Разовая сессия активирован`, and `Продолжить подготовку`; `/upload` showed `Проверить материал` and trust copy.
+- Final production health after QA returned `/health=200`, `session_credits=1`, `documents_uploaded=1`, QA document visible in `/api/documents`, containers healthy/running, and `recent_error_lines=0`.
 
 ## Completed P0 that must not regress
 
@@ -130,18 +136,18 @@ Verification:
 
 ## Open P0 backlog
 
-1. Manual QA of real YooKassa test flow, including success return and webhook confirmation.
-2. Browser QA of `/upload` after logging into a real dev/test account; unauthenticated local route correctly redirects to `/login?return=/upload`.
+1. Final browser coverage for the actual checkout button path: authenticated billing card -> YooKassa redirect. Do not complete another real charge unless explicitly needed; provider webhook/crediting is already verified.
+2. Guest continuation from a live guest token after payment remains unverified in browser because it consumes a paid `session_credit`; backend idempotency/credit tests exist, and billing success return is browser-verified.
 3. Auth/legal compliance gate: visible Google OAuth removal is deployed; direct Logto replacement of Supabase-hosted Auth remains the next auth architecture track before broader launch.
-4. YooKassa dashboard configuration: HTTP notification URL is currently absent in the shop UI screenshot. Configure `https://peaktalk.ru/webhooks/yookassa` and verify `payment.succeeded` delivery before considering payment QA closed.
+4. Logto implementation planning after final P0 payment/guest browser coverage. Existing users can be reset if needed, but billing/documents/simulations still need a clean local UUID user model with external auth subject mapping.
 
 ## Next recommended work
 
-1. Configure YooKassa HTTP notifications in the merchant dashboard.
-2. Close P0 real YooKassa payment QA: checkout -> success return -> webhook -> DB/payment credit -> guest continuation.
-3. Close P0 authenticated `/upload` browser QA with a real dev/test account.
-4. Continue auth/legal compliance gate after P0 payment/upload checks: provision Logto on the separate Timeweb Cloud-80 RU server according to [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Existing user preservation is explicitly not required, but the local UUID user model must not be tied to Logto `sub`.
-5. Finish authenticated browser QA when a real test account/session is available.
+1. Optional final checkout-button QA: from authenticated `/billing?plan=per_session` click through to YooKassa redirect and cancel/stop before payment, unless a second real charge is intentionally approved.
+2. Decide whether to spend the QA `session_credit` on a live guest-continuation browser test or keep it for manual checking.
+3. Continue auth/legal compliance gate after P0 payment/upload checks: provision Logto on the separate Timeweb Cloud-80 RU server according to [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Existing user preservation is explicitly not required, but the local UUID user model must not be tied to Logto `sub`.
+4. Before Logto code changes, re-read current official Logto docs and choose the cleanest self-hosted RU deployment/integration path for PeakTalk.
+5. Decide later whether Supabase Storage/S3 should remain in the upload pipeline after document lifecycle and retention/privacy semantics are audited.
 6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
 ## P1 parking lot
@@ -1123,3 +1129,65 @@ P0 status:
 
 - YooKassa dashboard delivery and backend crediting are verified.
 - Remaining payment-flow QA: browser-level checkout from the actual PeakTalk UI with an authenticated session, including return to `/billing/success` and guest continuation. The provider webhook/DB part is no longer the blocker.
+
+### 2026-06-16 - P0 authenticated QA and payment-success prompt suppression
+
+Scope:
+
+- Make the paid YooKassa QA user login-capable without changing application auth code.
+- Verify production authenticated API/browser access for billing success and upload.
+- Remove an interruptive push-notification prompt from critical post-payment/preparation routes.
+- Keep Logto/auth architecture changes out of this changeset.
+
+Files changed:
+
+- `frontend/src/components/PushPromoDialog.tsx`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Created a Supabase Auth account for `yookassa-e2e-20260616@peaktalk.ru` with the same UUID as the paid QA database user. The password is intentionally not stored in this log.
+- Confirmed password login returns a Supabase session.
+- Found an important existing auth risk: because the Supabase Auth account was created after the local DB user row, `get_current_user()` treated the local user as stale and deleted/recreated it through the current re-registration detection logic. This removed the QA payment and usage counter rows through cascade. This happened only to the QA account, but it is a concrete warning for the Logto migration: auth subject creation time must not be allowed to wipe billing/document/simulation state accidentally.
+- Restored the QA payment/credit idempotently:
+  - payment id `31c3c803-000f-5001-9000-1d6162e8b018`;
+  - payment status `succeeded`;
+  - amount `299.00 RUB`;
+  - `session_credits=1`;
+  - no duplicate payment rows.
+- Uploaded one real QA `.txt` document through production `/api/documents/upload`; it stored a Supabase Storage path and parsed synchronously.
+- Suppressed `PushPromoDialog` on critical task routes:
+  - `/billing/success`;
+  - `/simulation/*`;
+  - `/analysis/*`;
+  - `/upload`;
+  - `/onboarding`.
+- Reason: push permission prompts should not interrupt payment confirmation, guest migration, active preparation, upload, or analysis/report reading. They can wait for lower-friction app surfaces.
+
+Verification:
+
+- `cd frontend && npm run lint` exited 0. Existing unrelated warnings remain: 105 warnings in generated/public and old files.
+- `cd frontend && npm run build` exited 0.
+- `git diff --check` exited 0.
+- Production API with the QA Supabase session:
+  - `GET https://peaktalk.ru/api/me` -> `200`;
+  - `GET https://peaktalk.ru/api/billing/status` -> `200`;
+  - `POST https://peaktalk.ru/api/documents/upload` -> `201`;
+  - `GET https://peaktalk.ru/api/documents?limit=5` -> `200`.
+- Authenticated headless Chrome/CDP browser QA:
+  - `/billing/success?return=/simulation/from-guest` did not redirect to login and showed `Подписка подключена`, `Разовая сессия активирован`, and `Продолжить подготовку`;
+  - `/upload` did not redirect to login and showed `Проверить материал` plus trust/privacy copy;
+  - `/billing` did not redirect to login and showed session-credit-related billing state.
+- Production final check:
+  - `/health=200`;
+  - QA account `session_credits=1`;
+  - QA account `documents_uploaded=1`;
+  - QA document `qa-roadmap-budget-defense.txt` visible in `/api/documents`;
+  - containers healthy/running;
+  - `recent_error_lines=0`.
+
+Residual risk:
+
+- The exact browser path `billing card -> YooKassa redirect -> return` was not re-run end-to-end to avoid charging another 299 RUB. Provider webhook/crediting is already verified by the real payment; billing success rendering is browser-verified with the credited QA session.
+- Live guest-continuation browser QA would consume the paid `session_credit`. Keep it as a deliberate next action rather than silently spending it.
+- The current Supabase re-registration wipe logic is risky for auth migrations. Do not copy this model into Logto; move to local UUID users plus explicit external auth subject mapping.
