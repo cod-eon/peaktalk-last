@@ -140,7 +140,7 @@ Verification:
 1. Configure YooKassa HTTP notifications in the merchant dashboard.
 2. Close P0 real YooKassa payment QA: checkout -> success return -> webhook -> DB/payment credit -> guest continuation.
 3. Close P0 authenticated `/upload` browser QA with a real dev/test account.
-4. Continue auth/legal compliance gate: research official Logto docs, choose deployment/integration architecture, and replace Supabase Auth. Existing user migration can be treated as low-risk because there is no meaningful production user base yet.
+4. Continue auth/legal compliance gate after P0 payment/upload checks: provision or upgrade auth infrastructure, then implement Logto according to [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Existing user preservation is not a blocker, but the local UUID user model must not be tied to Logto `sub`.
 5. Finish authenticated browser QA when a real test account/session is available.
 6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
@@ -152,6 +152,7 @@ Verification:
 - Auth architecture decision: Logto is the preferred replacement direction over Keycloak for PeakTalk's current stage because it is lighter operationally, easier to reason about for email/magic-link and future Yandex ID, and avoids enterprise IAM complexity before paid validation signals. Since there is no meaningful production user base yet, user preservation is not a blocker; still, guest-to-paid conversion, billing user IDs, and backend auth middleware must be migrated deliberately.
 - Logto migration research gate: before implementing Logto, study current official Logto docs and choose the best modern deployment/integration path for PeakTalk. Required topics: self-hosted production deployment, Docker/Compose architecture, Postgres/Redis requirements, reverse proxy/HTTPS, custom domain, email connector via REG.RU SMTP first, Next.js integration, FastAPI/JWT validation, user-id mapping, logout/session behavior, future Yandex ID connector, backups, upgrade path, and rollback. Do not start Logto code changes from stale assumptions.
 - Auth replacement evaluation note: Yandex ID can be integrated later more directly in Logto via generic OAuth/OIDC connectors; Keycloak can broker OIDC/SAML easily, but pure OAuth 2.0 providers may require a custom/provider extension or extra mapping work.
+- Logto migration gate doc: [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Key decisions: use Logto OSS self-hosted, do not deploy it on the current VDS without upgrade/separate auth host, separate local `users.id` from external Logto `sub` through `auth_provider/auth_subject`, start with REG.RU SMTP only after deliverability seed tests, and treat Yandex ID as a second connector spike after first Logto cutover.
 - Auth email delivery note: current Supabase Auth sends sign-up/reset emails outside the PeakTalk backend. For Logto/Keycloak migration, configure an auth-provider SMTP connector using a domain mailbox or transactional email provider. REG.RU domain mail can work for low-volume auth links via SMTP (`mail.hosting.reg.ru`, SSL/TLS 465 or SMTP 587), but deliverability for magic links should be tested and likely moved to a dedicated transactional sender if validation traffic grows.
 - Auth email provider decision note: use REG.RU Mail-1 for domain mailboxes and owner/support correspondence, but prefer UniSender Go or another transactional email transport for production auth/magic-link delivery. Reason: magic-link reliability needs delivery logs, DKIM/SPF/DMARC alignment, bounce visibility, API/SMTP transport, and provider reputation; mailbox hosting is acceptable only as a short validation fallback.
 - Auth email provider comparison note: REG.RU Mail-1 is already paid and useful for `support@`, `hello@`, `noreply@`, and founder correspondence, but it is still mailbox hosting with account-level send limits and weaker operational visibility. UniSender Go is the better target for production auth emails because it is built as SMTP/API email transport, supports delivery/open tracking, operation logs, webhooks/statistics, and Russian hosting/compliance claims. Important pricing clarification: ordinary UniSender Free allows up to 1500 emails/month to 100 contacts, while UniSender Go free/test mode allows up to 100 emails/day only to addresses on confirmed owned domains; real magic-link delivery to arbitrary user emails requires a paid/activated UniSender Go setup, card binding, or another transactional sender. Before switching magic links, run a seed test to Gmail/Yandex/Mail.ru, verify SPF/DKIM/DMARC, and keep REG.RU as fallback only for validation-volume traffic.
@@ -949,3 +950,49 @@ Deploy evidence:
 Residual risk:
 
 - Open P0 remains unchanged: real YooKassa e2e, YooKassa dashboard webhook configuration, authenticated `/upload` QA, and Logto research gate.
+
+### 2026-06-16 - Logto migration research gate
+
+Scope:
+
+- Study current official Logto/Yandex docs before any auth migration code.
+- Check current VDS capacity before proposing self-hosted auth.
+- Map current PeakTalk Supabase Auth coupling across frontend/backend.
+- Produce a narrow migration gate document, not a code changeset.
+
+Files changed:
+
+- `docs/logto-migration-gate-2026-06-16.md`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Created the Logto gate doc with recommended topology, SMTP plan, Yandex ID path, affected code map, required data model change, migration sequence, and verification matrix.
+- Confirmed current VDS is not appropriate for Logto as-is:
+  - 2 vCPU;
+  - 3.8 GiB RAM total, no swap;
+  - 30 GiB disk, 5.2 GiB free, 82% used.
+- Compared this with Logto OSS docs, which list 2 vCPU, 8 GiB RAM, and 256 GiB disk as minimum recommended hosting resources.
+- Identified a critical data-model issue: `users.id` currently matches Supabase Auth `sub` and is UUID, while Logto `sub` should be treated as an external string subject. Migration should add `auth_provider/auth_subject` and keep local `users.id` as the stable UUID for billing, documents, simulations, and payments.
+- Confirmed Logto supports:
+  - Next.js App Router SDK (`@logto/next`);
+  - FastAPI JWT validation through OIDC/JWKS;
+  - SMTP and HTTP email connectors;
+  - generic OAuth 2.0 social connector, making Yandex ID feasible as a later connector spike.
+
+Verification:
+
+- Official docs checked:
+  - Logto OSS get started/deployment/configuration.
+  - Logto Next.js App Router.
+  - Logto FastAPI API protection and access token validation.
+  - Logto SMTP/HTTP email connectors.
+  - Logto OAuth 2.0 connector.
+  - Yandex ID OAuth docs.
+- Repo search checked current Supabase Auth coupling in `frontend/src`, `backend/app`, env examples, Docker, and workflow files.
+- VDS resource check completed read-only over SSH.
+
+Next:
+
+- Do not start Logto implementation on current VDS without infra decision.
+- Keep P0 order: close YooKassa dashboard/e2e and authenticated upload QA first, then provision/upgrade auth infra and implement Logto behind a feature-gated branch.
