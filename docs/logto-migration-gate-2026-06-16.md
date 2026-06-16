@@ -2,7 +2,7 @@
 
 Purpose: choose a safe auth migration path before replacing Supabase Auth in PeakTalk.
 
-Status: research gate, not implementation. Do not start code changes until P0 payment/upload gates and the infra decision below are closed.
+Status: research gate, not implementation. Do not start code changes until P0 payment/upload gates are closed and the Logto host/DNS credentials are available.
 
 ## Decision
 
@@ -20,10 +20,16 @@ Logto OSS docs list minimum recommended hosting resources as 2 vCPU, 8 GiB RAM, 
 
 Recommended infra path:
 
-1. Prefer a separate Russian VDS for auth, or upgrade the current VDS before adding Logto.
-2. Minimum practical target for validation: 2 vCPU, 8 GiB RAM, materially larger disk, swap, backups, and monitoring.
-3. If buying fresh capacity, follow Logto's 256 GiB disk recommendation when the price difference is not meaningful.
+1. Prefer the separate Timeweb Cloud-80 RU server for auth over the current PeakTalk VDS.
+2. Minimum practical target for validation: 2 vCPU, 8 GiB RAM, materially larger disk than the current VDS, swap, backups, and monitoring.
+3. The available Timeweb Cloud-80 server shown by the user has 4 x 3.3 GHz CPU, 8 GiB RAM, and 80 GiB NVMe. It satisfies the CPU/RAM validation target and is a reasonable Logto host candidate, but the 80 GiB disk is below Logto's 256 GiB recommendation. This is acceptable for validation only if backups/log retention are controlled.
 4. Use a dedicated empty Postgres database/user for Logto. Do not mix Logto tables into the PeakTalk app database schema.
+
+User migration stance:
+
+- The user explicitly said there is no meaningful production user base and existing auth/users may be deleted if that leads to a better architecture.
+- This removes the need for careful preservation of Supabase Auth accounts.
+- It does not remove the need for a clean internal identity model. Keep PeakTalk's local `users.id` as an internal UUID and map Logto/Yandex/Supabase subjects separately. This protects billing, guest-to-paid conversion, documents, simulations, and future provider linking.
 
 ## Target topology
 
@@ -177,7 +183,7 @@ Recommended env shape:
 
 1. Close P0 YooKassa webhook/payment e2e and authenticated `/upload` QA first.
 2. Provision or upgrade auth infrastructure.
-3. Deploy Logto behind `auth.peaktalk.ru` and `auth-admin.peaktalk.ru`.
+3. Deploy Logto on the separate Timeweb Cloud-80 host behind `auth.peaktalk.ru` and `auth-admin.peaktalk.ru`.
 4. Configure SMTP and pass seed deliverability tests.
 5. Create Logto traditional web app and API resource.
 6. Add backend auth model migration and JWT validator behind a feature flag.
