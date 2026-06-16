@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useCallback, useEffect } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -18,6 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
 import { PerSessionCard } from '@/components/billing/PerSessionCard';
@@ -157,6 +158,7 @@ function BillingContent() {
   const isPro = useBillingStore((s) => s.isPro());
   const { refetch } = useBilling();
   const searchParams = useSearchParams();
+  const billingOpenedKeyRef = useRef<string | null>(null);
 
   const planParam = searchParams.get('plan');
   const returnPath = searchParams.get('return') ?? undefined;
@@ -199,10 +201,27 @@ function BillingContent() {
   const handleUpgrade = useCallback(
     async (plan: string) => {
       try {
-        const successPath = returnPath ?? '/billing/success';
+        const successPath = returnPath
+          ? `/billing/success?return=${encodeURIComponent(returnPath)}`
+          : '/billing/success';
         const returnUrl = `${window.location.origin}${successPath}`;
         const res = await api.post('/billing/payment', { plan, return_url: returnUrl });
-        if (res?.payment_url) window.location.href = res.payment_url;
+        if (res?.payment_url) {
+          sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
+            payment_id: res.payment_id ?? null,
+            payment_plan: plan,
+            return_path: returnPath ?? '/billing/success',
+            plan_context: plan,
+          }));
+          trackEvent('payment_started', {
+            source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+            payment_plan: plan,
+            payment_id: res.payment_id ?? null,
+            return_path: returnPath ?? '/billing/success',
+            plan_context: plan,
+          });
+          window.location.href = res.payment_url;
+        }
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : 'Ошибка оплаты');
       }
@@ -236,6 +255,18 @@ function BillingContent() {
       sessionStorage.setItem('billing_return_path', returnPath);
     }
   }, [returnPath]);
+
+  useEffect(() => {
+    const key = `${planParam ?? plan}:${returnPath ?? ''}`;
+    if (billingOpenedKeyRef.current === key) return;
+    billingOpenedKeyRef.current = key;
+
+    trackEvent('billing_opened', {
+      source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+      plan_context: planParam ?? plan,
+      return_path: returnPath ?? null,
+    });
+  }, [plan, planParam, returnPath]);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
@@ -365,6 +396,9 @@ function BillingContent() {
               )}
             </motion.section>
 
+            {!isPaidPlan && paymentsEnabled && (
+              <PerSessionCard highlighted={highlightPerSession} returnPath={returnPath} />
+            )}
 
           </div>
 

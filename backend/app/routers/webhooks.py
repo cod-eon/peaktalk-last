@@ -7,7 +7,7 @@ Supabase webhook setup:
 
 YooKassa webhook setup:
   - URL: https://<your-api>/webhooks/yookassa
-  - Events: payment.succeeded, payment.cancelled, refund.succeeded
+  - Events: payment.succeeded, payment.canceled, refund.succeeded
 """
 
 import logging
@@ -105,7 +105,10 @@ _SUBSCRIPTION_PERIOD_DAYS = 30
 
 def _resolve_yookassa_event_type(event: YookassaWebhookEvent) -> str:
     """Normalize YooKassa webhook envelope into an actionable event name."""
-    return event.event or event.type
+    event_type = event.event or event.type
+    if event_type == "payment.canceled":
+        return "payment.cancelled"
+    return event_type
 
 
 def _extract_plan_from_payment(payment_obj: dict) -> PlanType | None:
@@ -284,7 +287,7 @@ async def _handle_payment_succeeded(payment_obj: dict, db: AsyncSession) -> None
 
 
 async def _handle_payment_cancelled(payment_obj: dict, db: AsyncSession) -> None:
-    """Process a payment.cancelled event from YooKassa."""
+    """Process a payment.canceled/payment.cancelled event from YooKassa."""
     yk_payment_id: str = payment_obj.get("id", "")
     if not yk_payment_id:
         logger.warning("webhooks/yookassa: payment.cancelled missing payment id")
@@ -339,7 +342,7 @@ async def yookassa_webhook(
     IP verification is performed against the official YooKassa IP ranges.
     Events handled:
       - payment.succeeded  → activate subscription, save payment method
-      - payment.cancelled  → mark payment failed, set subscription past_due
+      - payment.canceled   → mark payment failed, set subscription past_due
       - refund.succeeded   → logged only (no subscription changes in MVP)
     """
     _verify_yookassa_secret(request)

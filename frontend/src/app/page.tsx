@@ -15,8 +15,16 @@ import {
   X,
 } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
+import { trackEvent } from '@/lib/analytics';
 
 const CTA_LABEL = 'Запустить демо бесплатно';
+
+const trackLandingCta = (ctaLocation: string) => {
+  trackEvent('landing_cta_clicked', {
+    source: 'landing',
+    cta_location: ctaLocation,
+  });
+};
 
 const safariMotionStyle: React.CSSProperties = {
   willChange: 'transform, opacity',
@@ -204,6 +212,7 @@ function Nav() {
             </Link>
             <Link
               href="/simulation/guest"
+              onClick={() => trackLandingCta('nav_desktop')}
               className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#E8600A] hover:border-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none"
             >
               {CTA_LABEL}
@@ -261,7 +270,7 @@ function Nav() {
               <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950">
                 Войти
               </Link>
-              <Link href="/simulation/guest" className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white rounded-none">
+              <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_mobile')} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white rounded-none">
                 {CTA_LABEL}
               </Link>
             </div>
@@ -329,6 +338,7 @@ function Hero() {
           >
             <Link
               href="/simulation/guest"
+              onClick={() => trackLandingCta('hero_primary')}
               className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none sm:min-h-[56px] sm:px-8 sm:text-[15px]"
             >
               {CTA_LABEL}
@@ -631,7 +641,7 @@ function PricingCTA() {
                 <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E8600A]" />{item}</li>
               ))}
             </ul>
-            <Link href="/simulation/guest" className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 rounded-none">
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('pricing_free')} className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 rounded-none">
               {CTA_LABEL}
             </Link>
           </RevealDiv>
@@ -762,7 +772,7 @@ function FooterCTA() {
             Запустите бесплатное демо на своём материале и посмотрите, где аргументация требует усиления.
           </p>
           <div className="mt-10 flex justify-center">
-            <Link href="/simulation/guest" className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white rounded-none">
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white rounded-none">
               {CTA_LABEL}
               <ArrowRight size={18} />
             </Link>

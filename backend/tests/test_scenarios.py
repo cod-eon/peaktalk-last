@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.models.scenario import Scenario, ScenarioCategory
+from app.seeds.scenarios import seed_scenarios
 from app.services.simulation_ai import SimulationTurn
 
 
@@ -71,6 +72,29 @@ async def test_get_scenario_detail(client: AsyncClient, scenario_data: dict[str,
     data = resp.json()
     assert data["slug"] == scenario_data["slug"]
     assert data["situation"] == "Нужно защитить бюджет перед CFO."
+
+
+@pytest.mark.asyncio
+async def test_seeded_roadmap_budget_defense_scenario_is_available(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    await seed_scenarios(db_session)
+
+    detail_resp = await client.get("/scenarios/roadmap-budget-defense")
+    assert detail_resp.status_code == 200
+    detail = detail_resp.json()
+    assert detail["slug"] == "roadmap-budget-defense"
+    assert detail["category"] == "roadmap"
+    assert detail["persona"] == "CEO/CFO"
+    assert detail["recommended_difficulty"] == 5
+    assert "Head of Product" in detail["situation"]
+    assert "Defense Brief" in detail["situation"]
+
+    list_resp = await client.get("/scenarios?category=roadmap")
+    assert list_resp.status_code == 200
+    items = list_resp.json()["items"]
+    assert any(item["slug"] == "roadmap-budget-defense" for item in items)
 
 
 @pytest.mark.asyncio

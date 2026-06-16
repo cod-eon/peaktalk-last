@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Download, Lock, Loader2, Sparkles, Zap, ShieldAlert, Crosshair, MapPin } from 'lucide-react';
-import { api } from '@/lib/api';
+import { Check, Copy, Download, FileDown, Lock, Loader2, Sparkles, Zap, ShieldAlert, Crosshair, MapPin } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
+import {
+  buildDefenseBriefFilename,
+  formatDefenseBriefMarkdown,
+  type DefenseBriefArtifact,
+} from '@/lib/defense-brief-export';
 import { useRouter } from 'next/navigation';
 
 export interface PrepCardProps {
   sessionId: string;
 }
 
-type PrepCardArtifact = {
-  opening_move: string;
-  top_arguments: { text: string; strength: string; anchor_phrase: string }[];
-  danger_zones: { topic: string; risk: string; suggested_response: string }[];
-  key_numbers: string[];
-};
+type PrepCardArtifact = DefenseBriefArtifact;
 
 type PrepCardResponse = {
   available: boolean;
@@ -24,115 +24,36 @@ type PrepCardResponse = {
   } | null;
 };
 
-export function PrepCard({ sessionId }: PrepCardProps) {
-  const [data, setData] = useState<PrepCardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+export interface DefenseBriefCardProps {
+  artifact: PrepCardArtifact;
+  sessionId: string;
+}
 
-  useEffect(() => {
-    let mounted = true;
+export function DefenseBriefCard({ artifact, sessionId }: DefenseBriefCardProps) {
+  const [copied, setCopied] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
-    const fetchArtifact = async () => {
-      try {
-        const res = await api.get(`/simulation/${sessionId}/artifact`);
-        if (res.status === 202 || res.status === 404 || res.status === 409) {
-          // If the backend returns a specific status indicating it's still processing
-          // or if it returns 409 (Conflict - not generated yet) we poll
-          if (!mounted) return;
-          if (res.status === 409 || res.status === 404) {
-             // We'll retry after a delay
-             setTimeout(fetchArtifact, 2000);
-             return;
-          }
-        }
-        if (!mounted) return;
-        setData(res);
-        setLoading(false);
-      } catch (err: unknown) {
-        if (!mounted) return;
-        // If it's a 404 or 409 from axios/fetch wrapper
-        const status = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'status' in err.response ? (err.response as {status: number}).status : null;
-        if (status === 404 || status === 409) {
-          setTimeout(fetchArtifact, 2000);
-          return;
-        }
-        setError(err instanceof Error ? err.message : 'Ошибка загрузки артефакта');
-        setLoading(false);
-      }
-    };
+  const handleCopyMarkdown = async () => {
+    setExportError(null);
+    try {
+      await navigator.clipboard.writeText(formatDefenseBriefMarkdown(artifact));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setExportError('Не удалось скопировать Defense Brief. Скачайте .md файл.');
+    }
+  };
 
-    fetchArtifact();
-    return () => {
-      mounted = false;
-    };
-  }, [sessionId]);
-
-  if (loading) {
-    return (
-      <div className="bg-white border border-neutral-200 p-8 flex flex-col items-center justify-center text-neutral-500">
-        <Loader2 size={24} className="animate-spin mb-4" />
-        <p className="text-sm font-inter">Загружаем шпаргалку...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white border border-red-200 p-6 sm:p-8">
-        <h3 className="font-bold text-neutral-900 mb-2">Шпаргалка недоступна</h3>
-        <p className="text-sm text-neutral-500">
-          Это не отложенная генерация, а битое состояние данных. {error}
-        </p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  // Paywall / Teaser (Free user)
-  if (!data.available && data.teaser) {
-    return (
-      <div className="bg-white border border-neutral-200 p-6 sm:p-8 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-white backdrop-blur-[2px] z-10 flex flex-col items-center justify-center px-4">
-          <div className="bg-white border border-neutral-200 shadow-xl p-6 w-full max-w-sm text-center">
-            <Lock size={24} className="mx-auto text-neutral-400 mb-4" />
-            <h3 className="font-bold font-inter text-neutral-900 mb-2">Откройте полную шпаргалку</h3>
-            <p className="text-sm text-neutral-500 mb-6">
-              Ваш тариф не включает детализированные артефакты. Шпаргалка с сильными аргументами и разбором слабых мест доступна на платных тарифах или за сессию.
-            </p>
-            <button
-              onClick={() => router.push('/billing?plan=per_session')}
-              className="w-full bg-[#171717] hover:bg-black text-white font-semibold h-11 text-sm transition-colors mb-2 cursor-pointer"
-            >
-              Снять ограничения
-            </button>
-          </div>
-        </div>
-
-        <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-neutral-300">
-          <Sparkles size={20} />
-          Шпаргалка (Prep Card)
-        </h2>
-        
-        <div className="space-y-4 opacity-30 select-none">
-          <div className="bg-neutral-50 p-4 border border-neutral-100">
-            <h3 className="font-bold mb-2">Сильные аргументы ({data.teaser.top_arguments_count})</h3>
-            <div className="h-4 bg-neutral-200 w-3/4 mb-2"></div>
-            <div className="h-4 bg-neutral-200 w-1/2"></div>
-          </div>
-          <div className="bg-neutral-50 p-4 border border-neutral-100">
-            <h3 className="font-bold mb-2">Зоны риска ({data.teaser.danger_zones_count})</h3>
-            <div className="h-4 bg-neutral-200 w-full mb-2"></div>
-            <div className="h-4 bg-neutral-200 w-5/6"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { artifact } = data;
-  if (!artifact) return null;
+  const handleDownloadMarkdown = () => {
+    setExportError(null);
+    const markdown = formatDefenseBriefMarkdown(artifact);
+    const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = buildDefenseBriefFilename(sessionId);
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   const handlePrintPdf = () => {
     const existing = document.getElementById('_prep_print_style');
@@ -163,24 +84,46 @@ export function PrepCard({ sessionId }: PrepCardProps) {
 
   return (
     <div className="bg-white border border-neutral-200" id="prep-card-ui">
-      <div className="bg-neutral-900 text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-neutral-900 text-white p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="font-bold font-inter text-xl sm:text-2xl flex items-center gap-2 mb-1">
             <Sparkles size={24} className="text-accent-400" />
-            Индивидуальная шпаргалка
+            Defense Brief
           </h2>
           <p className="text-neutral-400 text-sm">Сформирована на базе вашей симуляции</p>
         </div>
-        <button
-          onClick={handlePrintPdf}
-          className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 text-sm transition-colors cursor-pointer"
-        >
-          <Download size={16} />
-          Скачать PDF
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 lg:justify-end">
+          <button
+            onClick={handleCopyMarkdown}
+            className="flex min-h-10 items-center justify-center gap-2 border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 cursor-pointer"
+          >
+            {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
+            {copied ? 'Скопировано' : 'Копировать'}
+          </button>
+          <button
+            onClick={handleDownloadMarkdown}
+            className="flex min-h-10 items-center justify-center gap-2 border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 cursor-pointer"
+          >
+            <FileDown size={16} />
+            Скачать .md
+          </button>
+          <button
+            onClick={handlePrintPdf}
+            className="flex min-h-10 items-center justify-center gap-2 bg-white text-neutral-950 px-3 py-2 text-sm font-semibold transition-colors hover:bg-neutral-100 cursor-pointer"
+          >
+            <Download size={16} />
+            PDF
+          </button>
+        </div>
       </div>
 
       <div className="p-4 sm:p-6 space-y-6">
+        {exportError && (
+          <div className="border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            {exportError}
+          </div>
+        )}
+
         {/* Opening move */}
         {artifact.opening_move && (
           <div className="bg-accent-50 border border-accent-100 p-4">
@@ -211,6 +154,23 @@ export function PrepCard({ sessionId }: PrepCardProps) {
                   <div className="bg-amber-100/50 text-amber-900 text-xs px-2 py-1.5 border border-amber-200 font-medium leading-tight">
                     «{arg.anchor_phrase}»
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Anchor phrases */}
+        {artifact.anchor_phrases && artifact.anchor_phrases.length > 0 && (
+          <div>
+            <h3 className="text-neutral-900 font-bold mb-3 flex items-center gap-2 text-sm">
+              <Copy size={16} className="text-violet-500" />
+              Формулировки, которые стоит забрать на встречу
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {artifact.anchor_phrases.map((phrase: string, i: number) => (
+                <div key={i} className="border border-violet-100 bg-violet-50/40 px-3 py-2 text-xs font-medium leading-relaxed text-neutral-800">
+                  &quot;{phrase}&quot;
                 </div>
               ))}
             </div>
@@ -263,4 +223,106 @@ export function PrepCard({ sessionId }: PrepCardProps) {
       </div>
     </div>
   );
+}
+
+export function PrepCard({ sessionId }: PrepCardProps) {
+  const [data, setData] = useState<PrepCardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchArtifact = async () => {
+      try {
+        const res = await api.get(`/simulation/${sessionId}/artifact`);
+        if (!mounted) return;
+        setData(res);
+        setLoading(false);
+      } catch (err: unknown) {
+        if (!mounted) return;
+        const status = err instanceof ApiError ? err.status : null;
+        if (status === 404 || status === 409) {
+          setTimeout(fetchArtifact, 2000);
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки Defense Brief');
+        setLoading(false);
+      }
+    };
+
+    fetchArtifact();
+    return () => {
+      mounted = false;
+    };
+  }, [sessionId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-neutral-200 p-8 flex flex-col items-center justify-center text-neutral-500">
+        <Loader2 size={24} className="animate-spin mb-4" />
+        <p className="text-sm font-inter">Готовим Defense Brief...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border border-red-200 p-6 sm:p-8">
+        <h3 className="font-bold text-neutral-900 mb-2">Defense Brief недоступен</h3>
+        <p className="text-sm text-neutral-500">
+          Это не отложенная генерация, а битое состояние данных. {error}
+        </p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  // Paywall / Teaser (Free user)
+  if (!data.available && data.teaser) {
+    return (
+      <div className="bg-white border border-neutral-200 p-6 sm:p-8 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-white backdrop-blur-[2px] z-10 flex flex-col items-center justify-center px-4">
+          <div className="bg-white border border-neutral-200 shadow-xl p-6 w-full max-w-sm text-center">
+            <Lock size={24} className="mx-auto text-neutral-400 mb-4" />
+            <h3 className="font-bold font-inter text-neutral-900 mb-2">Откройте полный Defense Brief</h3>
+            <p className="text-sm text-neutral-500 mb-6">
+              Полный Defense Brief с сильными аргументами и разбором слабых мест доступен в платной сессии.
+            </p>
+            <button
+              onClick={() => router.push('/billing?plan=per_session')}
+              className="w-full bg-[#171717] hover:bg-black text-white font-semibold h-11 text-sm transition-colors mb-2 cursor-pointer"
+            >
+              Получить Defense Brief
+            </button>
+          </div>
+        </div>
+
+        <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-neutral-300">
+          <Sparkles size={20} />
+          Defense Brief
+        </h2>
+
+        <div className="space-y-4 opacity-30 select-none">
+          <div className="bg-neutral-50 p-4 border border-neutral-100">
+            <h3 className="font-bold mb-2">Сильные аргументы ({data.teaser.top_arguments_count})</h3>
+            <div className="h-4 bg-neutral-200 w-3/4 mb-2"></div>
+            <div className="h-4 bg-neutral-200 w-1/2"></div>
+          </div>
+          <div className="bg-neutral-50 p-4 border border-neutral-100">
+            <h3 className="font-bold mb-2">Зоны риска ({data.teaser.danger_zones_count})</h3>
+            <div className="h-4 bg-neutral-200 w-full mb-2"></div>
+            <div className="h-4 bg-neutral-200 w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { artifact } = data;
+  if (!artifact) return null;
+
+  return <DefenseBriefCard artifact={artifact} sessionId={sessionId} />;
 }

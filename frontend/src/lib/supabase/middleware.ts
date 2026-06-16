@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   // All protected pages (route group `(dashboard)` strips the parens from URL)
-  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding']
+  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding', '/billing']
   const isDashboardRoute = protectedPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
 
@@ -48,6 +48,8 @@ export async function updateSession(request: NextRequest) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.search = ''
+    url.searchParams.set('return', `${pathname}${request.nextUrl.search}`)
     return NextResponse.redirect(url)
   }
 

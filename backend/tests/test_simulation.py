@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import func, select
 
 from app.models.guest import GuestSession
 from app.models.personalized_persona import PersonalizedPersona
@@ -107,6 +108,73 @@ async def test_guest_start_creates_session(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_guest_flow_asks_three_questions_before_paywall(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    start_resp = await client.post("/simulation/guest-start", json={
+        "text": "Нужно защитить бюджет внедрения перед CFO и показать риски сокращения.",
+        "persona": "cfo",
+        "difficulty": 5,
+    })
+    assert start_resp.status_code == 201
+    start_data = start_resp.json()
+    token = start_data["guest_session_id"]
+    assert start_data["turn"] == 1
+    assert start_data["first_question"] == MOCK_TURN.question
+
+    first_answer_resp = await client.post("/simulation/guest-message", json={
+        "guest_session_id": token,
+        "content": "Сокращение бюджета сдвинет релиз и сорвет контракт.",
+    })
+    assert first_answer_resp.status_code == 200
+    first_answer_data = first_answer_resp.json()
+    assert first_answer_data["turn"] == 2
+    assert first_answer_data["remaining_turns"] == 1
+    assert first_answer_data["limit_reached"] is False
+    assert first_answer_data["question"] == MOCK_TURN.question
+    assert first_answer_data["paywall"] is None
+
+    second_answer_resp = await client.post("/simulation/guest-message", json={
+        "guest_session_id": token,
+        "content": "Мы можем урезать второстепенный scope, но не core-интеграцию.",
+    })
+    assert second_answer_resp.status_code == 200
+    second_answer_data = second_answer_resp.json()
+    assert second_answer_data["turn"] == 3
+    assert second_answer_data["remaining_turns"] == 0
+    assert second_answer_data["limit_reached"] is False
+    assert second_answer_data["question"] == MOCK_TURN.question
+    assert second_answer_data["paywall"] is None
+
+    final_answer_resp = await client.post("/simulation/guest-message", json={
+        "guest_session_id": token,
+        "content": "Финальный аргумент: экономия сейчас дороже потери окна у клиента.",
+    })
+    assert final_answer_resp.status_code == 200
+    final_answer_data = final_answer_resp.json()
+    assert final_answer_data["turn"] == 3
+    assert final_answer_data["remaining_turns"] == 0
+    assert final_answer_data["limit_reached"] is True
+    assert final_answer_data["question"] is None
+    assert final_answer_data["paywall"]["cta_primary"]["action"] == "pay_per_session"
+
+    result = await db_session.execute(
+        select(GuestSession).where(GuestSession.session_token == token)
+    )
+    guest = result.scalar_one()
+    assert guest.turn_count == 3
+    assert [message["role"] for message in guest.messages] == [
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_guest_start_rejects_missing_required_field(client: AsyncClient) -> None:
     resp = await client.post("/simulation/guest-start", json={
         "persona": "cfo",
@@ -189,6 +257,158 @@ async def test_start_from_guest_uses_public_token_and_active_status(
     counter = await get_usage_counter(str(TEST_USER_ID), db_session)
     await db_session.refresh(counter)
     assert counter.session_credits == 0
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_requires_session_credit(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    token = str(uuid.uuid4())
+    guest = GuestSession(
+        session_token=token,
+        text="Нужно защитить бюджет внедрения перед CFO и показать риски сокращения.",
+        persona="cfo",
+        difficulty=3,
+        turn_count=3,
+        messages=[
+            {"role": "assistant", "content": "Почему это нельзя сократить?"},
+            {"role": "user", "content": "Потому что релиз сдвинется."},
+            {"role": "assistant", "content": "Что скажете CFO про экономику?"},
+            {"role": "user", "content": "Покажу стоимость задержки."},
+            {"role": "assistant", "content": "Какая самая слабая часть позиции?"},
+            {"role": "user", "content": "Нужно уточнить риск по клиенту."},
+        ],
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db_session.add(guest)
+    await db_session.commit()
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 0
+    counter.simulations_used = 0
+    await db_session.commit()
+
+    resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+
+    assert resp.status_code == 402
+    body = resp.json()
+    assert body["detail"]["code"] == "session_credit_required"
+    await db_session.refresh(counter)
+    assert counter.session_credits == 0
+    assert counter.simulations_used == 0
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_rejects_expired_guest_without_consuming_credit(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    token = str(uuid.uuid4())
+    guest = GuestSession(
+        session_token=token,
+        text="Expired guest defense material",
+        persona="cfo",
+        difficulty=3,
+        turn_count=3,
+        messages=[
+            {"role": "assistant", "content": "Почему это нельзя сократить?"},
+            {"role": "user", "content": "Потому что релиз сдвинется."},
+        ],
+        expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
+    )
+    db_session.add(guest)
+    await db_session.commit()
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 1
+    counter.simulations_used = 0
+    await db_session.commit()
+
+    resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+
+    assert resp.status_code == 410
+    assert resp.json()["detail"]["code"] == "guest_session_expired"
+    await db_session.refresh(counter)
+    assert counter.session_credits == 1
+    assert counter.simulations_used == 0
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_retry_returns_existing_session_without_extra_credit(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    token = str(uuid.uuid4())
+    guest_text = f"Retry-safe guest defense material {token}"
+    guest = GuestSession(
+        session_token=token,
+        text=guest_text,
+        persona="cfo",
+        difficulty=3,
+        turn_count=3,
+        messages=[
+            {"role": "assistant", "content": "Почему это нельзя сократить?"},
+            {"role": "user", "content": "Потому что релиз сдвинется."},
+            {"role": "assistant", "content": "Что скажете CFO про экономику?"},
+            {"role": "user", "content": "Покажу стоимость задержки."},
+        ],
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db_session.add(guest)
+    await db_session.commit()
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 2
+    counter.simulations_used = 0
+    await db_session.commit()
+
+    before_sessions = await db_session.scalar(
+        select(func.count(SimulationSession.id)).where(SimulationSession.user_id == TEST_USER_ID)
+    )
+
+    first_resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+    second_resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+
+    assert first_resp.status_code == 201
+    assert second_resp.status_code == 201
+    assert second_resp.json()["id"] == first_resp.json()["id"]
+
+    after_sessions = await db_session.scalar(
+        select(func.count(SimulationSession.id)).where(SimulationSession.user_id == TEST_USER_ID)
+    )
+    assert after_sessions == before_sessions + 1
+
+    drafts = await db_session.scalars(
+        select(SpeechDraft).where(
+            SpeechDraft.user_id == TEST_USER_ID,
+            SpeechDraft.raw_text == guest_text,
+        )
+    )
+    assert len(drafts.all()) == 1
+
+    result = await db_session.execute(
+        select(GuestSession).where(GuestSession.session_token == token)
+    )
+    migrated_guest = result.scalar_one()
+    assert str(migrated_guest.migrated_session_id) == first_resp.json()["id"]
+    assert migrated_guest.migrated_at is not None
+
+    await db_session.refresh(counter)
+    assert counter.session_credits == 1
+    assert counter.simulations_used == 1
 
 
 @pytest.fixture
@@ -395,6 +615,38 @@ async def test_complete_session_creates_prep_card_artifact(client: AsyncClient, 
         assert artifact is not None
         assert artifact.content["opening_move"] == MOCK_PREP_CARD["opening_move"]
         assert artifact.content["top_arguments"][0]["text"] == MOCK_PREP_CARD["top_arguments"][0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_paid_session_can_access_prep_card_artifact(client: AsyncClient, session_id: str) -> None:
+    await client.post(f"/simulation/{session_id}/message", json={"content": "Answer."})
+    complete_resp = await client.post(f"/simulation/{session_id}/complete")
+    assert complete_resp.status_code == 200
+
+    from .conftest import TestSessionLocal
+    from app.routers.simulation import _ensure_prep_card_artifact
+    from app.routers.simulation import _load_session
+
+    async with TestSessionLocal() as db:
+        session = await _load_session(db, uuid.UUID(session_id), TEST_USER_ID)
+        session.persona_config = {
+            **(session.persona_config or {}),
+            "paid_access": True,
+        }
+        await _ensure_prep_card_artifact(session, db)
+
+        counter = await get_usage_counter(str(TEST_USER_ID), db)
+        counter.session_credits = 0
+        await db.commit()
+
+    resp = await client.get(f"/simulation/{session_id}/artifact")
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["available"] is True
+    assert data["artifact"]["opening_move"] == MOCK_PREP_CARD["opening_move"]
+    assert data["teaser"] is None
+    assert data["paywall"] is None
 
 
 @pytest.mark.asyncio

@@ -21,6 +21,57 @@ export const START_PRESSURE_OPTIONS = [
 
 const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
   {
+    id: 'fallback-roadmap-budget-defense',
+    slug: 'roadmap-budget-defense',
+    title: 'Roadmap / Budget Defense',
+    subtitle: 'Head of Product защищает roadmap и бюджет перед CEO/CFO',
+    category: 'roadmap',
+    persona: 'CEO/CFO',
+    difficulty: 5,
+    recommended_difficulty: 5,
+    situation:
+      'Через 48 часов встреча с CEO и CFO. Вы Head of Product / Product Lead / CPO в B2B SaaS или IT-сервисной компании на 20-300 человек. Нужно защитить roadmap Q3/Q4, бюджет на команду и одну-две дорогие инициативы.\n\nМатериал может быть сырым: roadmap, бюджетный memo, список инициатив, KPI, риски, зависимости. Важно проверить не красоту документа, а способность связать приоритеты, деньги, сроки и бизнес-результат под давлением руководства.',
+    problem:
+      'Вы защищаете управленческую ставку: почему именно этот roadmap и бюджет сейчас рациональны, что компания потеряет при урезании и где допустимый компромисс.',
+    pressure:
+      'CEO будет давить на скорость, scope и стратегическую важность. CFO будет давить на payback, cost cut, альтернативы, headcount и доказательства, что budget request не является wish list.',
+    whatToPrepare: [
+      'Roadmap или короткий список инициатив с приоритетами, сроками и зависимостями.',
+      'Бюджетный запрос: люди, подрядчики, инструменты, интеграции или ключевая инициатива.',
+      'Связь с бизнес-метриками: revenue, retention, activation, churn, cost reduction или strategic risk.',
+      'Компромиссный вариант: что можно отложить без разрушения результата.',
+    ],
+    sampleQuestions: [
+      'Почему этот roadmap важнее sales requests, которые уже ждут клиенты?',
+      'Что конкретно случится с выручкой или retention, если мы урежем бюджет на 30%?',
+      'Почему нельзя получить тот же результат меньшей командой или более дешёвым scope?',
+      'Какая инициатива в вашем плане самая слабая, если смотреть глазами CFO?',
+      'Что вы сами готовы снять с roadmap, чтобы защитить одну ключевую ставку?',
+    ],
+    expectedOutput: [
+      'Неудобные вопросы CEO/CFO до реальной защиты roadmap и бюджета.',
+      'Карта weak spots: где не хватает метрик, trade-offs, payback или ясного компромисса.',
+      'Defense Brief с opening move, ключевыми аргументами, danger zones и фразами-опорами.',
+    ],
+    faq: [
+      {
+        question: 'Нужен ли готовый board deck?',
+        answer:
+          'Нет. Достаточно вставить roadmap, бюджетный memo, список инициатив или тезисы защиты. Чем конкретнее ограничения и цифры, тем полезнее вопросы.',
+      },
+      {
+        question: 'Это только для Head of Product?',
+        answer:
+          'Нет. Сценарий подходит Product Lead, CPO, founder или руководителю продукта, который защищает приоритеты, ресурсы и бюджет перед CEO, CFO, founder или board.',
+      },
+      {
+        question: 'Что будет после первых 3 вопросов?',
+        answer:
+          'Guest-режим покажет первые слабые места. Полный Defense Brief доступен после покупки Meeting Defense Pack для этой встречи.',
+      },
+    ],
+  },
+  {
     id: 'fallback-budget-cut-q3',
     slug: 'budget-cut-q3',
     title: 'Защита бюджета перед сокращением',
@@ -49,7 +100,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     expectedOutput: [
       'Список слабых мест в аргументации бюджета.',
       'Формулировки для защиты критичных статей.',
-      'Короткая памятка перед встречей перед встречей с CFO.',
+      'Короткая памятка перед встречей с CFO.',
     ],
     faq: [
       {

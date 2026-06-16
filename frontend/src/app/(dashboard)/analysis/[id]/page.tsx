@@ -226,7 +226,7 @@ function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, o
 }) {
     const total = annotations.length;
     const micro = total === 0
-        ? 'Замечаний не найдено — текст полностью готов к выступлению.'
+        ? 'Замечаний не найдено — материал готов к защите.'
         : `AI обнаружил ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева для разбора.`;
 
     return (
@@ -567,7 +567,7 @@ export default function AnalysisPage() {
         { key: 'style'   as IssueType, label: 'Стиль',      text: fb.style   },
         { key: 'grammar' as IssueType, label: 'Грамматика', text: fb.grammar },
     ];
-    const scoreLabel = fb.overall_score >= 8 ? 'Готов к выступлению'
+    const scoreLabel = fb.overall_score >= 8 ? 'Готов к защите'
         : fb.overall_score >= 6 ? 'Хорошая основа'
         : fb.overall_score >= 4 ? 'Требует доработки' : 'Нужна переработка';
     const scoreColor = fb.overall_score >= 7 ? '#10b981' : fb.overall_score >= 5 ? '#fbbf24' : '#ef4444';

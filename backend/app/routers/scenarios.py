@@ -30,6 +30,7 @@ _CATEGORY_LABELS = {
 
 _PERSONA_LABELS = {
     "cfo": "CFO",
+    "ceo_cfo": "CEO/CFO",
     "investor": "Инвестор",
     "board_member": "Совет директоров",
     "client": "Клиент",

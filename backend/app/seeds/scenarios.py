@@ -1,5 +1,5 @@
 """
-Scenario seed data — 20 realistic B2B work situations across 6 categories.
+Scenario seed data — realistic B2B work situations across 6 categories.
 Run via: python -m backend.scripts.seed_scenarios
 """
 from __future__ import annotations
@@ -222,8 +222,60 @@ SCENARIOS: list[dict] = [
     },
 
     # ──────────────────────────────────────────────────────────────────────────
-    # ROADMAP  (4 scenarios)
+    # ROADMAP
     # ──────────────────────────────────────────────────────────────────────────
+    {
+        "slug": "roadmap-budget-defense",
+        "category": ScenarioCategory.roadmap,
+        "title": "Roadmap / Budget Defense",
+        "subtitle": "Head of Product защищает roadmap и бюджет перед CEO/CFO.",
+        "situation": (
+            "Через 48 часов встреча с CEO и CFO. Вы Head of Product / Product Lead / CPO "
+            "в B2B SaaS или IT-сервисной компании на 20-300 человек. Нужно защитить roadmap Q3/Q4, "
+            "бюджет на команду и одну-две дорогие инициативы.\n\n"
+            "Материал может быть сырым: roadmap, бюджетный memo, список инициатив, KPI, риски, зависимости. "
+            "PeakTalk должен проверить не красоту документа, а способность связать приоритеты, деньги, сроки "
+            "и бизнес-результат под давлением руководства.\n\n"
+            "Цель подготовки: получить неудобные вопросы CEO/CFO, карту weak spots и Defense Brief перед реальной защитой."
+        ),
+        "simulation_context": (
+            "КОНТЕКСТ ДЛЯ СИМУЛЯЦИИ: Roadmap / Budget Defense перед CEO/CFO\n\n"
+            "РОЛЬ УЧАСТНИКА: Head of Product / Product Lead / CPO в B2B SaaS, IT-сервисе "
+            "или digital-продукте на 20-300 сотрудников.\n\n"
+            "СИТУАЦИЯ: через 48 часов встреча с CEO и CFO. Нужно защитить roadmap Q3/Q4, "
+            "бюджет на команду, подрядчиков, интеграции или одну-две дорогие продуктовые инициативы.\n\n"
+            "ЧТО ПРОВЕРЯЕТ ОППОНЕНТ:\n"
+            "- CEO давит на скорость, scope, стратегическую важность и способность команды исполнить план.\n"
+            "- CFO давит на payback, cost cut, headcount, альтернативы и доказательства, "
+            "что budget request не является wish list.\n"
+            "- Founder/board могут требовать trade-off: что снять с roadmap, чтобы защитить одну ключевую ставку.\n\n"
+            "ЧТО НУЖНО ВЫТАЩИТЬ ИЗ МАТЕРИАЛА:\n"
+            "- Приоритеты roadmap и зависимости между инициативами.\n"
+            "- Бюджетный запрос и причина, почему эти деньги нужны сейчас.\n"
+            "- Связь с revenue, retention, activation, churn, cost reduction или strategic risk.\n"
+            "- Реалистичный компромисс: что можно отложить без разрушения результата.\n\n"
+            "ТИПОВЫЕ ЖЁСТКИЕ ВОПРОСЫ:\n"
+            "1. Почему этот roadmap важнее sales requests, которые уже ждут клиенты?\n"
+            "2. Что случится с выручкой или retention, если бюджет урезать на 30%?\n"
+            "3. Почему нельзя получить тот же результат меньшей командой или более дешёвым scope?\n"
+            "4. Какая инициатива в плане самая слабая глазами CFO?\n"
+            "5. Что вы сами готовы снять с roadmap, чтобы защитить одну ключевую ставку?\n\n"
+            "ОЖИДАЕМЫЙ ВЫХОД: Defense Brief с opening move, ключевыми аргументами, "
+            "danger zones, weak spots и фразами-опорами перед встречей."
+        ),
+        "recommended_persona": "ceo_cfo",
+        "recommended_difficulty": 5,
+        "tags": [
+            "roadmap",
+            "budget",
+            "CEO",
+            "CFO",
+            "Head of Product",
+            "Defense Brief",
+            "validation sprint",
+        ],
+        "is_featured": True,
+    },
     {
         "slug": "qbr-missed-okr",
         "category": ScenarioCategory.roadmap,

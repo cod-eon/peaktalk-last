@@ -20,10 +20,10 @@ export default function UploadPage() {
     const [logs, setLogs] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const DEMO_PITCH = `Привет! Я — Илья, основатель PeakTalk. Мы делаем ИИ-симулятор сложных рабочих разговоров, который помогает проверять аргументацию до важной встречи.
-По статистике, 75% людей боятся выступать. Из-за этого руководители и эксперты хуже защищают решения, бюджеты и инициативы.
-Наш продукт — это сервис с индивидуальной покупкой. Пользователь загружает текст своей речи, а наш ИИ-судья, например "строгий инвестор", задает каверзные вопросы по логике и структуре.
-Мы уже запустили первую версию и у нас более 500 активных пользователей. Сейчас мы ищем инвестиции в размере 10 миллионов рублей для масштабирования маркетинга и выхода на корпоративный рынок корпоративного обучения. Буду рад ответить на вопросы!`;
+    const DEMO_PITCH = `Ситуация: я Head of Product и через два дня защищаю roadmap и бюджет внедрения перед CEO и CFO.
+Прошу сохранить бюджет на интеграцию с ключевым клиентом. Если урезать команду сейчас, релиз сдвинется минимум на месяц, а клиент может перенести контракт на следующий квартал.
+Главный аргумент: стоимость задержки выше краткосрочной экономии. Мы можем сократить второстепенный scope, но core-интеграцию нужно оставить в плане.
+Ожидаемые возражения: CFO спросит про payback и альтернативы, CEO — почему нельзя сделать дешевле и быстрее. Мне нужно понять, где позиция слабая до встречи.`;
 
     const setDemoText = () => {
         setMode('text');
@@ -75,7 +75,7 @@ export default function UploadPage() {
         if (mode === 'text' && !text.trim()) return;
 
         setIsProcessing(true);
-        setLogs(['> Инициализация ИИ-движка PeakTalk...']);
+        setLogs(['> Инициализация stress-test engine PeakTalk...']);
 
         try {
             let documentId = null;
@@ -121,8 +121,8 @@ export default function UploadPage() {
             }
 
             // 2. Create draft
-            setLogs(prev => [...prev, '> Создание черновика речи...']);
-            const draftTitle = mode === 'file' ? (file?.name ?? 'Документ') : 'Анализ текста ' + new Date().toLocaleTimeString('ru-RU');
+            setLogs(prev => [...prev, '> Создание материала встречи...']);
+            const draftTitle = mode === 'file' ? (file?.name ?? 'Документ') : 'Материал встречи ' + new Date().toLocaleTimeString('ru-RU');
 
             const draftRes = await api.post('/drafts', {
                 title: draftTitle,
@@ -133,8 +133,8 @@ export default function UploadPage() {
             const draftId = draftRes.id;
 
             // 3. Request Analysis
-            setLogs(prev => [...prev, '> Запуск глубокого семантического анализа (Cloud.ru AI)...']);
-            setLogs(prev => [...prev, '> Поиск стилистических и риторических уязвимостей...']);
+            setLogs(prev => [...prev, '> Запуск анализа аргументации (Cloud.ru AI)...']);
+            setLogs(prev => [...prev, '> Поиск слабых мест позиции и логических разрывов...']);
 
             await api.post(`/drafts/${draftId}/analyze`);
 
@@ -274,7 +274,7 @@ export default function UploadPage() {
                                             <textarea
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
-                                                placeholder="Вставьте текст вашего выступления (рекомендуется от 500 символов)..."
+                                                placeholder="Вставьте тезисы, план разговора или аргументы, которые нужно защитить (от 500 символов)..."
                                                 className="w-full flex-1 bg-neutral-50 border border-neutral-200 rounded-none p-4 text-sm text-neutral-900 placeholder:text-neutral-400 resize-none outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-300 transition-all font-inter leading-relaxed"
                                             />
                                             <div className="flex justify-between items-center mt-3 px-1">
@@ -287,7 +287,7 @@ export default function UploadPage() {
                                                             onClick={setDemoText}
                                                             className="text-[11px] text-neutral-600 hover:text-neutral-900 transition-colors bg-neutral-50 hover:bg-neutral-100 rounded-none px-2.5 py-1.5 font-medium border border-neutral-200"
                                                         >
-                                                            Вставить демо-спич
+                                                            Вставить демо-материал
                                                         </button>
                                                     )}
                                                 </div>
@@ -300,8 +300,9 @@ export default function UploadPage() {
 
                             {/* Action Bar */}
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-t border-neutral-200 p-4 sm:p-5 bg-white gap-3">
-                                <div className="text-xs text-neutral-400 hidden sm:block">
-                                    Ваши данные надежно защищены
+                                <div className="flex items-start gap-2 text-xs leading-relaxed text-neutral-500 sm:max-w-md">
+                                    <ShieldCheck size={14} className="mt-0.5 shrink-0 text-neutral-400" />
+                                    <span>Не вставляйте пароли, персональные данные и коммерческую тайну. Материал используется для анализа и подготовки вопросов по этой встрече.</span>
                                 </div>
                                 <div className="flex flex-col items-center sm:items-end gap-1.5 w-full sm:w-auto">
                                     <button
@@ -384,7 +385,7 @@ export default function UploadPage() {
                             className="mt-8 text-center flex items-center justify-center gap-2 font-mono text-xs text-neutral-400"
                         >
                             <Activity size={14} className="animate-spin-slow text-neutral-500" />
-                            AI анализирует контекст... Пожалуйста, подождите.
+                            PeakTalk проверяет аргументацию... Пожалуйста, подождите.
                         </motion.div>
                     </motion.div>
                 )}

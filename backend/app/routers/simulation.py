@@ -61,6 +61,12 @@ from app.services.simulation_ai import evaluate_session, generate_prep_card, gen
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 
 
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 async def _background_generate_prep_card(session_id: uuid.UUID) -> None:
     # Get a fresh DB session for the background task
     from app.database import async_session_maker
@@ -848,7 +854,7 @@ async def get_artifact(
     if session.status != SessionStatus.completed:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Шпаргалка доступна только после завершения сессии.",
+            detail="Defense Brief доступен только после завершения сессии.",
         )
 
     has_access = await _session_has_artifact_access(session, current_user.id, db)
@@ -870,7 +876,7 @@ async def get_artifact(
             )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Шпаргалка отсутствует в сохраненных артефактах сессии.",
+            detail="Defense Brief отсутствует в сохраненных артефактах сессии.",
         )
 
     # Free user: return teaser with partial info
@@ -884,7 +890,7 @@ async def get_artifact(
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Шпаргалка отсутствует в сохраненных артефактах сессии.",
+            detail="Defense Brief отсутствует в сохраненных артефактах сессии.",
         )
 
     return SessionArtifactResponse(
@@ -895,8 +901,8 @@ async def get_artifact(
             danger_zones_count=danger_count,
         ),
         paywall=ArtifactPaywall(
-            message="Шпаргалка доступна в платной сессии",
-            cta="Получить шпаргалку — 299 ₽",
+            message="Defense Brief доступен в платной сессии",
+            cta="Получить Defense Brief — 299 ₽",
             action="pay_per_session",
         ),
     )
@@ -963,13 +969,13 @@ async def abandon_session(
 async def start_from_guest(
     request: Request,
     body: StartFromGuestRequest,
-    _limit_check: None = Depends(check_simulation_limit),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> StartFromGuestResponse:
     # Load guest session
     guest_res = await db.execute(
         select(GuestSession).where(GuestSession.session_token == body.guest_session_id)
+        .with_for_update()
     )
     guest = guest_res.scalar_one_or_none()
     if not guest:
@@ -978,8 +984,47 @@ async def start_from_guest(
             detail="Guest session not found",
         )
 
+    if guest.migrated_session_id is not None:
+        migrated_session = await db.get(SimulationSession, guest.migrated_session_id)
+        if migrated_session is not None and migrated_session.user_id == current_user.id:
+            return StartFromGuestResponse(id=migrated_session.id)
+
+        logger.warning(
+            "guest migration reuse rejected token=%s current_user=%s migrated_session=%s",
+            body.guest_session_id,
+            current_user.id,
+            guest.migrated_session_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "detail": "Гостевая сессия уже была перенесена в другой аккаунт.",
+                "code": "guest_session_already_migrated",
+            },
+        )
+
+    if _as_utc(guest.expires_at) < datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={
+                "detail": "Гостевая сессия истекла. Начните новый стресс-тест перед оплатой.",
+                "code": "guest_session_expired",
+            },
+        )
+
     # 1. Consume limits
     consumed_credit = await consume_session_credit(str(current_user.id), db)
+    if not consumed_credit:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "detail": "Для продолжения гостевого стресс-теста нужна оплаченная разовая сессия.",
+                "code": "session_credit_required",
+                "limit_type": "session_credits",
+                "plan": "per_session",
+            },
+        )
+
     await increment_simulation_counter(str(current_user.id), db)
 
     # 2. Transfer session
@@ -1009,6 +1054,8 @@ async def start_from_guest(
     await db.flush()
 
     session.draft_id = draft.id
+    guest.migrated_session_id = session.id
+    guest.migrated_at = datetime.now(timezone.utc)
 
     # 4. Transfer messages
     for idx, msg in enumerate(guest.messages):

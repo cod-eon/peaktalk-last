@@ -139,7 +139,9 @@ async def test_yookassa_notification_webhook_activates_subscription(
 
 
 @pytest.mark.asyncio
-async def test_yookassa_recurrent_cancelled_marks_active_subscription_past_due(
+@pytest.mark.parametrize("event_name", ["payment.canceled", "payment.cancelled"])
+async def test_yookassa_recurrent_canceled_marks_active_subscription_past_due(
+    event_name: str,
     client: AsyncClient,
     db_session,
 ) -> None:
@@ -158,7 +160,7 @@ async def test_yookassa_recurrent_cancelled_marks_active_subscription_past_due(
 
     payload = {
         "type": "notification",
-        "event": "payment.cancelled",
+        "event": event_name,
         "object": {
             "id": "yk_recurrent_cancelled_1",
             "description": "PeakTalk Personal — месячная подписка (автопродление)",

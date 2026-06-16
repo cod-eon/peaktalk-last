@@ -11,6 +11,7 @@ from app.database import Base
 import app.models.document  # noqa: F401
 import app.models.app_setting  # noqa: F401
 import app.models.draft  # noqa: F401
+import app.models.guest  # noqa: F401
 import app.models.simulation  # noqa: F401
 import app.models.subscription  # noqa: F401
 import app.models.user  # noqa: F401

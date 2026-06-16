@@ -128,7 +128,7 @@ function OnboardingForm() {
         setIsSubmitting(true);
         try {
             await api.post('/me/onboarding', { segment, primary_goal: goal });
-            // Send UTM for OAuth users (email signups already have it in user_metadata)
+            // Keep UTM attached when onboarding is reached without registration metadata.
             const utm = getUTM();
             if (utm.utm_source) {
                 await api.post('/me/utm', utm).catch(() => {});

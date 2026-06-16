@@ -4,8 +4,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, Lock, Timer, UserRound, Briefcase, TrendingUp } from 'lucide-react';
+import { ArrowRight, Loader2, Lock, Timer, UserRound, Briefcase, TrendingUp, Crosshair, MapPin, Quote, ShieldAlert } from 'lucide-react';
 import { sendGuestMessage, startGuestSession } from '@/lib/guest-api';
+import { trackEvent } from '@/lib/analytics';
+import {
+  EXAMPLE_DEFENSE_BRIEF,
+  EXAMPLE_DEFENSE_BRIEF_CONTEXT_NOTE,
+} from '@/lib/example-defense-brief';
+import { useAuthStore } from '@/store/authStore';
 
 type Step = 'input' | 'chat' | 'paywall';
 
@@ -81,7 +87,110 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+function ExampleDefenseBriefPreview() {
+  const topArguments = (EXAMPLE_DEFENSE_BRIEF.top_arguments ?? []).filter((item) => item.text);
+  const dangerZones = (EXAMPLE_DEFENSE_BRIEF.danger_zones ?? []).filter((item) => item.topic || item.risk);
+  const anchorPhrases = (EXAMPLE_DEFENSE_BRIEF.anchor_phrases ?? []).filter(Boolean);
+  const keyNumbers = (EXAMPLE_DEFENSE_BRIEF.key_numbers ?? []).filter(Boolean);
+
+  return (
+    <section className="border border-neutral-200 bg-white">
+      <div className="flex flex-col gap-2 border-b border-neutral-100 bg-[#faf8f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <Label>пример Defense Brief</Label>
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-400">
+          формат, не ваш анализ
+        </span>
+      </div>
+
+      <div className="p-4 sm:p-6">
+        <p className="max-w-2xl font-inter text-[13px] leading-relaxed text-neutral-500">
+          {EXAMPLE_DEFENSE_BRIEF_CONTEXT_NOTE}
+        </p>
+
+        {EXAMPLE_DEFENSE_BRIEF.opening_move && (
+          <div className="mt-5 border-l-2 border-[#E8600A] bg-[#E8600A]/[0.04] px-4 py-3">
+            <h2 className="mb-2 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#B74707]">
+              <Crosshair size={14} />
+              Рекомендуемый старт
+            </h2>
+            <p className="font-inter text-[14px] font-medium leading-relaxed text-neutral-800">
+              {EXAMPLE_DEFENSE_BRIEF.opening_move}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {topArguments.map((argument, index) => (
+            <div key={index} className="border border-neutral-200 bg-neutral-50 px-4 py-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-neutral-500">
+                  Тезис 0{index + 1}
+                </h3>
+                <span className="font-mono text-[10px] text-[#E8600A]">{argument.strength}</span>
+              </div>
+              <p className="font-inter text-[13px] font-bold leading-relaxed text-neutral-900">
+                {argument.text}
+              </p>
+              {argument.anchor_phrase && (
+                <p className="mt-3 border-t border-neutral-200 pt-3 font-inter text-[12px] leading-relaxed text-neutral-600">
+                  “{argument.anchor_phrase}”
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="border border-red-100 bg-red-50/30 px-4 py-3">
+            <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-red-700">
+              <ShieldAlert size={14} />
+              Danger zones
+            </h3>
+            <div className="grid gap-3">
+              {dangerZones.map((zone, index) => (
+                <div key={index}>
+                  <p className="font-inter text-[13px] font-bold text-neutral-900">{zone.topic}</p>
+                  <p className="mt-1 font-inter text-[12px] leading-relaxed text-red-800">{zone.risk}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-violet-100 bg-violet-50/40 px-4 py-3">
+            <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-violet-700">
+              <Quote size={14} />
+              Фразы-опоры
+            </h3>
+            <div className="grid gap-2">
+              {anchorPhrases.map((phrase, index) => (
+                <p key={index} className="font-inter text-[12px] font-medium leading-relaxed text-neutral-800">
+                  “{phrase}”
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 border border-indigo-100 bg-indigo-50/40 px-4 py-3">
+          <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-indigo-700">
+            <MapPin size={14} />
+            Цифры, которые нужно принести
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {keyNumbers.map((number) => (
+              <span key={number} className="border border-indigo-200 bg-white px-2 py-1 font-mono text-[10px] text-indigo-800">
+                {number}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function GuestSimulationPage() {
+  const user = useAuthStore((state) => state.user);
   const [step, setStep] = useState<Step>('input');
   const [text, setText] = useState('');
   const [selectedPersona, setSelectedPersona] = useState('cfo');
@@ -100,10 +209,19 @@ export default function GuestSimulationPage() {
   const isReady = text.trim().length >= 20;
   const currentQuestion = messages.filter((message) => message.role === 'assistant').at(-1)?.content ?? 'Анализ вводных данных...';
   const progress = Math.min((turn / MAX_GUEST_TURNS) * 100, 100);
+  const billingPath = '/billing?plan=per_session&return=/simulation/from-guest';
+  const defensePackHref = user
+    ? billingPath
+    : `/register?return=${encodeURIComponent(billingPath)}`;
+  const loginHref = `/login?return=${encodeURIComponent(billingPath)}`;
+  const funnelSource = hasScenarioParam ? 'scenario' : 'direct';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isFromScenario = params.get('from_scenario') === 'true';
+    let trackedPersona = 'cfo';
+    let trackedDifficulty = 3;
+
     if (isFromScenario) {
       const ctx = localStorage.getItem('peaktalk_guest_context');
       if (ctx) {
@@ -115,7 +233,10 @@ export default function GuestSimulationPage() {
     
     // Map scenario categories to our 3 guest personas, or just use the exact match
     const mapped = p === 'investors' ? 'investor' : p === 'clients' ? 'client' : p === 'cfo' || p === 'budget' || p === 'roadmap' || p === 'people' || p === 'crisis' ? 'cfo' : p;
-    if (mapped && PERSONAS.some(x => x.id === mapped)) setSelectedPersona(mapped);
+    if (mapped && PERSONAS.some(x => x.id === mapped)) {
+      trackedPersona = mapped;
+      setSelectedPersona(mapped);
+    }
     const d = params.get('difficulty');
     if (d) {
       const requestedDifficulty = Number(d);
@@ -124,8 +245,15 @@ export default function GuestSimulationPage() {
           ? item
           : closest,
       DIFFICULTIES[1]);
+      trackedDifficulty = closestDifficulty.value;
       setSelectedDifficulty(closestDifficulty.value);
     }
+
+    trackEvent('guest_page_viewed', {
+      source: isFromScenario ? 'scenario' : 'direct',
+      persona: trackedPersona,
+      difficulty: trackedDifficulty,
+    });
   }, []);
 
   const transcript = useMemo(() => {
@@ -161,9 +289,22 @@ export default function GuestSimulationPage() {
       const response = await startGuestSession(text, selectedPersona, selectedDifficulty);
       setGuestSessionId(response.guest_session_id);
       setMessages([{ role: 'assistant', content: response.first_question }]);
-      setTurn(1);
+      setTurn(response.turn);
       setTimeLeft(90);
       setStep('chat');
+      trackEvent('guest_started', {
+        source: funnelSource,
+        persona: selectedPersona,
+        difficulty: selectedDifficulty,
+        text_length: text.trim().length,
+      });
+      trackEvent('guest_question_seen', {
+        source: funnelSource,
+        persona: selectedPersona,
+        difficulty: selectedDifficulty,
+        turn: response.turn,
+        max_turns: response.max_turns,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка инициализации сессии');
     } finally {
@@ -179,21 +320,47 @@ export default function GuestSimulationPage() {
     setIsLoading(true);
     setError(null);
     setMessages((prev) => [...prev, { role: 'user', content: nextAnswer }]);
+    const answeredTurn = turn;
 
     try {
       const response = await sendGuestMessage(guestSessionId, nextAnswer);
+      trackEvent('guest_answer_submitted', {
+        source: funnelSource,
+        persona: selectedPersona,
+        difficulty: selectedDifficulty,
+        turn: answeredTurn,
+        answer_length: nextAnswer.length,
+        timed_out: Boolean(timeoutAnswer),
+        limit_reached: response.limit_reached,
+      });
 
       if (response.limit_reached) {
         localStorage.setItem('peaktalk_guest_session_id', guestSessionId);
         localStorage.setItem('peaktalk_guest_difficulty', String(selectedDifficulty));
+        trackEvent('guest_paywall_seen', {
+          source: funnelSource,
+          persona: selectedPersona,
+          difficulty: selectedDifficulty,
+          turn: response.turn,
+          questions_seen: MAX_GUEST_TURNS,
+          plan_context: 'meeting_defense_pack',
+        });
         setStep('paywall');
         return;
       }
 
       if (response.question) {
         setMessages((prev) => [...prev, { role: 'assistant', content: response.question! }]);
-        setTurn((value) => value + 1);
+        setTurn(response.turn);
         setTimeLeft(90);
+        trackEvent('guest_question_seen', {
+          source: funnelSource,
+          persona: selectedPersona,
+          difficulty: selectedDifficulty,
+          turn: response.turn,
+          max_turns: response.max_turns,
+          remaining_turns: response.remaining_turns,
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка отправки данных');
@@ -202,7 +369,7 @@ export default function GuestSimulationPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [answer, guestSessionId, isLoading, selectedDifficulty]);
+  }, [answer, funnelSource, guestSessionId, isLoading, selectedDifficulty, selectedPersona, turn]);
 
   useEffect(() => {
     if (step !== 'chat' || timeLeft > 0 || isLoading) return;
@@ -290,8 +457,9 @@ export default function GuestSimulationPage() {
                             className="h-[120px] w-full resize-none border border-neutral-200 bg-[#faf8f4] p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 transition-colors"
                           />
                           <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="font-inter text-[13px] leading-relaxed text-neutral-500 sm:max-w-[85%]">
-                              Не вставляйте пароли, персональные данные и коммерческие тайны. Материал нужен только для проверки в этой сессии.
+                            <p className="flex gap-2 font-inter text-[13px] leading-relaxed text-neutral-500 sm:max-w-[85%]">
+                              <Lock size={14} className="mt-0.5 shrink-0 text-neutral-400" />
+                              <span>Не вставляйте пароли, персональные данные, коммерческую тайну или NDA-фрагменты. Материал используется для вопросов в этой сессии и переноса в полный Defense Pack после оплаты.</span>
                             </p>
                             <button
                               type="button"
@@ -517,45 +685,54 @@ export default function GuestSimulationPage() {
               style={safariMotionStyle}
             >
               <div className="mb-6">
-                <Label className="mb-3 text-[#E8600A]">лимит исчерпан</Label>
+                <Label className="mb-3 text-[#E8600A]">Meeting Defense Pack</Label>
                 <h1 className="font-inter text-[28px] font-black leading-[1.08] text-neutral-950 sm:text-[36px]">
-                  Демо-режим завершён
+                  Соберите полный Defense Pack для этой встречи
                 </h1>
                 <p className="mt-5 font-inter text-[17px] leading-relaxed text-neutral-600">
-                  Вы прошли 3 вопроса. Зарегистрируйтесь, чтобы получить полный разбор, памятку перед встречей и доступ ко всем сценариям.
+                  Вы прошли 3 неудобных вопроса. Полная подготовка за 299 ₽ сохранит материал, перенесёт ответы и даст Defense Brief: слабые места позиции, контраргументы и короткий план защиты перед встречей.
                 </p>
               </div>
 
-              <div className="border border-neutral-200 bg-white">
-                <div className="border-b border-neutral-100 bg-[#faf8f4] px-5 py-3">
-                  <Label>фрагмент анализа</Label>
-                </div>
-                <div className="p-5 sm:p-7">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center border border-neutral-200 bg-white text-neutral-400">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <ExampleDefenseBriefPreview />
+
+                <aside className="border border-neutral-200 bg-[#faf8f4] p-5 sm:p-6 lg:sticky lg:top-6 lg:self-start">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center border border-neutral-200 bg-white text-neutral-500">
                     <Lock size={18} />
                   </div>
+                  <Label className="mb-3 text-[#E8600A]">после оплаты</Label>
+                  <h2 className="font-inter text-[20px] font-black leading-tight text-neutral-950">
+                    Персональный Defense Brief по вашему материалу
+                  </h2>
+                  <ul className="mt-4 grid gap-2 font-inter text-[13px] leading-relaxed text-neutral-600">
+                    <li>сохранит вводные и ответы из гостевого stress-test;</li>
+                    <li>покажет слабые места позиции после всей сессии;</li>
+                    <li>соберет фразы-опоры и вопросы CEO/CFO перед встречей.</li>
+                  </ul>
 
-                  <div className="border-l-2 border-[#E8600A] pl-4">
-                    <p className="font-inter text-sm italic leading-relaxed text-neutral-600">
-                      Оппонент отметил слабость в аргументации на втором шаге. Ваш ответ про...
-                    </p>
-                    <div className="mt-2 h-4 w-3/4 bg-gradient-to-r from-neutral-200 to-transparent blur-sm" />
-                    <div className="mt-1 h-4 w-1/2 bg-gradient-to-r from-neutral-200 to-transparent blur-sm" />
-                  </div>
-
-                  <div className="mt-7 grid gap-3 border-t border-neutral-200 pt-7">
+                  <div className="mt-6 grid gap-3 border-t border-neutral-200 pt-6">
                     <Link
-                      href="/register?return=/simulation/from-guest"
-                      className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-10 text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
+                      href={defensePackHref}
+                      className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-5 text-center text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
                     >
-                      Разблокировать отчёт
-                      <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                      <span className="hidden sm:inline">Собрать Defense Pack — 299 ₽</span>
+                      <span className="sm:hidden">Defense Pack — 299 ₽</span>
+                      <ArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
                     </Link>
+                    {!user && (
+                      <Link
+                        href={loginHref}
+                        className="flex min-h-[44px] items-center justify-center border border-neutral-200 bg-white px-5 text-center font-inter text-[13px] font-bold text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-950"
+                      >
+                        Уже есть аккаунт — войти
+                      </Link>
+                    )}
                     <p className="text-center font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                      Сохранить прогресс и получить памятку
+                      Регистрация нужна, чтобы сохранить демо и перейти к оплате
                     </p>
                   </div>
-                </div>
+                </aside>
               </div>
             </motion.div>
           )}

@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, Clock3, RefreshCcw, CreditCard, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useBillingStore } from '@/store/billingStore';
+import { trackEvent } from '@/lib/analytics';
 
 export default function BillingSuccessPage() {
   const { fetchStatus, status, isLoading } = useBillingStore();
+  const trackedSuccessRef = useRef(false);
+  const [returnPath] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('return');
+  });
 
   const activePlan = status?.subscription.plan;
   const isPaidPlan = Boolean(activePlan && ['personal', 'pro', 'team'].includes(activePlan));
@@ -42,6 +48,28 @@ export default function BillingSuccessPage() {
 
     return () => window.clearInterval(intervalId);
   }, [fetchStatus, isConfirmed]);
+
+  useEffect(() => {
+    if (!isConfirmed || trackedSuccessRef.current) return;
+    trackedSuccessRef.current = true;
+
+    let paymentContext: Record<string, string | null> = {};
+    try {
+      const raw = sessionStorage.getItem('peaktalk_payment_context');
+      paymentContext = raw ? JSON.parse(raw) : {};
+      sessionStorage.removeItem('peaktalk_payment_context');
+    } catch {
+      paymentContext = {};
+    }
+
+    trackEvent('payment_succeeded', {
+      source: paymentContext.return_path === '/simulation/from-guest' ? 'guest_paywall' : 'billing_success',
+      payment_plan: paymentContext.payment_plan ?? planLabel,
+      payment_id: paymentContext.payment_id ?? null,
+      return_path: paymentContext.return_path ?? returnPath ?? '/billing/success',
+      plan_context: paymentContext.plan_context ?? planLabel,
+    });
+  }, [isConfirmed, planLabel, returnPath]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
@@ -127,17 +155,19 @@ export default function BillingSuccessPage() {
                 </div>
                 <p className="text-sm text-neutral-600 leading-relaxed">
                   {isConfirmed
-                    ? 'Можно сразу запускать следующую симуляцию или вернуться в биллинг, если хочешь проверить тариф и автопродление.'
+                    ? returnPath === '/simulation/from-guest'
+                      ? 'Оплата подтверждена. Теперь можно перенести гостевой стресс-тест в полную сессию.'
+                      : 'Можно сразу запускать следующую симуляцию или вернуться в биллинг, если хочешь проверить тариф и автопродление.'
                     : 'Если активация ещё не дошла, можно вручную обновить статус или открыть биллинг и убедиться, что тариф уже переключился.'}
                 </p>
               </div>
 
               {isConfirmed ? (
                 <Link
-                  href="/simulation"
+                  href={returnPath ?? '/simulation'}
                   className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-[#171717] hover:bg-black text-white font-semibold text-sm transition-all cursor-pointer"
                 >
-                  Начать симуляцию
+                  {returnPath === '/simulation/from-guest' ? 'Продолжить подготовку' : 'Начать симуляцию'}
                   <ArrowRight size={15} />
                 </Link>
               ) : (

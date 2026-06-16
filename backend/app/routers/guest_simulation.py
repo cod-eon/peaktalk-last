@@ -46,13 +46,13 @@ PERSONA_ALIASES = {
 }
 
 _PAYWALL_RESPONSE = {
-    "message": "Вы использовали 3 бесплатных вопроса",
+    "message": "Бесплатный стресс-тест завершен",
     "cta_primary": {
-        "text": "Продолжить полную сессию — 299 ₽",
+        "text": "Собрать Meeting Defense Pack — 299 ₽",
         "action": "pay_per_session",
     },
     "cta_secondary": {
-        "text": "Зарегистрироваться бесплатно",
+        "text": "Сохранить демо и вернуться позже",
         "action": "register",
     },
 }
@@ -224,9 +224,15 @@ async def guest_message(
 
     current_turn = session.turn_count  # number of AI questions already asked
 
-    # If the limit was already hit on a previous call, return paywall immediately
-    # without burning another Cloud.ru call.
+    # If all free AI questions were already asked, accept the answer to the
+    # final question once and return paywall without burning another AI call.
     if current_turn >= GUEST_MAX_TURNS:
+        updated_messages: list[dict] = list(session.messages)
+        if not updated_messages or updated_messages[-1].get("role") != "user":
+            updated_messages.append({"role": "user", "content": body.content})
+            session.messages = updated_messages
+            await db.flush()
+
         return GuestMessageResponse(
             question=None,
             turn=current_turn,
@@ -242,28 +248,6 @@ async def guest_message(
     ]
 
     new_turn = current_turn + 1  # this will be the turn number after we respond
-
-    if new_turn >= GUEST_MAX_TURNS:
-        # Limit reached — persist user answer, return paywall without generating
-        # another AI question.
-        session.messages = updated_messages
-        session.turn_count = new_turn
-        await db.flush()
-
-        logger.info(
-            "guest_message: limit reached session_token=%s turn=%d",
-            body.guest_session_id,
-            new_turn,
-        )
-
-        return GuestMessageResponse(
-            question=None,
-            turn=new_turn,
-            max_turns=GUEST_MAX_TURNS,
-            remaining_turns=0,
-            limit_reached=True,
-            paywall=_PAYWALL_RESPONSE,
-        )
 
     # Still within limit — generate the next question
     persona_config = _persona_config(session.persona, session.difficulty)

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   AlertCircle,
@@ -22,6 +22,10 @@ import {
   normalizeStartDifficulty,
   type ScenarioCatalogItem,
 } from '@/lib/scenarios-catalog'
+import {
+  SCENARIO_ANALYTICS_EVENTS,
+  trackScenarioEvent,
+} from '@/lib/scenario-analytics'
 
 const EXAMPLE_QUESTIONS: Record<string, string[]> = {
   budget: [
@@ -93,6 +97,7 @@ export default function ScenarioDetailPage() {
   const [difficulty, setDifficulty] = useState<number>(5)
   const [isUsingFallback, setIsUsingFallback] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
+  const viewedScenarioKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -121,6 +126,19 @@ export default function ScenarioDetailPage() {
 
     if (slug) load()
   }, [slug])
+
+  useEffect(() => {
+    if (!scenario) return
+
+    const key = `${scenario.slug}:${isUsingFallback ? 'fallback' : 'api'}`
+    if (viewedScenarioKeyRef.current === key) return
+    viewedScenarioKeyRef.current = key
+
+    trackScenarioEvent(SCENARIO_ANALYTICS_EVENTS.detailViewed, scenario, {
+      source: 'scenario_detail',
+      using_fallback: isUsingFallback,
+    })
+  }, [isUsingFallback, scenario])
 
   if (isLoading) {
     return (
@@ -165,8 +183,12 @@ export default function ScenarioDetailPage() {
   const expectedOutput = scenario.expectedOutput ?? [
     'Критические вопросы по вашему материалу.',
     'Слабые места в ответах и логике защиты.',
-    'Короткая памятка перед встречей перед встречей.',
+    'Короткая памятка перед встречей.',
   ]
+  const primaryOutput =
+    expectedOutput.find((item) => /Defense Brief/i.test(item)) ??
+    expectedOutput[0] ??
+    'Defense Brief по слабым местам защиты.'
   const faq = scenario.faq ?? []
   const jsonLd =
     faq.length > 0
@@ -205,11 +227,23 @@ export default function ScenarioDetailPage() {
       : null
 
   const handleStartScenario = async () => {
-    if (!scenario || isStarting || isUsingFallback) {
-      if (scenario) {
-        localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
-      }
-      router.push(`/simulation/guest?persona=${scenario?.category ?? 'cfo'}&difficulty=${difficulty}&from_scenario=true`);
+    if (!scenario || isStarting) {
+      return;
+    }
+
+    const trackStart = (startMode: string) => {
+      trackScenarioEvent(SCENARIO_ANALYTICS_EVENTS.startClicked, scenario, {
+        source: 'scenario_detail',
+        difficulty,
+        using_fallback: isUsingFallback,
+        start_mode: startMode,
+      })
+    }
+
+    if (isUsingFallback) {
+      localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
+      trackStart('guest_fallback')
+      router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);
       return;
     }
 
@@ -220,10 +254,12 @@ export default function ScenarioDetailPage() {
       const token = data.session?.access_token;
       if (!token) {
         localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
+        trackStart('guest_unauthenticated')
         router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);
         return;
       }
 
+      trackStart('authenticated')
       const started = await startFromScenario(scenario.id, difficulty, token);
       router.push(`/simulation/${started.id}`);
     } catch {
@@ -243,17 +279,17 @@ export default function ScenarioDetailPage() {
         />
       )}
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
         <Link
           href="/scenarios"
-          className="mb-8 inline-flex items-center gap-1.5 font-inter text-sm text-neutral-400 transition-colors hover:text-neutral-900"
+          className="mb-8 inline-flex items-center gap-1.5 font-inter text-sm text-neutral-500 transition-colors hover:text-neutral-900"
         >
           <ArrowLeft size={15} />
           Все сценарии
         </Link>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             {isUsingFallback && (
               <div className="mb-6 flex items-start gap-3 border border-[#E8600A]/30 bg-[#E8600A]/[0.06] px-4 py-3 text-[#8F3705]">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -263,49 +299,64 @@ export default function ScenarioDetailPage() {
               </div>
             )}
 
-            <motion.div
+            <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+              className="min-w-0 border border-neutral-950 bg-neutral-950 p-6 text-white sm:p-8"
             >
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="inline-block border border-neutral-200 bg-white px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-600">
+              <div className="mb-5 flex flex-wrap items-center gap-2">
+                <span className="inline-block border border-white/20 bg-white/5 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">
                   {categoryMeta.label}
                 </span>
                 <DifficultyDots value={scenario.difficulty} />
-                <span className="font-mono text-xs text-neutral-400">
+                <span className="font-mono text-xs text-white/40">
                   {scenario.persona}
                 </span>
               </div>
 
-              <h1 className="font-display text-[36px] font-black leading-[1.05] text-neutral-950 sm:text-[52px]">
+              <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">
+                Scenario pressure sheet
+              </div>
+              <h1 className="mt-4 max-w-3xl break-words font-display text-[34px] font-black leading-[1.05] text-white sm:text-[56px]">
                 {scenario.title}
               </h1>
-              <p className="mt-5 max-w-2xl font-inter text-[17px] leading-relaxed text-neutral-600">
+              <p className="mt-5 max-w-2xl font-inter text-[17px] leading-relaxed text-white/70">
                 {scenario.subtitle}
               </p>
-            </motion.div>
+            </motion.section>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.08 }}
-              className="my-10 flex flex-wrap gap-8 sm:gap-16 border-b border-black/[0.08] pb-10"
+              className="my-8 grid border border-neutral-950 bg-white sm:grid-cols-3"
             >
               {[
                 ['Оппонент', scenario.persona],
                 ['Фокус', categoryMeta.role],
+                ['Выход', primaryOutput],
               ].map(([label, value]) => (
-                <div key={label}>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400">
+                <div key={label} className="border-b border-black/[0.08] p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+                  <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
                     {label}
                   </div>
-                  <div className="mt-2 text-[17px] font-bold text-neutral-950">
+                  <div className="mt-2 break-words font-inter text-[15px] font-bold leading-snug text-neutral-950">
                     {value}
                   </div>
                 </div>
               ))}
             </motion.div>
+
+            <div className="mb-10 lg:hidden">
+              <StartBlock
+                scenario={scenario}
+                difficulty={difficulty}
+                setDifficulty={setDifficulty}
+                isStarting={isStarting}
+                onStart={handleStartScenario}
+              />
+            </div>
 
             {(scenario.problem || scenario.pressure) && (
               <motion.div
@@ -366,16 +417,6 @@ export default function ScenarioDetailPage() {
                 </div>
               </motion.div>
             )}
-
-            <div className="lg:hidden">
-              <StartBlock
-                scenario={scenario}
-                difficulty={difficulty}
-                setDifficulty={setDifficulty}
-                isStarting={isStarting}
-                onStart={handleStartScenario}
-              />
-            </div>
           </div>
 
           <div className="hidden lg:block">
@@ -397,26 +438,26 @@ export default function ScenarioDetailPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-5 sm:px-8">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF8F4]">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-[#FAF8F4]/95 px-4 sm:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-75"
           aria-label="PeakTalk"
         >
-          <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" />
-          <span className="brand-wordmark text-[18px] text-neutral-950">PeakTalk</span>
+          <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-8 w-8 sm:h-10 sm:w-10" />
+          <span className="brand-wordmark text-[16px] text-neutral-950 sm:text-[18px]">PeakTalk</span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link
             href="/login"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950"
+            className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 sm:inline"
           >
             Вход
           </Link>
           <Link
             href="/simulation/guest"
-            className="inline-flex min-h-[44px] items-center justify-center border border-neutral-950 bg-neutral-950 px-5 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
+            className="inline-flex min-h-[42px] items-center justify-center border border-neutral-950 bg-neutral-950 px-3 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] sm:min-h-[44px] sm:px-5"
           >
             3 вопроса
           </Link>
@@ -501,7 +542,10 @@ function StartBlock({
   const recommendedPreset = normalizeStartDifficulty(scenario.recommended_difficulty)
 
   return (
-    <div className="border border-neutral-950 bg-[#faf8f4] p-5 sm:p-7 shadow-lg">
+    <div className="border border-neutral-950 bg-white p-5 sm:p-7">
+      <div className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#B74707]">
+        Guest pressure test
+      </div>
       <h3 className="mb-4 font-display text-[24px] font-black leading-tight text-neutral-950">
         Проверить свой материал в бесплатном режиме
       </h3>
@@ -569,7 +613,7 @@ function StartBlock({
         type="button"
         onClick={onStart}
         disabled={isStarting}
-        className="flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] font-inter text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:opacity-50"
+        className="flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] font-inter text-[15px] font-bold text-white transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] disabled:opacity-50"
       >
         {isStarting ? 'Запускаем...' : 'Запустить сценарий'}
         {isStarting ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}

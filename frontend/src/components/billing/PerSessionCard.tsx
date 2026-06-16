@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
 import { api } from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 interface PerSessionCardProps {
@@ -23,13 +24,28 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
   const handleBuy = async () => {
     try {
       const returnUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}${returnPath ?? '/billing/success'}`
+        ? `${window.location.origin}${returnPath ? `/billing/success?return=${encodeURIComponent(returnPath)}` : '/billing/success'}`
         : '';
       const res = await api.post('/billing/payment', {
         plan: 'per_session',
         return_url: returnUrl,
       });
       if (res?.payment_url) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
+            payment_id: res.payment_id ?? null,
+            payment_plan: 'per_session',
+            return_path: returnPath ?? '/billing/success',
+            plan_context: 'meeting_defense_pack',
+          }));
+        }
+        trackEvent('payment_started', {
+          source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+          payment_plan: 'per_session',
+          payment_id: res.payment_id ?? null,
+          return_path: returnPath ?? '/billing/success',
+          plan_context: 'meeting_defense_pack',
+        });
         window.location.href = res.payment_url;
       }
     } catch (err: unknown) {

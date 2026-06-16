@@ -5,12 +5,23 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 export interface GuestStartResponse {
   guest_session_id: string
   first_question: string
+  turn: number
+  max_turns: number
+  remaining_turns: number
   limit_reached?: boolean
 }
 
 export interface GuestMessageResponse {
   question?: string
+  turn: number
+  max_turns: number
+  remaining_turns: number
   limit_reached: boolean
+  paywall?: {
+    message: string
+    cta_primary?: { text: string; action: string }
+    cta_secondary?: { text: string; action: string }
+  } | null
 }
 
 export async function startGuestSession(

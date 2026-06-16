@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 function FromGuestBridgeInner() {
@@ -29,6 +30,23 @@ function FromGuestBridgeInner() {
           guest_session_id: guestSessionId,
           difficulty,
         });
+
+        try {
+          const rawPaymentContext = sessionStorage.getItem('peaktalk_payment_context');
+          if (rawPaymentContext) {
+            const paymentContext = JSON.parse(rawPaymentContext);
+            trackEvent('payment_succeeded', {
+              source: 'guest_paywall',
+              payment_plan: paymentContext.payment_plan ?? 'per_session',
+              payment_id: paymentContext.payment_id ?? null,
+              return_path: paymentContext.return_path ?? '/simulation/from-guest',
+              plan_context: paymentContext.plan_context ?? 'meeting_defense_pack',
+            });
+            sessionStorage.removeItem('peaktalk_payment_context');
+          }
+        } catch {
+          sessionStorage.removeItem('peaktalk_payment_context');
+        }
         
         // Clean up
         localStorage.removeItem('peaktalk_guest_session_id');
@@ -40,7 +58,7 @@ function FromGuestBridgeInner() {
         if (!mounted) return;
         const apiError = err as Error & { code?: string };
         // If limit exceeded 402 error, we send to billing
-        if (apiError.code === 'simulation_limit_exceeded') {
+        if (apiError.code === 'simulation_limit_exceeded' || apiError.code === 'session_credit_required') {
            router.replace('/billing?plan=per_session&return=/simulation/from-guest');
            return;
         }

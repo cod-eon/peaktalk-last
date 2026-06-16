@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PeakTalk API",
-    description="AI-тренер для подготовки к публичным выступлениям",
+    description="AI-стресс-тест аргументов перед рабочими встречами",
     version="0.1.0",
     docs_url="/docs" if _is_dev else None,
     redoc_url="/redoc" if _is_dev else None,

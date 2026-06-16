@@ -142,7 +142,7 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
 
   if (documents.length === 0) {
     tip = {
-      title: "Загрузите текст выступления",
+      title: "Загрузите материал встречи",
       desc: "Для точной проверки нужен контекст: тезисы, аргументы и ожидаемые возражения.",
       action: "Перейти к загрузке",
       href: "/upload",
@@ -235,7 +235,7 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       title = 'Подготовьтесь к защите решений';
       break;
     case 'founder':
-      title = 'Отрепетируйте инвест-спич';
+      title = 'Проверьте инвест-питч';
       break;
     case 'head':
       title = 'Подготовьтесь к бюджетной защите';
@@ -274,7 +274,7 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       </h1>
       
       <p className="text-sm sm:text-base text-[#73706A] mb-10 max-w-xl mx-auto">
-        Загрузите текст выступления или проверьте аргументацию с ИИ-оппонентом перед реальной встречей.
+        Загрузите материал встречи или проверьте аргументацию с ИИ-оппонентом перед реальным разговором.
       </p>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -432,7 +432,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
             <Upload size={24} />
           </div>
           <h2 className="text-2xl font-black leading-tight">
-            Загрузить текст<br />выступления
+            Загрузить материал<br />встречи
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-white/58">
             Анализ аргументации и поиск логических уязвимостей перед встречей.
