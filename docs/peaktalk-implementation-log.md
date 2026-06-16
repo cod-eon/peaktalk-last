@@ -1186,6 +1186,26 @@ Verification:
   - containers healthy/running;
   - `recent_error_lines=0`.
 
+Deploy evidence:
+
+- Code commit deployed: `18d8c5b` — `Suppress push prompt on critical flows`.
+- GitHub Actions run: `27647956727`.
+- GitHub Actions result:
+  - Detect Changes: success;
+  - Frontend Changed-File Lint: success;
+  - Backend Tests: skipped because backend did not change;
+  - Deploy to VDS: success.
+- VDS verification after deploy:
+  - `/opt/peaktalk` head is `18d8c5b`;
+  - `https://peaktalk.ru/health` returned `200`;
+  - `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running;
+  - fresh production log scan found `recent_error_lines=0`.
+- Post-deploy headless Chrome/CDP check waited longer than the prompt delay:
+  - `/billing/success?return=/simulation/from-guest` showed the confirmed one-session state and `Продолжить подготовку`;
+  - `/upload` showed the authenticated upload screen and trust copy;
+  - neither route showed `Включите уведомления`;
+  - neither route redirected to `/login`.
+
 Residual risk:
 
 - The exact browser path `billing card -> YooKassa redirect -> return` was not re-run end-to-end to avoid charging another 299 RUB. Provider webhook/crediting is already verified by the real payment; billing success rendering is browser-verified with the credited QA session.
