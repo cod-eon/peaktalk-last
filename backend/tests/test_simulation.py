@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from app.models.guest import GuestSession
 from app.models.personalized_persona import PersonalizedPersona
 from app.models.draft import SpeechDraft
-from app.models.simulation import ArtifactType, SessionArtifact, SessionStatus, SimulationSession
+from app.models.simulation import ArtifactType, SessionArtifact, SessionStatus, SimulationMessage, SimulationSession
 from app.services.limits import get_usage_counter
 from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import SimulationTurn, SkillEvaluation
@@ -647,6 +647,96 @@ async def test_paid_session_can_access_prep_card_artifact(client: AsyncClient, s
     assert data["artifact"]["opening_move"] == MOCK_PREP_CARD["opening_move"]
     assert data["teaser"] is None
     assert data["paywall"] is None
+
+
+@pytest.mark.asyncio
+async def test_rerun_paid_session_is_idempotent_and_does_not_consume_credit(
+    client: AsyncClient,
+    db_session,
+    session_id: str,
+) -> None:
+    await client.post(f"/simulation/{session_id}/message", json={"content": "Answer."})
+    complete_resp = await client.post(f"/simulation/{session_id}/complete")
+    assert complete_resp.status_code == 200
+
+    source = await db_session.get(SimulationSession, uuid.UUID(session_id))
+    assert source is not None
+    source.persona_config = {
+        **(source.persona_config or {}),
+        "paid_access": True,
+    }
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 0
+    counter.simulations_used = 7
+    await db_session.commit()
+
+    first_resp = await client.post(f"/simulation/{session_id}/rerun")
+    second_resp = await client.post(f"/simulation/{session_id}/rerun")
+
+    assert first_resp.status_code == 201
+    assert second_resp.status_code == 201
+    first_id = first_resp.json()["id"]
+    assert first_id != session_id
+    assert second_resp.json()["id"] == first_id
+
+    rerun = await db_session.get(SimulationSession, uuid.UUID(first_id))
+    assert rerun is not None
+    assert rerun.status == SessionStatus.active
+    assert rerun.draft_id == source.draft_id
+    assert rerun.document_id == source.document_id
+    assert rerun.persona_config["paid_access"] is True
+    assert rerun.persona_config["rerun_source_session_id"] == session_id
+    assert "rerun_session_id" not in rerun.persona_config
+    messages = (
+        await db_session.execute(
+            select(SimulationMessage)
+            .where(SimulationMessage.session_id == rerun.id)
+            .order_by(SimulationMessage.turn_index)
+        )
+    ).scalars().all()
+    assert len(messages) == 1
+    assert messages[0].role.value == "assistant"
+    assert messages[0].content == MOCK_TURN.question
+
+    await db_session.refresh(source)
+    assert source.persona_config["rerun_session_id"] == first_id
+
+    await db_session.refresh(counter)
+    assert counter.session_credits == 0
+    assert counter.simulations_used == 7
+
+
+@pytest.mark.asyncio
+async def test_rerun_free_session_requires_paid_access(
+    client: AsyncClient,
+    db_session,
+    session_id: str,
+) -> None:
+    await client.post(f"/simulation/{session_id}/message", json={"content": "Answer."})
+    complete_resp = await client.post(f"/simulation/{session_id}/complete")
+    assert complete_resp.status_code == 200
+
+    source = await db_session.get(SimulationSession, uuid.UUID(session_id))
+    assert source is not None
+    source.persona_config = {
+        **(source.persona_config or {}),
+        "paid_access": False,
+    }
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 0
+    counter.simulations_used = 1
+    await db_session.commit()
+
+    resp = await client.post(f"/simulation/{session_id}/rerun")
+
+    assert resp.status_code == 402
+    assert resp.json()["detail"]["code"] == "rerun_paid_access_required"
+
+    await db_session.refresh(counter)
+    assert counter.session_credits == 0
+    assert counter.simulations_used == 1
 
 
 @pytest.mark.asyncio

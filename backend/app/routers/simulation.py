@@ -38,6 +38,7 @@ from app.schemas.simulation import (
     SendMessageResponse,
     SessionArtifactResponse,
     SimulationReportResponse,
+    SimulationRerunResponse,
     SimulationSessionListItem,
     SimulationSessionListResponse,
     SimulationSessionResponse,
@@ -653,6 +654,134 @@ async def start_simulation_from_scenario(
         scenario.slug,
     )
     return StartFromScenarioResponse(id=session.id)
+
+
+@router.post(
+    "/{session_id}/rerun",
+    response_model=SimulationRerunResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+@limiter.limit("5/minute")
+async def rerun_simulation(
+    request: Request,
+    session_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SimulationRerunResponse:
+    stmt = (
+        select(SimulationSession)
+        .options(selectinload(SimulationSession.messages))
+        .where(
+            SimulationSession.id == session_id,
+            SimulationSession.user_id == current_user.id,
+        )
+        .with_for_update()
+    )
+    result = await db.execute(stmt)
+    source_session = result.scalar_one_or_none()
+    if source_session is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сессия не найдена.")
+
+    source_config = dict(source_session.persona_config or {})
+    if source_session.status != SessionStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "detail": "Повторный прогон доступен только после завершения исходного стресс-теста.",
+                "code": "rerun_source_not_completed",
+            },
+        )
+
+    if source_config.get("rerun_source_session_id"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "detail": "Повторный прогон уже является производной сессией. Запустите новый Defense Pack для следующего цикла.",
+                "code": "rerun_chain_not_allowed",
+            },
+        )
+
+    existing_rerun_id = source_config.get("rerun_session_id")
+    if existing_rerun_id:
+        try:
+            existing_id = uuid.UUID(str(existing_rerun_id))
+        except (TypeError, ValueError):
+            existing_id = None
+        if existing_id is not None:
+            existing_rerun = await db.get(SimulationSession, existing_id)
+            if existing_rerun is not None and existing_rerun.user_id == current_user.id:
+                return SimulationRerunResponse(id=existing_rerun.id)
+
+    if not bool(source_config.get("paid_access")):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "detail": "Повторный прогон по тем же материалам входит только в оплаченный Defense Pack.",
+                "code": "rerun_paid_access_required",
+                "plan": "per_session",
+            },
+        )
+
+    doc_text = await _get_session_source_text(db, source_session, current_user.id)
+    try:
+        difficulty = int(source_config.get("difficulty", 3))
+    except (TypeError, ValueError):
+        difficulty = 3
+
+    rerun_config = {
+        **source_config,
+        "paid_access": True,
+        "rerun_source_session_id": str(source_session.id),
+        "max_turns": _build_initial_max_turns(difficulty, doc_text),
+    }
+    rerun_config.pop("rerun_session_id", None)
+
+    rerun_session = SimulationSession(
+        user_id=current_user.id,
+        document_id=source_session.document_id,
+        draft_id=source_session.draft_id,
+        persona_config=rerun_config,
+        status=SessionStatus.active,
+    )
+    db.add(rerun_session)
+    await db.flush()
+
+    profile = current_user.onboarding_profile
+    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
+
+    try:
+        turn = await generate_question(
+            persona_config=rerun_config,
+            doc_text=doc_text,
+            history=[],
+            user_context=user_context,
+            custom_persona=rerun_config if rerun_config.get("source_type") == "custom" else None,
+        )
+    except CloudRuAIError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    db.add(
+        SimulationMessage(
+            session_id=rerun_session.id,
+            role=MessageRole.assistant,
+            content=turn.question,
+            internal_reasoning=turn.internal_reasoning,
+            turn_index=0,
+        )
+    )
+
+    source_config["rerun_session_id"] = str(rerun_session.id)
+    source_session.persona_config = source_config
+
+    await db.flush()
+    await cache_invalidate_prefix(_sim_cache_prefix(current_user.id))
+    logger.info(
+        "Simulation rerun started user=%s source_session=%s rerun_session=%s",
+        current_user.id,
+        source_session.id,
+        rerun_session.id,
+    )
+    return SimulationRerunResponse(id=rerun_session.id)
 
 
 @router.post("/{session_id}/message", response_model=SendMessageResponse)

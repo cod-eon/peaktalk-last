@@ -68,6 +68,10 @@ class StartFromScenarioResponse(BaseModel):
     id: uuid.UUID
 
 
+class SimulationRerunResponse(BaseModel):
+    id: uuid.UUID
+
+
 class SkillMetricResponse(BaseModel):
     metric_name: str
     score: float

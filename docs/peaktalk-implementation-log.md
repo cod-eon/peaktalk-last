@@ -47,6 +47,8 @@ Completed P1 slice:
 - Backend seed data now includes `roadmap-budget-defense`, so production scenario API does not have to rely only on frontend fallback.
 - `/scenarios` and `/scenarios/[slug]` now emit scenario analytics events for catalog view, card/primary CTA clicks, detail view, and start clicks.
 - Guest paywall now shows an example Defense Brief format before payment, clearly marked as an example and not analysis of the user's material.
+- Paid Defense Brief reports now include a one-time same-material rerun action. The rerun creates a new active pressure-test from the original material without consuming another `session_credit`, and repeated clicks return the same rerun session instead of duplicating runs.
+- The report page no longer launches confetti on high scores; the report tone is kept serious and operational.
 
 Verification evidence from the implementation session:
 
@@ -72,6 +74,12 @@ Verification evidence from the implementation session:
 - `cd frontend && npm run lint` exited 0 after the example Defense Brief preview slice. Existing 107 warnings remain in generated/public and unrelated files.
 - `cd frontend && npm run build` exited 0 after the example Defense Brief preview slice.
 - Playwright visual check of `/simulation/guest` paywall with mocked guest API at 1440x1000 and 390x844 confirmed example preview text, `Defense Pack — 299 ₽` CTA, no horizontal overflow, and no console/page errors.
+- TDD RED/GREEN for paid same-material rerun confirmed the missing endpoint failed first, then passed after implementation.
+- `cd backend && pytest tests/test_simulation.py -k "rerun_paid_session or rerun_free_session"` passed: 2 tests.
+- `cd backend && pytest tests/test_simulation.py tests/test_billing.py` passed: 32 tests.
+- `cd backend && pytest tests/` passed after the same-material rerun slice: 65 tests.
+- `cd frontend && npm run lint` exited 0 after report rerun UI. Existing 107 warnings remain in generated/public and unrelated files.
+- `cd frontend && npm run build` exited 0 after report rerun UI.
 
 ## Completed P0 that must not regress
 
@@ -130,12 +138,12 @@ Verification:
 2. Close P0 real YooKassa payment QA: checkout -> success return -> webhook -> DB/payment credit -> guest continuation.
 3. Close P0 authenticated `/upload` browser QA with a real dev/test account.
 4. Continue auth/legal compliance gate: research official Logto docs, choose deployment/integration architecture, and replace Supabase Auth. Existing user migration can be treated as low-risk because there is no meaningful production user base yet.
-5. Add rerun on the same material, because it directly strengthens the Meeting Defense Pack value.
+5. Clean up report/onboarding lint warnings and finish authenticated browser QA when a real test account/session is available.
 6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
 ## P1 parking lot
 
-- Add rerun on the same material.
+- Additional reruns beyond the included one-time same-material rerun require an explicit pricing/product decision; do not silently create an infinite free rerun loop.
 - Wire post-meeting feedback into the report/dashboard flow.
 - Replace Supabase-hosted Auth with a controlled auth stack after the immediate Google OAuth removal/risk gate.
 - Auth architecture decision: Logto is the preferred replacement direction over Keycloak for PeakTalk's current stage because it is lighter operationally, easier to reason about for email/magic-link and future Yandex ID, and avoids enterprise IAM complexity before paid validation signals. Since there is no meaningful production user base yet, user preservation is not a blocker; still, guest-to-paid conversion, billing user IDs, and backend auth middleware must be migrated deliberately.
@@ -815,3 +823,51 @@ Residual risk:
 - Auth still uses Supabase email/password as a temporary bridge; Logto replacement requires the documented research gate first.
 - Existing GitHub Actions warnings about Node 20 deprecation should be cleaned up before they become hard failures.
 - Frontend lint warnings for `returnUrl` and `isHovered` should be removed in a small cleanup changeset.
+
+### 2026-06-16 - P1 same-material rerun slice
+
+Scope:
+
+- Add a narrow same-material rerun path for completed paid Defense Pack sessions.
+- Keep billing, YooKassa, auth, migrations, subscriptions, and document storage untouched.
+- Remove playful confetti from the report surface.
+- Keep Logto as a future auth migration gate, not part of this changeset.
+
+Files changed:
+
+- `backend/app/schemas/simulation.py`
+- `backend/app/routers/simulation.py`
+- `backend/tests/test_simulation.py`
+- `frontend/src/app/(dashboard)/simulation/[id]/report/page.tsx`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Added `POST /simulation/{session_id}/rerun`.
+- Rerun is available only for a completed source session with `persona_config.paid_access = true`.
+- Rerun copies the original `document_id`/`draft_id` and persona config, generates a fresh first hostile question, and creates a new `active` simulation.
+- Rerun does not call `consume_session_credit()` or `increment_simulation_counter()`.
+- Rerun is one-time and idempotent: the source session stores `rerun_session_id`; repeated clicks return the existing rerun session.
+- Rerun chaining is blocked via `rerun_source_session_id`, so a rerun cannot become an infinite free loop.
+- Paid report page action now has a primary `Повторить по тем же материалам` button and a secondary `Новая сессия` button; free reports do not show the paid-only rerun action.
+- Added frontend event `defense_rerun_started` with source and rerun session ids.
+- Removed the report confetti animation on high scores.
+
+Verification:
+
+- TDD RED:
+  - `cd backend && pytest tests/test_simulation.py -k "rerun_paid_session or rerun_free_session"` failed with `404` because `/simulation/{id}/rerun` did not exist.
+- Targeted GREEN:
+  - `cd backend && pytest tests/test_simulation.py -k "rerun_paid_session or rerun_free_session"` passed: 2 tests.
+- Wider checks:
+  - `cd backend && pytest tests/test_simulation.py tests/test_billing.py` passed: 32 tests.
+  - `cd backend && pytest tests/` passed: 65 tests.
+  - `cd frontend && npm run lint` exited 0. Existing 107 warnings remain in generated/public and unrelated files.
+  - `cd frontend && npm run build` exited 0.
+
+Known residual risks:
+
+- Authenticated visual QA of the real `/simulation/{id}/report` route still needs a real Supabase browser session or test credentials; middleware redirects unauthenticated browsers to login.
+- The complimentary rerun count is intentionally one per paid source session. More reruns require a pricing/product decision.
+- Real YooKassa e2e and authenticated `/upload` QA remain open P0 gates.
+- Logto migration remains separate: before any code changes, study current official Logto docs and select the best modern deployment/integration path for PeakTalk.

@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Zap, FileText, Sparkles, X, RefreshCw } from 'luci
 import { useParams, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
 import { getPersonaDisplayLabel } from '@/lib/constants/personas';
 import { PrepCard } from '@/components/simulation/PrepCard';
@@ -32,6 +33,8 @@ type PersonaConfig = {
     difficulty: number;
     persona_name?: string | null;
     persona_role_label?: string | null;
+    paid_access?: boolean | null;
+    rerun_source_session_id?: string | null;
 };
 
 type ReportData = {
@@ -247,9 +250,9 @@ export default function SimulationReportPage() {
 
     const [report, setReport] = useState<ReportData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [rerunLoading, setRerunLoading] = useState(false);
     const [popover, setPopover] = useState<PopoverState | null>(null);
     const [activePopoverId, setActivePopoverId] = useState<number | null>(null);
-    const [showConfetti, setShowConfetti] = useState(false);
 
     useEffect(() => {
         async function fetchReport() {
@@ -265,18 +268,6 @@ export default function SimulationReportPage() {
         }
         if (sessionId) fetchReport();
     }, [sessionId, router]);
-
-    useEffect(() => {
-        if (report) {
-            const sum = report.skill_metrics?.reduce((acc, m) => acc + m.score, 0) || 0;
-            const avg = report.skill_metrics?.length ? Math.round((sum / report.skill_metrics.length) * 10) : 0;
-            if (avg >= 8) {
-                setShowConfetti(true);
-                const timer = setTimeout(() => setShowConfetti(false), 6000);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [report]);
 
     const handlePopover = useCallback(
         (id: number, metricName: string, comment: string, rect: DOMRect) => {
@@ -319,6 +310,30 @@ export default function SimulationReportPage() {
         window.addEventListener('afterprint', () => document.getElementById('_pdf_print_style')?.remove(), { once: true });
     }, []);
 
+    const handleRerun = useCallback(async () => {
+        if (!sessionId || rerunLoading) return;
+
+        setRerunLoading(true);
+        try {
+            const res = (await api.post(`/simulation/${sessionId}/rerun`)) as { id?: string };
+            if (!res?.id) {
+                throw new Error('Не удалось получить новую сессию');
+            }
+            trackEvent('defense_rerun_started', {
+                source: 'report',
+                source_session_id: sessionId,
+                rerun_session_id: res.id,
+                persona_source: report?.persona_config?.source_type ?? 'unknown',
+            });
+            toast.success('Новый прогон создан по тем же материалам');
+            router.push(`/simulation/${res.id}`);
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Не удалось запустить повторный прогон');
+        } finally {
+            setRerunLoading(false);
+        }
+    }, [report?.persona_config?.source_type, rerunLoading, router, sessionId]);
+
     // ── Loading ──────────────────────────────────────────────────────────────
 
     if (loading) {
@@ -344,6 +359,7 @@ export default function SimulationReportPage() {
 
     const { persona_config, messages, skill_metrics, document_title } = report;
     const personaName = getPersonaDisplayLabel(persona_config);
+    const canRerunSameMaterial = Boolean(persona_config.paid_access) && !persona_config.rerun_source_session_id;
 
     const overallScoreFloat = skill_metrics?.length
         ? skill_metrics.reduce((acc, m) => acc + m.score, 0) / skill_metrics.length
@@ -384,38 +400,6 @@ export default function SimulationReportPage() {
 
             {/* ── Screen ───────────────────────────────────────────────────── */}
             <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-[#FAFAFA] relative">
-                
-                {/* 🎉 Confetti animation */}
-                <AnimatePresence>
-                    {showConfetti && (
-                        <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
-                            {[...Array(60)].map((_, i) => (
-                                <motion.div
-                                    key={`confetti-${i}`}
-                                    className="absolute w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-none"
-                                    style={{
-                                        backgroundColor: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 5)],
-                                        top: -20,
-                                        left: `${Math.random() * 100}%`,
-                                    }}
-                                    initial={{ y: -20, x: 0, rotate: 0, opacity: 1 }}
-                                    animate={{
-                                        y: typeof window !== 'undefined' ? window.innerHeight + 40 : 1000,
-                                        x: (Math.random() - 0.5) * 500,
-                                        rotate: Math.random() * 720,
-                                        opacity: [1, 1, 1, 0.8, 0],
-                                    }}
-                                    transition={{
-                                        duration: 3.5 + Math.random() * 3,
-                                        ease: "easeOut",
-                                        delay: Math.random() * 0.8,
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </AnimatePresence>
-
                 {/* Toolbar */}
                 <div className="h-13 shrink-0 border-b border-gray-100 bg-white flex items-center justify-between px-4 sm:px-6 gap-2 sticky top-0 z-10 shadow-sm">
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -573,13 +557,24 @@ export default function SimulationReportPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 mb-20 border-t border-gray-100 pt-10">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-8 mb-20 border-t border-gray-100 pt-10">
+                            {canRerunSameMaterial && (
+                                <button
+                                    type="button"
+                                    onClick={handleRerun}
+                                    disabled={rerunLoading}
+                                    className="w-full sm:w-auto inline-flex min-h-12 items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-5 py-3 text-center text-[13px] font-bold leading-tight text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:bg-neutral-200 disabled:text-neutral-500"
+                                >
+                                    <RefreshCw size={17} className={rerunLoading ? 'animate-spin' : ''} />
+                                    {rerunLoading ? 'Запускаем повтор' : 'Повторить по тем же материалам'}
+                                </button>
+                            )}
                             <button
+                                type="button"
                                 onClick={() => router.push('/simulation')}
-                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 rounded-none border border-gray-200 transition-all shadow-sm h-12"
+                                className="w-full sm:w-auto inline-flex min-h-12 items-center justify-center border border-gray-200 bg-white px-5 py-3 text-center text-[13px] font-semibold leading-tight text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
                             >
-                                <RefreshCw size={18} />
-                                Пройти ещё раз (Выбрать уровень сложности)
+                                Новая сессия
                             </button>
                         </div>
 
