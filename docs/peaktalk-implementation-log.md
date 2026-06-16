@@ -871,3 +871,22 @@ Known residual risks:
 - The complimentary rerun count is intentionally one per paid source session. More reruns require a pricing/product decision.
 - Real YooKassa e2e and authenticated `/upload` QA remain open P0 gates.
 - Logto migration remains separate: before any code changes, study current official Logto docs and select the best modern deployment/integration path for PeakTalk.
+
+Deploy evidence:
+
+- Commit deployed: `2717d1c` — `Add paid session rerun`.
+- GitHub Actions run: `27643606062`.
+- GitHub Actions result:
+  - Detect Changes: success.
+  - Frontend Changed-File Lint: success.
+  - Backend Tests: success.
+  - Deploy to VDS: success.
+- Production public checks:
+  - `https://peaktalk.ru/health` returned `200` with `{"status":"ok","service":"peaktalk-api"}`.
+  - `/login`, `/register`, `/scenarios`, and `/simulation/guest` returned `200`.
+- VDS verification:
+  - `/opt/peaktalk` head is `2717d1c`.
+  - Alembic current version is `0020_guest_migration_state (head)`.
+  - Docker Compose: `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running.
+  - Fresh production log scan over `api`, `frontend`, `worker`, `beat`, and `nginx` found `recent_error_lines=0`.
+- Workflow warning remains: GitHub Actions dependencies still emit Node.js 20 deprecation warnings and should be updated in a small CI maintenance changeset.
