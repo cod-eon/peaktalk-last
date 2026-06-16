@@ -80,6 +80,9 @@ Verification evidence from the implementation session:
 - `cd backend && pytest tests/` passed after the same-material rerun slice: 65 tests.
 - `cd frontend && npm run lint` exited 0 after report rerun UI. Existing 107 warnings remain in generated/public and unrelated files.
 - `cd frontend && npm run build` exited 0 after report rerun UI.
+- `cd frontend && npm run lint` exited 0 after CI/lint cleanup. Existing warnings are down to 105 and remain in generated/public and unrelated files.
+- `cd frontend && npm run build` exited 0 after CI/lint cleanup.
+- `git diff --check` exited 0 after CI/lint cleanup.
 
 ## Completed P0 that must not regress
 
@@ -138,7 +141,7 @@ Verification:
 2. Close P0 real YooKassa payment QA: checkout -> success return -> webhook -> DB/payment credit -> guest continuation.
 3. Close P0 authenticated `/upload` browser QA with a real dev/test account.
 4. Continue auth/legal compliance gate: research official Logto docs, choose deployment/integration architecture, and replace Supabase Auth. Existing user migration can be treated as low-risk because there is no meaningful production user base yet.
-5. Clean up report/onboarding lint warnings and finish authenticated browser QA when a real test account/session is available.
+5. Finish authenticated browser QA when a real test account/session is available.
 6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
 ## P1 parking lot
@@ -153,6 +156,7 @@ Verification:
 - Auth email provider decision note: use REG.RU Mail-1 for domain mailboxes and owner/support correspondence, but prefer UniSender Go or another transactional email transport for production auth/magic-link delivery. Reason: magic-link reliability needs delivery logs, DKIM/SPF/DMARC alignment, bounce visibility, API/SMTP transport, and provider reputation; mailbox hosting is acceptable only as a short validation fallback.
 - Auth email provider comparison note: REG.RU Mail-1 is already paid and useful for `support@`, `hello@`, `noreply@`, and founder correspondence, but it is still mailbox hosting with account-level send limits and weaker operational visibility. UniSender Go is the better target for production auth emails because it is built as SMTP/API email transport, supports delivery/open tracking, operation logs, webhooks/statistics, and Russian hosting/compliance claims. Important pricing clarification: ordinary UniSender Free allows up to 1500 emails/month to 100 contacts, while UniSender Go free/test mode allows up to 100 emails/day only to addresses on confirmed owned domains; real magic-link delivery to arbitrary user emails requires a paid/activated UniSender Go setup, card binding, or another transactional sender. Before switching magic links, run a seed test to Gmail/Yandex/Mail.ru, verify SPF/DKIM/DMARC, and keep REG.RU as fallback only for validation-volume traffic.
 - Supabase Storage/S3 audit: later decide whether PeakTalk should keep uploaded meeting materials in object storage at all. Inspect current document lifecycle, extraction pipeline, deletion semantics, retention/privacy copy, cost/ops overhead, and whether the validation product can store only extracted text plus metadata instead. Do not remove storage until upload/report flows and data retention promises are audited.
+- Late GTM review after critical fixes: review the user's 10 startup marketing theses only after P0 payment/auth/upload gates are closed. Apply the useful parts narrowly to PeakTalk: sell/validate before building more product, founder-led CustDev, unit economics, scenario-intent SEO, real social proof, building-in-public, niche community participation, targeted outbound, partnerships, and channel mix. Reject or heavily adapt parts that conflict with PeakTalk: broad "for everyone" acquisition, generic public-speaking SEO, invented testimonials, mass-market gimmicks, playful gamification/streaks/badges, low-price dumping, loud guerrilla stunts, and push-notification mechanics before retention evidence. The review output should become a validation sprint GTM operating memo, not a new product roadmap.
 
 ## Do not build yet
 
@@ -890,3 +894,41 @@ Deploy evidence:
   - Docker Compose: `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running.
   - Fresh production log scan over `api`, `frontend`, `worker`, `beat`, and `nginx` found `recent_error_lines=0`.
 - Workflow warning remains: GitHub Actions dependencies still emit Node.js 20 deprecation warnings and should be updated in a small CI maintenance changeset.
+
+### 2026-06-16 - CI and lint cleanup before next P0 gates
+
+Scope:
+
+- Keep the implementation log aligned with the plan before continuing.
+- Park the user's 10 startup-marketing theses as a late GTM review item after critical P0 payment/auth/upload gates, not as immediate product scope.
+- Remove the two project-source frontend lint warnings called out by the previous deploy.
+- Opt the GitHub Actions workflow into Node 24 execution for JavaScript actions to address the current Node 20 deprecation warning path.
+
+Files changed:
+
+- `.github/workflows/deploy.yml`
+- `frontend/src/app/onboarding/page.tsx`
+- `frontend/src/app/(dashboard)/analysis/[id]/page.tsx`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Added a late GTM parking-lot note:
+  - use the useful parts of the marketing theses for validation sprint discipline, founder-led CustDev, unit economics, scenario-intent SEO, real social proof, content/outbound, partnerships, and channel mix;
+  - reject/adapt broad acquisition, generic public-speaking SEO, invented testimonials, playful gamification, dumping, loud gimmicks, and premature push mechanics.
+- Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at workflow level.
+- Fixed the onboarding `returnUrl` effect dependency.
+- Removed unused hover state/props from the analysis annotation text path. This does not remove the card hover UI; it removes only dead state that no longer drove visible behavior.
+
+Verification:
+
+- `cd frontend && npm run lint` exited 0. Existing warnings are now 105 and remain in generated/public and unrelated files.
+- `cd frontend && npm run build` exited 0.
+- `git diff --check` exited 0.
+- `cd backend && alembic heads` returned single head: `0020_guest_migration_state (head)`.
+
+Residual risk:
+
+- The workflow Node 24 opt-in must be validated by the next GitHub Actions run after push.
+- If the workflow file change triggers deploy, treat it as a small deploy-gate even though no billing/auth/simulation runtime logic changed.
+- Open P0 remains unchanged: real YooKassa e2e, YooKassa dashboard webhook configuration, authenticated `/upload` QA, and Logto research gate.

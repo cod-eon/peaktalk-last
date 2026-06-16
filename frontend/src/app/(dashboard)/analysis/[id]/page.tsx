@@ -413,14 +413,12 @@ function AnnotationSheet({ ann, idx, total, onClose, onPrev, onNext }: {
 
 // ── AnnotatedText ──────────────────────────────────────────────────────────────
 
-function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter, spotlight, onTap, onHover, onLeave, onEmpty }: {
+function AnnotatedText({ text, annotations, activeIdx, activeFilter, spotlight, onTap, onEmpty }: {
     text: string; annotations: Annotation[];
-    activeIdx: number | null; hoveredIdx: number | null;
+    activeIdx: number | null;
     activeFilter: IssueType | null;
     spotlight: boolean;
     onTap: (idx: number) => void;
-    onHover: (idx: number) => void;
-    onLeave: () => void;
     onEmpty: () => void;
 }) {
     const segments = useMemo(() => buildSegments(text, annotations), [text, annotations]);
@@ -447,14 +445,11 @@ function AnnotatedText({ text, annotations, activeIdx, hoveredIdx, activeFilter,
                     );
                 }
                 const isActive  = activeIdx === seg.idx;
-                const isHovered = hoveredIdx === seg.idx;
                 const dimmed    = spotlight && !isActive;
                 return (
                     <span key={i}
                         data-ann-idx={seg.idx}
                         onClick={(e) => { e.stopPropagation(); onTap(seg.idx!); }}
-                        onMouseEnter={() => onHover(seg.idx!)}
-                        onMouseLeave={onLeave}
                         style={{
                             textDecoration: 'underline',
                             textDecorationStyle: 'wavy',
@@ -488,7 +483,6 @@ export default function AnalysisPage() {
     const [desktopView,  setDesktopView]  = useState<DesktopView>('text');
     const [sheetIdx,     setSheetIdx]     = useState<number | null>(null);
     const [activeFilter, setActiveFilter] = useState<IssueType | null>(null);
-    const [hoveredIdx,   setHoveredIdx]   = useState<number | null>(null);
     const [isDesktop,    setIsDesktop]    = useState(false);
 
     const leftColRef = useRef<HTMLDivElement>(null);
@@ -522,8 +516,6 @@ export default function AnalysisPage() {
 
     const handleTap   = useCallback((idx: number) => setSheetIdx(idx), []);
     const closeSheet  = useCallback(() => setSheetIdx(null), []);
-    const handleHover = useCallback((idx: number) => setHoveredIdx(idx), []);
-    const handleLeave = useCallback(() => setHoveredIdx(null), []);
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -653,11 +645,10 @@ export default function AnalysisPage() {
                                         transition={{ duration: 0.15 }}>
                                         <AnnotatedText
                                             text={textContent} annotations={annotations}
-                                            activeIdx={sheetIdx} hoveredIdx={hoveredIdx}
+                                            activeIdx={sheetIdx}
                                             activeFilter={activeFilter}
                                             spotlight={sheetIdx !== null}
-                                            onTap={handleTap} onHover={handleHover} onLeave={handleLeave}
-                                            onEmpty={closeSheet}
+                                            onTap={handleTap} onEmpty={closeSheet}
                                         />
                                     </motion.div>
                                 ) : (
@@ -810,9 +801,9 @@ export default function AnalysisPage() {
                                     </>
                                 )}
                                 <AnnotatedText text={textContent} annotations={annotations}
-                                    activeIdx={sheetIdx} hoveredIdx={null} activeFilter={activeFilter}
+                                    activeIdx={sheetIdx} activeFilter={activeFilter}
                                     spotlight={false}
-                                    onTap={handleTap} onHover={() => {}} onLeave={() => {}} onEmpty={() => {}} />
+                                    onTap={handleTap} onEmpty={() => {}} />
                             </motion.div>
                         )}
 

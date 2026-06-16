@@ -70,7 +70,7 @@ function OnboardingForm() {
             }
         }
         checkProfile();
-    }, [router]);
+    }, [router, returnUrl]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
