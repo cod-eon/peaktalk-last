@@ -927,8 +927,25 @@ Verification:
 - `git diff --check` exited 0.
 - `cd backend && alembic heads` returned single head: `0020_guest_migration_state (head)`.
 
+Deploy evidence:
+
+- Commit deployed: `00b432a` — `Clean up CI and lint warnings`.
+- GitHub Actions run: `27644666126`.
+- GitHub Actions result:
+  - Detect Changes: success.
+  - Backend Tests: success.
+  - Frontend Changed-File Lint: success.
+  - Deploy to VDS: success.
+- Node 24 opt-in result: the workflow still emits a deprecation annotation, but the annotation now says affected JavaScript actions are being forced to run on Node 24. This removes the immediate runtime risk but does not remove the visible warning until upstream actions fully retarget away from Node 20.
+- Production public checks:
+  - `https://peaktalk.ru/health` returned `200` with `{"status":"ok","service":"peaktalk-api"}`.
+  - `/login`, `/register`, `/scenarios`, and `/simulation/guest` returned `200`.
+- VDS verification:
+  - `/opt/peaktalk` head is `00b432a`.
+  - Alembic current version is `0020_guest_migration_state (head)`.
+  - Docker Compose: `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running.
+  - Fresh production log scan over `api`, `frontend`, `worker`, `beat`, and `nginx` found `recent_error_lines=0`.
+
 Residual risk:
 
-- The workflow Node 24 opt-in must be validated by the next GitHub Actions run after push.
-- If the workflow file change triggers deploy, treat it as a small deploy-gate even though no billing/auth/simulation runtime logic changed.
 - Open P0 remains unchanged: real YooKassa e2e, YooKassa dashboard webhook configuration, authenticated `/upload` QA, and Logto research gate.
