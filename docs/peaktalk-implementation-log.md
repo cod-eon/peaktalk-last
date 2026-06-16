@@ -1066,3 +1066,60 @@ Next:
   - `UsageCounter.session_credits += 1` for the target user on `payment.succeeded`;
   - no errors in fresh logs.
 - Do not mark P0 payment QA closed until a real `payment.succeeded` webhook is observed and DB state changes correctly.
+
+### 2026-06-16 - YooKassa real payment webhook verified
+
+Scope:
+
+- Close the core P0 YooKassa webhook/credit verification with a real provider payment event.
+- Do not change billing code, auth code, migrations, or deploy scripts.
+
+Operational context:
+
+- The first technical checkout opened in YooKassa test mode. Root cause: `backend/.env` on VDS had already been updated to the real shop credentials, but the running API container still held the previous YooKassa env.
+- Restarted only runtime services that read backend env:
+  - `api`
+  - `worker`
+  - `beat`
+- Verified after restart that runtime YooKassa env hashes matched `backend/.env`.
+
+Test payment:
+
+- QA user created in local production DB only: `yookassa-e2e-20260616@peaktalk.ru`.
+- QA user id: `4d2fdf66-5c8a-4359-9f88-8bebf8932758`.
+- This QA user is not a Supabase/Auth login account and has no password; it exists only to test billing webhook metadata and crediting.
+- Payment id: `31c3c803-000f-5001-9000-1d6162e8b018`.
+- Plan metadata: `per_session`.
+- Amount: `299.00 RUB`.
+
+Verification:
+
+- YooKassa API check:
+  - status: `succeeded`
+  - paid: `True`
+  - metadata user id: `4d2fdf66-5c8a-4359-9f88-8bebf8932758`
+  - metadata plan: `per_session`
+- Production webhook logs:
+  - `POST /webhooks/yookassa`
+  - event type: `payment.succeeded`
+  - source IP: `77.75.153.78`
+  - backend response: `200`
+  - handler log: `per_session payment.succeeded ... session_credits=1`
+- Production DB check:
+  - user exists: yes
+  - payment exists: yes
+  - payment status: `succeeded`
+  - payment amount: `299.00`
+  - payments for QA user: `1`
+  - usage counter exists: yes
+  - `session_credits=1`
+  - `simulations_used=0`
+- Runtime health after payment:
+  - `https://peaktalk.ru/health` returned `200`.
+  - `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running.
+  - Fresh production log scan found `recent_error_lines=0`.
+
+P0 status:
+
+- YooKassa dashboard delivery and backend crediting are verified.
+- Remaining payment-flow QA: browser-level checkout from the actual PeakTalk UI with an authenticated session, including return to `/billing/success` and guest continuation. The provider webhook/DB part is no longer the blocker.
