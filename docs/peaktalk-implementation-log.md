@@ -1024,3 +1024,45 @@ Next:
 - Return to P0 step 1: configure YooKassa HTTP notifications in the merchant dashboard and run real payment e2e.
 - User action needed in YooKassa dashboard: add notification URL `https://peaktalk.ru/webhooks/yookassa`, select `payment.succeeded` and `payment.canceled`, optionally `refund.succeeded`, then save.
 - Do not select `payment.waiting_for_capture` or `payment_method.active` unless backend handling is intentionally added.
+
+### 2026-06-16 - YooKassa dashboard webhook configured by user
+
+Scope:
+
+- Continue P0 step 1 after the user reported the YooKassa HTTP notification settings were saved in the merchant dashboard.
+- Verify production readiness without changing billing/auth code.
+
+What changed:
+
+- No code changes.
+- User reported that YooKassa dashboard notification settings are configured.
+
+Read-only verification:
+
+- Production `/opt/peaktalk` runtime head is still `00b432a`.
+- Production payment env:
+  - `PAYMENTS_ENABLED=True`
+  - `YOOKASSA_SHOP_ID=set`
+  - `YOOKASSA_SECRET_KEY=set`
+  - `YOOKASSA_WEBHOOK_SECRET=missing`
+  - `APP_ENV=production`
+  - `FRONTEND_URL=https://peaktalk.ru`
+- `GET https://peaktalk.ru/webhooks/yookassa` returns `405 Method Not Allowed`, which is expected because the endpoint accepts `POST`.
+- Recent production logs show only the manual GET check; no new YooKassa POST event has arrived yet.
+- YooKassa Python SDK is installed on production (`3.3.0`) and exposes `Webhook.list`, but `Webhook.list()` returned `401` with current shop credentials. Treat this as an admin API permission limitation, not proof that the dashboard setting failed.
+- Production DB snapshot before fresh e2e:
+  - users: 10
+  - payments: 12
+  - succeeded payments: 12
+  - usage counters: 10
+
+Next:
+
+- Real webhook verification now requires an actual YooKassa payment event.
+- Preferred fast path: create a controlled technical checkout for `per_session` with metadata pointing to a test/local PeakTalk user, have the user complete or cancel it in YooKassa, then verify:
+  - provider redirect;
+  - `POST /webhooks/yookassa` in production logs;
+  - new `Payment` row;
+  - `UsageCounter.session_credits += 1` for the target user on `payment.succeeded`;
+  - no errors in fresh logs.
+- Do not mark P0 payment QA closed until a real `payment.succeeded` webhook is observed and DB state changes correctly.
