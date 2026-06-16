@@ -121,7 +121,7 @@ Verification:
 
 1. Manual QA of real YooKassa test flow, including success return and webhook confirmation.
 2. Browser QA of `/upload` after logging into a real dev/test account; unauthenticated local route correctly redirects to `/login?return=/upload`.
-3. Auth/legal compliance gate: deploy the local Google OAuth removal and plan direct Logto replacement of Supabase-hosted Auth.
+3. Auth/legal compliance gate: visible Google OAuth removal is deployed; direct Logto replacement of Supabase-hosted Auth remains the next auth architecture track before broader launch.
 4. YooKassa dashboard configuration: HTTP notification URL is currently absent in the shop UI screenshot. Configure `https://peaktalk.ru/webhooks/yookassa` and verify `payment.succeeded` delivery before considering payment QA closed.
 
 ## Next recommended work
@@ -129,7 +129,7 @@ Verification:
 1. Configure YooKassa HTTP notifications in the merchant dashboard.
 2. Close P0 real YooKassa payment QA: checkout -> success return -> webhook -> DB/payment credit -> guest continuation.
 3. Close P0 authenticated `/upload` browser QA with a real dev/test account.
-4. Close auth/legal compliance gate: deploy visible Google login/registration removal and plan the Logto replacement path. Existing user migration can be treated as low-risk because there is no meaningful production user base yet.
+4. Continue auth/legal compliance gate: research official Logto docs, choose deployment/integration architecture, and replace Supabase Auth. Existing user migration can be treated as low-risk because there is no meaningful production user base yet.
 5. Add rerun on the same material, because it directly strengthens the Meeting Defense Pack value.
 6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
@@ -756,3 +756,62 @@ Residual risk:
 - This is local only until deployed.
 - Supabase Auth still powers email/password and confirmation emails; Logto migration remains a separate changeset.
 - `next/font/google` remains in the app and was not changed because it is not Google authorization; review separately only if legal/compliance scope expands beyond auth.
+
+### 2026-06-16 - P0 validation flow deploy
+
+Scope:
+
+- Deploy the P0/P1 validation-flow changes already implemented in this workstream.
+- Include guest paywall/value changes, guest-to-paid safety, scenario wedge, Defense Brief artifacts, analytics, YooKassa `payment.canceled` normalization, and visible Google OAuth removal.
+- Do not rotate secrets, change YooKassa env, configure merchant dashboard webhooks, or run destructive DB operations.
+
+Commit:
+
+- `aec87d3` — `Prepare P0 validation flow`
+- GitHub Actions run: `27642510582`
+
+Pre-deploy verification:
+
+- `cd backend && pytest tests/` passed: 63 tests.
+- `cd backend && alembic heads` returned single head: `0020_guest_migration_state`.
+- `cd backend && alembic upgrade 0019_add_utm:0020_guest_migration_state --sql` rendered expected nullable columns, index, FK, and version update.
+- `cd frontend && npm run lint` exited 0. Existing warnings remain in generated/public and unrelated files.
+- `cd frontend && npm run build` exited 0.
+- `git diff --cached --check` exited 0 before commit.
+- Staged secret scan found no secret values; only textual status notes such as `YOOKASSA_SECRET_KEY=set`.
+
+Deploy evidence:
+
+- `git push origin main` deployed through GitHub Actions.
+- GitHub Actions:
+  - Detect Changes: success.
+  - Backend Tests: success.
+  - Frontend Changed-File Lint: success, with existing warnings for `returnUrl` dependency and unused `isHovered`.
+  - Deploy to VDS: success.
+- VDS `/opt/peaktalk` head: `aec87d3`.
+- Production Alembic version: `0020_guest_migration_state`.
+- `https://peaktalk.ru/health` returned `200`.
+- Public routes returned `200`: `/login`, `/register`, `/scenarios`, `/simulation/guest`.
+- Docker Compose after deploy:
+  - `api`, `nginx`, `postgres`, `redis` healthy;
+  - `frontend`, `worker`, `beat` running.
+- Recent production log scan found 0 lines matching `[ERROR]`, `[CRITICAL]`, `Traceback`, `Exception`, `Unhandled`, or `failed`.
+
+Production UI verification:
+
+- Playwright checked `/login` and `/register` at 1440x1000 and 390x844.
+- No Google/OAuth text found in page body.
+- No horizontal overflow found.
+- Screenshots saved:
+  - `/tmp/peaktalk-prod-auth-login-desktop.png`
+  - `/tmp/peaktalk-prod-auth-login-mobile.png`
+  - `/tmp/peaktalk-prod-auth-register-desktop.png`
+  - `/tmp/peaktalk-prod-auth-register-mobile.png`
+
+Residual risk:
+
+- YooKassa merchant dashboard still needs HTTP notification URL configuration: `https://peaktalk.ru/webhooks/yookassa`.
+- Real payment e2e remains open: guest paywall -> YooKassa checkout -> return -> webhook -> DB/payment credit -> guest continuation.
+- Auth still uses Supabase email/password as a temporary bridge; Logto replacement requires the documented research gate first.
+- Existing GitHub Actions warnings about Node 20 deprecation should be cleaned up before they become hard failures.
+- Frontend lint warnings for `returnUrl` and `isHovered` should be removed in a small cleanup changeset.
