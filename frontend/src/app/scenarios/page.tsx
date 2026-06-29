@@ -198,7 +198,7 @@ function WedgePanel({ scenario }: { scenario: ScenarioCatalogItem }) {
         {[
           ['ICP', 'Head of Product / Product Lead / CPO'],
           ['Оппонент', scenario.persona],
-          ['Артефакт', 'Meeting Defense Pack + Defense Brief'],
+          ['Артефакт', 'Defense Brief'],
         ].map(([label, value]) => (
           <div key={label} className="p-5 sm:p-6">
             <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">
@@ -252,14 +252,14 @@ export default function ScenariosPage() {
             setCatalog(fallbackItems)
             setScenarios(fallbackItems)
             setIsUsingFallback(true)
-            setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск симуляции остаётся доступным.')
+            setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск стресс-теста остаётся доступным.')
           }
         } else {
           const fallbackItems = prioritizeWedgeScenario(getFallbackScenarios())
           setCatalog(fallbackItems)
           setScenarios(fallbackItems)
           setIsUsingFallback(true)
-          setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск симуляции остаётся доступным.')
+          setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск стресс-теста остаётся доступным.')
         }
 
         if (
@@ -274,7 +274,7 @@ export default function ScenariosPage() {
         setCatalog(fallbackItems)
         setScenarios(fallbackItems)
         setIsUsingFallback(true)
-        setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск симуляции остаётся доступным.')
+        setLoadNotice('Каталог временно работает на встроенных сценариях. Запуск стресс-теста остаётся доступным.')
       } finally {
         setIsLoading(false)
       }
@@ -406,7 +406,7 @@ export default function ScenariosPage() {
             href="/simulation/guest"
             className="inline-flex min-h-[42px] items-center justify-center border border-neutral-950 bg-neutral-950 px-3 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] sm:min-h-[44px] sm:px-5"
           >
-            3 вопроса
+            Проверить материал
           </Link>
         </div>
       </header>
@@ -447,7 +447,7 @@ export default function ScenariosPage() {
                 href="/simulation/guest"
                 className="inline-flex min-h-[48px] items-center justify-center border border-neutral-300 bg-white px-5 font-inter text-[14px] font-bold text-neutral-950 transition-colors hover:border-neutral-950"
               >
-                Быстрые 3 вопроса
+                Быстрый pressure scan
               </Link>
             </div>
           </div>
@@ -455,7 +455,7 @@ export default function ScenariosPage() {
           <div className="min-w-0 border border-neutral-950 bg-neutral-950 p-5 text-white sm:p-6">
             <div className="mb-6 flex items-center justify-between gap-3">
               <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">
-                Meeting Defense Pack
+                Defense Brief
               </div>
               <Target size={18} className="text-[#FF8A3D]" />
             </div>

@@ -28,6 +28,7 @@ from app.models.simulation import (
     SimulationSession,
     SkillMetric,
 )
+from app.models.subscription import PlanType
 from app.models.personalized_persona import PersonalizedPersona
 from app.models.user import User
 from app.schemas.simulation import (
@@ -50,6 +51,8 @@ from app.schemas.simulation import (
 )
 from app.services.cloud_ru_ai import CloudRuAIError, detect_ai_content
 from app.services.limits import (
+    _effective_plan,
+    _is_subscription_active,
     check_simulation_limit,
     consume_session_credit,
     get_can_use_pdf,
@@ -130,6 +133,29 @@ async def _session_has_artifact_access(
         return True
     return await _user_has_artifact_access(user_id, db)
 
+
+async def _resolve_guest_conversion_access(
+    user_id: uuid.UUID,
+    db: AsyncSession,
+) -> str | None:
+    """Return the paid access source for guest conversion, or None if blocked."""
+    if await consume_session_credit(str(user_id), db):
+        return "session_credit"
+
+    subscription, counter, limits = await get_plan_limits_for_user(str(user_id), db)
+    effective_plan = _effective_plan(subscription)
+    if effective_plan in (PlanType.free, PlanType.per_session):
+        return None
+    if not _is_subscription_active(subscription):
+        return None
+    if (
+        limits.simulations_per_month is not None
+        and counter.simulations_used >= limits.simulations_per_month
+    ):
+        return None
+
+    return "subscription"
+
 # Cache TTL for simulation list (seconds)
 _SIM_LIST_TTL = 60
 
@@ -153,6 +179,14 @@ def _status_label(status_value: str) -> str:
 
 _BASE_TURNS = 8
 _MAX_TURNS_CAP = 15
+
+
+def _clamp_difficulty(value: object, default: int = 3) -> int:
+    try:
+        difficulty = int(value)
+    except (TypeError, ValueError):
+        difficulty = default
+    return max(1, min(5, difficulty))
 
 
 def _build_initial_max_turns(difficulty: int, doc_text: str = "") -> int:
@@ -180,7 +214,7 @@ def _calculate_max_turns(session: "SimulationSession", doc_text: str = "") -> in
     if high_quality_answers < 3:
         turns += 2
 
-    difficulty = int((session.persona_config or {}).get("difficulty", 3))
+    difficulty = _clamp_difficulty((session.persona_config or {}).get("difficulty", 3))
     if difficulty >= 4:
         turns += 2
 
@@ -211,6 +245,21 @@ async def _get_doc_text(
         if draft:
             return draft.raw_text
     return ""
+
+
+async def _get_draft_case_context(
+    db: AsyncSession,
+    draft_id: uuid.UUID | None,
+    user_id: uuid.UUID | None = None,
+) -> dict | None:
+    if draft_id is None:
+        return None
+    stmt = select(SpeechDraft.case_context).where(SpeechDraft.id == draft_id)
+    if user_id is not None:
+        stmt = stmt.where(SpeechDraft.user_id == user_id)
+    result = await db.execute(stmt)
+    case_context = result.scalar_one_or_none()
+    return case_context if isinstance(case_context, dict) else None
 
 
 async def _get_scenario_source(
@@ -446,6 +495,7 @@ async def start_simulation(
     db: AsyncSession = Depends(get_db),
 ) -> SimulationSession:
     doc_text = await _get_doc_text(db, body.document_id, body.draft_id, current_user.id) if (body.document_id or body.draft_id) else ""
+    case_context = await _get_draft_case_context(db, body.draft_id, current_user.id)
     has_paid_access = await _user_has_artifact_access(current_user.id, db)
 
     custom_persona_payload: dict | None = None
@@ -459,7 +509,7 @@ async def start_simulation(
         if persona.user_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа к этой персоне.")
 
-        difficulty = int(persona.difficulty_hint)
+        difficulty = _clamp_difficulty(persona.difficulty_hint)
         persona_config_data = {
             "source_type": "custom",
             "role": persona.role,
@@ -485,7 +535,7 @@ async def start_simulation(
             "catch_phrases": persona.catch_phrases or [],
         }
     else:
-        difficulty = int(body.difficulty or 3)
+        difficulty = _clamp_difficulty(body.difficulty)
         persona_config_data = {
             "source_type": "system",
             "role": body.persona_config.role if body.persona_config else None,
@@ -494,6 +544,12 @@ async def start_simulation(
             "paid_access": has_paid_access,
         }
         persona_config_data["max_turns"] = _build_initial_max_turns(difficulty, doc_text)
+
+    if case_context:
+        persona_config_data["case_context"] = case_context
+        situation_label = case_context.get("situation_label")
+        if isinstance(situation_label, str) and situation_label.strip():
+            persona_config_data["scenario_title"] = situation_label.strip()[:128]
 
     session = SimulationSession(
         user_id=current_user.id,
@@ -596,11 +652,12 @@ async def start_simulation_from_scenario(
             detail="Сценарий не найден.",
         )
 
+    difficulty = _clamp_difficulty(body.difficulty)
     persona_config_data = {
         "source_type": "scenario",
         "role": scenario.recommended_persona,
         "industry": scenario.category.value,
-        "difficulty": body.difficulty,
+        "difficulty": difficulty,
         "scenario_id": str(scenario.id),
         "scenario_slug": scenario.slug,
         "scenario_title": scenario.title,
@@ -608,7 +665,7 @@ async def start_simulation_from_scenario(
     }
 
     initial_turns = _BASE_TURNS + 2
-    if body.difficulty >= 4:
+    if difficulty >= 4:
         initial_turns += 2
     persona_config_data["max_turns"] = min(initial_turns, _MAX_TURNS_CAP)
 
@@ -696,7 +753,7 @@ async def rerun_simulation(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
-                "detail": "Повторный прогон уже является производной сессией. Запустите новый Defense Pack для следующего цикла.",
+                "detail": "Повторный прогон уже является производной сессией. Запустите новый Defense Brief для следующего цикла.",
                 "code": "rerun_chain_not_allowed",
             },
         )
@@ -716,20 +773,18 @@ async def rerun_simulation(
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
-                "detail": "Повторный прогон по тем же материалам входит только в оплаченный Defense Pack.",
+                "detail": "Повторный прогон по тем же материалам входит только в оплаченный Defense Brief.",
                 "code": "rerun_paid_access_required",
                 "plan": "per_session",
             },
         )
 
     doc_text = await _get_session_source_text(db, source_session, current_user.id)
-    try:
-        difficulty = int(source_config.get("difficulty", 3))
-    except (TypeError, ValueError):
-        difficulty = 3
+    difficulty = _clamp_difficulty(source_config.get("difficulty", 3))
 
     rerun_config = {
         **source_config,
+        "difficulty": difficulty,
         "paid_access": True,
         "rerun_source_session_id": str(source_session.id),
         "max_turns": _build_initial_max_turns(difficulty, doc_text),
@@ -1141,9 +1196,9 @@ async def start_from_guest(
             },
         )
 
-    # 1. Consume limits
-    consumed_credit = await consume_session_credit(str(current_user.id), db)
-    if not consumed_credit:
+    # 1. Resolve paid access for guest conversion.
+    access_source = await _resolve_guest_conversion_access(current_user.id, db)
+    if access_source is None:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
@@ -1160,8 +1215,9 @@ async def start_from_guest(
     persona_config = {
         "role": guest.persona,
         "industry": "general",
-        "difficulty": body.difficulty,
-        "paid_access": consumed_credit,
+        "difficulty": _clamp_difficulty(body.difficulty),
+        "paid_access": True,
+        "access_source": access_source,
     }
 
     session = SimulationSession(

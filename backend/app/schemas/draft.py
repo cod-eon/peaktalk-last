@@ -12,13 +12,29 @@ class AnnotationItem(BaseModel):
     severity: Literal["high", "medium", "low"] = "medium"
 
 
+class DefenseBrief(BaseModel):
+    evidence_gaps: list[str] = Field(default_factory=list, description="Weak evidence, metrics, assumptions, or missing owners")
+    pressure_questions: list[str] = Field(default_factory=list, description="Likely questions or objections from the opponent")
+    next_moves: list[str] = Field(default_factory=list, description="Concrete edits or checks before the real meeting")
+
+
+class DraftCaseContext(BaseModel):
+    situation_id: str = Field(min_length=1, max_length=64)
+    situation_label: str = Field(min_length=1, max_length=128)
+    opponent_role: str | None = Field(default=None, max_length=128)
+    desired_output: Literal["pressure_scan", "full_rewrite", "brief", "rehearsal"] = "pressure_scan"
+    stakes: str | None = Field(default=None, max_length=500)
+    success_criteria: str | None = Field(default=None, max_length=500)
+
+
 class AnalysisFeedback(BaseModel):
-    logic: str = Field(description="Assessment of logical structure and flow")
-    style: str = Field(description="Assessment of writing style and tone")
-    clarity: str = Field(description="Assessment of clarity and conciseness")
-    grammar: str = Field(description="Assessment of grammar and language correctness")
+    logic: str = Field(description="Pressure scan of evidence, metrics, trade-offs, and decision ownership")
+    style: str = Field(description="Assessment of tone under executive/customer/investor pressure")
+    clarity: str = Field(description="Assessment of ask, decision, next step, and success criteria")
+    grammar: str = Field(description="Language precision issues that could reduce trust or create ambiguity")
     overall_score: int = Field(ge=1, le=10, description="Overall quality score 1-10")
     annotations: list[AnnotationItem] = Field(default_factory=list, description="Fragment-level issue annotations")
+    defense_brief: DefenseBrief | None = Field(default=None, description="Meeting defense artifact for the analyzed material")
 
 
 class AIAnalysisResultResponse(BaseModel):
@@ -36,6 +52,7 @@ class SpeechDraftResponse(BaseModel):
     title: str
     raw_text: str
     document_id: uuid.UUID | None = None
+    case_context: DraftCaseContext | None = None
     created_at: datetime
     analysis_result: AIAnalysisResultResponse | None = None
 
@@ -51,5 +68,6 @@ class SpeechDraftListResponse(BaseModel):
 
 class SpeechDraftCreate(BaseModel):
     title: str = Field(min_length=1, max_length=512)
-    raw_text: str = Field(min_length=10, max_length=50_000, description="Speech text to analyze (min 10 chars)")
+    raw_text: str = Field(min_length=10, max_length=50_000, description="Meeting material to analyze (min 10 chars)")
     document_id: uuid.UUID | None = None
+    case_context: DraftCaseContext | None = None

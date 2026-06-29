@@ -297,7 +297,7 @@ async def check_simulation_limit(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 "detail": (
-                    f"Достигнут лимит симуляций на тарифе {plan_label} "
+                    f"Достигнут лимит стресс-тестов на тарифе {plan_label} "
                     f"({limits.simulations_per_month}"
                     + ("/мес" if effective_plan != PlanType.free else " всего")
                     + f"). Пополните баланс или перейдите на Personal."

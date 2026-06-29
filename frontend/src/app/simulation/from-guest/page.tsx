@@ -40,29 +40,57 @@ function FromGuestBridgeInner() {
               payment_plan: paymentContext.payment_plan ?? 'per_session',
               payment_id: paymentContext.payment_id ?? null,
               return_path: paymentContext.return_path ?? '/simulation/from-guest',
-              plan_context: paymentContext.plan_context ?? 'meeting_defense_pack',
+              plan_context: paymentContext.plan_context ?? 'defense_brief',
             });
             sessionStorage.removeItem('peaktalk_payment_context');
           }
         } catch {
-          sessionStorage.removeItem('peaktalk_payment_context');
+          try {
+            sessionStorage.removeItem('peaktalk_payment_context');
+          } catch {
+            // Storage cleanup must not block guest conversion.
+          }
         }
+
+        trackEvent('guest_conversion_completed', {
+          source: 'guest_paywall',
+          guest_session_id: guestSessionId,
+          simulation_id: res.id,
+          difficulty,
+          plan_context: 'defense_brief',
+        });
         
         // Clean up
         localStorage.removeItem('peaktalk_guest_session_id');
         localStorage.removeItem('peaktalk_guest_difficulty');
         
-        toast.success('Контекст сессии успешно перенесён!');
+        toast.success('Материал встречи и ответы перенесены');
         if (mounted) router.replace(`/simulation/${res.id}`);
       } catch (err: unknown) {
         if (!mounted) return;
         const apiError = err as Error & { code?: string };
         // If limit exceeded 402 error, we send to billing
         if (apiError.code === 'simulation_limit_exceeded' || apiError.code === 'session_credit_required') {
+           trackEvent('guest_conversion_failed', {
+             source: 'guest_paywall',
+             guest_session_id: guestSessionId,
+             difficulty: Number.parseInt(difficultyStr || '3', 10),
+             error_code: apiError.code,
+             redirect_target: 'billing',
+             plan_context: 'defense_brief',
+           });
            router.replace('/billing?plan=per_session&return=/simulation/from-guest');
            return;
         }
-        const message = err instanceof Error ? err.message : 'Ошибка переноса сессии';
+        const message = err instanceof Error ? err.message : 'Ошибка переноса материала встречи';
+        trackEvent('guest_conversion_failed', {
+          source: 'guest_paywall',
+          guest_session_id: guestSessionId,
+          difficulty: Number.parseInt(difficultyStr || '3', 10),
+          error_code: apiError.code ?? 'unknown',
+          redirect_target: 'error',
+          plan_context: 'defense_brief',
+        });
         setError(message);
         localStorage.removeItem('peaktalk_guest_session_id');
       }
@@ -96,10 +124,10 @@ function FromGuestBridgeInner() {
       >
         <Loader2 size={32} className="animate-spin text-neutral-900 mb-5" />
         <h2 className="font-inter font-semibold text-lg text-neutral-900 mb-2">
-          Готовим полную сессию...
+          Готовим Defense Brief...
         </h2>
         <p className="font-inter text-sm text-neutral-500">
-          Переносим контекст вашего диалога
+          Переносим материал встречи и ответы
         </p>
       </motion.div>
     </div>

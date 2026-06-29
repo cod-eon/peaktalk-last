@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     metadataScenario.problem ||
     metadataScenario.subtitle ||
-    `Подготовьтесь к сложному рабочему разговору с ${metadataScenario.persona}. Запустите 3 вопроса в guest-режиме.`
+    `Подготовьтесь к сложному рабочему разговору с ${metadataScenario.persona}. Запустите быстрый pressure scan материала.`
 
   return {
     title,

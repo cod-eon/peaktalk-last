@@ -6,18 +6,20 @@ import { CheckCircle2, ArrowRight, Clock3, RefreshCcw, CreditCard, ShieldCheck }
 import Link from 'next/link';
 import { useBillingStore } from '@/store/billingStore';
 import { trackEvent } from '@/lib/analytics';
+import { isGuestPaywallReturnPath, normalizeOptionalInternalReturnPath } from '@/lib/return-path';
 
 export default function BillingSuccessPage() {
   const { fetchStatus, status, isLoading } = useBillingStore();
   const trackedSuccessRef = useRef(false);
   const [returnPath] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('return');
+    return normalizeOptionalInternalReturnPath(new URLSearchParams(window.location.search).get('return'));
   });
 
   const activePlan = status?.subscription.plan;
   const isPaidPlan = Boolean(activePlan && ['personal', 'pro', 'team'].includes(activePlan));
   const hasSessionCredit = (status?.usage.session_credits ?? 0) > 0;
+  const isPerSessionCredit = hasSessionCredit && !isPaidPlan;
   const isConfirmed = Boolean(
     status?.subscription.status === 'active' && (isPaidPlan || hasSessionCredit),
   );
@@ -62,11 +64,13 @@ export default function BillingSuccessPage() {
       paymentContext = {};
     }
 
+    const paymentReturnPath = normalizeOptionalInternalReturnPath(paymentContext.return_path ?? returnPath);
+
     trackEvent('payment_succeeded', {
-      source: paymentContext.return_path === '/simulation/from-guest' ? 'guest_paywall' : 'billing_success',
+      source: isGuestPaywallReturnPath(paymentReturnPath) ? 'guest_paywall' : 'billing_success',
       payment_plan: paymentContext.payment_plan ?? planLabel,
       payment_id: paymentContext.payment_id ?? null,
-      return_path: paymentContext.return_path ?? returnPath ?? '/billing/success',
+      return_path: paymentReturnPath ?? '/billing/success',
       plan_context: paymentContext.plan_context ?? planLabel,
     });
   }, [isConfirmed, planLabel, returnPath]);
@@ -76,14 +80,16 @@ export default function BillingSuccessPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
           <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
-            Подписка
+            {isPerSessionCredit ? 'Разовая оплата' : 'Подписка'}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">
-            {isConfirmed ? 'Подписка подключена' : 'Платёж получен'}
+            {isConfirmed ? (isPerSessionCredit ? 'Defense Brief оплачен' : 'Подписка подключена') : 'Платёж получен'}
           </h1>
           <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
             {isConfirmed
-              ? 'Биллинг подтвердил активацию тарифа. Можно возвращаться к симуляциям.'
+              ? isPerSessionCredit
+                ? 'Биллинг подтвердил разовую оплату. Можно перенести гостевой материал и собрать Defense Brief.'
+                : 'Биллинг подтвердил активацию тарифа. Можно возвращаться к материалам и стресс-тестам.'
               : 'Ждём подтверждение от платёжного провайдера и синхронизацию статуса.'}
           </p>
         </div>
@@ -108,11 +114,13 @@ export default function BillingSuccessPage() {
                     {isConfirmed ? 'Статус подтверждён' : isLoading ? 'Синхронизация' : 'Ожидаем webhook'}
                   </div>
                   <h2 className="text-2xl font-bold text-neutral-900 tracking-tight">
-                    {isConfirmed ? `${planLabel} активирован` : 'Проверяем активацию подписки'}
+                    {isConfirmed ? (isPerSessionCredit ? 'Разовая сессия активирована' : `${planLabel} активирован`) : 'Проверяем активацию оплаты'}
                   </h2>
                   <p className="text-sm leading-relaxed text-neutral-600 max-w-2xl">
                     {isConfirmed
-                      ? 'Платёж успешно зафиксирован в системе. Доступ уже открыт, а управление тарифом и автопродлением доступно в биллинге.'
+                      ? isPerSessionCredit
+                        ? 'Платёж успешно зафиксирован в системе. Доступ открыт для одного полного стресс-теста и Defense Brief без подписки.'
+                        : 'Платёж успешно зафиксирован в системе. Доступ уже открыт, а управление тарифом и автопродлением доступно в биллинге.'
                       : 'Провайдер вернул успешный статус оплаты, но финальная активация ещё не дошла до биллинга. Обычно синхронизация завершается автоматически в течение нескольких секунд.'}
                   </p>
                 </div>
@@ -121,13 +129,17 @@ export default function BillingSuccessPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border border-[#D9D5CC] bg-[#FAF8F4] p-4">
                   <div className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase mb-2">
-                    Тариф
+                    {isPerSessionCredit ? 'Доступ' : 'Тариф'}
                   </div>
                   <div className="text-lg font-bold text-neutral-900 tracking-tight">
                     {isConfirmed ? planLabel : 'Ожидаем подтверждение'}
                   </div>
                   <div className="text-sm text-neutral-500 mt-1">
-                    {isConfirmed ? 'Подписка активна и готова к использованию.' : 'Статус обновится автоматически.'}
+                    {isConfirmed
+                      ? isPerSessionCredit
+                        ? 'Один Defense Brief готов к использованию.'
+                        : 'Подписка активна и готова к использованию.'
+                      : 'Статус обновится автоматически.'}
                   </div>
                 </div>
 
@@ -140,7 +152,9 @@ export default function BillingSuccessPage() {
                     {isConfirmed ? 'Подтверждено' : isLoading ? 'Проверяем' : 'В обработке'}
                   </div>
                   <div className="text-sm text-neutral-500 mt-1">
-                    {isConfirmed && periodEnd
+                    {isConfirmed && isPerSessionCredit
+                      ? 'Без автопродления. Оплата один раз.'
+                      : isConfirmed && periodEnd
                       ? `Следующее списание: ${periodEnd}`
                       : 'Если статус не обновился, откройте страницу подписки и повторите проверку.'}
                   </div>
@@ -155,9 +169,11 @@ export default function BillingSuccessPage() {
                 </div>
                 <p className="text-sm text-neutral-600 leading-relaxed">
                   {isConfirmed
-                    ? returnPath === '/simulation/from-guest'
-                      ? 'Оплата подтверждена. Теперь можно перенести гостевой стресс-тест в полную сессию.'
-                      : 'Можно сразу запускать следующую симуляцию или вернуться в биллинг, если хочешь проверить тариф и автопродление.'
+                    ? isGuestPaywallReturnPath(returnPath)
+                      ? 'Оплата подтверждена. Теперь можно перенести гостевой стресс-тест в Defense Brief.'
+                      : isPerSessionCredit
+                        ? 'Разовая сессия доступна. Выберите материал и соберите полный Defense Brief.'
+                        : 'Можно сразу запускать следующий стресс-тест или вернуться в биллинг, если хочешь проверить тариф и автопродление.'
                     : 'Если активация ещё не дошла, можно вручную обновить статус или открыть биллинг и убедиться, что тариф уже переключился.'}
                 </p>
               </div>
@@ -167,7 +183,7 @@ export default function BillingSuccessPage() {
                   href={returnPath ?? '/simulation'}
                   className="w-full flex items-center justify-center gap-2 h-11 rounded-none bg-[#171717] hover:bg-black text-white font-semibold text-sm transition-all cursor-pointer"
                 >
-                  {returnPath === '/simulation/from-guest' ? 'Продолжить подготовку' : 'Начать симуляцию'}
+                  {isGuestPaywallReturnPath(returnPath) ? 'Собрать Defense Brief' : isPerSessionCredit ? 'Выбрать материал' : 'Начать стресс-тест'}
                   <ArrowRight size={15} />
                 </Link>
               ) : (
@@ -186,7 +202,7 @@ export default function BillingSuccessPage() {
                 href="/billing"
                 className="w-full flex items-center justify-center gap-2 h-11 rounded-none border border-neutral-200 bg-white hover:border-neutral-400 text-neutral-700 hover:text-neutral-900 font-semibold text-sm transition-colors"
               >
-                Управление подпиской
+                {isPerSessionCredit ? 'История оплат' : 'Управление подпиской'}
               </Link>
             </div>
           </div>

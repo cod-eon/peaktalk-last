@@ -4,7 +4,7 @@ const EXAMPLE_OPENING_MOVE =
   'Защита roadmap/budget перед CEO/CFO: начните с trade-off. Покажите, какую бизнес-цель вы защищаете, что будет с [ваша ключевая метрика], если срезать scope или бюджет сейчас, и где проходит граница компромисса.';
 
 export const EXAMPLE_DEFENSE_BRIEF_CONTEXT_NOTE =
-  'Это пример формата, не анализ вашего материала. Персональный Defense Brief собирается после полной сессии на базе ваших вводных и ответов.';
+  'Это пример формата, не анализ вашего материала. Персональный Defense Brief собирается после полного стресс-теста на базе ваших вводных и ответов.';
 
 export const EXAMPLE_DEFENSE_BRIEF: DefenseBriefArtifact = {
   opening_move: EXAMPLE_OPENING_MOVE,

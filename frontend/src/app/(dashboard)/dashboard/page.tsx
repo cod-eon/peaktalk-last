@@ -151,8 +151,8 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
   } else if (completedSessions.length === 0) {
     tip = {
       title: "Проведите первую проверку",
-      desc: "Завершённая симуляция сформирует базовую линию устойчивости аргументации.",
-      action: "Начать стресс-тест",
+      desc: "Завершённый стресс-тест сформирует базовую линию устойчивости аргументации.",
+      action: "Запустить стресс-тест",
       href: "/simulation",
       icon: <Target size={24} className="text-[#E8600A]" />
     };
@@ -188,7 +188,7 @@ function NextStepsPanel({ documents, completedSessions, sessions }: { documents:
   );
 }
 
-function DashboardDocuments({ documents }: { documents: Array<{ id: string; name: string; created_at: string }> }) {
+function DashboardDocuments({ documents }: { documents: DocumentItem[] }) {
   if (!documents || documents.length === 0) return null;
   const recentDocs = documents.slice(0, 3);
   
@@ -196,29 +196,36 @@ function DashboardDocuments({ documents }: { documents: Array<{ id: string; name
     <div className="bg-white border border-[#D9D5CC] rounded-none overflow-hidden mt-8 mb-8">
       <div className="p-6 border-b border-[#D9D5CC] flex justify-between items-center">
         <h2 className="font-mono text-[11px] font-bold text-[#73706A] tracking-[0.18em] uppercase">
-          ПОСЛЕДНИЕ ДОКУМЕНТЫ
+          ПОСЛЕДНИЕ МАТЕРИАЛЫ
         </h2>
       </div>
       <div className="flex flex-col">
-        {recentDocs.map(doc => (
-          <div key={doc.id} className="flex items-center justify-between p-4 px-6 border-b border-[#D9D5CC] hover:bg-[#FAF8F4] transition-colors group last:border-b-0">
-             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 bg-[#FEF3E8] text-[#E8600A] flex items-center justify-center shrink-0">
-                 <FileText size={16} />
-               </div>
-               <div>
-                 <div className="font-medium text-[#111827] truncate max-w-[150px] sm:max-w-[300px]">{doc.name}</div>
-                 <div className="text-xs text-[#73706A]">{formatDate(doc.created_at)}</div>
-               </div>
-             </div>
-             <Link 
-               href={`/simulation?doc=${doc.id}`}
-               className="text-[11px] font-semibold px-3 py-1.5 border border-neutral-200 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors text-neutral-600 rounded-none whitespace-nowrap"
-             >
-               Начать<span className="hidden sm:inline"> симуляцию</span>
-             </Link>
-          </div>
-        ))}
+        {recentDocs.map(doc => {
+          const hasAnalysis = Boolean(doc.draft_id);
+          return (
+            <div key={doc.id} className="flex items-center justify-between p-4 px-6 border-b border-[#D9D5CC] hover:bg-[#FAF8F4] transition-colors group last:border-b-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-[#FEF3E8] text-[#E8600A] flex items-center justify-center shrink-0">
+                  <FileText size={16} />
+                </div>
+                <div>
+                  <div className="font-medium text-[#111827] truncate max-w-[150px] sm:max-w-[300px]">{doc.name}</div>
+                  <div className="text-xs text-[#73706A]">{formatDate(doc.created_at)}</div>
+                </div>
+              </div>
+              <Link
+                href={hasAnalysis ? `/analysis/${doc.draft_id}` : '/upload'}
+                className="text-[11px] font-semibold px-3 py-1.5 border border-neutral-200 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors text-neutral-600 rounded-none whitespace-nowrap"
+              >
+                {hasAnalysis ? (
+                  <>Открыть<span className="hidden sm:inline"> разбор</span></>
+                ) : (
+                  <>Подготовить</>
+                )}
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -228,7 +235,7 @@ function DashboardDocuments({ documents }: { documents: Array<{ id: string; name
 
 function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing: { status: BillingStatus | null; simulationsLeft: number | null } }) {
   const segment = profile?.segment || 'other';
-  let title = "Начните первую симуляцию";
+  let title = "Подготовьте первый рабочий материал";
   
   switch (segment) {
     case 'manager':
@@ -260,11 +267,11 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
         <PlanBadge plan={plan} />
         {isUnlimited ? (
           <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
-            Безлимитные симуляции
+            Безлимитные проверки материала
           </span>
         ) : (
           <span className="text-[11px] font-medium text-[#73706A] font-mono tracking-[0.12em] uppercase">
-            Осталось симуляций: {simulationsLeft ?? 0}
+            Осталось проверок материала: {simulationsLeft ?? 0}
           </span>
         )}
       </div>
@@ -274,23 +281,23 @@ function DashboardNewUser({ profile, billing }: { profile: UserProfile; billing:
       </h1>
       
       <p className="text-sm sm:text-base text-[#73706A] mb-10 max-w-xl mx-auto">
-        Загрузите материал встречи или проверьте аргументацию с ИИ-оппонентом перед реальным разговором.
+        Добавьте материал встречи, получите разбор слабых мест и затем прогоните позицию через ИИ-оппонента.
       </p>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
         <Link
           href="/upload"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-6 py-3.5 text-sm font-semibold transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-6 py-3.5 text-sm font-semibold transition-colors"
         >
           <Upload size={16} />
-          Загрузить документ
+          Новый материал
         </Link>
         <Link
           href="/simulation"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-6 py-3.5 text-sm font-semibold transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-6 py-3.5 text-sm font-semibold transition-colors"
         >
-          <Play size={16} className="fill-white" />
-          Начать проверку
+          <Play size={16} />
+          К стресс-тестам
         </Link>
       </div>
     </motion.div>
@@ -318,14 +325,14 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
     .filter((score): score is number => score !== null);
   
   let indexMarkup: React.ReactNode = "--";
-  let indexSubtitle = "Завершите симуляцию для расчёта";
+  let indexSubtitle = "Завершите стресс-тест для расчёта";
   
   if (validScores.length > 0) {
     const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
     const avg10 = Math.round(avg * 10);
     const colorClass = avg10 >= 7 ? "text-[#111827]" : avg10 >= 4 ? "text-[#D97706]" : "text-[#E8600A]";
     indexMarkup = <span className={colorClass}>{avg10}<span className="text-[#73706A] text-xl">/10</span></span>;
-    indexSubtitle = "Средний результат всех защит";
+    indexSubtitle = "Средняя устойчивость позиции";
   }
 
   const criticalCount = validScores.filter(s => s < 0.4).length;
@@ -347,7 +354,7 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6 border-b border-[#D9D5CC] pb-6">
         <div>
-          <h1 className="text-3xl font-black text-[#111827] tracking-tight">Сводка аналитики</h1>
+          <h1 className="text-3xl font-black text-[#111827] tracking-tight">Сводка подготовки</h1>
           <p className="text-sm font-medium text-[#73706A] mt-1">
             Устойчивость аргументации, уязвимости и история последних защит.
           </p>
@@ -355,17 +362,17 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
         <div className="flex items-center gap-3">
           <Link
             href="/upload"
-            className="inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-[#111827] hover:bg-black text-white rounded-none px-5 py-3 text-sm font-semibold transition-colors"
           >
             <Upload size={14} />
-            Загрузить документ
+            Новый материал
           </Link>
           <Link
             href="/simulation"
-            className="inline-flex items-center justify-center gap-2 bg-[#E8600A] hover:bg-[#B74707] text-white border border-[#E8600A] hover:border-[#B74707] rounded-none px-5 py-3 text-sm font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-white border border-[#D9D5CC] rounded-none hover:border-[#111827] text-[#111827] px-5 py-3 text-sm font-semibold transition-colors"
           >
-            <Play size={14} className="fill-white" />
-            Новый стресс-тест
+            <Play size={14} />
+            К стресс-тестам
           </Link>
         </div>
       </motion.div>
@@ -401,9 +408,9 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
           variant={criticalCount > 0 ? 'critical' : 'default'}
         />
         <MetricPod
-          label="СЕССИЙ ЗА МЕСЯЦ"
+          label="СТРЕСС-ТЕСТОВ ЗА МЕСЯЦ"
           value={monthlySessionsCount}
-          subtitle="Сколько тренировок запущено в этом месяце"
+          subtitle="Сколько проверок материала запущено в этом месяце"
           icon={<RotateCcw size={18} />}
         />
       </motion.div>
@@ -450,14 +457,14 @@ function DashboardActive({ sessions, documents }: { sessions: SessionItem[]; doc
       <motion.div variants={itemVariants} className="bg-white border border-[#D9D5CC] rounded-none overflow-hidden">
         <div className="p-6 border-b border-[#D9D5CC] flex justify-between items-center">
           <h2 className="text-2xl font-black text-[#111827]">
-            Лента симуляций
+            Лента стресс-тестов
           </h2>
           <Link href="/simulation" className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#73706A] hover:text-[#111827] flex items-center gap-1 group">
             Все <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
         <div className="hidden border-b border-[#D9D5CC] bg-[#F3F0EA] px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#73706A] sm:grid sm:grid-cols-[minmax(0,1fr)_120px_128px_28px]">
-          <span>Название</span>
+          <span>Кейс</span>
           <span>Дата</span>
           <span>Статус</span>
           <span></span>

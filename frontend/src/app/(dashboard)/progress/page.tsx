@@ -157,8 +157,8 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-3 text-neutral-400">
       <BarChart2 size={32} className="opacity-40" />
-      <p className="text-sm font-medium">Пока нет завершённых сессий</p>
-      <p className="text-xs text-neutral-300">Пройдите первую симуляцию, чтобы увидеть прогресс</p>
+      <p className="text-sm font-medium">Пока нет завершённых стресс-тестов</p>
+      <p className="text-xs text-neutral-300">Проверьте первый материал, чтобы увидеть прогресс</p>
     </div>
   );
 }

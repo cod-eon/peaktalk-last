@@ -10,7 +10,6 @@ import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
 import { getPersonaDisplayLabel } from '@/lib/constants/personas';
 import { PrepCard } from '@/components/simulation/PrepCard';
-import { ShareCard } from '@/components/simulation/ShareCard';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -180,7 +179,7 @@ function UserLine({
     const isTimeout = msg.content === "[Время на ответ истекло, ответ не предоставлен]";
     const isActive = activePopoverId === msg.turn_index;
     const hasIssue = !isTimeout && metric && metric.comment && metric.score < 0.75;
-    
+
     const highlightClass = !hasIssue
         ? ''
         : metric && metric.score < 0.45
@@ -379,9 +378,9 @@ export default function SimulationReportPage() {
     return (
         <>
             <div id="print-report" style={{ display: 'none' }} className="font-inter text-black bg-white">
-                <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Отчёт по симуляции PeakTalk</h1>
+                <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Отчёт по стресс-тесту PeakTalk</h1>
                 <p style={{ fontSize: 13, color: '#555', marginBottom: 24 }}>
-                    {personaName} · {avgScore10}/10{document_title ? ` · ${document_title}` : ''}
+                    {personaName} · устойчивость позиции ${avgScore10}/10{document_title ? ` · ${document_title}` : ''}
                 </p>
                 <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Сводка</h2>
                 {summaryLines.map((l, i) => (
@@ -414,7 +413,7 @@ export default function SimulationReportPage() {
                         <div className="flex items-center gap-1.5 min-w-0">
                             <Zap size={13} className="text-accent-400 shrink-0" />
                             <span className="text-[12px] sm:text-[13px] font-inter font-bold text-gray-800 tracking-tight uppercase">
-                                Отчёт
+                                Pressure scan
                             </span>
                             <span className="text-[11px] text-gray-400 truncate hidden xs:inline sm:inline font-mono uppercase tracking-widest">
                                 · {personaName}
@@ -440,7 +439,7 @@ export default function SimulationReportPage() {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+                    <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-28 sm:py-12">
 
                         {/* Context pill */}
                         {document_title && (
@@ -513,7 +512,7 @@ export default function SimulationReportPage() {
                         {/* ── Transcript (script format) ───────────────────── */}
                         <div>
                             <p className="text-[11px] font-mono text-gray-300 uppercase tracking-widest mb-10">
-                                Транскрипт сессии
+                                Транскрипт стресс-теста
                             </p>
 
                             {(() => {
@@ -546,16 +545,6 @@ export default function SimulationReportPage() {
                             })()}
                         </div>
 
-                        {/* Share Card */}
-                        <div className="my-10 flex border-t border-gray-100 pt-10 justify-center">
-                            <ShareCard 
-                              score={avgScore10} 
-                              personaName={personaName} 
-                              summary={summaryLines[0] || 'Симуляция завершена'} 
-                              metrics={skill_metrics || []} 
-                            />
-                        </div>
-
                         {/* Actions */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-8 mb-20 border-t border-gray-100 pt-10">
                             {canRerunSameMaterial && (
@@ -574,7 +563,7 @@ export default function SimulationReportPage() {
                                 onClick={() => router.push('/simulation')}
                                 className="w-full sm:w-auto inline-flex min-h-12 items-center justify-center border border-gray-200 bg-white px-5 py-3 text-center text-[13px] font-semibold leading-tight text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
                             >
-                                Новая сессия
+                                Новый pressure scan
                             </button>
                         </div>
 

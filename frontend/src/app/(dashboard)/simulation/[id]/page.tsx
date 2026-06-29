@@ -55,40 +55,40 @@ export default function SimulationPage() {
   const isFinishedRef = useRef(false);
 
   const PERSONA_LABELS: Record<string, string> = {
-    supervisor: 'Научный руководитель',
-    reviewer: 'Придирчивый рецензент',
-    peer: 'Коллега-скептик',
+    supervisor: 'Руководитель',
+    reviewer: 'Стейкхолдер-скептик',
+    peer: 'Коллега-оппонент',
     tech_lead: 'Тимлид / ведущий инженер',
-    hr: 'HR-менеджер',
-    senior_dev: 'Старший разработчик',
+    hr: 'People Lead / HRBP',
+    senior_dev: 'Технический стейкхолдер',
     investor: 'Венчурный инвестор',
     partner: 'Корпоративный партнёр',
     customer: 'Потенциальный клиент',
     board: 'Совет директоров',
     subordinate: 'Скептичный подчинённый',
-    journalist: 'Журналист',
-    audience: 'Общая аудитория',
-    moderator: 'Модератор дискуссии',
-    listener: 'Скептик из зала',
+    journalist: 'Скептичный член комитета',
+    audience: 'Скептичный стейкхолдер',
+    moderator: 'Фасилитатор decision review',
+    listener: 'Скептик из комитета',
   };
 
   // Dative case — "Ваш ответ [кому]..."
   const PERSONA_DATIVE: Record<string, string> = {
-    supervisor: 'научному руководителю',
-    reviewer: 'придирчивому рецензенту',
-    peer: 'коллеге-скептику',
+    supervisor: 'руководителю',
+    reviewer: 'стейкхолдеру-скептику',
+    peer: 'коллеге-оппоненту',
     tech_lead: 'тимлиду',
-    hr: 'HR-менеджеру',
-    senior_dev: 'старшему разработчику',
+    hr: 'People Lead / HRBP',
+    senior_dev: 'техническому стейкхолдеру',
     investor: 'венчурному инвестору',
     partner: 'корпоративному партнёру',
     customer: 'потенциальному клиенту',
     board: 'совету директоров',
     subordinate: 'скептичному подчинённому',
-    journalist: 'журналисту',
-    audience: 'аудитории',
-    moderator: 'модератору дискуссии',
-    listener: 'скептику из зала',
+    journalist: 'скептичному члену комитета',
+    audience: 'скептичному стейкхолдеру',
+    moderator: 'фасилитатору decision review',
+    listener: 'скептику из комитета',
   };
 
   // Keep isFinishedRef in sync so beforeunload can read it synchronously
@@ -142,8 +142,8 @@ export default function SimulationPage() {
         }
         setMessages(res.messages || []);
         if (res.persona_config) setPersonaConfig(res.persona_config);
-      } catch (err: unknown) {
-        toast.error('Ошибка загрузки симуляции');
+      } catch {
+        toast.error('Ошибка загрузки стресс-теста');
         router.push('/simulation');
       } finally {
         setIsLoading(false);
@@ -169,7 +169,7 @@ export default function SimulationPage() {
     }
   }, [messages, isAnalyzing]); // isAnalyzing flips when AI finishes answering
 
-  const submitAnswer = async (currentAnswer: string, isTimeout: boolean = false) => {
+  const submitAnswer = useCallback(async (currentAnswer: string, isTimeout: boolean = false) => {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
     setAiWarning(false);
@@ -225,7 +225,7 @@ export default function SimulationPage() {
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [isAnalyzing, openUpgradeModal, sessionId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,7 +241,7 @@ export default function SimulationPage() {
     if (timeLeft === 0 && !isAnalyzing && !isFinished) {
        submitAnswer(answer.trim() ? answer : "[Время на ответ истекло, ответ не предоставлен]", true);
     }
-  }, [timeLeft]);
+  }, [answer, isAnalyzing, isFinished, submitAnswer, timeLeft]);
 
   const handleComplete = async () => {
     if (messages.filter(m => m.role === 'user').length === 0) {
@@ -286,10 +286,10 @@ export default function SimulationPage() {
             <CheckCircle2 size={40} className="hidden sm:block" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-inter font-bold text-neutral-900 mb-3 sm:mb-4">
-            Тренировка завершена!
+            Стресс-тест завершён
           </h2>
           <p className="text-neutral-400 mb-6 sm:mb-8 text-sm sm:text-base max-w-md mx-auto">
-            Сессия была успешно завершена. {personaLabel} проанализировал ваши ответы — ознакомьтесь с подробным отчетом по вашим навыкам.
+            Сессия завершена. {personaLabel} проверил ваши ответы под давлением — посмотрите отчёт по защите позиции.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -302,7 +302,7 @@ export default function SimulationPage() {
               onClick={() => router.push(`/simulation/${sessionId}/report`)}
               className="bg-[#171717] hover:bg-black text-white font-medium rounded-none px-4 py-2.5 transition-colors min-h-[44px]"
             >
-              Посмотреть полный отчет
+              Посмотреть полный отчёт
             </button>
           </div>
         </motion.div>
@@ -344,7 +344,7 @@ export default function SimulationPage() {
                 {personaLabel}
               </div>
               <div className="text-sm text-neutral-400 border border-neutral-200 rounded-none px-2 py-0.5 inline-block text-[10px] uppercase tracking-wider font-mono">
-                Тренировка
+                Стресс-тест
               </div>
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function SimulationPage() {
                   <div>
                     <p className="text-sm font-semibold text-amber-800">Обнаружен ИИ-сгенерированный ответ</p>
                     <p className="text-xs text-amber-700 mt-0.5">
-                      Тренер видит, что текст написан нейросетью. Напишите ответ своими словами — только так вы получите честную оценку и реальную пользу от тренировки.
+                      Система видит, что текст написан нейросетью. Ответьте своими словами — только так стресс-тест покажет реальные слабые места позиции.
                     </p>
                   </div>
                 </motion.div>
@@ -486,8 +486,8 @@ export default function SimulationPage() {
                     {isAnalyzing ? (
                       <div className="flex items-center justify-center gap-2.5">
                         <Loader2 size={18} className="animate-spin shrink-0" />
-                        <span className="hidden sm:inline">Анализ нейросетью...</span>
-                        <span className="sm:hidden">Анализ...</span>
+                        <span className="hidden sm:inline">Проверка ответа...</span>
+                        <span className="sm:hidden">Проверка...</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2.5">

@@ -21,7 +21,7 @@ type Doc = {
 
 type DocListResponse = { items: Doc[]; total: number };
 
-const FILTERS = ['Все', 'Файлы', 'Тексты'] as const;
+const FILTERS = ['Все', 'Файлы', 'Текст'] as const;
 const DOCUMENTS_PAGE_SIZE = 12;
 type Filter = (typeof FILTERS)[number];
 
@@ -98,17 +98,17 @@ export default function DocumentsPage() {
             <div className="flex items-start justify-between gap-3 mb-6 sm:mb-8">
                 <div>
                     <h1 className="font-inter text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight tracking-tight mb-1">
-                        Мои тексты
+                        Материалы
                     </h1>
-                    <p className="text-sm text-neutral-500 mt-1 hidden sm:block">Управление загруженными материалами и черновиками</p>
+                    <p className="text-sm text-neutral-500 mt-1 hidden sm:block">Исходные файлы, тезисы и разборы для подготовки к рабочим встречам</p>
                 </div>
                 <Link
                     href="/upload"
                     className="inline-flex items-center shrink-0 gap-1.5 px-3 sm:px-4 py-2 text-sm min-h-[44px] rounded-none bg-[#171717] hover:bg-black text-white font-medium transition-colors"
                 >
                     <Plus size={14} />
-                    <span className="hidden sm:inline">Загрузить текст</span>
-                    <span className="sm:hidden">Загрузить</span>
+                    <span className="hidden sm:inline">Новый материал</span>
+                    <span className="sm:hidden">Новый</span>
                 </Link>
             </div>
 
@@ -123,7 +123,7 @@ export default function DocumentsPage() {
                             setSearch(e.target.value);
                             setCurrentPage(1);
                         }}
-                        placeholder="Поиск по названию..."
+                        placeholder="Поиск по материалам..."
                         className="w-full bg-white border border-neutral-200 rounded-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200 py-2.5 pl-9 pr-8 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors min-h-[44px]"
                     />
                     {!search && (
@@ -187,10 +187,10 @@ export default function DocumentsPage() {
                     <div className="w-16 h-16 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-center mb-5">
                         <UploadCloud size={28} className="text-neutral-400" />
                     </div>
-                    <p className="text-sm font-medium text-neutral-900 mb-1">Пока нет материалов</p>
-                    <p className="text-xs text-neutral-400 mb-6">Загрузите файл или создайте текстовый документ</p>
+                    <p className="text-sm font-medium text-neutral-900 mb-1">Пока нет рабочих материалов</p>
+                    <p className="text-xs text-neutral-400 mb-6">Добавьте тезисы, memo, КП или черновик защиты решения</p>
                     <Link href="/upload" className="inline-flex items-center gap-2 text-sm bg-[#171717] hover:bg-black text-white font-medium rounded-none px-4 py-2 transition-colors">
-                        <Plus size={14} /> Загрузить текст
+                        <Plus size={14} /> Новый материал
                     </Link>
                 </div>
             ) : filtered.length === 0 ? (
@@ -219,7 +219,7 @@ export default function DocumentsPage() {
                     <div className="bg-white border border-neutral-200 rounded-none overflow-hidden">
                         {/* Head — desktop only */}
                         <div className="hidden sm:grid grid-cols-[1fr_80px_110px_120px] bg-gray-50 border-b border-gray-100 px-5 py-2.5">
-                            {['НАЗВАНИЕ', 'ФОРМАТ', 'ДАТА', 'ДЕЙСТВИЕ'].map((col) => (
+                            {['МАТЕРИАЛ', 'ФОРМАТ', 'ДАТА', 'PRESSURE SCAN'].map((col) => (
                                 <span key={col} className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{col}</span>
                             ))}
                         </div>
@@ -255,7 +255,7 @@ export default function DocumentsPage() {
                                                 </span>
                                                 {doc.draft_id && (
                                                     <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none">
-                                                        Разобран
+                                                        Pressure scan
                                                     </span>
                                                 )}
                                             </div>
@@ -265,7 +265,7 @@ export default function DocumentsPage() {
                                                 href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
                                                 className="text-xs font-medium text-neutral-500 hover:text-neutral-900 flex items-center gap-1 transition-colors min-h-[44px] px-2"
                                             >
-                                                Разбор <ArrowRight size={12} />
+                                                {doc.draft_id ? 'Открыть scan' : 'Разобрать'} <ArrowRight size={12} />
                                             </Link>
                                             <button
                                                 onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
@@ -289,7 +289,7 @@ export default function DocumentsPage() {
                                                 </span>
                                                 {doc.draft_id && (
                                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-none shrink-0">
-                                                        Разобран
+                                                        Pressure scan
                                                     </span>
                                                 )}
                                             </div>
@@ -311,7 +311,7 @@ export default function DocumentsPage() {
                                                 href={doc.draft_id ? `/analysis/${doc.draft_id}` : `/upload`}
                                                 className="text-sm font-medium text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors whitespace-nowrap"
                                             >
-                                                Разбор <ArrowRight size={13} />
+                                                {doc.draft_id ? 'Открыть scan' : 'Разобрать'} <ArrowRight size={13} />
                                             </Link>
                                             <button
                                                 onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}

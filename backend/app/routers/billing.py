@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qs, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,6 +47,84 @@ logger = logging.getLogger("peaktalk.billing")
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
+_PAYMENT_RETURN_PATH = "/billing/success"
+_ALLOWED_INNER_RETURN_PREFIXES = (
+    "/dashboard",
+    "/upload",
+    "/simulation",
+    "/billing",
+    "/onboarding",
+    "/documents",
+    "/meetings",
+    "/personas",
+    "/settings",
+    "/analysis",
+    "/scenarios",
+)
+
+
+def _raise_invalid_return_url() -> None:
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail={
+            "detail": "Некорректный адрес возврата после оплаты.",
+            "code": "invalid_return_url",
+        },
+    )
+
+
+def _origin_from_url(url: str) -> str | None:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+
+
+def _allowed_payment_return_origins() -> set[str]:
+    origins = {
+        origin
+        for origin in (_origin_from_url(settings.frontend_url),)
+        if origin is not None
+    }
+    for allowed_origin in settings.get_allowed_origins():
+        origin = _origin_from_url(allowed_origin)
+        if origin is not None:
+            origins.add(origin)
+    return origins
+
+
+def _is_allowed_internal_return_path(value: str) -> bool:
+    if not value or not value.startswith("/") or value.startswith("//"):
+        return False
+    if "\\" in value:
+        return False
+
+    parsed = urlparse(value)
+    if parsed.scheme or parsed.netloc:
+        return False
+
+    return any(
+        parsed.path == prefix or parsed.path.startswith(f"{prefix}/")
+        for prefix in _ALLOWED_INNER_RETURN_PREFIXES
+    )
+
+
+def _validate_payment_return_url(return_url: str) -> str:
+    parsed = urlparse(return_url)
+    origin = _origin_from_url(return_url)
+    if origin is None or origin not in _allowed_payment_return_origins():
+        _raise_invalid_return_url()
+
+    if parsed.path != _PAYMENT_RETURN_PATH or parsed.fragment:
+        _raise_invalid_return_url()
+
+    query = parse_qs(parsed.query, keep_blank_values=True)
+    for nested_return in query.get("return", []):
+        if nested_return and not _is_allowed_internal_return_path(nested_return):
+            _raise_invalid_return_url()
+
+    return return_url
+
 # ---------------------------------------------------------------------------
 # Plan catalogue (static, no auth required)
 # ---------------------------------------------------------------------------
@@ -56,18 +135,18 @@ _PLAN_CATALOGUE: list[PlanInfo] = [
         name="Бесплатно",
         price=0,
         billing="once",
-        simulations="1 сессия",
+        simulations="1 стресс-тест",
         documents="1 документ",
-        features=["Все персоны", "3 вопроса в демо"],
+        features=["Все оппоненты", "Быстрый pressure scan"],
     ),
     PlanInfo(
         id="per_session",
-        name="За сессию",
+        name="Defense Brief",
         price=299,
         billing="once",
-        simulations="1 полная сессия",
+        simulations="1 стресс-тест материала",
         documents="включено",
-        features=["PDF-отчёт", "Шпаргалка", "Все персоны"],
+        features=["Defense Brief", "PDF-отчёт", "Все оппоненты"],
         primary=True,
     ),
     PlanInfo(
@@ -75,7 +154,7 @@ _PLAN_CATALOGUE: list[PlanInfo] = [
         name="Personal",
         price=790,
         billing="month",
-        simulations="10 сессий/мес",
+        simulations="10 стресс-тестов/мес",
         features=["PDF + sharing", "История прогресса"],
     ),
     PlanInfo(
@@ -253,11 +332,13 @@ async def create_subscription_payment(
             detail={"detail": "Этот тариф нельзя оплатить.", "code": "invalid_plan"},
         )
 
+    return_url = _validate_payment_return_url(body.return_url)
+
     try:
         result = await create_payment(
             user_id=str(current_user.id),
             plan=body.plan,
-            return_url=body.return_url,
+            return_url=return_url,
             customer_email=current_user.email,
         )
     except (ValueError, RuntimeError) as exc:

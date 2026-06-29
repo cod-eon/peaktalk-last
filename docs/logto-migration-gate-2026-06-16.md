@@ -2,7 +2,35 @@
 
 Purpose: choose a safe auth migration path before replacing Supabase Auth in PeakTalk.
 
-Status: research gate, not implementation. Do not start code changes until P0 payment/upload gates are closed and the Logto host/DNS credentials are available.
+Status: research gate, not implementation. P0 payment/upload/checkout/TLS gates are now materially closed; do not start production cutover until the Logto host/DNS credentials are available.
+
+## 2026-06-18 docs re-check
+
+Official Logto docs were re-checked after closing the YooKassa and TLS P0 gates.
+
+Current conclusions still hold:
+
+- Do not use Logto's quick Docker Compose command for production. The docs explicitly warn that the bundled Postgres composition is not production-safe because rerunning it can recreate the database and lose persisted data.
+- Use a controlled production deployment with a separate PostgreSQL database, persistent volumes, backups, pinned image version, and explicit env:
+  - `DB_URL`;
+  - `ENDPOINT`;
+  - `ADMIN_ENDPOINT`;
+  - `PORT` / `ADMIN_PORT` as needed;
+  - `REDIS_URL` only if/when central cache is intentionally added.
+- Logto's `ENDPOINT` affects the OIDC issuer, so changing `auth.peaktalk.ru` later is an auth-breaking event. Pick the domain before wiring the app.
+- Next.js App Router integration should use `@logto/next` with app id, app secret, endpoint, base URL, `cookieSecret`, and secure cookies in production.
+- FastAPI should be treated as a protected API resource. Validate access tokens by JWKS signature, issuer, audience, expiration, and scopes. Do not accept an ID token as the API bearer token.
+- Email delivery can start through the SMTP connector, but magic-link/sign-in reliability must be seed-tested before real validation traffic.
+- Yandex ID remains a second-phase connector spike through Logto's OAuth 2.0 connector, not part of the first cutover.
+
+Updated source checks:
+
+- Logto OSS get started / production Docker warning: https://docs.logto.io/logto-oss/get-started-with-oss
+- Logto deployment and env configuration: https://docs.logto.io/logto-oss/deployment-and-configuration
+- Logto central cache / Redis: https://docs.logto.io/logto-oss/central-cache
+- Logto Next.js App Router quick start: https://docs.logto.io/quick-starts/next-app-router
+- Logto API token validation: https://docs.logto.io/authorization/validate-access-tokens
+- Logto email connectors: https://docs.logto.io/connectors/email-connectors
 
 ## Decision
 

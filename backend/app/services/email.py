@@ -81,13 +81,13 @@ WEEKLY_TEMPLATE = """
         </table>
       </td>
     </tr>
-    <tr>
-      <td style="padding: 0 24px 24px;">
-        <a href="{cta_url}" style="display: block; background: #171717; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 14px 24px; text-align: center; width: 100%; box-sizing: border-box;">
-          Попробовать 3 вопроса бесплатно &rarr;
-        </a>
-      </td>
-    </tr>
+        <tr>
+          <td style="padding: 0 24px 24px;">
+            <a href="{cta_url}" style="display: block; background: #171717; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 14px 24px; text-align: center; width: 100%; box-sizing: border-box;">
+              Проверить материал бесплатно &rarr;
+            </a>
+          </td>
+        </tr>
     <tr>
       <td style="padding: 16px 24px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #a3a3a3; text-align: center;">
         PeakTalk &mdash; стресс-тест аргументации до реальной встречи

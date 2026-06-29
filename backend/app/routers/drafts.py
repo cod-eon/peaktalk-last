@@ -56,6 +56,7 @@ async def create_draft(
         title=body.title,
         raw_text=body.raw_text,
         document_id=body.document_id,
+        case_context=body.case_context.model_dump(exclude_none=True) if body.case_context else None,
     )
     db.add(draft)
     await db.flush()
@@ -88,9 +89,13 @@ async def analyze_draft_endpoint(
 
     logger.info("Starting Cloud.ru analysis draft=%s chars=%d", draft_id, len(draft.raw_text))
     profile = current_user.onboarding_profile
-    user_context = {"segment": profile.segment.value, "goal": profile.primary_goal.value} if profile else None
+    user_context = {}
+    if profile:
+        user_context.update({"segment": profile.segment.value, "goal": profile.primary_goal.value})
+    if draft.case_context:
+        user_context["case_context"] = draft.case_context
     try:
-        analysis_result = await analyze_draft(draft.raw_text, user_context=user_context)
+        analysis_result = await analyze_draft(draft.raw_text, user_context=user_context or None)
     except CloudRuAIError as exc:
         logger.error("Cloud.ru analysis failed draft=%s error=%s", draft_id, exc)
         raise HTTPException(

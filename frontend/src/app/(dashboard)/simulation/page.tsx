@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Bot, Users, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
-    Clock, Trophy, Plus, TrendingUp, TrendingDown, Mic, Target, ArrowLeft,
-    Loader2, Zap, Ban, FileText, ChevronDown, Search, ShieldAlert, BarChart3,
+    Bot, Briefcase, ChevronRight, CheckCircle2, MessageSquare,
+    Clock, Trophy, Plus, TrendingUp, TrendingDown, Target, ArrowLeft,
+    Loader2, Zap, FileText, ChevronDown, Search, ShieldAlert, BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -265,7 +265,7 @@ function SimulationPageContent() {
             }
         } catch {
             if (requestId === sessionRequestIdRef.current) {
-                toast.error('Не удалось загрузить историю симуляций');
+                toast.error('Не удалось загрузить историю стресс-тестов');
             }
         } finally {
             if (requestId === sessionRequestIdRef.current) {
@@ -415,8 +415,8 @@ function SimulationPageContent() {
     const fallbackRoles = [
         { id: 'investor', name: 'Венчурный Инвестор', desc: 'Въедливый. Сфокусирован на метриках, TAM и возврате инвестиций.', icon: TrendingUp, iconColor: 'text-amber-600', iconBg: 'bg-amber-50' },
         { id: 'tech_lead', name: 'Тимлид / Ведущий инженер', desc: 'Прагматичный. Оценивает реалистичность, архитектуру и ресурсы.', icon: Briefcase, iconColor: 'text-[#E8600A]', iconBg: 'bg-[#FEF3E8]' },
-        { id: 'hr', name: 'HR-менеджер', desc: 'Эмпатичный, но строгий. Оценивает мотивацию и навыки общения.', icon: Users, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
-        { id: 'audience', name: 'Общая аудитория', desc: 'Провокационный. Задаёт каверзные вопросы, ищет слабые места.', icon: Mic, iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
+        { id: 'hr', name: 'People Lead / HRBP', desc: 'Проверяет влияние решения на команду, fairness, критерии и исполнимость.', icon: Briefcase, iconColor: 'text-pink-600', iconBg: 'bg-pink-50' },
+        { id: 'audience', name: 'Скептичный стейкхолдер', desc: 'Проверяет ценность, риски и ясность решения без знания внутреннего контекста.', icon: ShieldAlert, iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
     ];
 
     const fallbackIndustries = ["IT / Технологии", "Образование", "Медицина", "Финансы", "Другое"];
@@ -449,6 +449,7 @@ function SimulationPageContent() {
 
     const handleStart = async () => {
         if (!isReady) return;
+        if (!selectedDoc) return;
         if (!canStartSimulation) {
             openUpgrade('simulations');
             return;
@@ -458,10 +459,9 @@ function SimulationPageContent() {
             const domainName = selectedDomain === 'custom' ? customDomain : selectedDomain;
             const selectedDocItem = documents.find(d => d.id === selectedDoc);
             const isDraft = selectedDocItem?.source === 'draft';
-            const hasDoc = selectedDoc !== null && selectedDoc !== 'none';
             const payload: Record<string, unknown> = {
-                document_id: (hasDoc && !isDraft) ? selectedDoc : null,
-                draft_id: (hasDoc && isDraft) ? selectedDoc : null,
+                document_id: isDraft ? null : selectedDoc,
+                draft_id: isDraft ? selectedDoc : null,
                 industry: domainName,
             };
             if (selectedUserPersonaId) {
@@ -477,10 +477,10 @@ function SimulationPageContent() {
             if (res?.id) {
                 router.push(`/simulation/${res.id}`);
             } else {
-                throw new Error('Не удалось получить ID симуляции');
+                throw new Error('Не удалось получить ID стресс-теста');
             }
         } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : 'Ошибка запуска симуляции';
+            const msg = error instanceof Error ? error.message : 'Ошибка запуска стресс-теста';
             toast.error(msg);
             setIsStarting(false);
         }
@@ -521,7 +521,7 @@ function SimulationPageContent() {
                 <div className="flex items-start justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
                     <div>
                         <h1 className="font-inter text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 leading-tight tracking-tight mb-1 sm:mb-2">
-                            Симуляции
+                            Стресс-тесты
                         </h1>
                         <p className="font-inter text-neutral-500 text-xs sm:text-sm">
                             {sessionTotal} {sessionTotal === 1 ? 'сессия' : sessionTotal < 5 ? 'сессии' : 'сессий'} · история стресс-тестов
@@ -843,9 +843,9 @@ function SimulationPageContent() {
                 {/* Progress Stepper */}
                 <div className="flex items-center gap-2 pt-1">
                     {[
-                        { step: 1, label: 'Персонаж' },
-                        { step: 2, label: 'Индустрия' },
-                        { step: 3, label: 'Контекст' },
+                        { step: 1, label: 'Оппонент' },
+                        { step: 2, label: 'Сфера' },
+                        { step: 3, label: 'Материал' },
                         { step: 4, label: 'Сложность' },
                     ].map(({ step, label }, i) => {
                         const isDone = currentStep > step;
@@ -900,7 +900,7 @@ function SimulationPageContent() {
                                 </div>
                             </div>
                             <div className="text-[11px] font-medium text-[#B04A08] text-right max-w-[220px]">
-                                Симуляция останется привязана к этой встрече, даже если ты сменишь персону, индустрию или документ.
+                                Стресс-тест останется привязан к этой встрече, даже если ты сменишь оппонента, сферу или материал.
                             </div>
                         </div>
                     </section>
@@ -922,7 +922,7 @@ function SimulationPageContent() {
                                 personaTab === 'system' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500'
                             }`}
                         >
-                            Системные
+                            Готовые
                         </button>
                         <button
                             type="button"
@@ -934,7 +934,7 @@ function SimulationPageContent() {
                                 personaTab === 'custom' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500'
                             }`}
                         >
-                            Мои персоны
+                            Мои оппоненты
                         </button>
                     </div>
 
@@ -942,7 +942,7 @@ function SimulationPageContent() {
                         {personasLoading ? (
                             <div className="flex items-center gap-3 py-8 text-neutral-500">
                                 <Loader2 className="animate-spin" size={20} />
-                                <span className="font-inter text-sm">Загружаем собеседников...</span>
+                                <span className="font-inter text-sm">Загружаем оппонентов...</span>
                             </div>
                         ) : personaTab === 'system' ? (
                             <motion.div
@@ -1057,16 +1057,16 @@ function SimulationPageContent() {
                                     </div>
                                 ) : (
                                     <div className="border border-dashed border-neutral-300 bg-neutral-50 p-6 sm:p-8">
-                                        <div className="text-lg font-semibold text-neutral-900 mb-2">Пока нет своих персон</div>
+                                        <div className="text-lg font-semibold text-neutral-900 mb-2">Пока нет своих оппонентов</div>
                                         <p className="text-sm text-neutral-500 max-w-xl mb-4">
-                                            Создай кастомного собеседника, если хочешь тренироваться против конкретного CTO, клиента, инвестора или другого реального персонажа.
+                                            Создай кастомного оппонента, если нужно проверить материал против конкретного CTO, клиента, инвестора или другого реального участника встречи.
                                         </p>
                                         <Link
                                             href="/personas"
                                             className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white px-4 py-2.5 text-sm font-semibold transition-colors"
                                         >
                                             <Plus size={14} />
-                                            Создать персону
+                                            Создать оппонента
                                         </Link>
                                     </div>
                                 )}
@@ -1078,7 +1078,7 @@ function SimulationPageContent() {
                 {/* 2. DOMAIN SELECTION */}
                 <section ref={step2Ref}>
                     <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
-                        <span className="text-neutral-500">Шаг 2:</span> Индустрия / Ниша
+                        <span className="text-neutral-500">Шаг 2:</span> Сфера / контекст решения
                     </h2>
                     <div className="flex flex-wrap gap-3">
                         {domains.map((domain) => (
@@ -1113,7 +1113,7 @@ function SimulationPageContent() {
                 {/* 3. DOCUMENT SELECTION */}
                 <section ref={step3Ref}>
                     <h2 className="text-[11px] font-bold tracking-widest uppercase text-neutral-500 mb-4 flex items-center gap-2 border-b border-neutral-200 pb-3">
-                        <span className="text-neutral-500">Шаг 3:</span> Контекст для тренера
+                        <span className="text-neutral-500">Шаг 3:</span> Материал встречи
                     </h2>
 
                     {/* Combobox */}
@@ -1132,19 +1132,12 @@ function SimulationPageContent() {
                             }`}
                         >
                             <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-neutral-50 border border-neutral-200">
-                                {selectedDoc === 'none'
-                                    ? <Ban size={16} className="text-neutral-400" />
-                                    : selectedDoc
-                                        ? <FileText size={16} className="text-neutral-500" />
-                                        : <FileText size={16} className="text-neutral-400" />
-                                }
+                                <FileText size={16} className={selectedDoc ? 'text-neutral-500' : 'text-neutral-400'} />
                             </div>
                             <span className={`flex-1 text-sm font-inter truncate ${selectedDoc !== null ? 'text-neutral-900 font-medium' : 'text-neutral-400'}`}>
-                                {selectedDoc === 'none'
-                                    ? 'Без документа — общее интервью'
-                                    : selectedDoc
-                                        ? documents.find(d => d.id === selectedDoc)?.name ?? 'Выбранный документ'
-                                        : 'Выберите контекст для тренировки...'}
+                                {selectedDoc
+                                    ? documents.find(d => d.id === selectedDoc)?.name ?? 'Выбранный материал'
+                                    : 'Выберите материал для стресс-теста...'}
                             </span>
                             <ChevronDown
                                 size={16}
@@ -1170,7 +1163,7 @@ function SimulationPageContent() {
                                             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                                             <input
                                                 type="text"
-                                                placeholder="Поиск по документам..."
+                                                placeholder="Поиск по материалам..."
                                                 value={docSearch}
                                                 onChange={(e) => setDocSearch(e.target.value)}
                                                 autoFocus
@@ -1180,24 +1173,6 @@ function SimulationPageContent() {
                                         </div>
                                     </div>
 
-                                    {/* «Без документа» — pinned */}
-                                    <button
-                                        type="button"
-                                        onClick={() => { setSelectedDoc('none'); setDocDropdownOpen(false); setDocSearch(''); }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-neutral-200 ${
-                                            selectedDoc === 'none' ? 'bg-neutral-50' : 'hover:bg-neutral-50'
-                                        }`}
-                                    >
-                                        <div className="w-7 h-7 rounded-none bg-neutral-50 border border-neutral-200 flex items-center justify-center shrink-0">
-                                            <Ban size={14} className="text-neutral-400" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium font-inter text-neutral-900">Без документа</div>
-                                            <div className="text-xs text-neutral-400 font-inter">Общее интервью по выбранной роли и сфере</div>
-                                        </div>
-                                        {selectedDoc === 'none' && <CheckCircle2 size={15} className="text-neutral-900 shrink-0" />}
-                                    </button>
-
                                     {/* Document list */}
                                     <div className="flex-1 overflow-y-auto min-h-0">
                                         {(() => {
@@ -1206,8 +1181,15 @@ function SimulationPageContent() {
                                             );
                                             if (filtered.length === 0) {
                                                 return (
-                                                    <div className="py-8 text-center text-sm text-neutral-400 font-inter">
-                                                        {docSearch ? `Ничего не найдено по «${docSearch}»` : 'Нет загруженных документов'}
+                                                    <div className="px-4 py-8 text-center font-inter">
+                                                        <div className="text-sm text-neutral-500">
+                                                            {docSearch ? `Ничего не найдено по «${docSearch}»` : 'Сначала добавьте материал встречи'}
+                                                        </div>
+                                                        {!docSearch && (
+                                                            <div className="mt-1 text-xs text-neutral-400">
+                                                                Стресс-тест начинается с тезисов, memo, КП или черновика защиты.
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             }
@@ -1251,13 +1233,27 @@ function SimulationPageContent() {
                                             className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium font-inter text-neutral-900 hover:bg-neutral-50 transition-colors"
                                         >
                                             <Plus size={15} />
-                                            Загрузить новый документ
+                                            Загрузить новый материал
                                         </Link>
                                     </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
+                    {documents.length === 0 && (
+                        <div className="mt-3 max-w-lg border border-dashed border-neutral-300 bg-neutral-50 p-4">
+                            <div className="text-sm font-semibold text-neutral-900">Нет материалов для стресс-теста</div>
+                            <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                                Сначала добавьте тезисы, memo, КП или черновик защиты. PeakTalk использует материал как базу для вопросов оппонента.
+                            </p>
+                            <Link
+                                href="/upload"
+                                className="mt-3 inline-flex min-h-[40px] items-center gap-2 bg-[#171717] px-3 text-sm font-semibold text-white transition-colors hover:bg-black"
+                            >
+                                <Plus size={14} /> Добавить материал
+                            </Link>
+                        </div>
+                    )}
                 </section>
 
                 <section>
@@ -1271,7 +1267,7 @@ function SimulationPageContent() {
                                     value: 2,
                                     label: 'Мягкий',
                                     range: '1-2',
-                                    desc: 'Собеседник задаёт вопросы спокойно и оставляет пространство на разгон.',
+                                    desc: 'Оппонент задаёт вопросы спокойно и оставляет пространство на разгон.',
                                 },
                                 {
                                     value: 4,
@@ -1325,10 +1321,10 @@ function SimulationPageContent() {
                             <div className="flex items-start justify-between gap-4 flex-wrap">
                                 <div>
                                     <div className="text-sm font-semibold text-neutral-900 mb-1">
-                                        {selectedCustomPersona?.name ?? 'Кастомная персона'}
+                                        {selectedCustomPersona?.name ?? 'Кастомный оппонент'}
                                     </div>
                                     <div className="text-sm text-neutral-600">
-                                        Для кастомной персоны уровень давления задается в карточке персоны и не меняется на этом экране.
+                                        Для кастомного оппонента уровень давления задается в его карточке и не меняется на этом экране.
                                     </div>
                                 </div>
                                 <div className="text-sm font-semibold text-[#B04A08] whitespace-nowrap">
@@ -1336,7 +1332,7 @@ function SimulationPageContent() {
                                 </div>
                             </div>
                             <p className="text-xs text-neutral-500 mt-3 max-w-2xl">
-                                Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность стресс-тест сценария.
+                                Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность стресс-теста.
                             </p>
                         </div>
                     )}
@@ -1353,7 +1349,7 @@ function SimulationPageContent() {
                                 : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                         }`}
                     >
-                        {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать симуляцию'}
+                        {isStarting ? <Loader2 className="animate-spin" size={18} /> : 'Начать стресс-тест'}
                         {!isStarting && <ChevronRight size={18} />}
                     </button>
                 </div>
@@ -1364,12 +1360,12 @@ function SimulationPageContent() {
                 <div className="bg-white/95 backdrop-blur-md border border-neutral-200 p-3 flex items-center gap-3 shadow-lg">
                     <div className="flex-1 min-w-0">
                         <p className="font-inter text-xs text-neutral-400 truncate">
-                            {!selectedRoleName 
-                                ? 'Шаг 1: Выберите собеседника' 
-                                : !selectedDomain 
-                                    ? 'Шаг 2: Укажите индустрию' 
-                                    : selectedDoc === null 
-                                        ? 'Шаг 3: Выберите контекст' 
+                            {!selectedRoleName
+                                ? 'Шаг 1: Выберите оппонента'
+                                : !selectedDomain
+                                    ? 'Шаг 2: Укажите индустрию'
+                                    : selectedDoc === null
+                                        ? 'Шаг 3: Выберите материал'
                                         : <span className="text-neutral-500 font-medium">Готово: {selectedRoleName}</span>}
                         </p>
                     </div>

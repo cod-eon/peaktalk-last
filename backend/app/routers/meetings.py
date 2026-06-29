@@ -162,9 +162,9 @@ async def delete_meeting(
 # Mapping from meeting_type to suggested system persona role
 _MEETING_TYPE_TO_PERSONA: dict[str, str] = {
     "budget_defense": "investor",
-    "qbr": "client_meeting",
+    "qbr": "client",
     "pitch": "investor",
-    "client_meeting": "client_meeting",
+    "client_meeting": "client",
     "roadmap_review": "tech_lead",
     "other": "audience",
 }

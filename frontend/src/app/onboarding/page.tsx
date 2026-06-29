@@ -9,6 +9,7 @@ import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCirc
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { getUTM } from '@/lib/utm';
+import { normalizeInternalReturnPath } from '@/lib/return-path';
 
 type Segment = 'manager' | 'head' | 'founder' | 'customer_facing' | 'other';
 type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
@@ -22,14 +23,14 @@ type BeforeInstallPromptEvent = Event & {
 const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
     { id: 'manager', label: 'Тимлид / Менеджер', desc: 'Защита решений, приоритизация, апдейты руководству', icon: <Users size={22} /> },
     { id: 'head', label: 'Руководитель функции', desc: 'Бюджетные защиты, согласование инициатив, обсуждение с советом директоров', icon: <Briefcase size={22} /> },
-    { id: 'founder', label: 'Фаундер / CEO', desc: 'Инвест-спичи, партнёрские переговоры, стратегические продажи', icon: <Rocket size={22} /> },
+    { id: 'founder', label: 'Фаундер / CEO', desc: 'Инвест-питчи, партнёрские переговоры, стратегические продажи', icon: <Rocket size={22} /> },
     { id: 'customer_facing', label: 'Клиентская команда', desc: 'квартальные обзоры, эскалации, переговоры по продлению контракта', icon: <MessageSquare size={22} /> },
-    { id: 'other', label: 'Другое', desc: 'Любой другой тип рабочей коммуникации', icon: <Globe size={22} /> },
+    { id: 'other', label: 'Другое', desc: 'Другая сложная рабочая защита или встреча', icon: <Globe size={22} /> },
 ];
 
 const GOALS: { id: Goal; label: string; icon: React.ReactNode }[] = [
     { id: 'budget_defense', label: 'Защита бюджета / дорожной карты', icon: <FileText size={20} /> },
-    { id: 'pitch', label: 'Инвест-спич / продажа', icon: <Rocket size={20} /> },
+    { id: 'pitch', label: 'Инвест-питч / продажа', icon: <Rocket size={20} /> },
     { id: 'qbr', label: 'Клиентский квартальный обзор', icon: <BarChart2 size={20} /> },
     { id: 'stakeholder', label: 'Сложный разговор со стейкхолдером', icon: <Users size={20} /> },
     { id: 'other', label: 'Другое', icon: <Globe size={20} /> },
@@ -38,7 +39,8 @@ const GOALS: { id: Goal; label: string; icon: React.ReactNode }[] = [
 function OnboardingForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const returnUrl = searchParams.get('return') || '/dashboard';
+    const returnUrl = normalizeInternalReturnPath(searchParams.get('return'));
+    const isBillingContinuation = returnUrl === '/billing' || returnUrl.startsWith('/billing?');
     
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [segment, setSegment] = useState<Segment | null>(null);
@@ -133,6 +135,10 @@ function OnboardingForm() {
             if (utm.utm_source) {
                 await api.post('/me/utm', utm).catch(() => {});
             }
+            if (isBillingContinuation) {
+                router.replace(returnUrl);
+                return;
+            }
             setStep(3);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Ошибка сохранения';
@@ -164,7 +170,7 @@ function OnboardingForm() {
     const installGuides: Record<InstallDevice, { title: string; hint: string; steps: string[] }> = {
         android: {
             title: 'Установите PeakTalk на Android',
-            hint: 'Откроется как отдельное приложение и будет быстрее возвращать к симуляциям и уведомлениям.',
+            hint: 'Откроется как отдельное приложение и будет быстрее возвращать к стресс-тестам и уведомлениям.',
             steps: [
                 'Откройте меню браузера Chrome или Edge.',
                 'Нажмите «Установить приложение» или «Добавить на главный экран».',
@@ -225,8 +231,8 @@ function OnboardingForm() {
                         </h1>
                         <p className="text-neutral-400 font-inter text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                             {step === 1
-                                ? 'Это поможет симулятору подобрать релевантные персоны и стиль давления.'
-                                : 'Выберите ближайший сценарий — симулятор настроит вопросы под него.'}
+                                ? 'Это поможет PeakTalk подобрать релевантных оппонентов и стиль давления.'
+                                : 'Выберите ближайший сценарий — PeakTalk настроит вопросы под него.'}
                         </p>
                     </div>
                 )}
@@ -378,7 +384,7 @@ function OnboardingForm() {
                                 Профиль настроен
                             </h2>
                             <p className="text-neutral-400 mb-7 sm:mb-10 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-                                Симулятор готов к работе. Выберите, с чего начать.
+                                Контур подготовки настроен. Загрузите материал встречи или сразу запустите стресс-тест.
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -389,8 +395,8 @@ function OnboardingForm() {
                                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-none bg-neutral-100 text-neutral-900 flex items-center justify-center mb-4 sm:mb-5 group-hover:-translate-y-1 transition-transform">
                                         <FileText size={24} />
                                     </div>
-                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить текст</h3>
-                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Симулятор проанализирует логику, структуру и аргументацию вашего документа.</p>
+                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 transition-colors">Загрузить материал</h3>
+                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">PeakTalk сделает pressure scan: слабые места, вопросы оппонента и следующий шаг.</p>
                                 </button>
                                 
                                 <button
@@ -400,8 +406,8 @@ function OnboardingForm() {
                                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 sm:mb-5 group-hover:-translate-y-1 transition-transform">
                                         <Mic size={24} />
                                     </div>
-                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Симуляция Q&A</h3>
-                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Отвечайте на сложные и провокационные вопросы в реальном времени.</p>
+                                    <h3 className="font-inter font-semibold text-base sm:text-xl text-neutral-900 mb-2 group-hover:text-emerald-500 transition-colors">Стресс-тест встречи</h3>
+                                    <p className="font-inter text-xs sm:text-sm text-neutral-500 leading-relaxed mt-auto">Проверьте позицию на неудобных вопросах выбранного оппонента в реальном времени.</p>
                                 </button>
                             </div>
 
@@ -493,7 +499,7 @@ function OnboardingForm() {
                                 onClick={() => router.push(returnUrl)} 
                                 className="mt-6 sm:mt-8 font-mono text-[11px] sm:text-xs tracking-wider uppercase text-neutral-500 hover:text-neutral-900 transition-colors underline underline-offset-4 p-2 cursor-pointer min-h-[44px] inline-flex items-center justify-center"
                             >
-                                Перейти в дашборд
+                                {returnUrl === '/dashboard' ? 'Перейти в дашборд' : 'Продолжить подготовку'}
                             </button>
                         </motion.div>
                     )}

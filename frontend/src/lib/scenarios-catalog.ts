@@ -65,9 +65,9 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
           'Нет. Сценарий подходит Product Lead, CPO, founder или руководителю продукта, который защищает приоритеты, ресурсы и бюджет перед CEO, CFO, founder или board.',
       },
       {
-        question: 'Что будет после первых 3 вопросов?',
+        question: 'Что будет после быстрой проверки?',
         answer:
-          'Guest-режим покажет первые слабые места. Полный Defense Brief доступен после покупки Meeting Defense Pack для этой встречи.',
+          'Быстрый scan покажет первые слабые места материала. Полный Defense Brief доступен после покупки разбора для этой встречи.',
       },
     ],
   },
@@ -109,7 +109,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
           'Да. Достаточно списка статей, ожидаемого эффекта и ограничений. PeakTalk будет давить на причинно-следственную связь, а не на формат документа.',
       },
       {
-        question: 'Можно ли тренировать сокращение, а не защиту бюджета?',
+        question: 'Можно ли проверить позицию по сокращению, а не защиту бюджета?',
         answer:
           'Да. В guest-режиме можно описать, что вы сами предлагаете урезать, и проверить, выдерживает ли это объяснение вопросы руководства.',
       },
@@ -167,7 +167,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     category: 'investors',
     persona: 'Инвестор',
     difficulty: 5,
-    recommended_difficulty: 8,
+    recommended_difficulty: 5,
     situation:
       'Вы выходите на встречу с потенциальным лид-инвестором раунда. Он не собирается слушать общие слова и сразу уходит в размер рынка, траекторию роста и экономику сделки.\n\nНужно выдержать темп вопросов, не потерять нить и доказать, что рост не куплен скидками, а модель масштабируема.',
     problem:
@@ -199,7 +199,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
       {
         question: 'PeakTalk заменяет инвесторского консультанта?',
         answer:
-          'Нет. Это тренировка давления и слабых мест аргументации перед разговором, а не стратегический advisory.',
+          'Нет. Это стресс-тест давления и слабых мест аргументации перед разговором, а не стратегический advisory.',
       },
     ],
   },
@@ -299,7 +299,7 @@ const FALLBACK_SCENARIOS: ScenarioCatalogItem[] = [
     category: 'crisis',
     persona: 'Руководство',
     difficulty: 5,
-    recommended_difficulty: 8,
+    recommended_difficulty: 5,
     situation:
       'В проде произошёл критический инцидент, который ударил по пользователям и репутации команды. Руководство ждёт объяснения: что сломалось, почему это не было предотвращено и что изменится системно.\n\nЗадача не сводится к статус-апдейту. Нужно выдержать давление, взять ответственность и показать, что это не повторится через две недели.',
     problem:
@@ -399,22 +399,4 @@ export function normalizeStartDifficulty(value?: number | null): number {
       ? optionValue
       : closest
   }, pressureValues[1] ?? 5)
-}
-
-export function getScenarioOfTheDay(
-  scenarios: ScenarioCatalogItem[]
-): ScenarioCatalogItem | null {
-  if (scenarios.length === 0) {
-    return null
-  }
-
-  const dayKey = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Moscow',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date())
-
-  const seed = Array.from(dayKey).reduce((sum, char) => sum + char.charCodeAt(0), 0)
-  return scenarios[seed % scenarios.length] ?? scenarios[0]
 }

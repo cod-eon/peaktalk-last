@@ -123,7 +123,7 @@ function PersonaForm({
     >
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-mono text-[10px] font-bold text-[#73706A] tracking-[0.18em] uppercase">
-          {initial.name ? 'Редактирование' : 'Новая персона'}
+          {initial.name ? 'Редактирование оппонента' : 'Новый оппонент'}
         </h2>
         <button
           type="button"
@@ -197,7 +197,7 @@ function PersonaForm({
             ))}
           </select>
           <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
-            Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность стресс-тест сценария.
+            Этот уровень влияет на жёсткость вопросов, давление, терпимость к расплывчатым ответам и интенсивность стресс-теста.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ function PersonaForm({
             value={form.background}
             onChange={(e) => handleChange('background', e.target.value)}
             className={inputClass + ' resize-none'}
-            placeholder="Краткое описание бэкграунда персоны..."
+            placeholder="Краткое описание бэкграунда оппонента..."
           />
         </div>
 
@@ -224,7 +224,7 @@ function PersonaForm({
             value={form.communication_style}
             onChange={(e) => handleChange('communication_style', e.target.value)}
             className={inputClass + ' resize-none'}
-            placeholder="Как персона общается — тон, подход, манера..."
+            placeholder="Как оппонент общается — тон, подход, манера..."
           />
         </div>
 
@@ -350,13 +350,13 @@ function PersonaCard({
           </span>
         )}
 
-        {/* Use in simulation button */}
+        {/* Use in stress-test button */}
         <button
           onClick={() => router.push(`/simulation?persona=${persona.id}`)}
           className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8600A] bg-[#FEF3E8] border border-[#F9BD8E] px-2.5 py-1 rounded-none ml-auto hover:bg-[#FDDEC4] transition-colors cursor-pointer"
         >
           <Play size={9} />
-          Использовать в симуляции
+          Использовать в стресс-тесте
         </button>
       </div>
 
@@ -406,16 +406,16 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     >
       <Users size={36} className="opacity-30" />
       <div className="text-center">
-        <p className="text-sm font-medium text-neutral-600 mb-1">Нет персон</p>
+        <p className="text-sm font-medium text-neutral-600 mb-1">Нет своих оппонентов</p>
         <p className="text-xs text-neutral-400 mb-4">
-          Создайте собственных персонажей для симуляций
+          Создайте конкретного оппонента для проверки материала
         </p>
         <button
           onClick={onCreate}
           className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer transition-colors"
         >
           <Plus size={14} />
-          Создать персону
+          Создать оппонента
         </button>
       </div>
     </motion.div>
@@ -457,7 +457,7 @@ function PersonasContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-personas'] });
-      toast.success('Персона создана');
+      toast.success('Оппонент создан');
       setShowForm(false);
     },
     onError: (err) => {
@@ -482,7 +482,7 @@ function PersonasContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-personas'] });
-      toast.success('Персона обновлена');
+      toast.success('Оппонент обновлён');
       setEditingPersona(null);
     },
     onError: (err) => {
@@ -496,7 +496,7 @@ function PersonasContent() {
     mutationFn: (id: string) => api.delete(`/personas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-personas'] });
-      toast.success('Персона удалена');
+      toast.success('Оппонент удалён');
       setDeletingPersona(null);
     },
     onError: (err) => {
@@ -539,9 +539,9 @@ function PersonasContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Персоны</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111827] tracking-tight">Оппоненты</h1>
           <p className="text-sm font-medium text-[#73706A] mt-1 max-w-xl">
-            Управляйте ролями оппонентов для стресс-тестов: инвестор, клиент, руководитель или стейкхолдер.
+            Соберите конкретных людей, которые будут давить на материал: инвестор, клиент, руководитель или стейкхолдер.
           </p>
         </div>
         {!isFormOpen && (
@@ -550,7 +550,7 @@ function PersonasContent() {
             className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white rounded-none px-5 py-2.5 text-sm font-semibold cursor-pointer transition-colors self-start sm:self-auto"
           >
             <Plus size={14} />
-            Создать персону
+            Создать оппонента
           </button>
         )}
       </div>
@@ -607,8 +607,8 @@ function PersonasContent() {
       {/* ─── Delete confirmation ─── */}
       <ConfirmDialog
         isOpen={deletingPersona !== null}
-        title="Удалить персону?"
-        message={`Персона «${deletingPersona?.name ?? ''}» будет удалена безвозвратно. Все настройки будут потеряны.`}
+        title="Удалить оппонента?"
+        message={`Оппонент «${deletingPersona?.name ?? ''}» будет удалён безвозвратно. Все настройки давления будут потеряны.`}
         confirmLabel="Удалить"
         cancelLabel="Отмена"
         onConfirm={handleDeleteConfirm}

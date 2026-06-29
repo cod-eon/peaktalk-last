@@ -11,6 +11,7 @@ export type DocumentItem = {
   id: string;
   name: string;
   created_at: string;
+  draft_id: string | null;
 };
 
 export type UserProfile = {

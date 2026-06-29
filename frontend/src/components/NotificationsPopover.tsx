@@ -53,11 +53,16 @@ export function NotificationsPopover({ isExpanded, isMobile = false }: { isExpan
   }, [isMobile, isOpen]);
 
   // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
+  const { data: notificationsData, isLoading } = useQuery<NotificationItem[] | { items?: NotificationItem[] }>({
     queryKey: ["notifications"],
     queryFn: () => api.get("/api/notifications/"),
     refetchInterval: 60000,
   });
+  const notifications = Array.isArray(notificationsData)
+    ? notificationsData
+    : Array.isArray(notificationsData?.items)
+      ? notificationsData.items
+      : [];
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 

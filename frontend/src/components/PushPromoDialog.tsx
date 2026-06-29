@@ -103,7 +103,7 @@ export function PushPromoDialog() {
             <div className="grid grid-cols-1 gap-2 mb-6">
               <div className="border border-neutral-200 bg-neutral-50 px-3 py-2.5 rounded-none">
                 <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-1">Что придет</div>
-                <div className="text-[13px] text-neutral-800">Готовность симуляции, анализа и статусы важных действий</div>
+                <div className="text-[13px] text-neutral-800">Готовность стресс-теста, разбора и статусы важных действий</div>
               </div>
               <div className="border border-neutral-200 bg-white px-3 py-2.5 rounded-none">
                 <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-1">Куда ведет</div>

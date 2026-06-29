@@ -12,7 +12,8 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { getScenario, startFromScenario } from '@/lib/scenarios-api'
+import { getScenario } from '@/lib/scenarios-api'
+import { getCaseSituationIdForScenario } from '@/lib/case-context'
 import { createClient } from '@/lib/supabase/client'
 import {
   START_PRESSURE_OPTIONS,
@@ -259,9 +260,9 @@ export default function ScenarioDetailPage() {
         return;
       }
 
-      trackStart('authenticated')
-      const started = await startFromScenario(scenario.id, difficulty, token);
-      router.push(`/simulation/${started.id}`);
+      trackStart('authenticated_upload')
+      const caseId = getCaseSituationIdForScenario(scenario.category, scenario.slug)
+      router.push(`/upload?case=${encodeURIComponent(caseId)}`)
     } catch {
       localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
       router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);
@@ -459,7 +460,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             href="/simulation/guest"
             className="inline-flex min-h-[42px] items-center justify-center border border-neutral-950 bg-neutral-950 px-3 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] sm:min-h-[44px] sm:px-5"
           >
-            3 вопроса
+            Проверить материал
           </Link>
         </div>
       </header>
@@ -544,10 +545,10 @@ function StartBlock({
   return (
     <div className="border border-neutral-950 bg-white p-5 sm:p-7">
       <div className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#B74707]">
-        Guest pressure test
+        Material pressure scan
       </div>
       <h3 className="mb-4 font-display text-[24px] font-black leading-tight text-neutral-950">
-        Проверить свой материал в бесплатном режиме
+        Проверить материал бесплатно
       </h3>
 
       <p className="mb-6 font-inter text-[15px] leading-relaxed text-neutral-600">
@@ -615,7 +616,7 @@ function StartBlock({
         disabled={isStarting}
         className="flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] font-inter text-[15px] font-bold text-white transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] disabled:opacity-50"
       >
-        {isStarting ? 'Запускаем...' : 'Запустить сценарий'}
+        {isStarting ? 'Готовим scan...' : 'Проверить материал'}
         {isStarting ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
       </button>
 

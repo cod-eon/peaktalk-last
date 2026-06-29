@@ -4,6 +4,17 @@ export type DefenseBriefArtifact = {
   anchor_phrases?: string[] | null;
   danger_zones?: { topic?: string | null; risk?: string | null; suggested_response?: string | null }[] | null;
   key_numbers?: string[] | null;
+  evidence_gaps?: string[] | null;
+  pressure_questions?: string[] | null;
+  next_moves?: string[] | null;
+};
+
+export type AnalysisDefenseBriefArtifact = {
+  title?: string | null;
+  evidence_gaps?: string[] | null;
+  pressure_questions?: string[] | null;
+  next_moves?: string[] | null;
+  improved_text?: string | null;
 };
 
 const STRENGTH_LABELS: Record<string, string> = {
@@ -27,7 +38,7 @@ export function formatDefenseBriefMarkdown(artifact: DefenseBriefArtifact): stri
   const lines: string[] = [
     '# Defense Brief',
     '',
-    'Сформирован на базе вашей симуляции PeakTalk.',
+    'Сформирован на базе стресс-теста вашего материала в PeakTalk.',
   ];
 
   const openingMove = cleanText(artifact.opening_move);
@@ -35,6 +46,10 @@ export function formatDefenseBriefMarkdown(artifact: DefenseBriefArtifact): stri
     pushSection(lines, 'Рекомендуемый старт');
     lines.push(openingMove);
   }
+
+  pushListSection(lines, 'Дыры в позиции', artifact.evidence_gaps);
+  pushListSection(lines, 'Вопросы, которые стоит ждать', artifact.pressure_questions);
+  pushListSection(lines, 'Что поправить до встречи', artifact.next_moves);
 
   const topArguments = (artifact.top_arguments ?? []).filter((arg) => cleanText(arg.text));
   if (topArguments.length > 0) {
@@ -88,6 +103,39 @@ export function formatDefenseBriefMarkdown(artifact: DefenseBriefArtifact): stri
     keyNumbers.forEach((number) => {
       lines.push(`- ${number}`);
     });
+  }
+
+  return `${lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()}\n`;
+}
+
+function pushListSection(lines: string[], title: string, items: string[] | null | undefined): void {
+  const cleaned = (items ?? []).map(cleanText).filter(Boolean);
+  if (cleaned.length === 0) return;
+
+  pushSection(lines, title);
+  cleaned.forEach((item) => {
+    lines.push(`- ${item}`);
+  });
+}
+
+export function formatAnalysisDefenseBriefMarkdown(artifact: AnalysisDefenseBriefArtifact): string {
+  const title = cleanText(artifact.title);
+  const improvedText = cleanText(artifact.improved_text);
+  const lines: string[] = [
+    '# Defense Brief',
+    '',
+    title ? `Материал: ${title}` : 'Материал встречи',
+    '',
+    'Сформирован после pressure scan материала в PeakTalk.',
+  ];
+
+  pushListSection(lines, 'Дыры в позиции', artifact.evidence_gaps);
+  pushListSection(lines, 'Вопросы, которые стоит ждать', artifact.pressure_questions);
+  pushListSection(lines, 'Что поправить до встречи', artifact.next_moves);
+
+  if (improvedText) {
+    pushSection(lines, 'Усиленная версия материала');
+    lines.push(improvedText);
   }
 
   return `${lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()}\n`;

@@ -24,6 +24,7 @@ class PersonaConfig(BaseModel):
     scenario_id: str | None = None
     scenario_slug: str | None = None
     scenario_title: str | None = None
+    case_context: dict[str, Any] | None = None
 
 
 class SystemPersonaSelection(BaseModel):
@@ -42,20 +43,22 @@ class SimulationStartRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_start_source(self) -> "SimulationStartRequest":
+        if (self.document_id is None) == (self.draft_id is None):
+            raise ValueError("Для стресс-теста нужно передать ровно один материал: document_id или draft_id.")
         if self.source_type == "system":
             if self.persona_config is None:
-                raise ValueError("Для системной симуляции нужно передать persona_config.role.")
+                raise ValueError("Для системного стресс-теста нужно передать persona_config.role.")
             if self.persona_id is not None:
-                raise ValueError("persona_id нельзя передавать для системной симуляции.")
+                raise ValueError("persona_id нельзя передавать для системного стресс-теста.")
             if self.difficulty is None:
-                raise ValueError("Для системной симуляции нужно передать difficulty.")
+                raise ValueError("Для системного стресс-теста нужно передать difficulty.")
         if self.source_type == "custom":
             if self.persona_id is None:
-                raise ValueError("Для кастомной симуляции нужно передать persona_id.")
+                raise ValueError("Для кастомного стресс-теста нужно передать persona_id.")
             if self.persona_config is not None:
-                raise ValueError("persona_config нельзя передавать для кастомной симуляции.")
+                raise ValueError("persona_config нельзя передавать для кастомного стресс-теста.")
             if self.difficulty is not None:
-                raise ValueError("difficulty нельзя передавать для кастомной симуляции.")
+                raise ValueError("difficulty нельзя передавать для кастомного стресс-теста.")
         return self
 
 
@@ -149,6 +152,9 @@ class PrepCardContent(BaseModel):
     anchor_phrases: list[str] = []
     danger_zones: list[DangerZone] = []
     key_numbers: list[str] = []
+    evidence_gaps: list[str] = []
+    pressure_questions: list[str] = []
+    next_moves: list[str] = []
     opening_move: str = ""
 
 
@@ -185,7 +191,7 @@ class SendMessageResponse(BaseModel):
 
 class StartFromGuestRequest(BaseModel):
     guest_session_id: str = Field(min_length=1, max_length=128)
-    difficulty: int = Field(default=3, ge=1, le=10)
+    difficulty: int = Field(default=3, ge=1, le=5)
 
 class StartFromGuestResponse(BaseModel):
     id: uuid.UUID

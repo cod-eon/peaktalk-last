@@ -6,8 +6,67 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
+from app.routers import billing as billing_router
 from app.models.subscription import Payment, PaymentStatus, PlanType, Subscription, SubscriptionStatus
 from app.models.user import User
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "return_url",
+    [
+        "https://evil.example/billing/success",
+        "http://localhost:3000/billing/success?return=https%3A%2F%2Fevil.example%2Fsteal",
+        "http://localhost:3000/auth/callback",
+    ],
+)
+async def test_create_payment_rejects_unsafe_return_url(
+    return_url: str,
+    client: AsyncClient,
+    monkeypatch,
+) -> None:
+    create_payment_mock = AsyncMock(return_value={
+        "payment_id": "yk_test_payment",
+        "confirmation_url": "https://yookassa.test/confirm",
+    })
+    monkeypatch.setattr(billing_router.settings, "payments_enabled", True)
+    monkeypatch.setattr(billing_router, "create_payment", create_payment_mock)
+
+    response = await client.post("/billing/payment", json={
+        "plan": "per_session",
+        "return_url": return_url,
+    })
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "invalid_return_url"
+    create_payment_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_payment_accepts_configured_billing_success_return_url(
+    client: AsyncClient,
+    monkeypatch,
+) -> None:
+    create_payment_mock = AsyncMock(return_value={
+        "payment_id": "yk_test_payment",
+        "confirmation_url": "https://yookassa.test/confirm",
+    })
+    monkeypatch.setattr(billing_router.settings, "payments_enabled", True)
+    monkeypatch.setattr(billing_router, "create_payment", create_payment_mock)
+
+    return_url = "http://localhost:3000/billing/success?return=%2Fsimulation%2Ffrom-guest"
+    response = await client.post("/billing/payment", json={
+        "plan": "per_session",
+        "return_url": return_url,
+    })
+
+    assert response.status_code == 201
+    assert response.json() == {
+        "payment_url": "https://yookassa.test/confirm",
+        "payment_id": "yk_test_payment",
+    }
+    create_payment_mock.assert_awaited_once()
+    assert create_payment_mock.await_args.kwargs["return_url"] == return_url
 
 
 @pytest.mark.asyncio

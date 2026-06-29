@@ -1,8 +1,8 @@
 """Guest simulation endpoints — no authentication required.
 
-Allows unauthenticated users to run a 3-question stress-test session.
-After 3 turns the response carries a paywall payload directing the user
-to either pay-per-session (299 ₽) or register for free.
+Allows unauthenticated users to run a short pressure scan against a meeting case.
+After the free guest turns the response carries a paywall payload directing the user
+to either buy a Defense Brief (299 ₽) or register to preserve the meeting material.
 """
 import logging
 import uuid
@@ -31,7 +31,7 @@ GUEST_MAX_TURNS = 3
 GUEST_SESSION_TTL_HOURS = 24
 
 ALLOWED_PERSONAS = frozenset(
-    ["cfo", "investor", "board_member", "client", "hr", "tech_lead", "ceo", "journalist"]
+    ["cfo", "investor", "board_member", "client", "hr", "tech_lead", "ceo"]
 )
 
 PERSONA_ALIASES = {
@@ -43,16 +43,19 @@ PERSONA_ALIASES = {
     "финансовый директор": "cfo",
     "инвестор": "investor",
     "техлид": "tech_lead",
+    "journalist": "board_member",
+    "журналист": "board_member",
+    "пресс-конференция": "board_member",
 }
 
 _PAYWALL_RESPONSE = {
-    "message": "Бесплатный стресс-тест завершен",
+    "message": "Быстрый pressure scan по материалу завершён",
     "cta_primary": {
-        "text": "Собрать Meeting Defense Pack — 299 ₽",
+        "text": "Собрать Defense Brief — 299 ₽",
         "action": "pay_per_session",
     },
     "cta_secondary": {
-        "text": "Сохранить демо и вернуться позже",
+        "text": "Сохранить материал встречи и вернуться позже",
         "action": "register",
     },
 }

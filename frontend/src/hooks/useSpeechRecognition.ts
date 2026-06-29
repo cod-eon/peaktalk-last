@@ -111,7 +111,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch (e) {}
+        } catch {}
       }
     };
   }, [onResult]);
@@ -156,7 +156,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
           osc.stop(ctx.currentTime + 0.2);
         }
       }
-    } catch (e) {
+    } catch {
       // AudioContext might be blocked or unsupported, fail completely silently
     }
   }, []);
@@ -167,7 +167,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
     try {
       recognitionRef.current.start();
       triggerFeedback('start');
-    } catch (err) {
+    } catch {
       console.log('Recognition already started');
     }
   }, [triggerFeedback]);
@@ -177,7 +177,7 @@ export const useSpeechRecognition = (onResult?: (text: string, isFinal: boolean)
     try {
       recognitionRef.current.stop();
       triggerFeedback('stop');
-    } catch (err) {}
+    } catch {}
   }, [triggerFeedback]);
 
   return {

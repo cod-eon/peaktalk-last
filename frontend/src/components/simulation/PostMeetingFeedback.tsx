@@ -78,7 +78,7 @@ export function PostMeetingFeedback({ session_id, onComplete }: PostMeetingFeedb
             Спасибо за обратную связь
           </h3>
           <p className="text-sm text-neutral-500 max-w-sm">
-            Это помогает нам улучшить рекомендации и делать симуляции точнее.
+            Это помогает нам улучшить рекомендации и делать стресс-тесты точнее.
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function PostMeetingFeedback({ session_id, onComplete }: PostMeetingFeedb
           Как прошла настоящая встреча?
         </h2>
         <p className="text-neutral-400 text-sm">
-          Расскажите, помогла ли симуляция подготовиться
+          Расскажите, помог ли стресс-тест подготовиться
         </p>
       </div>
 

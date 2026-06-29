@@ -1,6 +1,6 @@
 # PeakTalk implementation log
 
-Last updated: 2026-06-16
+Last updated: 2026-06-18
 
 Purpose: keep a running implementation record for applying the deep research report without losing P0/P1/P2 discipline.
 
@@ -16,7 +16,7 @@ Primary plan: [peaktalk-execution-map-2026-06-15.md](./peaktalk-execution-map-20
 
 ## Current state
 
-The execution map exists and core P0 implementation is underway. YooKassa provider webhook delivery, backend crediting, authenticated billing-success rendering, and authenticated upload/storage are now verified; the remaining P0 work is final checkout/guest-continuation browser coverage and auth architecture replacement planning, not more speculative product work.
+The execution map exists and core P0 implementation is underway. YooKassa provider webhook delivery, backend crediting, authenticated checkout redirect, authenticated billing-success rendering, authenticated upload/storage, and production TLS recovery are now verified; the remaining P0 work is guest-continuation browser coverage and auth architecture replacement planning, not more speculative product work.
 
 Completed P0 slice:
 
@@ -35,6 +35,9 @@ Completed P0 slice:
 - YooKassa HTTP notifications are configured and verified against production with a real `payment.succeeded` event: the backend returned `200`, created/updated the payment as `succeeded`, and incremented `session_credits` for the target user.
 - A login-capable QA account now exists for the paid YooKassa test user, and production `/api/me`, `/api/billing/status`, `/api/documents/upload`, `/api/documents`, `/billing/success`, `/billing`, and `/upload` were checked under that authenticated session.
 - Visible Google OAuth entrypoints were removed locally from login/register; email/password remains as the temporary bridge until Logto replaces Supabase Auth.
+- Authenticated checkout from the actual billing UI now reaches YooKassa/ЮMoney without another payment: `/billing?plan=per_session&return=/simulation/from-guest` loaded under the QA session, the 299 RUB CTA called `/api/billing/payment` with `200`, backend created YooKassa payment `31c648c7-000f-5001-8000-15f5d90eb91d`, and the browser navigated to `yoomoney.ru`.
+- Production TLS was recovered after the certificate expired on `2026-06-18 07:21:25 GMT`; the active certificate now expires on `2026-09-16 17:12:15 GMT`.
+- Certbot renewal failure cause is identified and mitigated: renewal used `standalone`, but Docker nginx occupied port 80. Renewal hooks now stop/start only the nginx container around certbot renewal.
 
 Completed P1 slice:
 
@@ -89,6 +92,9 @@ Verification evidence from the implementation session:
 - Authenticated production API QA on `https://peaktalk.ru/api` returned `/me=200`, `/billing/status=200`, `/documents/upload=201`, `/documents=200`; the uploaded QA txt document parsed synchronously and stored a Supabase Storage path.
 - Headless Chrome/CDP browser QA with Supabase SSR cookies confirmed `/billing/success?return=/simulation/from-guest`, `/billing`, and `/upload` do not redirect to login. Billing success showed `Подписка подключена`, `Разовая сессия активирован`, and `Продолжить подготовку`; `/upload` showed `Проверить материал` and trust copy.
 - Final production health after QA returned `/health=200`, `session_credits=1`, `documents_uploaded=1`, QA document visible in `/api/documents`, containers healthy/running, and `recent_error_lines=0`.
+- Production TLS check after renewal: `openssl` showed `notAfter=Sep 16 17:12:15 2026 GMT`; `curl -fsS https://peaktalk.ru/health` returned `{"status":"ok","service":"peaktalk-api"}` without `-k`.
+- Certbot renewal hooks were manually verified: pre-hook stopped `peaktalk-nginx-1`, post-hook started it again, and final checks showed nginx healthy, `/health` OK, and fresh log error scan `0`.
+- Authenticated browser checkout redirect QA reached `yoomoney.ru` from the real billing CTA. The command exited non-zero only while closing the CDP target after navigation; the product assertions already printed success: billing loaded, payment button clicked, `/api/billing/payment=200`, external payment host reached, page runtime errors `0`, failed non-canceled requests `0`.
 
 ## Completed P0 that must not regress
 
@@ -136,19 +142,18 @@ Verification:
 
 ## Open P0 backlog
 
-1. Final browser coverage for the actual checkout button path: authenticated billing card -> YooKassa redirect. Do not complete another real charge unless explicitly needed; provider webhook/crediting is already verified.
-2. Guest continuation from a live guest token after payment remains unverified in browser because it consumes a paid `session_credit`; backend idempotency/credit tests exist, and billing success return is browser-verified.
-3. Auth/legal compliance gate: visible Google OAuth removal is deployed; direct Logto replacement of Supabase-hosted Auth remains the next auth architecture track before broader launch.
-4. Logto implementation planning after final P0 payment/guest browser coverage. Existing users can be reset if needed, but billing/documents/simulations still need a clean local UUID user model with external auth subject mapping.
+1. Guest continuation from a live guest token after payment remains unverified in browser because it consumes a paid `session_credit`; backend idempotency/credit tests exist, billing success return is browser-verified, and checkout redirect is now browser-verified.
+2. Auth/legal compliance gate: visible Google OAuth removal is deployed; direct Logto replacement of Supabase-hosted Auth remains the next auth architecture track before broader launch.
+3. Logto implementation planning after final P0 payment/guest browser coverage. Existing users can be reset if needed, but billing/documents/simulations still need a clean local UUID user model with external auth subject mapping.
+4. Infra follow-up: the certbot hook mitigation is enough to avoid the immediate renewal failure, but a cleaner later ops task is moving renewal from `standalone` to webroot against the Docker `certbot_webroot` volume so certificate renewals do not require nginx downtime.
 
 ## Next recommended work
 
-1. Optional final checkout-button QA: from authenticated `/billing?plan=per_session` click through to YooKassa redirect and cancel/stop before payment, unless a second real charge is intentionally approved.
-2. Decide whether to spend the QA `session_credit` on a live guest-continuation browser test or keep it for manual checking.
-3. Continue auth/legal compliance gate after P0 payment/upload checks: provision Logto on the separate Timeweb Cloud-80 RU server according to [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Existing user preservation is explicitly not required, but the local UUID user model must not be tied to Logto `sub`.
-4. Before Logto code changes, re-read current official Logto docs and choose the cleanest self-hosted RU deployment/integration path for PeakTalk.
-5. Decide later whether Supabase Storage/S3 should remain in the upload pipeline after document lifecycle and retention/privacy semantics are audited.
-6. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
+1. Decide whether to spend the QA `session_credit` on a live guest-continuation browser test or keep it for manual checking.
+2. Continue auth/legal compliance gate after P0 payment/upload checks: provision Logto on the separate Timeweb Cloud-80 RU server according to [logto-migration-gate-2026-06-16.md](./logto-migration-gate-2026-06-16.md). Existing user preservation is explicitly not required, but the local UUID user model must not be tied to Logto `sub`.
+3. Before Logto code changes, re-read current official Logto docs and choose the cleanest self-hosted RU deployment/integration path for PeakTalk.
+4. Decide later whether Supabase Storage/S3 should remain in the upload pipeline after document lifecycle and retention/privacy semantics are audited.
+5. Defer team mode, aggregated analytics, custom scenarios, integrations, and enterprise admin until paid signals exist.
 
 ## P1 parking lot
 
@@ -1211,3 +1216,135 @@ Residual risk:
 - The exact browser path `billing card -> YooKassa redirect -> return` was not re-run end-to-end to avoid charging another 299 RUB. Provider webhook/crediting is already verified by the real payment; billing success rendering is browser-verified with the credited QA session.
 - Live guest-continuation browser QA would consume the paid `session_credit`. Keep it as a deliberate next action rather than silently spending it.
 - The current Supabase re-registration wipe logic is risky for auth migrations. Do not copy this model into Logto; move to local UUID users plus explicit external auth subject mapping.
+
+### 2026-06-17 - CodeGraph agent workflow rule
+
+Scope:
+
+- Capture the user's decision to use the initialized CodeGraph index as the default code-intelligence layer for PeakTalk work.
+- Keep this as an agent workflow/documentation change only; no product, API, auth, billing, simulation, or deploy behavior changed.
+
+Files changed:
+
+- `AGENTS.md`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Added a dedicated `CodeGraph` section to `AGENTS.md`.
+- Required agents to use CodeGraph first, when `.codegraph/` exists, before `rg`, manual file reads, or code edits for code understanding, symbol lookup, flow mapping, and blast-radius checks.
+- Documented the preferred commands: `codegraph explore`, `codegraph node`, and `codegraph callers`.
+- Clarified that CodeGraph is not a replacement for `lint`, `build`, `pytest`, browser/Playwright checks, or deploy gates.
+
+Verification:
+
+- Docs-only change. No application tests were run.
+- `git diff --check` exited 0.
+
+### 2026-06-18 - P0 TLS recovery and authenticated checkout redirect QA
+
+Scope:
+
+- Recover production HTTPS after browser QA exposed an expired Let's Encrypt certificate.
+- Verify the real authenticated billing CTA reaches YooKassa/ЮMoney without completing another payment.
+- Add a minimal renewal mitigation so certbot no longer fails only because Docker nginx occupies port 80.
+- Keep application code, database schema, auth, billing crediting, and deploy pipeline unchanged.
+
+Files changed:
+
+- `docs/peaktalk-implementation-log.md`
+
+Production infra changed:
+
+- Renewed the active `/etc/letsencrypt/live/peaktalk.ru` certificate for `peaktalk.ru` and `www.peaktalk.ru`.
+- Added renewal hooks on the VDS:
+  - `/etc/letsencrypt/renewal-hooks/pre/10-stop-peaktalk-nginx.sh`;
+  - `/etc/letsencrypt/renewal-hooks/post/90-start-peaktalk-nginx.sh`.
+- The hooks stop/start only the `nginx` Docker service around certbot renewal; app, worker, beat, Postgres, and Redis are not stopped.
+
+What happened:
+
+- Authenticated Chrome/CDP checkout QA initially failed before reaching PeakTalk because Chrome showed `NET::ERR_CERT_DATE_INVALID`.
+- `openssl` confirmed the served certificate expired at `2026-06-18 07:21:25 GMT`.
+- VDS certbot logs confirmed repeated auto-renew failures from `2026-06-15` through `2026-06-18`: `Could not bind TCP port 80 because it is already in use`.
+- Stopped only `peaktalk-nginx-1`, ran `certbot renew --cert-name peaktalk.ru --force-renewal --non-interactive`, and started nginx again.
+- Renewed certificate now has `notBefore=Jun 18 17:12:16 2026 GMT` and `notAfter=Sep 16 17:12:15 2026 GMT`.
+- Re-ran authenticated checkout redirect QA after TLS recovery:
+  - `/billing?plan=per_session&return=/simulation/from-guest` loaded under the QA session;
+  - clicked `Начать сессию за 299 ₽`;
+  - `/api/billing/payment` returned `200`;
+  - backend log created YooKassa payment `31c648c7-000f-5001-8000-15f5d90eb91d`;
+  - browser navigated to `yoomoney.ru`;
+  - payment was not completed.
+
+Verification:
+
+- `openssl s_client -servername peaktalk.ru -connect peaktalk.ru:443 | openssl x509 -noout -dates` showed the new certificate expiry `Sep 16 17:12:15 2026 GMT`.
+- `curl -fsS https://peaktalk.ru/health` returned `{"status":"ok","service":"peaktalk-api"}` without ignoring TLS.
+- `docker compose ps` showed `api`, `nginx`, `postgres`, and `redis` healthy; `frontend`, `worker`, and `beat` running.
+- Fresh production log scan over `api`, `frontend`, `worker`, `beat`, and `nginx` returned `0` error/traceback lines.
+- Manual hook test:
+  - pre-hook stopped nginx;
+  - post-hook started nginx;
+  - final nginx state became healthy again;
+  - external `/health` remained OK after recovery.
+- Browser/CDP checkout assertions printed success before CDP target cleanup:
+  - billing loaded;
+  - payment button clicked;
+  - `/api/billing/payment=200`;
+  - final external host `yoomoney.ru`;
+  - runtime errors `0`;
+  - failed non-canceled requests `0`.
+
+Residual risk:
+
+- The local `payments` table still records the YooKassa payment on successful webhook, not on invoice creation. That matches current code, and the real `payment.succeeded` webhook path is already verified, but pending-payment observability is weak.
+- `certbot renew --dry-run` was not completed end-to-end because this old certbot version inserted a random non-interactive delay of about 409 seconds and does not expose the newer no-random-sleep flag in help. Mitigation confidence comes from: actual successful renewal with nginx stopped, repeated log evidence of the exact previous failure, and manual verification that the new hooks stop/start nginx.
+- Cleaner later ops task: move certbot from `standalone` to `webroot` using the Docker `certbot_webroot` volume so renewal can happen without nginx downtime.
+- Live guest continuation from a real guest token is still deliberately unspent; using it would consume the QA `session_credit=1`.
+
+### 2026-06-18 - Logto migration gate re-check
+
+Scope:
+
+- Re-check current official Logto docs after P0 payment/upload/checkout/TLS gates.
+- Update the Logto gate before starting auth code changes.
+- Keep production auth unchanged in this step.
+
+Files changed:
+
+- `docs/logto-migration-gate-2026-06-16.md`
+- `docs/peaktalk-implementation-log.md`
+
+What changed:
+
+- Updated the Logto migration gate with a `2026-06-18 docs re-check` section.
+- Confirmed the earlier architecture direction:
+  - do not use Logto's quick Docker Compose command for production;
+  - deploy Logto with separate Postgres, persistent volumes, backups, pinned image version, and explicit env;
+  - choose `auth.peaktalk.ru` before cutover because `ENDPOINT` affects the OIDC issuer;
+  - use `@logto/next` for Next.js App Router;
+  - protect FastAPI as a Logto API resource and validate access tokens by JWKS, issuer, audience, expiration, and scopes;
+  - start email with SMTP only after seed deliverability tests;
+  - keep Yandex ID as a second-phase OAuth 2.0 connector spike.
+
+Verification:
+
+- Official docs checked through Context7 `/logto-io/docs`.
+- Current PeakTalk auth blast radius inspected through CodeGraph:
+  - frontend middleware and Supabase session refresh;
+  - login/register/callback forms;
+  - `frontend/src/lib/api.ts` token attachment;
+  - backend `get_current_user`;
+  - auth re-registration tests and Supabase webhook dependencies.
+- `git diff --check -- docs/peaktalk-implementation-log.md` exited `0` after the previous log update.
+
+Next:
+
+- Do not start Logto code cutover until the auth host and DNS route are concrete.
+- Required from infra side: SSH access to the Timeweb Cloud-80 auth server and DNS ability for `auth.peaktalk.ru` and ideally `auth-admin.peaktalk.ru`.
+- First implementation changeset should be a narrow data/auth foundation:
+  - add local auth mapping fields or table;
+  - remove the dangerous external-account-created-at wipe pattern;
+  - add JWT validation tests;
+  - keep Supabase Storage out of scope.

@@ -9,6 +9,7 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CheckCircle2 } from "lucide-react";
 import { translateAuthError } from "@/lib/authErrors";
 import { getUTM } from "@/lib/utm";
+import { normalizeOptionalInternalReturnPath } from "@/lib/return-path";
 
 function RegisterForm() {
   const [name, setName] = useState("");
@@ -21,13 +22,13 @@ function RegisterForm() {
   const captchaRef = useRef<HCaptcha>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const returnUrl = normalizeOptionalInternalReturnPath(searchParams.get('return'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const returnUrl = searchParams.get('return');
     const nextUrl = returnUrl ? `/onboarding?return=${encodeURIComponent(returnUrl)}` : '/onboarding';
 
     const supabase = createClient();
@@ -116,7 +117,7 @@ router.push(nextUrl);
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
-            placeholder="Илон Маск"
+            placeholder="Анна Петрова"
           />
         </div>
 
@@ -130,7 +131,7 @@ router.push(nextUrl);
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
-            placeholder="elon@spacex.com"
+            placeholder="anna@company.ru"
           />
         </div>
 
@@ -178,7 +179,7 @@ router.push(nextUrl);
 
       <div className="mt-8 text-center text-sm text-neutral-500 border-t border-neutral-200 pt-8">
         Уже есть аккаунт?{" "}
-        <Link href={`/login${searchParams.get('return') ? `?return=${encodeURIComponent(searchParams.get('return')!)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
+        <Link href={`/login${returnUrl ? `?return=${encodeURIComponent(returnUrl)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
           Войти
         </Link>
       </div>

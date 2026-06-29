@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { translateAuthError } from "@/lib/authErrors";
+import { normalizeInternalReturnPath, normalizeOptionalInternalReturnPath } from "@/lib/return-path";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -18,11 +19,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const getReturnUrl = () => {
-    const returnUrl = searchParams.get('return');
-
-    return returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/dashboard';
-  };
+  const normalizedReturnUrl = normalizeOptionalInternalReturnPath(searchParams.get('return'));
+  const getReturnUrl = () => normalizeInternalReturnPath(searchParams.get('return'));
 
   const getOnboardingUrl = (returnUrl: string) => {
     if (returnUrl.startsWith('/onboarding')) {
@@ -159,7 +157,7 @@ function LoginForm() {
       </form>
       <div className="mt-8 text-center text-sm text-neutral-500">
         Нет аккаунта?{" "}
-        <Link href={`/register${searchParams.get('return') ? `?return=${encodeURIComponent(searchParams.get('return')!)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
+        <Link href={`/register${normalizedReturnUrl ? `?return=${encodeURIComponent(normalizedReturnUrl)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
           Создать бесплатно
         </Link>
       </div>

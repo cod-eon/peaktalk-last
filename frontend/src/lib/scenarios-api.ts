@@ -77,7 +77,7 @@ export async function startFromScenario(
     body: JSON.stringify({ scenario_id: scenarioId, difficulty }),
   })
   if (!res.ok) {
-    let msg = 'Не удалось запустить симуляцию'
+    let msg = 'Не удалось запустить стресс-тест'
     let code: string | undefined
     try {
       const data = await res.json()

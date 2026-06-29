@@ -205,6 +205,7 @@ export default function GuestSimulationPage() {
   const [hasScenarioParam, setHasScenarioParam] = useState(false);
 
   const answerRef = useRef<HTMLTextAreaElement>(null);
+  const guestPageViewedRef = useRef(false);
   const currentPersona = PERSONAS.find((persona) => persona.id === selectedPersona) ?? PERSONAS[0];
   const isReady = text.trim().length >= 20;
   const currentQuestion = messages.filter((message) => message.role === 'assistant').at(-1)?.content ?? 'Анализ вводных данных...';
@@ -217,6 +218,9 @@ export default function GuestSimulationPage() {
   const funnelSource = hasScenarioParam ? 'scenario' : 'direct';
 
   useEffect(() => {
+    if (guestPageViewedRef.current) return;
+    guestPageViewedRef.current = true;
+
     const params = new URLSearchParams(window.location.search);
     const isFromScenario = params.get('from_scenario') === 'true';
     let trackedPersona = 'cfo';
@@ -343,7 +347,7 @@ export default function GuestSimulationPage() {
           difficulty: selectedDifficulty,
           turn: response.turn,
           questions_seen: MAX_GUEST_TURNS,
-          plan_context: 'meeting_defense_pack',
+          plan_context: 'defense_brief',
         });
         setStep('paywall');
         return;
@@ -371,6 +375,18 @@ export default function GuestSimulationPage() {
     }
   }, [answer, funnelSource, guestSessionId, isLoading, selectedDifficulty, selectedPersona, turn]);
 
+  const trackGuestPaywallCta = useCallback((destination: 'billing' | 'register' | 'login') => {
+    trackEvent('guest_paywall_cta_clicked', {
+      source: funnelSource,
+      persona: selectedPersona,
+      difficulty: selectedDifficulty,
+      destination,
+      turn: Math.min(turn, MAX_GUEST_TURNS),
+      questions_seen: MAX_GUEST_TURNS,
+      plan_context: 'defense_brief',
+    });
+  }, [funnelSource, selectedDifficulty, selectedPersona, turn]);
+
   useEffect(() => {
     if (step !== 'chat' || timeLeft > 0 || isLoading) return;
     void handleSendAnswer(answer.trim() || '[Истекло время на ответ]');
@@ -394,21 +410,21 @@ export default function GuestSimulationPage() {
               style={safariMotionStyle}
             >
               <div className="mb-4">
-                <Label className="mb-2 text-[#E8600A]">бесплатная проверка</Label>
+                <Label className="mb-2 text-[#E8600A]">pressure scan материала</Label>
                 <h1 className="font-display text-[32px] font-black leading-[1.05] text-neutral-950 sm:text-[42px]">
-                  Настройка симуляции
+                  Проверьте материал перед встречей
                 </h1>
                 <p className="mt-3 max-w-2xl font-inter text-[16px] leading-relaxed text-neutral-600">
-                  Подготовьтесь к сложной встрече. Задайте контекст, выберите профиль оппонента и уровень жесткости.
+                  Сначала вставьте тезисы, memo, КП или план разговора. PeakTalk найдет слабые места позиции, затем задаст первые вопросы будущего оппонента.
                 </p>
               </div>
 
               <div className="border border-neutral-200 bg-white">
-                <div className="p-4 sm:p-6">
+                <div className="flex flex-col p-4 sm:p-6">
                   {/* Persona Selection */}
                   {!hasScenarioParam && (
-                    <div className="mb-6">
-                      <Label className="mb-3">оппонент</Label>
+                    <div className="order-2 mb-6">
+                      <Label className="mb-3">оппонент на встрече</Label>
                       <div className="grid gap-3 sm:grid-cols-3">
                         {PERSONAS.map((persona) => {
                           const isSelected = selectedPersona === persona.id;
@@ -441,11 +457,11 @@ export default function GuestSimulationPage() {
                   )}
 
                   {/* Context Input */}
-                  <div className={hasScenarioParam ? '' : 'mb-6'}>
+                  <div className={hasScenarioParam ? 'order-1' : 'order-1 mb-6'}>
                     {!hasScenarioParam ? (
                       <>
                         <div className="mb-3 flex items-center justify-between">
-                          <Label>контекст встречи</Label>
+                          <Label>материал встречи</Label>
                           <span className="font-mono text-[10px] text-neutral-300">{text.length}/{MAX_TEXT_LENGTH}</span>
                         </div>
                         <div>
@@ -453,18 +469,25 @@ export default function GuestSimulationPage() {
                             id="meeting-material"
                             value={text}
                             onChange={(event) => setText(event.target.value.slice(0, MAX_TEXT_LENGTH))}
-                            placeholder="Опишите ситуацию. Например: тезисы защиты бюджета, спорный момент с клиентом, запрос инвестиций..."
-                            className="h-[120px] w-full resize-none border border-neutral-200 bg-[#faf8f4] p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 transition-colors"
+                            placeholder="Вставьте тезисы защиты, КП, memo, письмо клиенту или план разговора. Чем конкретнее материал, тем точнее pressure scan."
+                            className="h-[150px] w-full resize-none border border-neutral-200 bg-[#faf8f4] p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 transition-colors"
                           />
+                          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                            {['Дыры в доказательствах', 'Вопросы оппонента', 'Defense Brief'].map((item) => (
+                              <div key={item} className="border border-neutral-200 bg-white px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+                                {item}
+                              </div>
+                            ))}
+                          </div>
                           <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <p className="flex gap-2 font-inter text-[13px] leading-relaxed text-neutral-500 sm:max-w-[85%]">
                               <Lock size={14} className="mt-0.5 shrink-0 text-neutral-400" />
-                              <span>Не вставляйте пароли, персональные данные, коммерческую тайну или NDA-фрагменты. Материал используется для вопросов в этой сессии и переноса в полный Defense Pack после оплаты.</span>
+                              <span>Не вставляйте пароли, персональные данные, коммерческую тайну или NDA-фрагменты. Сначала PeakTalk ищет слабые места, затем задает вопросы по этому материалу и переносит выводы в Defense Brief после оплаты.</span>
                             </p>
                             <button
                               type="button"
                               onClick={() => setText(SAMPLE_TEXT)}
-                              className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-neutral-950"
+                              className="shrink-0 self-end font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-neutral-950"
                             >
                               [вставить пример]
                             </button>
@@ -475,14 +498,14 @@ export default function GuestSimulationPage() {
                       <div className="mb-2 bg-neutral-50 border border-neutral-200 p-5">
                         <Label className="mb-2 text-[#E8600A]">готовый сценарий</Label>
                         <p className="font-inter text-[15px] leading-relaxed text-neutral-700">
-                          Контекст и вводные данные успешно загружены. Вы можете сразу начинать симуляцию.
+                          Контекст и вводные данные успешно загружены. Вы можете сразу начинать стресс-тест.
                         </p>
                       </div>
                     )}
                   </div>
 
                   {/* Difficulty & Start */}
-                  <div className={`flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between ${hasScenarioParam ? 'mt-6' : 'border-t border-neutral-200 pt-6'}`}>
+                  <div className={`order-3 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between ${hasScenarioParam ? 'mt-6' : 'border-t border-neutral-200 pt-6'}`}>
                     {!hasScenarioParam && (
                       <div className="pt-2">
                         <Label className="mb-3">уровень давления</Label>
@@ -526,7 +549,7 @@ export default function GuestSimulationPage() {
                           <Loader2 size={18} className="animate-spin" />
                         ) : (
                           <>
-                            Начать тест
+                            Проверить материал
                             <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                           </>
                         )}
@@ -553,7 +576,7 @@ export default function GuestSimulationPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 bg-[#E8600A] animate-pulse" />
-                    <Label>живая симуляция</Label>
+                    <Label>живой стресс-тест</Label>
                   </div>
                   <h1 className="mt-3 font-display text-3xl font-black text-neutral-950 sm:text-4xl">
                     Раунд 0{Math.min(turn, MAX_GUEST_TURNS)} / 0{MAX_GUEST_TURNS}
@@ -653,7 +676,7 @@ export default function GuestSimulationPage() {
               {/* History */}
               {transcript.length > 1 && (
                 <div className="mt-8 opacity-50 transition-opacity hover:opacity-100">
-                  <Label className="mb-4">лог симуляции</Label>
+                  <Label className="mb-4">лог стресс-теста</Label>
                   <div className="grid gap-3 border-l-2 border-neutral-200 pl-4">
                     {transcript.slice(0, -1).map((item, index) => (
                       <div key={index} className="grid gap-1.5">
@@ -685,9 +708,9 @@ export default function GuestSimulationPage() {
               style={safariMotionStyle}
             >
               <div className="mb-6">
-                <Label className="mb-3 text-[#E8600A]">Meeting Defense Pack</Label>
+                <Label className="mb-3 text-[#E8600A]">Defense Brief</Label>
                 <h1 className="font-inter text-[28px] font-black leading-[1.08] text-neutral-950 sm:text-[36px]">
-                  Соберите полный Defense Pack для этой встречи
+                  Соберите Defense Brief для этой встречи
                 </h1>
                 <p className="mt-5 font-inter text-[17px] leading-relaxed text-neutral-600">
                   Вы прошли 3 неудобных вопроса. Полная подготовка за 299 ₽ сохранит материал, перенесёт ответы и даст Defense Brief: слабые места позиции, контраргументы и короткий план защиты перед встречей.
@@ -714,22 +737,24 @@ export default function GuestSimulationPage() {
                   <div className="mt-6 grid gap-3 border-t border-neutral-200 pt-6">
                     <Link
                       href={defensePackHref}
+                      onClick={() => trackGuestPaywallCta(user ? 'billing' : 'register')}
                       className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-5 text-center text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
                     >
-                      <span className="hidden sm:inline">Собрать Defense Pack — 299 ₽</span>
-                      <span className="sm:hidden">Defense Pack — 299 ₽</span>
+                      <span className="hidden sm:inline">Собрать Defense Brief — 299 ₽</span>
+                      <span className="sm:hidden">Defense Brief — 299 ₽</span>
                       <ArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
                     </Link>
                     {!user && (
                       <Link
                         href={loginHref}
+                        onClick={() => trackGuestPaywallCta('login')}
                         className="flex min-h-[44px] items-center justify-center border border-neutral-200 bg-white px-5 text-center font-inter text-[13px] font-bold text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-950"
                       >
                         Уже есть аккаунт — войти
                       </Link>
                     )}
                     <p className="text-center font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                      Регистрация нужна, чтобы сохранить демо и перейти к оплате
+                      Регистрация нужна, чтобы сохранить кейс и перейти к оплате
                     </p>
                   </div>
                 </aside>

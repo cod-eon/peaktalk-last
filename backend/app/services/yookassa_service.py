@@ -35,7 +35,7 @@ PLAN_PRICES: dict[PlanType, int] = {
 }
 
 PLAN_DESCRIPTIONS: dict[PlanType, str] = {
-    PlanType.per_session: "PeakTalk — одна полная сессия",
+    PlanType.per_session: "PeakTalk — Defense Brief по материалу встречи",
     PlanType.personal: "PeakTalk Personal — месячная подписка",
     PlanType.pro: "PeakTalk PRO — месячная подписка",
     PlanType.team: "PeakTalk TEAM — месячная подписка",

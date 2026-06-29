@@ -8,6 +8,12 @@
 
 Режим: сначала карта исполнения, без немедленных кодовых изменений.
 
+Статус на 2026-06-28: документ является baseline-аудитом до material-first перестройки.
+Часть пунктов ниже уже закрыта в текущем коде: registration/upload/analysis copy,
+backend AI prompts, landing, guest flow, Defense Brief, scenario pages и authenticated
+dashboard/report/billing visual QA переведены в рамку stress-test аргументации перед
+рабочей встречей. Для актуального pivot-контекста см. `docs/research/2026-06-24-audio-pivot-analysis.md`.
+
 ## 1. Критическое чтение
 
 1. Отчет прав в главном: широкий запуск сейчас опасен. Нужен 21-30 day validation sprint.
@@ -23,7 +29,7 @@
 11. Team analytics, enterprise admin, integrations, LMS, achievements, avatars и тяжелая B2B-платформа до первых paid signals являются отвлечением.
 12. Первый sprint должен доказывать не "людям интересно", а "люди вставляют реальный материал, получают aha, доходят до paywall и платят за конкретную подготовку".
 
-## 2. Inventory текущего состояния
+## 2. Inventory состояния на дату baseline-аудита
 
 ### Уже реализовано
 
@@ -46,15 +52,15 @@
 - Trust copy есть, но нужна более явная формулировка рядом с вводом материала: redaction guidance, no model training by default, retention, delete/export где реально поддержано.
 - Analytics events описаны в admin marketing page, но фактических `reachGoal` вызовов по core funnel не видно.
 
-### Противоречит отчету
+### Противоречило отчету на дату baseline-аудита
 
 - Guest backend обещает 3 вопроса, но логика вокруг `GUEST_MAX_TURNS = 3` может фактически дать только 2 AI-вопроса после первого старта и ответа до paywall.
-- Registration page содержит старый framing: "Умная подготовка к выступлениям за 3 шага".
-- Backend prompt в `cloud_ru_ai.py` начинается со speech coach / тренер по коммуникации.
-- Upload flow использует старые формулировки про выступления, текст речи, риторические уязвимости.
-- Simulation completion copy говорит "Тренировка завершена" и "отчет по навыкам".
-- Report flow содержит confetti при высоком score, что конфликтует с серьезным pressure-testing продуктом.
-- Billing/pro plans и team dashboard могут выглядеть слишком важными до первых paid signals.
+- Registration page раньше содержала старый framing про подготовку к выступлениям; в текущем коде заменено на стресс-тест аргументов перед рабочей встречей.
+- Backend prompt в `cloud_ru_ai.py` раньше был ближе к speech-coach framing; в текущем коде он переводит материал встречи в pressure scan и Defense Brief.
+- Upload flow раньше использовал формулировки про текст речи и риторические уязвимости; в текущем коде это material-first pressure scan.
+- Simulation/report copy была ближе к тренировке навыков; текущий отчет упакован вокруг Defense Brief и слабых мест позиции.
+- Report flow с reward-эффектами был риском для серьезности продукта; текущая рамка report/Defense Brief проверена desktop/mobile.
+- Billing/pro plans и team dashboard остаются зоной внимания при validation sprint: one-meeting purchase должен оставаться первичным.
 
 ### Что критично проверить руками / Browser / Playwright
 
@@ -87,7 +93,7 @@
 | Analytics | UTM and Metrika exist; explicit funnel events appear incomplete | Landing -> guest -> answer -> paywall -> billing -> payment is measurable | No learning from validation sprint | P0 |
 | Trust/privacy | Microcopy and legal pages exist | Clear redaction/no-training/retention/delete wording near material input | Users avoid real materials | P0 |
 | Landing | Pressure-testing language mostly strong | First screen and scenario focus sharpened around Product Lead / roadmap/budget defense | Broad positioning | P0/P1 |
-| Registration/upload copy | Old "выступления", speech coach and skills language remain | Decision defense, pressure-testing, weak spots, Defense Brief | Category drift | P0 |
+| Registration/upload copy | Baseline drift был закрыт в текущем коде: auth/upload/analysis говорят про meeting material, pressure scan и Defense Brief | Decision defense, pressure-testing, weak spots, Defense Brief | Regression risk if copy drifts back | P0 guard |
 | Defense Brief | Prep-card exists and can print PDF | Named Defense Brief, copy/export, artifact preview | Paid value unclear | P1 |
 | Post-meeting feedback | Backend/component exist, likely not wired in report flow | Feedback prompt after real meeting | Weak learning loop | P1 |
 | UI quality | Industrial base exists, but report has playful confetti/reward feel | Serious operational artifact UI | Weak product trust | P1 |

@@ -686,8 +686,8 @@ export default function MeetingsPage() {
                   Нет запланированных встреч
                 </p>
                 <p className="text-[13px] text-neutral-400 font-inter max-w-xs leading-relaxed">
-                  Добавьте предстоящую встречу, чтобы подготовиться к ней с
-                  помощью ИИ-симуляции
+                  Добавьте предстоящую встречу, чтобы проверить материал
+                  перед реальным разговором
                 </p>
               </div>
               <button

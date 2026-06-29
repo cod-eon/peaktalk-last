@@ -26,8 +26,8 @@ export type SessionItem = {
 };
 
 export const PERSONA_LABELS: Record<string, string> = {
-  supervisor: 'Научный руководитель',
-  reviewer: 'Придирчивый рецензент',
+  supervisor: 'Руководитель',
+  reviewer: 'Жёсткий ревьюер',
   peer: 'Коллега-скептик',
   tech_lead: 'Тимлид / ведущий инженер',
   hr: 'HR-менеджер',
@@ -39,10 +39,10 @@ export const PERSONA_LABELS: Record<string, string> = {
   procurement: 'Менеджер по закупкам',
   board: 'Совет директоров',
   subordinate: 'Скептичный подчинённый',
-  journalist: 'Журналист',
-  audience: 'Общая аудитория',
+  journalist: 'Скептичный член комитета',
+  audience: 'Комитет',
   moderator: 'Модератор дискуссии',
-  listener: 'Скептик из зала',
+  listener: 'Скептик в комнате',
 };
 
 export type RoleVisual = { icon: LucideIcon; iconColor: string; iconBg: string };
@@ -61,7 +61,7 @@ export const ROLE_VISUALS: Record<string, RoleVisual> = {
   peer:       { icon: Users,         iconColor: 'text-teal-600',   iconBg: 'bg-teal-50' },
   board:      { icon: Briefcase,     iconColor: 'text-slate-600',  iconBg: 'bg-slate-100' },
   subordinate:{ icon: Users,         iconColor: 'text-amber-500',  iconBg: 'bg-amber-50' },
-  journalist: { icon: Mic,           iconColor: 'text-neutral-600', iconBg: 'bg-neutral-100' },
+  journalist: { icon: Briefcase,     iconColor: 'text-slate-600',   iconBg: 'bg-slate-100' },
   audience:   { icon: Mic,           iconColor: 'text-violet-600', iconBg: 'bg-violet-50' },
   moderator:  { icon: MessageSquare, iconColor: 'text-stone-600',  iconBg: 'bg-stone-100' },
   listener:   { icon: MessageSquare, iconColor: 'text-rose-500',   iconBg: 'bg-rose-50' },
@@ -73,9 +73,9 @@ export const SHORT_PERSONA: Record<string, string> = {
   investor: 'Инвестор', partner: 'Партнёр', customer: 'Клиент',
   demanding_client: 'Сл. клиент', procurement: 'Закупки',
   tech_lead: 'Тимлид', hr: 'HR', senior_dev: 'Dev',
-  supervisor: 'Науч. рук.', reviewer: 'Рецензент', peer: 'Коллега',
-  board: 'Совет', subordinate: 'Подчин.', journalist: 'Журналист',
-  audience: 'Аудитория', moderator: 'Модератор', listener: 'Скептик',
+  supervisor: 'Руковод.', reviewer: 'Ревьюер', peer: 'Коллега',
+  board: 'Совет', subordinate: 'Подчин.', journalist: 'Комитет',
+  audience: 'Комитет', moderator: 'Модератор', listener: 'Скептик',
 };
 
 export function formatDate(iso: string): string {
@@ -89,7 +89,7 @@ export function getPersonaDisplayLabel(personaConfig: SessionPersonaConfig): str
   if (personaConfig.role) {
     return PERSONA_LABELS[personaConfig.role] ?? personaConfig.role;
   }
-  return 'Тренер';
+  return 'Оппонент';
 }
 
 export function getPersonaSecondaryLabel(personaConfig: SessionPersonaConfig): string | null {

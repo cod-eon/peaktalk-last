@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
+import { buildBillingSuccessPath, isGuestPaywallReturnPath, normalizeOptionalInternalReturnPath } from '@/lib/return-path';
 import { useBillingStore } from '@/store/billingStore';
 import { useBilling } from '@/hooks/useBilling';
 import { PerSessionCard } from '@/components/billing/PerSessionCard';
@@ -37,22 +38,22 @@ const PLAN_DISPLAY: Array<{
     id: 'personal',
     name: 'PERSONAL',
     price: '790 ₽/мес',
-    badge: 'частая практика',
-    features: ['10 сессий в месяц', 'Все персоны', 'PDF-отчёты', 'Шпаргалки'],
+    badge: 'регулярные защиты',
+    features: ['10 проверок материала в месяц', 'Defense Brief по каждой сессии', 'Все оппоненты', 'PDF-отчёты'],
   },
   {
     id: 'pro',
     name: 'PRO',
     price: '1 490 ₽/мес',
     badge: 'рекомендуемый',
-    features: ['Безлимитные сессии', 'Расширенная аналитика', 'PDF-отчёты', 'Приоритетная поддержка'],
+    features: ['Безлимитные проверки материала', 'Расширенная аналитика слабых мест', 'Defense Brief + PDF', 'Приоритетная поддержка'],
   },
   {
     id: 'team',
     name: 'TEAM',
     price: '4 990 ₽/мес',
     badge: 'в разработке',
-    features: ['5 мест', 'Всё из PRO', 'Командный dashboard', 'Общая библиотека документов'],
+    features: ['5 мест', 'Всё из PRO', 'Командный dashboard', 'Общая библиотека материалов'],
   },
 ];
 
@@ -161,7 +162,8 @@ function BillingContent() {
   const billingOpenedKeyRef = useRef<string | null>(null);
 
   const planParam = searchParams.get('plan');
-  const returnPath = searchParams.get('return') ?? undefined;
+  const returnPath = normalizeOptionalInternalReturnPath(searchParams.get('return')) ?? undefined;
+  const isGuestPaywallReturn = isGuestPaywallReturnPath(returnPath);
   const highlightPerSession = planParam === 'per_session';
   const paymentsEnabled = status?.payments_enabled ?? true;
   const sessionCredits = status?.usage.session_credits ?? 0;
@@ -201,20 +203,22 @@ function BillingContent() {
   const handleUpgrade = useCallback(
     async (plan: string) => {
       try {
-        const successPath = returnPath
-          ? `/billing/success?return=${encodeURIComponent(returnPath)}`
-          : '/billing/success';
+        const successPath = buildBillingSuccessPath(returnPath);
         const returnUrl = `${window.location.origin}${successPath}`;
         const res = await api.post('/billing/payment', { plan, return_url: returnUrl });
         if (res?.payment_url) {
-          sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
-            payment_id: res.payment_id ?? null,
-            payment_plan: plan,
-            return_path: returnPath ?? '/billing/success',
-            plan_context: plan,
-          }));
+          try {
+            sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
+              payment_id: res.payment_id ?? null,
+              payment_plan: plan,
+              return_path: returnPath ?? '/billing/success',
+              plan_context: plan,
+            }));
+          } catch {
+            // Payment redirect must continue even when storage is unavailable.
+          }
           trackEvent('payment_started', {
-            source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+            source: isGuestPaywallReturn ? 'guest_paywall' : 'billing',
             payment_plan: plan,
             payment_id: res.payment_id ?? null,
             return_path: returnPath ?? '/billing/success',
@@ -226,7 +230,7 @@ function BillingContent() {
         toast.error(err instanceof Error ? err.message : 'Ошибка оплаты');
       }
     },
-    [returnPath],
+    [isGuestPaywallReturn, returnPath],
   );
 
   const handleCancel = useCallback(async () => {
@@ -252,21 +256,25 @@ function BillingContent() {
 
   useEffect(() => {
     if (returnPath && typeof window !== 'undefined') {
-      sessionStorage.setItem('billing_return_path', returnPath);
+      try {
+        sessionStorage.setItem('billing_return_path', returnPath);
+      } catch {
+        // Non-critical breadcrumb for billing navigation.
+      }
     }
   }, [returnPath]);
 
   useEffect(() => {
-    const key = `${planParam ?? plan}:${returnPath ?? ''}`;
+    const key = `${planParam ?? 'current'}:${returnPath ?? ''}`;
     if (billingOpenedKeyRef.current === key) return;
     billingOpenedKeyRef.current = key;
 
     trackEvent('billing_opened', {
-      source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+      source: isGuestPaywallReturn ? 'guest_paywall' : 'billing',
       plan_context: planParam ?? plan,
       return_path: returnPath ?? null,
     });
-  }, [plan, planParam, returnPath]);
+  }, [isGuestPaywallReturn, plan, planParam, returnPath]);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 font-inter">
@@ -358,8 +366,8 @@ function BillingContent() {
               <div className="grid grid-cols-1 gap-4 p-5 sm:p-6 lg:grid-cols-2">
                 {status ? (
                   <>
-                    <UsageBar used={status.usage.simulations_used} limit={status.limits.simulations_per_month} label="Симуляции" icon={<Zap size={14} />} />
-                    <UsageBar used={status.usage.documents_uploaded} limit={status.limits.documents_total} label="Документы" icon={<FileText size={14} />} />
+                    <UsageBar used={status.usage.simulations_used} limit={status.limits.simulations_per_month} label="Проверки материала" icon={<Zap size={14} />} />
+                    <UsageBar used={status.usage.documents_uploaded} limit={status.limits.documents_total} label="Материалы" icon={<FileText size={14} />} />
                   </>
                 ) : (
                   <div className="text-sm text-[#73706A]">Нет данных по использованию</div>
@@ -522,7 +530,7 @@ function BillingContent() {
             >
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <p>
-                Бесплатный план ограничен по симуляциям и документам. Можно купить одну подготовку за 299 ₽ или перейти на регулярный план от 790 ₽/мес.
+                Бесплатный план ограничен по стресс-тестам и материалам. Можно купить один Defense Brief за 299 ₽ или перейти на регулярный план от 790 ₽/мес.
               </p>
             </motion.div>
           )}

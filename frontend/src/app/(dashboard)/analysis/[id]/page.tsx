@@ -8,8 +8,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Zap, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft,
     BarChart2, Sparkles, Copy, Download, Check, X, MessageSquare, MousePointer2,
+    Loader2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { buildDefenseBriefFilename, formatAnalysisDefenseBriefMarkdown } from '@/lib/defense-brief-export';
+import type { DraftCaseContext } from '@/lib/case-context';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -26,21 +29,33 @@ type AnalysisFeedback = {
     overall_score: number;
     annotations?: Annotation[];
     strengths?: string[]; weaknesses?: string[]; recommendations?: string[];
+    defense_brief?: {
+        evidence_gaps?: string[];
+        pressure_questions?: string[];
+        next_moves?: string[];
+    };
 };
 
 type Draft = {
     id: string; title: string; raw_text: string; content?: string; created_at: string;
     analysis_result: { id: string; improved_text: string; feedback_json: AnalysisFeedback; created_at: string } | null;
     document_id: string | null;
+    case_context: DraftCaseContext | null;
+};
+
+type DefenseBrief = {
+    evidenceGaps: string[];
+    pressureQuestions: string[];
+    nextMoves: string[];
 };
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 
 const ISSUE: Record<IssueType, { label: string; pill: string; bg: string; bgHover: string }> = {
-    logic:   { label: 'Логика',     pill: '#3b82f6', bg: 'rgba(59,130,246,0.08)',  bgHover: 'rgba(59,130,246,0.20)' },
-    clarity: { label: 'Ясность',    pill: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', bgHover: 'rgba(139,92,246,0.20)' },
-    style:   { label: 'Стиль',      pill: '#f59e0b', bg: 'rgba(245,158,11,0.08)', bgHover: 'rgba(245,158,11,0.20)' },
-    grammar: { label: 'Грамматика', pill: '#ef4444', bg: 'rgba(239,68,68,0.08)',  bgHover: 'rgba(239,68,68,0.20)'  },
+    logic:   { label: 'Доказательства', pill: '#3b82f6', bg: 'rgba(59,130,246,0.08)',  bgHover: 'rgba(59,130,246,0.20)' },
+    clarity: { label: 'Ask / шаг',      pill: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', bgHover: 'rgba(139,92,246,0.20)' },
+    style:   { label: 'Тон под давлением', pill: '#f59e0b', bg: 'rgba(245,158,11,0.08)', bgHover: 'rgba(245,158,11,0.20)' },
+    grammar: { label: 'Точность фактов',   pill: '#ef4444', bg: 'rgba(239,68,68,0.08)',  bgHover: 'rgba(239,68,68,0.20)'  },
 };
 
 const SEV: Record<Severity, { label: string; bg: string; color: string }> = {
@@ -59,6 +74,68 @@ function pl(n: number, one: string, few: string, many: string) {
     return many;
 }
 
+function compactText(text: string, max = 180): string {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (normalized.length <= max) return normalized;
+    return `${normalized.slice(0, max - 1).trim()}…`;
+}
+
+function briefSentence(text: string): string {
+    const withoutExample = text.split(/Например:/i)[0]?.trim() || text;
+    const first = withoutExample.match(/^[^.!?]+[.!?]/)?.[0] ?? withoutExample;
+    return compactText(first, 180);
+}
+
+function uniqueBriefItems(items: string[], limit = 3): string[] {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const item of items) {
+        const cleaned = compactText(item);
+        const key = cleaned.toLowerCase();
+        if (!cleaned || seen.has(key)) continue;
+        seen.add(key);
+        out.push(cleaned);
+        if (out.length >= limit) break;
+    }
+    return out;
+}
+
+function buildDefenseBrief(fb: AnalysisFeedback, annotations: Annotation[]): DefenseBrief {
+    const severityRank: Record<Severity, number> = { high: 0, medium: 1, low: 2 };
+    const sorted = [...annotations].sort((a, b) => severityRank[a.severity] - severityRank[b.severity]);
+
+    const evidenceGaps = uniqueBriefItems(
+        sorted
+            .filter((ann) => ann.issue_type === 'logic' || ann.issue_type === 'clarity')
+            .map((ann) => {
+                const fragment = compactText(ann.text, 70);
+                return fragment ? `«${fragment}»: ${briefSentence(ann.comment)}` : briefSentence(ann.comment);
+            })
+    );
+
+    const pressureQuestions = uniqueBriefItems(
+        sorted.map((ann) => briefSentence(ann.comment))
+    );
+
+    const nextMoves = uniqueBriefItems([
+        ...(fb.recommendations ?? []),
+        fb.logic,
+        fb.clarity,
+        fb.style,
+    ].map((item) => briefSentence(item)));
+
+    const backendBrief = fb.defense_brief;
+    const backendEvidenceGaps = uniqueBriefItems(backendBrief?.evidence_gaps ?? []);
+    const backendPressureQuestions = uniqueBriefItems(backendBrief?.pressure_questions ?? []);
+    const backendNextMoves = uniqueBriefItems(backendBrief?.next_moves ?? []);
+
+    return {
+        evidenceGaps: backendEvidenceGaps.length > 0 ? backendEvidenceGaps : evidenceGaps,
+        pressureQuestions: backendPressureQuestions.length > 0 ? backendPressureQuestions : pressureQuestions,
+        nextMoves: backendNextMoves.length > 0 ? backendNextMoves : nextMoves,
+    };
+}
+
 function buildSegments(text: string, annotations: Annotation[]): Segment[] {
     const ivs = annotations.flatMap((ann, i) => {
         const s = text.indexOf(ann.text);
@@ -74,6 +151,28 @@ function buildSegments(text: string, annotations: Annotation[]): Segment[] {
     }
     if (cur < text.length) out.push({ text: text.slice(cur) });
     return out;
+}
+
+function BriefSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
+    return (
+        <section>
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-neutral-400 mb-2">
+                {title}
+            </p>
+            {items.length > 0 ? (
+                <ul className="space-y-2">
+                    {items.map((item, idx) => (
+                        <li key={`${title}-${idx}`} className="flex gap-2 text-[12px] leading-relaxed text-neutral-600">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[#E8600A]" />
+                            <span>{item}</span>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-[12px] leading-relaxed text-neutral-400">{empty}</p>
+            )}
+        </section>
+    );
 }
 
 // ── ScoreRing ──────────────────────────────────────────────────────────────────
@@ -113,14 +212,27 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-function DownloadButton({ text, title }: { text: string; title: string }) {
+function DownloadButton({
+    text,
+    title,
+    filename,
+    label = 'Скачать .txt',
+}: {
+    text: string;
+    title: string;
+    filename?: string;
+    label?: string;
+}) {
     return (
         <button onClick={() => {
             const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-            Object.assign(document.createElement('a'), { href: url, download: `${title.slice(0,40).replace(/[^а-яёa-z0-9]/gi,'_')}_AI.txt` }).click();
+            Object.assign(document.createElement('a'), {
+                href: url,
+                download: filename ?? `${title.slice(0,40).replace(/[^а-яёa-z0-9]/gi,'_')}_defense-ready.txt`,
+            }).click();
             URL.revokeObjectURL(url);
         }} className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 transition-all text-[12px] font-mono cursor-pointer">
-            <Download size={12} /> Скачать .txt
+            <Download size={12} /> {label}
         </button>
     );
 }
@@ -216,18 +328,22 @@ const IssueCard = React.forwardRef<HTMLButtonElement, {
 
 // ── Desktop Summary Panel ──────────────────────────────────────────────────────
 
-function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, onFilter }: {
+function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, onFilter, brief, briefMarkdown, draftId, caseContext }: {
     fb: AnalysisFeedback;
     annotations: Annotation[];
     scoreLabel: string;
     scoreColor: string;
     activeFilter: IssueType | null;
     onFilter: (t: IssueType | null) => void;
+    brief: DefenseBrief;
+    briefMarkdown: string;
+    draftId: string;
+    caseContext?: DraftCaseContext | null;
 }) {
     const total = annotations.length;
     const micro = total === 0
         ? 'Замечаний не найдено — материал готов к защите.'
-        : `AI обнаружил ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева для разбора.`;
+        : `PeakTalk нашёл ${total} ${pl(total, 'замечание', 'замечания', 'замечаний')} — кликните подчёркнутый фрагмент слева для разбора.`;
 
     return (
         <div className="h-full flex flex-col">
@@ -244,36 +360,95 @@ function SummaryPanel({ fb, annotations, scoreLabel, scoreColor, activeFilter, o
                 </div>
             </div>
 
-            {/* Filter pills */}
-            {total > 0 && (
-                <div className="px-4 pt-4 pb-2 shrink-0">
-                    <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={onFilter} />
+            <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="px-4 py-4 border-b border-neutral-200 bg-[#FAF8F4]">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                        <div>
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-neutral-400">
+                                Defense Brief
+                            </p>
+                            <h2 className="text-[14px] font-inter font-semibold text-neutral-900 mt-1">
+                                Карта защиты перед встречей
+                            </h2>
+                        </div>
+                        <span className="shrink-0 border border-neutral-200 bg-white px-2 py-1 text-[10px] font-mono text-neutral-500">
+                            {total > 0 ? `${total} сигналов` : 'без критичных'}
+                        </span>
+                    </div>
+                    {caseContext && (
+                        <div className="mb-4 border border-neutral-200 bg-white px-3 py-2.5">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] leading-relaxed text-neutral-500">
+                                <span className="font-mono uppercase tracking-[0.12em] text-neutral-400">Кейс</span>
+                                <span className="font-semibold text-neutral-900">{caseContext.situation_label}</span>
+                                {caseContext.opponent_role && <span>Оппонент: {caseContext.opponent_role}</span>}
+                            </div>
+                        </div>
+                    )}
+                    <div className="space-y-4">
+                        <BriefSection
+                            title="Дыры в позиции"
+                            items={brief.evidenceGaps}
+                            empty="Критичных дыр не видно, но перед встречей всё равно проверьте цифры, owner и критерий успеха."
+                        />
+                        <BriefSection
+                            title="Вопросы, которые стоит ждать"
+                            items={brief.pressureQuestions}
+                            empty="Запустите стресс-тест, чтобы получить неудобные вопросы от выбранного оппонента."
+                        />
+                        <BriefSection
+                            title="Что поправить до встречи"
+                            items={brief.nextMoves}
+                            empty="Материал выглядит устойчиво; следующий шаг — проверить его под давлением."
+                        />
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <CopyButton text={briefMarkdown} />
+                        <DownloadButton
+                            text={briefMarkdown}
+                            title={draftId}
+                            filename={buildDefenseBriefFilename(`analysis-${draftId}`)}
+                            label="Скачать .md"
+                        />
+                    </div>
+                    <Link
+                        href={`/simulation?draft=${draftId}`}
+                        className="mt-4 inline-flex min-h-[42px] w-full items-center justify-center gap-2 bg-[#171717] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-black"
+                    >
+                        <Zap size={14} /> Запустить стресс-тест по материалу
+                    </Link>
                 </div>
-            )}
 
-            {/* CTA placeholder — дышащий пустой стейт */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-3 mt-2">
-                {total === 0 ? (
-                    <>
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: 'rgba(16,185,129,0.1)' }}>
-                            <CheckCircle2 size={22} className="text-emerald-400" strokeWidth={1.5} />
-                        </div>
-                        <p className="text-sm text-neutral-400 font-inter text-center leading-relaxed">
-                            Отличная работа!
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: '#fafafa' }}>
-                            <MousePointer2 size={20} className="text-neutral-400" strokeWidth={1.5} />
-                        </div>
-                        <p className="text-sm text-neutral-400 font-inter leading-relaxed text-center max-w-[180px]">
-                            Кликните на любой подчёркнутый фрагмент в тексте, чтобы увидеть детальный разбор и советы
-                        </p>
-                    </>
+                {/* Filter pills */}
+                {total > 0 && (
+                    <div className="px-4 pt-4 pb-2">
+                        <FilterPills annotations={annotations} activeFilter={activeFilter} onFilter={onFilter} />
+                    </div>
                 )}
+
+                {/* Detail hint */}
+                <div className="flex flex-col items-center justify-center px-6 py-8 gap-3 mt-2">
+                    {total === 0 ? (
+                        <>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: 'rgba(16,185,129,0.1)' }}>
+                                <CheckCircle2 size={22} className="text-emerald-400" strokeWidth={1.5} />
+                            </div>
+                            <p className="text-sm text-neutral-400 font-inter text-center leading-relaxed">
+                                Сильная основа. Проверьте материал на реальных вопросах оппонента.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: '#fafafa' }}>
+                                <MousePointer2 size={20} className="text-neutral-400" strokeWidth={1.5} />
+                            </div>
+                            <p className="text-sm text-neutral-400 font-inter leading-relaxed text-center max-w-[220px]">
+                                Кликните на подчёркнутый фрагмент, чтобы увидеть, почему он не выдержит давления.
+                            </p>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -484,6 +659,8 @@ export default function AnalysisPage() {
     const [sheetIdx,     setSheetIdx]     = useState<number | null>(null);
     const [activeFilter, setActiveFilter] = useState<IssueType | null>(null);
     const [isDesktop,    setIsDesktop]    = useState(false);
+    const [isAnalyzing,  setIsAnalyzing]  = useState(false);
+    const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
     const leftColRef = useRef<HTMLDivElement>(null);
 
@@ -508,7 +685,7 @@ export default function AnalysisPage() {
         return () => window.removeEventListener('keydown', h);
     }, []);
 
-    const { data: draft, isLoading, isError } = useQuery<Draft>({
+    const { data: draft, isLoading, isError, refetch } = useQuery<Draft>({
         queryKey: ['draft', draftId],
         queryFn:  () => api.get(`/drafts/${draftId}`),
         enabled:  !!draftId,
@@ -516,6 +693,20 @@ export default function AnalysisPage() {
 
     const handleTap   = useCallback((idx: number) => setSheetIdx(idx), []);
     const closeSheet  = useCallback(() => setSheetIdx(null), []);
+    const runAnalysis = useCallback(async () => {
+        if (!draftId || isAnalyzing) return;
+        setAnalyzeError(null);
+        setIsAnalyzing(true);
+        try {
+            await api.post(`/drafts/${draftId}/analyze`);
+            await refetch();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Не удалось запустить разбор материала';
+            setAnalyzeError(message);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }, [draftId, isAnalyzing, refetch]);
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -542,9 +733,21 @@ export default function AnalysisPage() {
                 </button>
                 <div className="bg-white border border-neutral-200 p-8 text-center">
                     <BarChart2 size={24} className="text-neutral-400 mx-auto mb-4" strokeWidth={1.5} />
-                    <h2 className="font-inter text-[16px] font-semibold text-neutral-900 mb-2">Анализ ещё не запущен</h2>
-                    <p className="text-[13px] text-neutral-500 font-inter mb-5 max-w-sm mx-auto">AI разберёт структуру, логику и стиль вашего текста</p>
-                    <button className="inline-flex items-center gap-2 bg-[#171717] hover:bg-black text-white font-medium px-5 py-2.5 transition-colors cursor-pointer"><Zap size={14} /> Запустить анализ</button>
+                    <h2 className="font-inter text-[16px] font-semibold text-neutral-900 mb-2">Разбор материала ещё не запущен</h2>
+                    <p className="text-[13px] text-neutral-500 font-inter mb-5 max-w-sm mx-auto">PeakTalk проверит структуру, доказательства и риски позиции перед встречей.</p>
+                    {analyzeError && (
+                        <p className="mb-4 border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                            {analyzeError}
+                        </p>
+                    )}
+                    <button
+                        onClick={runAnalysis}
+                        disabled={isAnalyzing}
+                        className="inline-flex min-h-[42px] items-center gap-2 bg-[#171717] px-5 py-2.5 font-medium text-white transition-colors hover:bg-black disabled:cursor-wait disabled:opacity-70"
+                    >
+                        {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                        {isAnalyzing ? 'Разбираем материал' : 'Запустить разбор'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -554,11 +757,19 @@ export default function AnalysisPage() {
     const textContent = draft.raw_text || draft.content || '';
     const countByType = annotations.reduce<Record<string, number>>((a, ann) => ({ ...a, [ann.issue_type]: (a[ann.issue_type] ?? 0) + 1 }), {});
     const categories  = [
-        { key: 'logic'   as IssueType, label: 'Логика',     text: fb.logic   },
-        { key: 'clarity' as IssueType, label: 'Ясность',    text: fb.clarity },
-        { key: 'style'   as IssueType, label: 'Стиль',      text: fb.style   },
-        { key: 'grammar' as IssueType, label: 'Грамматика', text: fb.grammar },
+        { key: 'logic'   as IssueType, label: 'Доказательства', text: fb.logic   },
+        { key: 'clarity' as IssueType, label: 'Ask / следующий шаг', text: fb.clarity },
+        { key: 'style'   as IssueType, label: 'Тон под давлением', text: fb.style   },
+        { key: 'grammar' as IssueType, label: 'Язык и точность',    text: fb.grammar },
     ];
+    const defenseBrief = buildDefenseBrief(fb, annotations);
+    const defenseBriefMarkdown = formatAnalysisDefenseBriefMarkdown({
+        title: draft.title,
+        evidence_gaps: defenseBrief.evidenceGaps,
+        pressure_questions: defenseBrief.pressureQuestions,
+        next_moves: defenseBrief.nextMoves,
+        improved_text: analysis.improved_text,
+    });
     const scoreLabel = fb.overall_score >= 8 ? 'Готов к защите'
         : fb.overall_score >= 6 ? 'Хорошая основа'
         : fb.overall_score >= 4 ? 'Требует доработки' : 'Нужна переработка';
@@ -569,9 +780,9 @@ export default function AnalysisPage() {
         : annotations;
 
     const mobileTabs = [
-        { id: 'text'     as MobileTab, label: 'Текст',     badge: annotations.length },
-        { id: 'issues'   as MobileTab, label: 'Разбор',    badge: null },
-        { id: 'improved' as MobileTab, label: 'AI версия', badge: null, icon: true },
+        { id: 'text'     as MobileTab, label: 'Материал',     badge: annotations.length },
+        { id: 'issues'   as MobileTab, label: 'Pressure scan', badge: null },
+        { id: 'improved' as MobileTab, label: 'Усиление', badge: null, icon: true },
     ];
 
     // ── iOS segmented control (above text in left column) ─────────────────────
@@ -582,14 +793,14 @@ export default function AnalysisPage() {
                     desktopView === 'text'
                         ? 'bg-white text-neutral-900 shadow-sm'
                         : 'text-neutral-400 hover:text-neutral-500'
-                }`}>Текст</button>
+                }`}>Материал</button>
             <button onClick={() => setDesktopView('ai')}
                 className={`flex items-center gap-1 text-[11px] font-mono px-3 py-1.5 rounded-none transition-all cursor-pointer ${
                     desktopView === 'ai'
                         ? 'bg-white text-neutral-900 shadow-sm'
                         : 'text-neutral-400 hover:text-neutral-500'
                 }`}>
-                <Sparkles size={9} /> AI версия
+                <Sparkles size={9} /> Усиленная версия
             </button>
         </div>
     );
@@ -606,7 +817,7 @@ export default function AnalysisPage() {
                     {draft.title}
                 </h1>
                 <Link href={`/simulation?draft=${draftId}`} className="inline-flex items-center gap-1.5 bg-[#171717] hover:bg-black text-white font-medium text-sm px-4 py-2 transition-colors shrink-0">
-                    <Zap size={13} /> Симуляция
+                    <Zap size={13} /> Стресс-тест
                 </Link>
             </div>
         </header>
@@ -658,7 +869,7 @@ export default function AnalysisPage() {
                                         <div className="flex items-start gap-2.5 p-3.5 bg-neutral-50 border border-neutral-200 mb-4">
                                             <Sparkles size={14} className="text-neutral-500 shrink-0 mt-0.5" />
                                             <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">
-                                                AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность
+                                                PeakTalk подготовил defense-ready версию материала: структура, аргументация и следующий шаг стали крепче.
                                             </p>
                                         </div>
                                         <div className="flex gap-2 mb-5">
@@ -692,6 +903,10 @@ export default function AnalysisPage() {
                                         scoreColor={scoreColor}
                                         activeFilter={activeFilter}
                                         onFilter={setActiveFilter}
+                                        brief={defenseBrief}
+                                        briefMarkdown={defenseBriefMarkdown}
+                                        draftId={draftId}
+                                        caseContext={draft.case_context}
                                     />
                                 </motion.div>
                             ) : (
@@ -748,7 +963,7 @@ export default function AnalysisPage() {
                         <div className="flex items-center gap-3">
                             <ScoreRing score={fb.overall_score} size={52} />
                             <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-mono text-neutral-400 mb-0.5">Разбор материала</p>
+                                <p className="text-[11px] font-mono text-neutral-400 mb-0.5">Pressure scan материала</p>
                                 <p className="text-[13px] font-inter font-semibold" style={{ color: scoreColor }}>{scoreLabel}</p>
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                     {(['grammar','logic','clarity','style'] as IssueType[]).map(type => {
@@ -768,8 +983,61 @@ export default function AnalysisPage() {
                         </div>
                     </motion.div>
 
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.04 }}
+                        className="bg-[#FAF8F4] border border-neutral-200 p-4 mb-4">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-neutral-400">
+                                    Defense Brief
+                                </p>
+                                <h2 className="text-[14px] font-inter font-semibold text-neutral-900 mt-1">
+                                    Что защищать на встрече
+                                </h2>
+                            </div>
+                            <span className="shrink-0 border border-neutral-200 bg-white px-2 py-1 text-[10px] font-mono text-neutral-500">
+                                {annotations.length > 0 ? `${annotations.length} сигналов` : 'готово'}
+                            </span>
+                        </div>
+                        {draft.case_context && (
+                            <div className="mb-4 border border-neutral-200 bg-white px-3 py-2">
+                                <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">Кейс</p>
+                                <p className="mt-1 text-[12px] font-semibold text-neutral-900">{draft.case_context.situation_label}</p>
+                                {draft.case_context.opponent_role && (
+                                    <p className="mt-0.5 text-[12px] text-neutral-500">Оппонент: {draft.case_context.opponent_role}</p>
+                                )}
+                            </div>
+                        )}
+                        <div className="space-y-4">
+                            <BriefSection
+                                title="Дыры в позиции"
+                                items={defenseBrief.evidenceGaps.slice(0, 2)}
+                                empty="Критичных дыр не видно; проверьте цифры и критерий успеха."
+                            />
+                            <BriefSection
+                                title="Что поправить"
+                                items={defenseBrief.nextMoves.slice(0, 2)}
+                                empty="Следующий шаг — проверить материал вопросами оппонента."
+                            />
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <CopyButton text={defenseBriefMarkdown} />
+                            <DownloadButton
+                                text={defenseBriefMarkdown}
+                                title={draft.title}
+                                filename={buildDefenseBriefFilename(`analysis-${draftId}`)}
+                                label="Скачать .md"
+                            />
+                        </div>
+                        <Link
+                            href={`/simulation?draft=${draftId}`}
+                            className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 bg-[#171717] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-black"
+                        >
+                            <Zap size={14} /> Запустить стресс-тест
+                        </Link>
+                    </motion.div>
+
                     {/* Tab bar */}
-                    <div className="flex bg-neutral-50 border border-neutral-200 p-1 mb-5">
+                    <div className="flex bg-neutral-50 border border-neutral-200 p-1 mb-3">
                         {mobileTabs.map(tab => (
                             <button key={tab.id} onClick={() => setMobileTab(tab.id)}
                                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[12px] font-mono transition-all cursor-pointer ${
@@ -865,7 +1133,7 @@ export default function AnalysisPage() {
                                 <div className="flex items-start gap-2.5 p-3.5 bg-neutral-50 border border-neutral-200 mb-4">
                                     <Sparkles size={14} className="text-neutral-500 shrink-0 mt-0.5" />
                                     <p className="text-[12px] text-neutral-500 font-inter leading-relaxed">
-                                        AI переписал текст, сохранив ваш голос — улучшена структура, аргументация и ясность изложения
+                                        PeakTalk подготовил defense-ready версию материала: структура, аргументация и следующий шаг стали крепче.
                                     </p>
                                 </div>
                                 <div className="flex gap-2 mb-5">

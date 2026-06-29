@@ -119,7 +119,7 @@ def _extract_plan_from_payment(payment_obj: dict) -> PlanType | None:
         return PlanType(plan_value)
     except ValueError:
         desc = (payment_obj.get("description") or "").lower()
-        if "per_session" in desc or "одна полная сессия" in desc:
+        if "per_session" in desc or "одна полная сессия" in desc or "defense brief" in desc:
             return PlanType.per_session
         if "personal" in desc:
             return PlanType.personal

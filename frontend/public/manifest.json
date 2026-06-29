@@ -1,7 +1,7 @@
 {
   "name": "PeakTalk",
   "short_name": "PeakTalk",
-  "description": "PeakTalk - ИИ-тренер для публичных выступлений",
+  "description": "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

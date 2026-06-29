@@ -18,8 +18,8 @@ import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Мои тексты', path: '/documents', icon: FileText },
-    { name: 'Симуляции', path: '/simulation', icon: Bot },
+    { name: 'Материалы', path: '/documents', icon: FileText },
+    { name: 'Стресс-тесты', path: '/simulation', icon: Bot },
     { name: 'Настройки', path: '/settings', icon: Settings },
 ];
 
@@ -130,10 +130,10 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
 
                             {/* Upsell card */}
                             <div className="bg-neutral-50 rounded-none p-4 border border-neutral-200">
-                                <div className="text-[11px] font-medium text-neutral-400 uppercase tracking-wide mb-1">Basic Plan</div>
-                                <div className="text-[13px] text-neutral-900 font-medium mb-3">Улучшите навыки с ИИ</div>
+                                <div className="text-[11px] font-medium text-neutral-400 uppercase tracking-wide mb-1">Текущий план</div>
+                                <div className="text-[13px] text-neutral-900 font-medium mb-3">Больше стресс-тестов и Defense Brief</div>
                                 <button className="w-full py-2 bg-[#171717] text-white text-[12px] font-semibold rounded-none hover:bg-black transition-colors">
-                                    Upgrade to Pro
+                                    Открыть тарифы
                                 </button>
                             </div>
                         </div>

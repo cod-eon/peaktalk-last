@@ -35,19 +35,6 @@ const GOAL_LABELS: Record<string, string> = {
   other: 'Другое',
 };
 
-function ComingSoonTab({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[320px] bg-white border border-neutral-200 rounded-none p-10 text-center">
-      <Icon className="w-8 h-8 text-neutral-300 mb-4" />
-      <h3 className="text-sm font-semibold text-neutral-900 tracking-wider uppercase mb-2">{label}</h3>
-      <p className="text-sm text-neutral-500 mb-4 max-w-md">Модуль находится в разработке и будет доступен в следующих релизах системы.</p>
-      <span className="inline-block px-3 py-1 text-[10px] font-mono text-neutral-500 bg-neutral-100 border border-neutral-200 rounded-none tracking-widest">
-        ОТЛОЖЕНО
-      </span>
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const user = useAuthStore((s) => s.user);
@@ -89,7 +76,7 @@ export default function SettingsPage() {
         notification_push_enabled: pushNotifications,
       });
       toast.success('Настройки уведомлений обновлены');
-    } catch (err: unknown) {
+    } catch {
       toast.error('Не удалось обновить настройки');
     } finally {
       setIsSavingNotifications(false);
@@ -119,7 +106,7 @@ export default function SettingsPage() {
       await supabase.auth.signOut();
       router.push('/');
       toast.success('Вы вышли из аккаунта');
-    } catch (err) {
+    } catch {
       toast.error('Не удалось выйти. Попробуйте ещё раз.');
     } finally {
       setIsLoggingOut(false);
@@ -324,7 +311,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between py-4 border-b border-neutral-100">
                   <div>
                     <h3 className="text-sm font-semibold text-neutral-900">Email-уведомления</h3>
-                    <p className="text-xs text-neutral-500 mt-1">Оповещения о симуляциях на вашу электронную почту.</p>
+                    <p className="text-xs text-neutral-500 mt-1">Оповещения о стресс-тестах на вашу электронную почту.</p>
                   </div>
                   <button 
                     onClick={() => setEmailNotifications(!emailNotifications)}
@@ -353,7 +340,7 @@ export default function SettingsPage() {
                       try {
                         await api.post('/api/notifications/test');
                         toast.success('Тестовый сигнал отправлен!');
-                      } catch (err) {
+                      } catch {
                         toast.error('Ошибка отправки теста');
                       }
                     }}

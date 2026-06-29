@@ -32,6 +32,11 @@ export interface DefenseBriefCardProps {
 export function DefenseBriefCard({ artifact, sessionId }: DefenseBriefCardProps) {
   const [copied, setCopied] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const hasPressureScanSections = Boolean(
+    artifact.evidence_gaps?.length ||
+    artifact.pressure_questions?.length ||
+    artifact.next_moves?.length,
+  );
 
   const handleCopyMarkdown = async () => {
     setExportError(null);
@@ -90,26 +95,26 @@ export function DefenseBriefCard({ artifact, sessionId }: DefenseBriefCardProps)
             <Sparkles size={24} className="text-accent-400" />
             Defense Brief
           </h2>
-          <p className="text-neutral-400 text-sm">Сформирована на базе вашей симуляции</p>
+          <p className="text-neutral-400 text-sm">Сформирован на базе стресс-теста материала</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 lg:justify-end">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row lg:justify-end">
           <button
             onClick={handleCopyMarkdown}
-            className="flex min-h-10 items-center justify-center gap-2 border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 cursor-pointer"
+            className="flex min-h-10 items-center justify-center gap-1.5 border border-white/10 bg-white/10 px-2 py-2 text-[11px] font-medium text-white transition-colors hover:bg-white/20 cursor-pointer sm:gap-2 sm:px-3 sm:text-sm"
           >
             {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
             {copied ? 'Скопировано' : 'Копировать'}
           </button>
           <button
             onClick={handleDownloadMarkdown}
-            className="flex min-h-10 items-center justify-center gap-2 border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 cursor-pointer"
+            className="flex min-h-10 items-center justify-center gap-1.5 border border-white/10 bg-white/10 px-2 py-2 text-[11px] font-medium text-white transition-colors hover:bg-white/20 cursor-pointer sm:gap-2 sm:px-3 sm:text-sm"
           >
             <FileDown size={16} />
             Скачать .md
           </button>
           <button
             onClick={handlePrintPdf}
-            className="flex min-h-10 items-center justify-center gap-2 bg-white text-neutral-950 px-3 py-2 text-sm font-semibold transition-colors hover:bg-neutral-100 cursor-pointer"
+            className="flex min-h-10 items-center justify-center gap-1.5 bg-white text-neutral-950 px-2 py-2 text-[11px] font-semibold transition-colors hover:bg-neutral-100 cursor-pointer sm:gap-2 sm:px-3 sm:text-sm"
           >
             <Download size={16} />
             PDF
@@ -134,6 +139,56 @@ export function DefenseBriefCard({ artifact, sessionId }: DefenseBriefCardProps)
             <p className="text-neutral-800 leading-relaxed font-medium text-sm">
               {artifact.opening_move}
             </p>
+          </div>
+        )}
+
+        {hasPressureScanSections && (
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {artifact.evidence_gaps && artifact.evidence_gaps.length > 0 && (
+              <div className="border border-red-100 bg-red-50/30 p-3">
+                <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-700">
+                  <ShieldAlert size={14} />
+                  Дыры в позиции
+                </h3>
+                <ul className="space-y-2 text-xs leading-relaxed text-neutral-800">
+                  {artifact.evidence_gaps.map((item, index) => (
+                    <li key={index} className="border-t border-red-100 pt-2 first:border-t-0 first:pt-0">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {artifact.pressure_questions && artifact.pressure_questions.length > 0 && (
+              <div className="border border-amber-100 bg-amber-50/40 p-3">
+                <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-800">
+                  <Crosshair size={14} />
+                  Вопросы оппонента
+                </h3>
+                <ul className="space-y-2 text-xs leading-relaxed text-neutral-800">
+                  {artifact.pressure_questions.map((item, index) => (
+                    <li key={index} className="border-t border-amber-100 pt-2 first:border-t-0 first:pt-0">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {artifact.next_moves && artifact.next_moves.length > 0 && (
+              <div className="border border-accent-100 bg-accent-50 p-3">
+                <h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-accent-800">
+                  <Check size={14} />
+                  Что поправить
+                </h3>
+                <ul className="space-y-2 text-xs leading-relaxed text-neutral-800">
+                  {artifact.next_moves.map((item, index) => (
+                    <li key={index} className="border-t border-accent-100 pt-2 first:border-t-0 first:pt-0">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

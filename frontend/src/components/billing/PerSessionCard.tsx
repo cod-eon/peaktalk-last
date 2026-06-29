@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FileText, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
 import { api } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
+import { buildBillingSuccessPath, isGuestPaywallReturnPath, normalizeOptionalInternalReturnPath } from '@/lib/return-path';
 import { toast } from 'sonner';
 
 interface PerSessionCardProps {
@@ -14,6 +15,8 @@ interface PerSessionCardProps {
 
 export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const normalizedReturnPath = normalizeOptionalInternalReturnPath(returnPath);
+  const isGuestPaywallReturn = isGuestPaywallReturnPath(normalizedReturnPath);
 
   useEffect(() => {
     if (highlighted && cardRef.current) {
@@ -24,7 +27,7 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
   const handleBuy = async () => {
     try {
       const returnUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}${returnPath ? `/billing/success?return=${encodeURIComponent(returnPath)}` : '/billing/success'}`
+        ? `${window.location.origin}${buildBillingSuccessPath(normalizedReturnPath)}`
         : '';
       const res = await api.post('/billing/payment', {
         plan: 'per_session',
@@ -32,19 +35,23 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
       });
       if (res?.payment_url) {
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
-            payment_id: res.payment_id ?? null,
-            payment_plan: 'per_session',
-            return_path: returnPath ?? '/billing/success',
-            plan_context: 'meeting_defense_pack',
-          }));
+          try {
+            sessionStorage.setItem('peaktalk_payment_context', JSON.stringify({
+              payment_id: res.payment_id ?? null,
+              payment_plan: 'per_session',
+              return_path: normalizedReturnPath ?? '/billing/success',
+              plan_context: 'defense_brief',
+            }));
+          } catch {
+            // Payment redirect must continue even when storage is unavailable.
+          }
         }
         trackEvent('payment_started', {
-          source: returnPath === '/simulation/from-guest' ? 'guest_paywall' : 'billing',
+          source: isGuestPaywallReturn ? 'guest_paywall' : 'billing',
           payment_plan: 'per_session',
           payment_id: res.payment_id ?? null,
-          return_path: returnPath ?? '/billing/success',
-          plan_context: 'meeting_defense_pack',
+          return_path: normalizedReturnPath ?? '/billing/success',
+          plan_context: 'defense_brief',
         });
         window.location.href = res.payment_url;
       }
@@ -91,15 +98,15 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
       <div className="grid grid-cols-1 gap-3 mt-5 mb-6 text-sm text-white/75">
         <span className="flex items-center gap-1.5">
           <Zap size={13} className="text-[#E8600A]" />
-          1 полная сессия
+          1 стресс-тест материала
         </span>
         <span className="flex items-center gap-1.5">
           <FileText size={13} className="text-[#E8600A]" />
-          PDF-отчёт
+          Defense Brief + PDF
         </span>
         <span className="flex items-center gap-1.5">
           <ShieldCheck size={13} className="text-[#E8600A]" />
-          Шпаргалка
+          План защиты перед встречей
         </span>
       </div>
 
@@ -107,7 +114,7 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
         onClick={handleBuy}
         className="mt-auto w-full h-12 bg-white hover:bg-[#FAF8F4] text-[#111827] font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-none"
       >
-        Начать сессию за 299 ₽
+        Собрать Defense Brief за 299 ₽
         <ArrowRight size={15} />
       </button>
 

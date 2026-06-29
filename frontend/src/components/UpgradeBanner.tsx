@@ -41,11 +41,12 @@ export function UpgradeBanner() {
   const limit = status.limits.simulations_per_month ?? 3;
   const left = Math.max(0, limit - used);
   const visible = used >= 2 && !isDismissedNow;
+  const leftLabel = left === 1 ? 'Осталась 1 проверка материала' : `Осталось ${left} проверки материала`;
 
   const bannerText =
     left === 0
-      ? 'Лимит симуляций исчерпан — нужен PRO для продолжения'
-      : `Осталась ${left} симуляция — переходи на PRO для безлимита`;
+      ? 'Лимит проверок материала исчерпан — нужен PRO для продолжения'
+      : `${leftLabel} — PRO откроет безлимит и Defense Brief`;
 
   return (
     <AnimatePresence>

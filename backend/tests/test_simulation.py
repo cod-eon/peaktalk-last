@@ -9,7 +9,8 @@ from app.models.guest import GuestSession
 from app.models.personalized_persona import PersonalizedPersona
 from app.models.draft import SpeechDraft
 from app.models.simulation import ArtifactType, SessionArtifact, SessionStatus, SimulationMessage, SimulationSession
-from app.services.limits import get_usage_counter
+from app.models.subscription import PlanType, SubscriptionStatus
+from app.services.limits import get_usage_counter, get_user_subscription
 from app.services.cloud_ru_ai import CloudRuAIError
 from app.services.simulation_ai import SimulationTurn, SkillEvaluation
 from .conftest import TEST_USER_ID
@@ -21,11 +22,11 @@ MOCK_TURN = SimulationTurn(
 )
 
 MOCK_EVALUATION = SkillEvaluation(metrics=[
-    {"name": "clarity", "score": 0.8, "comment": "Answers were clear and direct."},
-    {"name": "argumentation", "score": 0.7, "comment": "Good use of data points."},
-    {"name": "stress_resistance", "score": 0.75, "comment": "Stayed composed under pressure."},
-    {"name": "structure", "score": 0.65, "comment": "Slight tangents, but mostly structured."},
-    {"name": "conciseness", "score": 0.9, "comment": "Very concise responses."},
+    {"name": "Доказательность", "score": 0.8, "comment": "Answers were clear and direct."},
+    {"name": "Слабые допущения", "score": 0.7, "comment": "Good use of data points."},
+    {"name": "Работа с рисками", "score": 0.75, "comment": "Stayed composed under pressure."},
+    {"name": "Числа и факты", "score": 0.65, "comment": "Slight tangents, but mostly structured."},
+    {"name": "План ответа на встрече", "score": 0.9, "comment": "Very concise responses."},
 ])
 
 MOCK_PREP_CARD = {
@@ -39,6 +40,9 @@ MOCK_PREP_CARD = {
         {"topic": "Юнит-экономика", "risk": "Ответ был слишком общим", "suggested_response": "Назовите CAC, LTV и payback."},
     ],
     "key_numbers": ["20% MoM", "CAC $15"],
+    "evidence_gaps": ["Нет владельца решения по риску задержки релиза."],
+    "pressure_questions": ["Что вы урежете первым, если бюджет все-таки сократят на 30%?"],
+    "next_moves": ["Добавить owner, пороговую метрику и цену задержки."],
     "opening_move": "Начну с главной метрики роста.",
 }
 
@@ -47,7 +51,6 @@ START_PAYLOAD = {
     "persona_config": {"role": "investor"},
     "industry": "edtech",
     "difficulty": 3,
-    "draft_id": None,
 }
 
 
@@ -78,8 +81,8 @@ def mock_ai(monkeypatch):
 @pytest.fixture
 async def draft_id(client: AsyncClient) -> str:
     resp = await client.post("/drafts", json={
-        "title": "PeakTalk Pitch",
-        "raw_text": "PeakTalk is an AI coach for public speaking. We target students and founders.",
+        "title": "Budget Defense Memo",
+        "raw_text": "Нужно защитить бюджет внедрения перед CFO: без команды релиз сдвинется на месяц, а клиент перенесет контракт.",
     })
     return resp.json()["id"]
 
@@ -105,6 +108,26 @@ async def test_guest_start_creates_session(client: AsyncClient) -> None:
     assert data["turn"] == 1
     assert data["max_turns"] == 3
     assert data["remaining_turns"] == 2
+
+
+@pytest.mark.asyncio
+async def test_guest_start_maps_journalist_alias_to_working_committee(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    resp = await client.post("/simulation/guest-start", json={
+        "text": "Нужно защитить бюджет внедрения перед комитетом и показать цену задержки.",
+        "persona": "journalist",
+        "difficulty": 4,
+    })
+    assert resp.status_code == 201
+    token = resp.json()["guest_session_id"]
+
+    result = await db_session.execute(
+        select(GuestSession).where(GuestSession.session_token == token)
+    )
+    guest = result.scalar_one()
+    assert guest.persona == "board_member"
 
 
 @pytest.mark.asyncio
@@ -201,16 +224,52 @@ async def test_start_simulation(client: AsyncClient, draft_id: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_start_without_source_succeeds(client: AsyncClient) -> None:
-    """Starting simulation without a document is valid — AI uses general questions."""
+async def test_start_simulation_copies_draft_case_context(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    draft = SpeechDraft(
+        user_id=TEST_USER_ID,
+        title="Client Escalation Memo",
+        raw_text="Нужно объяснить клиенту сбой и защитить план восстановления до продления контракта.",
+        case_context={
+            "situation_id": "client_escalation",
+            "situation_label": "Клиентская эскалация",
+            "opponent_role": "Недовольный клиент",
+            "desired_output": "full_rewrite",
+        },
+    )
+    db_session.add(draft)
+    await db_session.commit()
+
+    resp = await client.post("/simulation/start", json={**START_PAYLOAD, "draft_id": str(draft.id)})
+
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["persona_config"]["case_context"] == draft.case_context
+    assert data["persona_config"]["scenario_title"] == "Клиентская эскалация"
+
+
+@pytest.mark.asyncio
+async def test_start_without_source_is_rejected(client: AsyncClient) -> None:
+    """Material-first stress-tests must be tied to a document or draft."""
     resp = await client.post("/simulation/start", json={
         "source_type": "system",
         "persona_config": {"role": "hr"},
         "industry": "general",
         "difficulty": 2,
     })
-    assert resp.status_code == 201
-    assert resp.json()["status"] == "active"
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_start_rejects_two_material_sources(client: AsyncClient, draft_id: str) -> None:
+    resp = await client.post("/simulation/start", json={
+        **START_PAYLOAD,
+        "draft_id": draft_id,
+        "document_id": str(uuid.uuid4()),
+    })
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -300,6 +359,66 @@ async def test_start_from_guest_requires_session_credit(
     await db_session.refresh(counter)
     assert counter.session_credits == 0
     assert counter.simulations_used == 0
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_allows_active_paid_subscription_without_session_credit(
+    client: AsyncClient,
+    db_session,
+) -> None:
+    await client.get("/billing/status")
+
+    token = str(uuid.uuid4())
+    guest = GuestSession(
+        session_token=token,
+        text="Нужно защитить бюджет внедрения перед CFO и показать риски сокращения.",
+        persona="cfo",
+        difficulty=3,
+        turn_count=3,
+        messages=[
+            {"role": "assistant", "content": "Почему это нельзя сократить?"},
+            {"role": "user", "content": "Потому что релиз сдвинется."},
+            {"role": "assistant", "content": "Что скажете CFO про экономику?"},
+            {"role": "user", "content": "Покажу стоимость задержки."},
+        ],
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db_session.add(guest)
+
+    subscription = await get_user_subscription(str(TEST_USER_ID), db_session)
+    subscription.plan = PlanType.pro
+    subscription.status = SubscriptionStatus.active
+    subscription.period_start = datetime.now(timezone.utc)
+    subscription.period_end = datetime.now(timezone.utc) + timedelta(days=30)
+
+    counter = await get_usage_counter(str(TEST_USER_ID), db_session)
+    counter.session_credits = 0
+    counter.simulations_used = 0
+    await db_session.commit()
+
+    resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": token,
+        "difficulty": 3,
+    })
+
+    assert resp.status_code == 201
+    session = await db_session.get(SimulationSession, uuid.UUID(resp.json()["id"]))
+    assert session is not None
+    assert session.persona_config["paid_access"] is True
+    assert session.persona_config["access_source"] == "subscription"
+
+    await db_session.refresh(counter)
+    assert counter.session_credits == 0
+    assert counter.simulations_used == 1
+
+
+@pytest.mark.asyncio
+async def test_start_from_guest_rejects_difficulty_above_prompt_contract(client: AsyncClient) -> None:
+    resp = await client.post("/simulation/from-guest", json={
+        "guest_session_id": str(uuid.uuid4()),
+        "difficulty": 6,
+    })
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -434,11 +553,13 @@ async def test_start_custom_simulation_creates_snapshot(
     client: AsyncClient,
     db_session,
     custom_persona_id: str,
+    draft_id: str,
 ) -> None:
     resp = await client.post("/simulation/start", json={
         "source_type": "custom",
         "persona_id": custom_persona_id,
         "industry": "fintech",
+        "draft_id": draft_id,
     })
     assert resp.status_code == 201
     data = resp.json()
@@ -455,15 +576,41 @@ async def test_start_custom_simulation_creates_snapshot(
 
 
 @pytest.mark.asyncio
+async def test_start_custom_simulation_clamps_persisted_difficulty_hint(
+    client: AsyncClient,
+    db_session,
+    custom_persona_id: str,
+    draft_id: str,
+) -> None:
+    persona = await db_session.get(PersonalizedPersona, uuid.UUID(custom_persona_id))
+    assert persona is not None
+    persona.difficulty_hint = 9
+    await db_session.commit()
+
+    resp = await client.post("/simulation/start", json={
+        "source_type": "custom",
+        "persona_id": custom_persona_id,
+        "industry": "fintech",
+        "draft_id": draft_id,
+    })
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["persona_config"]["difficulty"] == 5
+    assert data["persona_config"]["max_turns"] <= 15
+
+
+@pytest.mark.asyncio
 async def test_custom_simulation_snapshot_does_not_mutate_after_persona_update(
     client: AsyncClient,
     db_session,
     custom_persona_id: str,
+    draft_id: str,
 ) -> None:
     start_resp = await client.post("/simulation/start", json={
         "source_type": "custom",
         "persona_id": custom_persona_id,
         "industry": "fintech",
+        "draft_id": draft_id,
     })
     assert start_resp.status_code == 201
     session_id = start_resp.json()["id"]
@@ -481,10 +628,11 @@ async def test_custom_simulation_snapshot_does_not_mutate_after_persona_update(
 
 
 @pytest.mark.asyncio
-async def test_custom_simulation_rejects_missing_persona_id(client: AsyncClient) -> None:
+async def test_custom_simulation_rejects_missing_persona_id(client: AsyncClient, draft_id: str) -> None:
     resp = await client.post("/simulation/start", json={
         "source_type": "custom",
         "industry": "fintech",
+        "draft_id": draft_id,
     })
     assert resp.status_code == 422
 
@@ -493,18 +641,20 @@ async def test_custom_simulation_rejects_missing_persona_id(client: AsyncClient)
 async def test_start_rejects_hybrid_payload(
     client: AsyncClient,
     custom_persona_id: str,
+    draft_id: str,
 ) -> None:
     resp = await client.post("/simulation/start", json={
         "source_type": "custom",
         "persona_id": custom_persona_id,
         "persona_config": {"role": "investor"},
         "industry": "fintech",
+        "draft_id": draft_id,
     })
     assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_start_custom_simulation_rejects_foreign_persona(client: AsyncClient, db_session) -> None:
+async def test_start_custom_simulation_rejects_foreign_persona(client: AsyncClient, db_session, draft_id: str) -> None:
     foreign_persona = PersonalizedPersona(
         user_id=uuid.uuid4(),
         name="Чужой инвестор",
@@ -519,6 +669,7 @@ async def test_start_custom_simulation_rejects_foreign_persona(client: AsyncClie
         "source_type": "custom",
         "persona_id": str(foreign_persona.id),
         "industry": "fintech",
+        "draft_id": draft_id,
     })
     assert resp.status_code == 403
 
@@ -562,8 +713,8 @@ async def test_complete_session(client: AsyncClient, session_id: str) -> None:
     assert data["completed_at"] is not None
     assert len(data["skill_metrics"]) == 5
     metric_names = {m["metric_name"] for m in data["skill_metrics"]}
-    assert "clarity" in metric_names
-    assert "argumentation" in metric_names
+    assert "Доказательность" in metric_names
+    assert "План ответа на встрече" in metric_names
 
 
 @pytest.mark.asyncio
@@ -615,6 +766,9 @@ async def test_complete_session_creates_prep_card_artifact(client: AsyncClient, 
         assert artifact is not None
         assert artifact.content["opening_move"] == MOCK_PREP_CARD["opening_move"]
         assert artifact.content["top_arguments"][0]["text"] == MOCK_PREP_CARD["top_arguments"][0]["text"]
+        assert artifact.content["evidence_gaps"] == MOCK_PREP_CARD["evidence_gaps"]
+        assert artifact.content["pressure_questions"] == MOCK_PREP_CARD["pressure_questions"]
+        assert artifact.content["next_moves"] == MOCK_PREP_CARD["next_moves"]
 
 
 @pytest.mark.asyncio
@@ -645,6 +799,9 @@ async def test_paid_session_can_access_prep_card_artifact(client: AsyncClient, s
     data = resp.json()
     assert data["available"] is True
     assert data["artifact"]["opening_move"] == MOCK_PREP_CARD["opening_move"]
+    assert data["artifact"]["evidence_gaps"] == MOCK_PREP_CARD["evidence_gaps"]
+    assert data["artifact"]["pressure_questions"] == MOCK_PREP_CARD["pressure_questions"]
+    assert data["artifact"]["next_moves"] == MOCK_PREP_CARD["next_moves"]
     assert data["teaser"] is None
     assert data["paywall"] is None
 

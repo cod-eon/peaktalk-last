@@ -159,7 +159,7 @@ const funnelData = [
   { step: 'Подписка', value: 45, label: 'доверие к founder-led каналу' },
   { step: 'Telegram', value: 26, label: 'глубокий разбор' },
   { step: 'Guest flow', value: 14, label: 'открыл сценарий' },
-  { step: '3 вопроса', value: 8, label: 'value moment' },
+  { step: 'Pressure scan', value: 8, label: 'value moment' },
   { step: 'Feedback', value: 4, label: 'качественный сигнал' },
   { step: 'Оплата', value: 2, label: 'payment intent' },
 ];
@@ -167,7 +167,7 @@ const funnelData = [
 const psychologyLevers = [
   { lever: 'Loss aversion', score: 14, action: 'увидеть слабое место до встречи' },
   { lever: 'Specificity', score: 13, action: 'узнать себя в конкретном сценарии' },
-  { lever: 'Risk reversal', score: 12, action: 'попробовать 3 вопроса без страха' },
+  { lever: 'Risk reversal', score: 12, action: 'проверить материал без страха' },
   { lever: 'Commitment ladder', score: 12, action: 'плавно дойти до feedback / оплаты' },
   { lever: 'Transparency', score: 11, action: 'поверить founder-led запуску' },
 ];
@@ -422,7 +422,7 @@ function ContentUnitCard() {
           ['Неудобный вопрос', 'Что сломается, если урезать эту статью на 50%?'],
           ['Слабый ответ', 'Команда не успеет.'],
           ['Сильный ответ', 'Сдвинется релиз для клиента X, риск потери Y млн из воронки, компромисс — урезать Z, но сохранить A.'],
-          ['CTA', 'Проверьте свой материал на 3 вопросах.'],
+          ['CTA', 'Проверьте слабое место материала до встречи.'],
         ].map(([label, value], index) => (
           <div key={label} className="grid gap-3 border border-black/8 bg-[rgba(17,24,39,0.02)] px-4 py-3 sm:grid-cols-[130px_1fr]">
             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
@@ -525,7 +525,7 @@ export default function MarketingPlanPage() {
               {[
                 'Острый тезис в Threads / Telegram / Instagram.',
                 'Переход в Telegram или сразу в сценарий.',
-                'Пробная сессия на 3 вопроса.',
+                'Быстрый pressure scan материала.',
                 'Feedback пользователя.',
                 'Новый пост, сценарий, SEO-блок или внешний материал.',
               ].map((item, index) => (

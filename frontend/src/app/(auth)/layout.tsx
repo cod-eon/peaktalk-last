@@ -10,8 +10,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-white">
       {/* Background elements */}
       <div className="bg-grid absolute inset-0 z-0 pointer-events-none opacity-50" />
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-neutral-200/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-neutral-200/30 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute inset-x-0 top-20 h-px bg-neutral-200/80 pointer-events-none" />
 
       {/* Nav — same style & animation as landing page */}
       <motion.nav
@@ -38,6 +37,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               alt="PeakTalk"
               width={52}
               height={52}
+              priority
+              loading="eager"
               style={{ display: 'block' }}
             />
             <span className="brand-wordmark text-[21.6px] text-neutral-900">
