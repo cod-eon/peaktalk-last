@@ -1,272 +1,149 @@
-# =============================================================================
-# PeakTalk — CI/CD Pipeline
-# =============================================================================
-# Triggered automatically on every push to the `main` branch.
-#
-# What this does:
-#   1. Run backend tests (pytest with SQLite in-memory — no real DB needed)
-#   2. SSH into the VDS
-#   3. Pull latest code
-#   4. Build Docker images
-#   5. Run Alembic migrations
-#   6. Restart services
-#   7. Verify the API is healthy
-#
-# Required GitHub Secrets (set in: GitHub repo → Settings → Secrets → Actions):
-#   VDS_HOST        — IP address or hostname of your VDS (e.g. 123.45.67.89)
-#   VDS_USER        — SSH username (e.g. root or ubuntu)
-#   VDS_SSH_KEY     — Private SSH key (contents of ~/.ssh/id_ed25519)
-#   VDS_APP_DIR     — Path to the app on the VDS (e.g. /opt/peaktalk)
-#   VDS_DOMAIN      — PeakTalk production domain (e.g. peaktalk.ru)
-#
-# Optional secrets:
-#   SLACK_WEBHOOK   — Slack webhook URL for deploy notifications
-# =============================================================================
-
-name: Deploy to VDS
+name: PeakTalk CI/CD
 
 on:
   push:
-    branches:
-      - main
-  # Allow manual trigger from GitHub Actions UI
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
-  group: deploy-main
+  group: peaktalk-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  changes:
-    name: Detect Changes
+  backend-tests:
+    name: Backend tests
     runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      deploy: ${{ steps.filter.outputs.deploy }}
-
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      SUPABASE_URL: https://test.supabase.co
+      SUPABASE_KEY: test-key
+      SUPABASE_SERVICE_KEY: test-service-key
+      GEMINI_API_KEY: test-gemini-key
+      REDIS_URL: redis://localhost:6379/0
+      APP_ENV: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Detect changed paths
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-              - 'tests/**'
-              - '.github/workflows/deploy.yml'
-            frontend:
-              - 'frontend/**'
-              - '.github/workflows/deploy.yml'
-            deploy:
-              - 'backend/**'
-              - 'frontend/**'
-              - 'tests/**'
-              - 'nginx/**'
-              - 'docker-compose.yml'
-              - 'deploy.sh'
-              - '.github/workflows/deploy.yml'
-
-  # ── Job 1: Run Tests ────────────────────────────────────────────────────────
-  test:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
+          cache: pip
           cache-dependency-path: backend/requirements.txt
-
-      - name: Install Python dependencies
+      - name: Install backend dependencies
         working-directory: backend
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          # Note: aiosqlite is included in requirements.txt for CI tests
-
-      - name: Run pytest
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Run backend tests
         working-directory: backend
-        env:
-          # Tests use SQLite in-memory — no real credentials needed
-          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
-          SUPABASE_URL: "https://test.supabase.co"
-          SUPABASE_KEY: "test-service-role-key"
-          GEMINI_API_KEY: "test-gemini-key"
-          REDIS_URL: "redis://localhost:6379/0"
-          APP_ENV: "test"
-        run: |
-          pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short
 
-  # ── Job 2: Frontend Checks ──────────────────────────────────────────────────
-  frontend-checks:
-    name: Frontend Changed-File Lint
+  frontend-quality:
+    name: Frontend lint and build
     runs-on: ubuntu-latest
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true'
-    permissions:
-      contents: read
-
-    defaults:
-      run:
-        working-directory: frontend
-
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+      NEXT_PUBLIC_API_URL: https://example.invalid/api
+      NEXT_PUBLIC_HCAPTCHA_SITEKEY: test-site-key
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
-
       - name: Install frontend dependencies
-        shell: bash
-        run: |
-          npm config set fetch-retries 5
-          npm config set fetch-retry-factor 2
-          npm config set fetch-retry-mintimeout 20000
-          npm config set fetch-retry-maxtimeout 120000
-          npm config set fetch-timeout 300000
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Run frontend lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
 
-          for attempt in 1 2 3; do
-            echo "npm ci attempt ${attempt}/3"
-            if npm ci --no-audit --no-fund; then
-              exit 0
-            fi
-
-            if [ "$attempt" -eq 3 ]; then
-              echo "npm ci failed after 3 attempts"
-              exit 1
-            fi
-
-            echo "Transient npm failure detected. Cleaning cache and retrying..."
-            npm cache verify || true
-            sleep 15
-          done
-
-      - name: Detect changed frontend source files
-        id: changed-frontend
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            frontend/src/**/*.ts
-            frontend/src/**/*.tsx
-            frontend/src/**/*.js
-            frontend/src/**/*.jsx
-            frontend/src/**/*.mjs
-            frontend/src/**/*.cjs
-
-      - name: Lint changed frontend files
-        if: steps.changed-frontend.outputs.any_changed == 'true'
-        env:
-          CHANGED_FILES: ${{ steps.changed-frontend.outputs.all_changed_files }}
-        run: |
-          python - <<'PY'
-          import os
-          import shlex
-          import subprocess
-
-          raw = os.environ["CHANGED_FILES"]
-          files = [path.removeprefix("frontend/") for path in shlex.split(raw) if path]
-
-          print("Linting changed files:")
-          for path in files:
-              print(path)
-
-          subprocess.run(["npx", "eslint", "--", *files], check=True)
-          PY
-
-      - name: Skip when no lintable frontend files changed
-        if: steps.changed-frontend.outputs.any_changed != 'true'
-        run: echo "No frontend source file changes detected. Skipping frontend lint."
-
-  # ── Job 3: Deploy ────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to VDS
+    needs: [backend-tests, frontend-quality]
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    needs: [changes, test, frontend-checks]
-    if: >
-      always() &&
-      needs.changes.result == 'success' &&
-      github.ref == 'refs/heads/main' &&
-      (
-        github.event_name == 'workflow_dispatch' ||
-        needs.changes.outputs.deploy == 'true'
-      ) &&
-      (
-        needs.test.result == 'success' ||
-        needs.test.result == 'skipped'
-      ) &&
-      (
-        needs.frontend-checks.result == 'success' ||
-        needs.frontend-checks.result == 'skipped'
-      )
-
+    timeout-minutes: 30
+    env:
+      VDS_HOST: ${{ secrets.VDS_HOST }}
+      VDS_USER: ${{ secrets.VDS_USER }}
+      VDS_APP_DIR: ${{ secrets.VDS_APP_DIR }}
+      VDS_DOMAIN: ${{ secrets.VDS_DOMAIN }}
+      VDS_KNOWN_HOSTS: ${{ secrets.VDS_KNOWN_HOSTS }}
+      VDS_SSH_KEY: ${{ secrets.VDS_SSH_KEY }}
     steps:
-      # Install the SSH key from GitHub Secrets so we can connect to the VDS
+      - uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VDS_HOST VDS_USER VDS_APP_DIR VDS_DOMAIN VDS_KNOWN_HOSTS VDS_SSH_KEY; do
+            if [[ -z "${!variable}" ]]; then
+              echo "Missing required deployment secret: ${variable}" >&2
+              exit 1
+            fi
+          done
+
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.VDS_SSH_KEY }}
 
-      # Add the VDS host to known_hosts so SSH doesn't ask for confirmation
-      - name: Add VDS to known hosts
+      - name: Install pinned VDS host key
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.VDS_HOST }}" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VDS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
 
-      # SSH into the VDS and run the deploy script.
-      # VDS uses SSH deploy key (~/.ssh/id_ed25519) to pull from GitHub —
-      # no GITHUB_TOKEN manipulation needed.
-      - name: Deploy
+      - name: Sync repository to VDS
+        shell: bash
         run: |
-          ssh ${{ secrets.VDS_USER }}@${{ secrets.VDS_HOST }} \
-            "cd ${{ secrets.VDS_APP_DIR }} && bash deploy.sh"
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='backend/.env' \
+            --exclude='frontend/.env.local' \
+            --exclude='node_modules' \
+            --exclude='frontend/.next' \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10' \
+            ./ "${VDS_USER}@${VDS_HOST}:${VDS_APP_DIR}/"
 
-      # Quick sanity check: hit the health endpoint from GitHub's runner
-      # (optional — only works if your VDS is publicly accessible)
-      - name: Verify deployment
+      - name: Run server-side deployment
+        shell: bash
         run: |
-          if [ -n "${{ secrets.VDS_DOMAIN }}" ]; then
-            for i in $(seq 1 10); do
-              if curl -ksf "https://${{ secrets.VDS_DOMAIN }}/health"; then
-                exit 0
-              fi
-              echo "Health check retry $i/10..."
-              sleep 3
-            done
-            echo "Health check failed."
-            exit 1
-          else
-            echo "Health check skipped: VDS_DOMAIN secret is not set."
-          fi
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+            "${VDS_USER}@${VDS_HOST}" \
+            "cd '${VDS_APP_DIR}' && DEPLOY_SHA='${GITHUB_SHA}' DEPLOY_HEALTH_HOST='${VDS_DOMAIN}' bash deploy.sh"
 
-      # Uncomment to get Slack notifications on deploy
-      # - name: Notify Slack
-      #   if: always()
-      #   uses: slackapi/slack-github-action@v1.26.0
-      #   with:
-      #     payload: |
-      #       {
-      #         "text": "${{ job.status == 'success' && '✅' || '❌' }} Deploy to PeakTalk VDS: ${{ job.status }}\nCommit: ${{ github.event.head_commit.message }}\nAuthor: ${{ github.actor }}"
-      #       }
-      #   env:
-      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Verify public health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 10 "https://${VDS_DOMAIN}/health"; then
+              echo
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public health check failed" >&2
+          exit 1

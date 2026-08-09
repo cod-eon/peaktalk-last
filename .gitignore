@@ -1,84 +1,57 @@
-# =============================================================================
-# PeakTalk — .gitignore
-# =============================================================================
-
-# ── Node / Next.js ────────────────────────────────────────────────────────────
+# Dependencies and build output
 node_modules/
-.pnp
-.pnp.js
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/.turbo/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+frontend/next-env.d.ts
 
-# ── Environment files (NEVER commit these — they contain secrets!) ───────────
-.env
-.env.local
-.env.*.local
-backend/.env
-frontend/.env.local
-
-# .env.example files SHOULD be committed (they contain no secrets)
-!backend/.env.example
-!frontend/.env.example
-
-# ── Python ────────────────────────────────────────────────────────────────────
+# Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-venv/
-env/
-.venv/
 *.egg-info/
-dist/
-build/
 .pytest_cache/
 .coverage
 htmlcov/
-*.pyc
 
-# ── Docker ────────────────────────────────────────────────────────────────────
-# Don't ignore docker-compose files — they are part of the project
-# .docker/  (only if you store secrets there)
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+*.pem
+*.key
 
-# ── OS ────────────────────────────────────────────────────────────────────────
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Generated PWA assets
+frontend/public/sw.js
+frontend/public/workbox-*.js
 
-# ── IDE ────────────────────────────────────────────────────────────────────────
+# Harness runtime and pinned external catalog checkout
+.harness/runtime/
+.harness/vendor/
+.harness/evidence/
+
+# Tooling caches
+.codegraph/
+.playwright-mcp/
+.mcp.json
+.claude/
+.vercel/
+
+# Editors, logs, and OS files
 .idea/
 .vscode/
 *.swp
 *.swo
-*.sublime-project
-*.sublime-workspace
-
-# ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-
-# ── PWA (generated files) ────────────────────────────────────────────────────
-frontend/public/sw.js
-frontend/public/workbox-*.js
-
-# ── TypeScript build info ─────────────────────────────────────────────────────
-*.tsbuildinfo
-frontend/tsconfig.tsbuildinfo
-
-# ── Claude internal ───────────────────────────────────────────────────────────
-.claude/
-
-# Build artifacts & tooling cache
-.next/
-.playwright-mcp/
-.mcp.json
+.DS_Store
+._*
+/Icon?
