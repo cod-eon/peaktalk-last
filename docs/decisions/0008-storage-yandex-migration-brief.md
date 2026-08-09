@@ -1,18 +1,18 @@
 # 0008 — Yandex Object Storage migration brief
 
-Status: accepted migration plan; provider-neutral adapter is implemented while
-production execution remains credential and object-inventory gated.
+Status: accepted migration plan; Yandex provider is enabled on the clean
+production runtime after credential, KMS, privacy and smoke-test gates passed.
+Legacy Supabase Storage code remains available for rollback.
 
 Date: 2026-08-09
 
 ## Current state
 
-The backend currently uploads original files directly through the Supabase
-Storage client. The path is based on local user ID, document ID, and the raw
-filename. The API allows PDF, DOC, DOCX, TXT, and MD up to 50 MiB. Extracted
-text and product results are already stored in PostgreSQL. The current code has
-no Yandex adapter, no signed-URL path, no storage manifest, and no verified
-orphan inventory.
+The backend supports the legacy Supabase provider and a Yandex S3 adapter. The
+Yandex path uses private objects, KMS encryption, short-lived signed URLs,
+idempotent checksum preflight, bounded retries/timeouts, content-type checks,
+and safe key construction. Extracted text and product results remain in
+PostgreSQL.
 
 ## Target boundary
 
@@ -84,5 +84,25 @@ Rollback switches the provider flag to Supabase and preserves the local
 
 Approval requires actual bucket/KMS/IAM inventory, retention period, service
 account owner, cost ceiling, backup/restore test, object manifest, feature-flag
-owner, cutover window, and smoke/regression evidence. Until then, do not create
-the production bucket, migrate objects, or remove Supabase Storage.
+owner, cutover window, and smoke/regression evidence. Credential, IAM, KMS,
+privacy and application smoke evidence now exists; retention, lifecycle and
+policy inventory remain operator checks. Supabase Storage is retained as
+rollback code and is not deleted.
+
+## Gate evidence — 2026-08-09
+
+- Service account `peaktalk-prod-storage` was provisioned with scoped bucket
+  and KMS roles; credentials are stored only on VDS.
+- `STORAGE_PROVIDER=yandex` is enabled in `/opt/peaktalk/backend/.env` with
+  mode `600`; credential values are not committed or logged.
+- Non-destructive smoke passed: KMS-encrypted upload, download, signed-URL
+  download, anonymous-read denial, and delete cleanup.
+- PostgreSQL contains zero `documents`, `session_artifacts`, and
+  `ai_analysis_results` rows after the approved database reset, so no legacy
+  object migration or deletion is required for this clean runtime.
+- Runtime remains on exact deploy commit `c8333dc`; migration head is
+  `0021_draft_case_context` and public API health passes.
+
+The remaining operator follow-up is to inspect and record the bucket policy,
+lifecycle and retention settings from the Yandex console. Do not replace an
+existing bucket policy without an exact diff.

@@ -222,6 +222,7 @@ services:
       - certbot_webroot:/var/www/certbot:ro
     networks:
       - internal
+      - logto-internal
     depends_on:
       - api
       - frontend
@@ -242,3 +243,6 @@ volumes:
 networks:
   internal:
     driver: bridge
+  logto-internal:
+    external: true
+    name: peaktalk-logto_logto-internal

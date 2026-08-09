@@ -1,8 +1,8 @@
 # Yandex Object Storage access for PeakTalk
 
 Status: operator procedure; provider-neutral backend adapter is implemented
-behind `STORAGE_PROVIDER=legacy|yandex`; no production cutover has been
-performed.
+behind `STORAGE_PROVIDER=legacy|yandex`. The clean production runtime is now
+on `STORAGE_PROVIDER=yandex`; Supabase Storage remains available for rollback.
 
 ## Target
 
@@ -59,13 +59,16 @@ YANDEX_S3_KMS_KEY_ID=abjbiq7jvp0bca5qpe3l
 YANDEX_S3_PRESIGN_TTL_SECONDS=900
 ```
 
-Before enabling the provider, the release gate requires a non-destructive `HeadBucket`, a test upload under a temporary prefix, a signed download, a negative anonymous download, and cleanup of only that test prefix. Existing objects are not migrated or deleted until a manifest and restore evidence exist.
+The completed release gate included a non-destructive bucket check, a test
+upload under a temporary prefix, a KMS-encrypted object head, a signed
+download, a negative anonymous download, and cleanup of only that test prefix.
+Existing objects were not migrated or deleted; the clean production database
+contains no document or artifact rows.
 
 ## What I can do after the key is installed
 
-The backend adapter is now configured for timeout/retry/idempotency/content
-type validation, KMS-encrypted uploads, private-object downloads, and
-short-lived signed URLs. After the key is installed I can run the scoped
-storage smoke test on VDS, inspect bucket encryption/policy/lifecycle, and
-record the evidence. I cannot manufacture the Yandex access key or read a
-browser-only console session from the VDS.
+The backend adapter is configured for timeout/retry/idempotency/content type
+validation, KMS-encrypted uploads, private-object downloads, and short-lived
+signed URLs. The scoped VDS smoke test passed. The remaining operator task is
+to inspect and record the bucket policy, lifecycle and retention settings; an
+existing bucket policy will not be replaced without an exact diff.
