@@ -26,6 +26,7 @@ htmlcov/
 !frontend/.env.example
 *.pem
 *.key
+ВРЕМЕННО_key
 
 # Generated PWA assets
 frontend/public/sw.js

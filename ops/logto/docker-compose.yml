@@ -1,0 +1,56 @@
+name: peaktalk-logto
+
+services:
+  logto-postgres:
+    image: postgres:16.14-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${LOGTO_DB_USER}
+      POSTGRES_PASSWORD: ${LOGTO_DB_PASSWORD}
+      POSTGRES_DB: ${LOGTO_DB_NAME}
+    volumes:
+      - logto_postgres_data:/var/lib/postgresql/data
+    networks:
+      - logto-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOGTO_DB_USER} -d ${LOGTO_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    stop_grace_period: 60s
+
+  logto:
+    image: ghcr.io/logto-io/logto:1.41.0@sha256:7f79547e3d1fe569a3ecae757968a7cfc579687aa8164eec35113c0adc983c5b
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_URL: postgres://${LOGTO_DB_USER}:${LOGTO_DB_PASSWORD}@logto-postgres:5432/${LOGTO_DB_NAME}
+      PORT: 3001
+      ADMIN_PORT: 3002
+      ENDPOINT: ${LOGTO_ENDPOINT}
+      ADMIN_ENDPOINT: ${LOGTO_ADMIN_ENDPOINT}
+      TRUST_PROXY_HEADER: 1
+      SECRET_VAULT_KEK: ${LOGTO_SECRET_VAULT_KEK}
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3002:3002"
+    networks:
+      - logto-internal
+    depends_on:
+      logto-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1:3001/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  logto_postgres_data:
+
+networks:
+  logto-internal:
+    driver: bridge

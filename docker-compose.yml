@@ -23,7 +23,7 @@ services:
   # so it survives container restarts and re-deploys.
   postgres:
     <<: *default-logging
-    image: postgres:16-alpine
+    image: postgres:16.14-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-peaktalk}
@@ -34,16 +34,17 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-peaktalk}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-peaktalk} -d ${POSTGRES_DB:-peaktalk}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    stop_grace_period: 60s
 
   # ── Redis ───────────────────────────────────────────────────────────────────
   # Used by Celery as task broker and result backend.
   redis:
     <<: *default-logging
-    image: redis:7-alpine
+    image: redis:7.4.10-alpine
     restart: unless-stopped
     volumes:
       - redis_data:/data

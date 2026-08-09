@@ -12,6 +12,9 @@ alembic==1.14.0
 # Supabase
 supabase>=2.10.0
 
+# Yandex Object Storage (S3-compatible API; enabled only behind STORAGE_PROVIDER)
+boto3==1.43.67
+
 # AI
 openai>=1.0.0
 tenacity==9.0.0

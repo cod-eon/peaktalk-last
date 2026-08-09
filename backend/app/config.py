@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,11 +10,29 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str
+    database_pool_size: int = Field(default=10, ge=1, le=100)
+    database_max_overflow: int = Field(default=20, ge=0, le=100)
+    database_pool_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    database_command_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
 
     # Supabase
     supabase_url: str
     supabase_key: str
     supabase_storage_bucket: str = "peaktalk-dev-bucket"
+
+    # Object storage. Keep legacy as the default until the separate Storage
+    # migration gate has fresh credentials and upload/restore evidence.
+    storage_provider: Literal["legacy", "yandex"] = "legacy"
+    yandex_s3_endpoint_url: str = "https://storage.yandexcloud.net"
+    yandex_s3_region: str = "ru-central1"
+    yandex_s3_bucket: str = "peaktalk-prod-private-documents"
+    yandex_s3_kms_key_id: str = ""
+    yandex_s3_access_key_id: str = ""
+    yandex_s3_secret_access_key: str = ""
+    yandex_s3_presign_ttl_seconds: int = Field(default=900, ge=60, le=3600)
+    yandex_s3_connect_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    yandex_s3_read_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    yandex_s3_max_attempts: int = Field(default=4, ge=1, le=10)
 
     # AI
     cloud_ru_api_key: str = Field(default="")
