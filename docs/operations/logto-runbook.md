@@ -5,7 +5,7 @@ healthy endpoints. Application Auth cutover remains a separate migration gate.
 
 ## Architecture
 
-Logto is a separate Compose project under `/opt/peaktalk-logto` with its own persistent PostgreSQL volume and its own secret file. It must not share the PeakTalk application database or volume. The public and admin ports bind to loopback only; nginx joins the dedicated Logto network and is the TLS boundary. The admin route has an edge rate limit and still relies on Logto admin authentication; PeakTalk application roles are not inferred from Logto console access.
+Logto is a separate Compose project under `/opt/peaktalk-logto` with its own persistent PostgreSQL volume and its own secret file. It must not share the PeakTalk application database or volume. The public and admin ports bind to loopback only; nginx joins the dedicated Logto network and is the TLS boundary. The admin route relies on Logto admin authentication; PeakTalk application roles are not inferred from Logto console access.
 
 The repository pins the Logto image to `ghcr.io/logto-io/logto:1.41.0` by immutable digest. Upgrades are explicit release changes with a database backup, migration check and rollback window.
 

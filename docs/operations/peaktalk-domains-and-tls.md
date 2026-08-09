@@ -41,7 +41,7 @@ expected address and public HTTPS requests return successfully.
 3. Separate nginx virtual hosts are installed:
    - `auth.peaktalk.ru` → Logto public endpoint;
    - `admin.auth.peaktalk.ru` → Logto admin endpoint, protected by Logto
-     admin authentication and an edge rate limit.
+     admin authentication.
 4. `nginx -t`, certificate SANs, TLS protocol policy, redirect behavior,
    endpoint routing and Logto health have passed. Application integration
    remains separately gated.
