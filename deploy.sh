@@ -79,9 +79,7 @@ if [[ ! -r backend/.env || ! -r frontend/.env.local ]]; then
   fail "Production env files are missing or unreadable"
 fi
 
-if [[ ! -x "$BACKUP_COMMAND" ]]; then
-  fail "Required database backup command is missing: $BACKUP_COMMAND"
-fi
+sudo -n test -x "$BACKUP_COMMAND" || fail "Required database backup command is missing or not executable: $BACKUP_COMMAND"
 
 log "Loading verified application images"
 gzip -dc "$IMAGE_ARCHIVE" | docker load >/dev/null
