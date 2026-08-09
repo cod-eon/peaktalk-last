@@ -61,7 +61,7 @@ services:
   # Uses the same image as `api` — no separate build needed.
   migrate:
     <<: *default-logging
-    image: peaktalk-backend:latest
+    image: peaktalk-backend:${IMAGE_TAG:-latest}
     env_file: ./backend/.env
     environment:
       # Override DATABASE_URL so it points at the Docker postgres service
@@ -88,7 +88,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: peaktalk-backend:latest
+    image: peaktalk-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
@@ -127,7 +127,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    image: peaktalk-worker:latest
+    image: peaktalk-worker:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
@@ -154,7 +154,7 @@ services:
   # Sends periodic tasks (e.g. expire abandoned sessions every 30 min).
   beat:
     <<: *default-logging
-    image: peaktalk-worker:latest
+    image: peaktalk-worker:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
@@ -193,6 +193,7 @@ services:
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-placeholder_anon_key}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
         NEXT_PUBLIC_HCAPTCHA_SITEKEY: ${NEXT_PUBLIC_HCAPTCHA_SITEKEY:-placeholder_sitekey}
+    image: peaktalk-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       NODE_ENV: production

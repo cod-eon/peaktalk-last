@@ -18,34 +18,51 @@
 
 @layer base {
   :root {
+    /* PeakTalk pivot system */
+    --pt-bg: #f4f6f8;
+    --pt-surface: #ffffff;
+    --pt-surface-soft: #edf1f5;
+    --pt-ink: #172033;
+    --pt-muted: #637087;
+    --pt-faint: #8f9aab;
+    --pt-line: #dbe2ea;
+    --pt-line-strong: #c5ceda;
+    --pt-cobalt: #2557d6;
+    --pt-cobalt-strong: #1e44ac;
+    --pt-cobalt-soft: rgba(37, 87, 214, 0.09);
+    --pt-success: #147a58;
+    --pt-warning: #9a6414;
+    --pt-danger: #bd3d3d;
+    --pt-radius: 22px;
+
     /* ─── Backgrounds — light, breathing ─── */
-    --bg-main: #F9FAFB;
+    --bg-main: var(--pt-bg);
     --bg-surface: #FFFFFF;
     --bg-surface-alt: #F3F4F6;
     --bg-surface-hover: #F9FAFB;
     --bg-card: #FFFFFF;
-    --color-ink: #000000;
+    --color-ink: var(--pt-ink);
     --color-surface-dark: #0A0A0A;
     --border-main: #E5E7EB;
     --border-light: #D1D5DB;
 
     /* ─── Text — deep graphite scale ─── */
-    --text-main: #111827;
-    --text-muted: #374151;
-    --text-dim: #6B7280;
+    --text-main: var(--pt-ink);
+    --text-muted: #40506a;
+    --text-dim: var(--pt-muted);
     --text-placeholder: #9CA3AF;
 
     /* ─── Primary Accent — Ember Orange (CTA, progress, highlights) ─── */
-    --accent-primary: #E8600A;
-    --accent-primary-hover: #D4570A;
-    --accent-primary-glow: rgba(232, 96, 10, 0.20);
-    --accent-primary-bg: rgba(232, 96, 10, 0.08);
+    --accent-primary: var(--pt-cobalt);
+    --accent-primary-hover: var(--pt-cobalt-strong);
+    --accent-primary-glow: rgba(37, 87, 214, 0.18);
+    --accent-primary-bg: var(--pt-cobalt-soft);
 
     /* ─── Convenience aliases ─── */
-    --color-accent: #E8600A;
-    --color-accent-hover: #D4570A;
-    --color-accent-glow: rgba(232, 96, 10, 0.20);
-    --color-accent-bg: rgba(232, 96, 10, 0.08);
+    --color-accent: var(--pt-cobalt);
+    --color-accent-hover: var(--pt-cobalt-strong);
+    --color-accent-glow: rgba(37, 87, 214, 0.18);
+    --color-accent-bg: var(--pt-cobalt-soft);
 
     /* ─── Secondary alias — kept for legacy code ─── */
     --accent-blue: #E8600A;
@@ -94,15 +111,15 @@
     --sidebar-width-collapsed: 72px;
 
     /* ─── Landing editorial system ─── */
-    --landing-paper: #FAF8F4;
-    --landing-ink: #111111;
-    --landing-steel: #73706A;
-    --landing-line: #D9D5CC;
-    --landing-accent: #E8600A;
+    --landing-paper: var(--pt-bg);
+    --landing-ink: var(--pt-ink);
+    --landing-steel: var(--pt-muted);
+    --landing-line: var(--pt-line);
+    --landing-accent: var(--pt-cobalt);
   }
 
   body {
-    background-color: var(--bg-main);
+    background-color: var(--pt-bg);
     color: var(--text-main);
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
     position: relative;
@@ -113,7 +130,7 @@
   }
 
   ::selection {
-    background-color: rgba(232, 96, 10, 0.15);
+    background-color: rgba(37, 87, 214, 0.16);
     color: var(--text-main);
   }
 

@@ -1,37 +1,37 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, JetBrains_Mono, Unbounded } from "next/font/google";
+import { IBM_Plex_Mono, Manrope } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "sonner";
 
-const bodyFont = IBM_Plex_Sans({
+const bodyFont = Manrope({
   variable: "--font-inter",
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const displayFont = Unbounded({
+const displayFont = Manrope({
   variable: "--font-syne",
   subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700", "800", "900"],
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = IBM_Plex_Mono({
   variable: "--font-mono",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://peaktalk.ru"),
-  title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
+  title: "PeakTalk - ИИ-среда подготовки из рабочих материалов",
   description:
-    "Подготовьтесь к защите бюджета, инвест-питчу, QBR или клиентской эскалации: вставьте тезисы и получите неудобные вопросы, слабые места и план усиления позиции.",
+    "Загрузите документ, сценарий мероприятия, резюме или презентацию. PeakTalk задаст уточняющие вопросы и соберет спич, выжимку, тайминг, памятку и проверку оппонентом.",
   applicationName: "PeakTalk",
   manifest: "/manifest.json",
   icons: {
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
+    title: "PeakTalk - ИИ-среда подготовки из рабочих материалов",
     description:
-      "Вставьте тезисы или план разговора, получите неудобные вопросы, слабые места и план усиления позиции.",
+      "Загрузите сырой материал и получите дерево подготовки: версии, выжимку, тайминг, памятку и проверку оппонентом.",
     url: "https://peaktalk.ru",
     siteName: "PeakTalk",
     locale: "ru_RU",
@@ -54,9 +54,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
+    title: "PeakTalk - ИИ-среда подготовки из рабочих материалов",
     description:
-      "Проверьте позицию с ИИ-оппонентом до реальной встречи.",
+      "Превратите документ, сценарий или презентацию в готовый комплект подготовки.",
     images: ["/og-image.png"],
   },
   alternates: {

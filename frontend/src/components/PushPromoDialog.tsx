@@ -8,7 +8,14 @@ import { usePathname } from 'next/navigation';
 
 const PUSH_PROMPT_SUPPRESSED_PREFIXES = [
   '/analysis',
+  '/billing',
+  '/dashboard',
+  '/documents',
+  '/meetings',
   '/onboarding',
+  '/personas',
+  '/progress',
+  '/settings',
   '/simulation',
   '/upload',
 ];

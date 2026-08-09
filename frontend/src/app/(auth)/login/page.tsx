@@ -83,43 +83,43 @@ function LoginForm() {
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white border border-neutral-200 p-6 sm:p-8 rounded-none shadow-[0_4px_24px_rgba(0,0,0,0.07)]"
+      className="rounded-[30px] border border-[color:var(--pt-line)] bg-white p-6 shadow-[0_24px_80px_rgba(20,34,55,0.08)] sm:p-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">С возвращением</h1>
-        <p className="text-neutral-500 text-sm">
+        <h1 className="mb-2 font-display text-3xl font-semibold tracking-[-0.04em] text-[color:var(--pt-ink)]">С возвращением</h1>
+        <p className="text-sm text-[color:var(--pt-muted)]">
           Войдите, чтобы продолжить подготовку
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-none">
+          <div className="rounded-[18px] border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
         <div className="space-y-1.5">
-          <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider block ml-1">
-            Email
+          <label className="ml-1 block text-xs font-semibold text-[color:var(--pt-muted)]">
+            Почта
           </label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
+            className="w-full rounded-[18px] border border-[color:var(--pt-line)] bg-[color:var(--pt-bg)] px-4 py-3 text-sm text-[color:var(--pt-ink)] placeholder:text-[color:var(--pt-faint)] transition-all focus:border-[color:var(--pt-cobalt)] focus:outline-none focus:ring-2 focus:ring-[rgba(37,87,214,0.12)]"
             placeholder="arthur@example.com"
           />
         </div>
 
         <div className="space-y-1.5">
           <div className="flex justify-between items-center ml-1">
-            <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider">
+            <label className="text-xs font-semibold text-[color:var(--pt-muted)]">
               Пароль
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs text-neutral-900 hover:text-black transition-colors"
+              className="inline-flex min-h-9 items-center text-xs font-semibold text-[color:var(--pt-cobalt)] transition-colors hover:text-[color:var(--pt-cobalt-strong)]"
             >
               Забыли пароль?
             </Link>
@@ -129,7 +129,7 @@ function LoginForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-none px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all font-inter"
+            className="w-full rounded-[18px] border border-[color:var(--pt-line)] bg-[color:var(--pt-bg)] px-4 py-3 text-sm text-[color:var(--pt-ink)] placeholder:text-[color:var(--pt-faint)] transition-all focus:border-[color:var(--pt-cobalt)] focus:outline-none focus:ring-2 focus:ring-[rgba(37,87,214,0.12)]"
             placeholder="••••••••"
           />
         </div>
@@ -146,7 +146,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={isLoading || !captchaToken}
-          className="w-full bg-[#171717] hover:bg-black text-white font-medium rounded-none py-3.5 text-xs font-semibold relative overflow-hidden group mt-4 h-11 transition-colors flex items-center justify-center"
+          className="mt-4 flex h-12 w-full items-center justify-center overflow-hidden rounded-full bg-[color:var(--pt-ink)] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--pt-cobalt)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -155,9 +155,9 @@ function LoginForm() {
           )}
         </button>
       </form>
-      <div className="mt-8 text-center text-sm text-neutral-500">
+      <div className="mt-8 border-t border-[color:var(--pt-line)] pt-6 text-center text-sm text-[color:var(--pt-muted)]">
         Нет аккаунта?{" "}
-        <Link href={`/register${normalizedReturnUrl ? `?return=${encodeURIComponent(normalizedReturnUrl)}` : ''}`} className="text-neutral-900 hover:text-black transition-colors font-medium">
+        <Link href={`/register${normalizedReturnUrl ? `?return=${encodeURIComponent(normalizedReturnUrl)}` : ''}`} className="inline-flex min-h-9 items-center font-semibold text-[color:var(--pt-ink)] transition-colors hover:text-[color:var(--pt-cobalt)]">
           Создать бесплатно
         </Link>
       </div>

@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Сценарии рабочих защит — PeakTalk',
+  title: 'Сценарии подготовки - PeakTalk',
   description:
-    'Каталог pressure tests для защиты roadmap, бюджета, инвест-питча, клиентской эскалации и других дорогих рабочих встреч. Начните с Roadmap / Budget Defense для Head of Product.',
+    'Выберите ситуацию, загрузите материал и получите речь, выжимку, тайминг, памятку и вопросы перед встречей.',
   alternates: {
     canonical: '/scenarios',
   },
   openGraph: {
-    title: 'Сценарии рабочих защит — PeakTalk',
+    title: 'Сценарии подготовки - PeakTalk',
     description:
-      'Выберите конкретную встречу, вставьте материал и проверьте аргументацию под давлением будущего оппонента до реального разговора.',
+      'Выберите конкретную ситуацию и начните подготовку с вашего материала.',
     type: 'website',
     url: '/scenarios',
   },

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "catalog": "aas",
+  "default": "deny",
+  "allowSkillScripts": false,
+  "allowUnapprovedContent": false,
+  "blockedCatalogRisks": ["critical", "offensive"],
+  "approved": [
+    {
+      "id": "product-manager",
+      "modes": ["plan"],
+      "domains": ["product"],
+      "keywords": ["prd", "roadmap", "prioritization", "positioning", "pricing", "onboarding", "paywall", "product decision"]
+    },
+    {
+      "id": "architecture",
+      "modes": ["plan", "review"],
+      "domains": ["architecture"],
+      "keywords": ["architecture", "adr", "trade-off", "migration", "system design"]
+    },
+    {
+      "id": "code-review-excellence",
+      "modes": ["review"],
+      "domains": ["code"],
+      "keywords": ["review", "audit", "pull request", "diff"]
+    },
+    {
+      "id": "bug-hunter",
+      "modes": ["debug"],
+      "domains": ["code"],
+      "keywords": ["bug", "broken", "failure", "exception", "regression", "root cause"]
+    },
+    {
+      "id": "e2e-testing",
+      "modes": ["test", "review"],
+      "domains": ["ui", "frontend"],
+      "keywords": ["playwright", "e2e", "browser", "visual regression", "screenshot"]
+    },
+    {
+      "id": "design-taste-frontend",
+      "modes": ["plan", "implement", "review"],
+      "domains": ["ui"],
+      "keywords": ["design", "responsive", "layout", "visual", "interface", "mobile", "desktop"]
+    },
+    {
+      "id": "react-best-practices",
+      "modes": ["implement", "review"],
+      "domains": ["frontend"],
+      "keywords": ["react", "component", "render", "performance", "hook"]
+    },
+    {
+      "id": "nextjs-app-router-patterns",
+      "modes": ["implement", "review", "debug"],
+      "domains": ["frontend"],
+      "keywords": ["next.js", "nextjs", "app router", "server component", "route"]
+    },
+    {
+      "id": "frontend-api-integration-patterns",
+      "modes": ["implement", "review", "debug"],
+      "domains": ["frontend", "api"],
+      "keywords": ["api client", "tanstack query", "fetch", "mutation", "race condition", "loading state", "error state"]
+    },
+    {
+      "id": "python-fastapi-development",
+      "modes": ["implement", "review", "debug"],
+      "domains": ["backend", "api"],
+      "keywords": ["fastapi", "python", "sqlalchemy", "pydantic", "endpoint", "router"]
+    },
+    {
+      "id": "api-security-testing",
+      "modes": ["test", "review", "implement"],
+      "domains": ["security", "api", "auth"],
+      "keywords": ["authorization", "authentication", "jwt", "rate limit", "input validation", "idor"]
+    },
+    {
+      "id": "postgres-best-practices",
+      "modes": ["plan", "implement", "review", "debug"],
+      "domains": ["database"],
+      "keywords": ["postgres", "sql", "query", "index", "rls", "schema", "migration"]
+    }
+  ]
+}

@@ -1,215 +1,160 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
-    LayoutDashboard,
-    Settings,
-    Bot,
-    FileText,
-    LogOut,
-    CreditCard,
-    Calendar,
-    TrendingUp,
-    Users,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import { useAuthStore } from '@/store/authStore';
-import { createClient } from '@/lib/supabase/client';
-import { NotificationsPopover } from '@/components/NotificationsPopover';
+  BarChart3,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  FolderOpen,
+  LogOut,
+  Settings,
+  ShieldQuestion,
+  UploadCloud,
+  Users,
+} from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
+import { NotificationsPopover } from "@/components/NotificationsPopover";
 
 const NAV_ITEMS = [
-    { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Материалы', path: '/documents', icon: FileText },
-    { name: 'Стресс-тесты', path: '/simulation', icon: Bot },
-    { name: 'Встречи', path: '/meetings', icon: Calendar },
-    { name: 'Прогресс', path: '/progress', icon: TrendingUp },
-    { name: 'Оппоненты', path: '/personas', icon: Users },
-    { name: 'Подписка', path: '/billing', icon: CreditCard },
+  { name: "Материал", caption: "текущая подготовка", path: "/dashboard", icon: FileText },
+  { name: "Артефакты", caption: "версии и файлы", path: "/documents", icon: FolderOpen },
+  { name: "Загрузка", caption: "новый материал", path: "/upload", icon: UploadCloud },
+  { name: "Проверка", caption: "краш-тест", path: "/simulation", icon: ShieldQuestion },
+  { name: "Встречи", caption: "даты и пакеты", path: "/meetings", icon: CalendarDays },
+  { name: "Роли", caption: "оппоненты", path: "/personas", icon: Users },
+  { name: "Риски", caption: "слабые места", path: "/progress", icon: BarChart3 },
 ];
 
 export function Sidebar() {
-    const pathname = usePathname();
-    const router = useRouter();
-    const [isExpanded, setIsExpanded] = useState(false);
-    const { user } = useAuthStore();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useAuthStore();
 
-    const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push('/login');
-        router.refresh();
-    };
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
-    const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';
-    return (
-        <motion.aside
-            initial={false}
-            animate={{ width: isExpanded ? 240 : 72 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            onMouseEnter={() => setIsExpanded(true)}
-            onMouseLeave={() => setIsExpanded(false)}
-            className="hidden md:flex flex-col h-screen fixed left-0 top-0 border-r border-neutral-200 bg-white z-40 overflow-hidden"
+  const displayName =
+    user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Пользователь";
+
+  return (
+    <aside className="hidden h-screen w-[236px] shrink-0 flex-col border-r border-[color:var(--pt-line)] bg-white/90 px-4 py-5 backdrop-blur-xl md:fixed md:left-0 md:top-0 md:z-40 md:flex">
+      <Link href="/dashboard" className="brand-wordmark text-[26px] text-[color:var(--pt-cobalt)]">
+        PeakTalk
+      </Link>
+
+      <nav className="mt-9 flex flex-1 flex-col gap-1 overflow-y-auto">
+        {NAV_ITEMS.map((item) => {
+          const isActive = pathname === item.path || pathname?.startsWith(item.path + "/");
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.path}
+              href={item.path}
+              className={cx(
+                "group flex min-h-[58px] items-center gap-3 rounded-[18px] px-3 text-[color:var(--pt-muted)] transition hover:bg-[color:var(--pt-bg)] hover:text-[color:var(--pt-ink)]",
+                isActive &&
+                  "bg-[color:var(--pt-cobalt-soft)] text-[color:var(--pt-cobalt)] shadow-[inset_3px_0_0_var(--pt-cobalt)]",
+              )}
+            >
+              <span
+                className={cx(
+                  "flex size-9 shrink-0 items-center justify-center rounded-[14px] border transition",
+                  isActive
+                    ? "border-[color:var(--pt-cobalt)] bg-white text-[color:var(--pt-cobalt)]"
+                    : "border-[color:var(--pt-line)] bg-white text-[color:var(--pt-muted)] group-hover:border-[color:var(--pt-line-strong)]",
+                )}
+              >
+                <Icon size={18} strokeWidth={1.85} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[14px] font-semibold leading-tight">{item.name}</span>
+                <span className="mt-0.5 block truncate text-[11px] font-medium leading-tight text-[color:var(--pt-faint)]">
+                  {item.caption}
+                </span>
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-5 space-y-3 border-t border-[color:var(--pt-line)] pt-4">
+        <Link
+          href="/billing"
+          className={cx(
+            "flex items-center justify-between rounded-[18px] border px-3 py-3 transition",
+            pathname === "/billing"
+              ? "border-[color:var(--pt-cobalt)] bg-[color:var(--pt-cobalt-soft)]"
+              : "border-[color:var(--pt-line)] bg-white hover:border-[color:var(--pt-line-strong)]",
+          )}
         >
-            {/* Logo */}
-            <div className="h-16 flex items-center px-5 border-b border-neutral-200 shrink-0 bg-white z-10 w-full">
-                <Link href="/" className="flex items-center gap-3.5 hover:opacity-75 transition-opacity">
-                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                        <Image src="/logo_svg.svg" alt="PeakTalk" width={32} height={32} />
-                    </div>
-                    <AnimatePresence>
-                        {isExpanded && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -6 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -6 }}
-                                transition={{ duration: 0.15 }}
-                                className="overflow-hidden"
-                            >
-                                <span className="brand-wordmark whitespace-nowrap text-neutral-900 text-[15px]">
-                                    PeakTalk
-                                </span>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </Link>
-            </div>
+          <span className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-[14px] bg-[color:var(--pt-cobalt-soft)] text-[color:var(--pt-cobalt)]">
+              <CreditCard size={17} strokeWidth={1.85} />
+            </span>
+            <span>
+              <span className="block text-[13px] font-semibold text-[color:var(--pt-ink)]">
+                Тариф Pro
+              </span>
+              <span className="mt-0.5 block text-[11px] font-medium text-[color:var(--pt-muted)]">
+                14 проверок
+              </span>
+            </span>
+          </span>
+          <span className="size-2 rounded-full bg-[color:var(--pt-cobalt)]" />
+        </Link>
 
-            {/* Navigation */}
-            <nav className="flex-1 py-4 flex flex-col gap-0.5 overflow-y-auto overflow-x-hidden px-2.5 w-full">
-                {NAV_ITEMS.map((item) => {
-                    const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
+        <div className="grid grid-cols-3 gap-2">
+          <Link
+            href="/settings"
+            title="Настройки"
+            className={cx(
+              "flex size-12 items-center justify-center rounded-[16px] transition",
+              pathname === "/settings"
+                ? "bg-[color:var(--pt-cobalt-soft)] text-[color:var(--pt-cobalt)]"
+                : "bg-[color:var(--pt-bg)] text-[color:var(--pt-muted)] hover:text-[color:var(--pt-ink)]",
+            )}
+          >
+            <Settings size={18} strokeWidth={1.85} />
+          </Link>
+          <div className="flex size-12 items-center justify-center rounded-[16px] bg-[color:var(--pt-bg)] text-[color:var(--pt-muted)]">
+            <NotificationsPopover />
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex size-12 items-center justify-center rounded-[16px] bg-[color:var(--pt-bg)] text-[color:var(--pt-muted)] transition hover:bg-red-50 hover:text-red-600"
+            title="Выйти"
+          >
+            <LogOut size={18} strokeWidth={1.85} />
+          </button>
+        </div>
 
-                    return (
-                        <Link
-                            key={item.path}
-                            href={item.path}
-                            title={!isExpanded ? item.name : undefined}
-                            className={`
-                                flex items-center gap-3 px-2.5 h-9 transition-all duration-150 relative group w-[216px]
-                                ${isActive
-                                    ? 'bg-neutral-200 text-black font-bold'
-                                    : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'
-                                }
-                            `}
-                        >
-                            <item.icon
-                                size={17}
-                                strokeWidth={isActive ? 2.5 : 2}
-                                className={`shrink-0 transition-colors ${
-                                    isActive
-                                        ? 'text-black'
-                                        : 'text-neutral-400 group-hover:text-neutral-600'
-                                }`}
-                            />
-                            <div className="flex-1 overflow-hidden">
-                                <AnimatePresence>
-                                    {isExpanded && (
-                                        <motion.span
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.12 }}
-                                            className={`text-[13px] whitespace-nowrap font-inter ${
-                                                isActive ? 'font-bold text-black' : 'font-medium'
-                                            }`}
-                                        >
-                                            {item.name}
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </Link>
-                    );
-                })}
-            </nav>
+        <div className="flex items-center gap-3 rounded-[18px] bg-[color:var(--pt-bg)] px-3 py-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[color:var(--pt-ink)]">
+            {displayName.slice(0, 1).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-[color:var(--pt-ink)]">
+              {displayName}
+            </p>
+            <p className="mt-0.5 text-[11px] font-medium text-[color:var(--pt-muted)]">
+              рабочее пространство
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
 
-            {/* Bottom — settings + user */}
-            <div className="px-2.5 pb-4 flex flex-col gap-0.5 shrink-0 bg-white z-10 w-full border-t border-neutral-200 pt-3">
-                <Link
-                    href="/settings"
-                    title={!isExpanded ? "Настройки" : undefined}
-                    className={`flex items-center gap-3 px-2.5 h-9 transition-all duration-150 w-[216px] ${
-                        pathname === '/settings' || pathname?.startsWith('/settings/')
-                            ? 'bg-neutral-100 text-neutral-900'
-                            : 'text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50'
-                    }`}
-                >
-                    <Settings
-                        size={17}
-                        strokeWidth={pathname === '/settings' ? 2.5 : 2}
-                        className={`shrink-0 ${pathname === '/settings' || pathname?.startsWith('/settings/') ? 'text-neutral-900' : ''}`}
-                    />
-                    <div className="flex-1 overflow-hidden">
-                        <AnimatePresence>
-                            {isExpanded && (
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.12 }}
-                                    className={`text-[13px] font-inter whitespace-nowrap ${
-                                        pathname === '/settings' || pathname?.startsWith('/settings/') ? 'font-semibold text-neutral-900' : 'font-medium'
-                                    }`}
-                                >
-                                    Настройки
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </Link>
-
-                <NotificationsPopover isExpanded={isExpanded} />
-
-                <button
-                    onClick={handleLogout}
-                    title={!isExpanded ? "Выйти" : undefined}
-                    className="flex items-center gap-3 px-2.5 h-9 transition-all duration-150 text-neutral-400 hover:text-red-500 hover:bg-red-50 w-[216px] cursor-pointer"
-                >
-                    <LogOut size={17} strokeWidth={2} className="shrink-0" />
-                    <div className="flex-1 overflow-hidden flex justify-start">
-                        <AnimatePresence>
-                            {isExpanded && (
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.12 }}
-                                    className="text-[13px] font-medium font-inter whitespace-nowrap"
-                                >
-                                    Выйти
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </button>
-
-                {/* User chip at very bottom */}
-                <AnimatePresence>
-                    {isExpanded && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="mt-2 px-2.5 py-2 flex items-center gap-2.5 border-t border-neutral-200"
-                        >
-                            <div className="w-6 h-6 rounded-none bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0">
-                                <span className="text-[10px] font-bold text-neutral-600">
-                                    {displayName.charAt(0).toUpperCase()}
-                                </span>
-                            </div>
-                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                                <span className="text-[12px] text-neutral-500 font-inter truncate leading-none">
-                                    {displayName}
-                                </span>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </motion.aside>
-    );
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
 }

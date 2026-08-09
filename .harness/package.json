@@ -1,0 +1,13 @@
+{
+  "name": "peaktalk-harness",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "status": "node bin/harness.mjs status",
+    "audit": "node bin/harness.mjs audit"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

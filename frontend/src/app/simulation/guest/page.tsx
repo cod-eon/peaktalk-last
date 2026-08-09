@@ -1,769 +1,215 @@
-'use client';
-
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, Lock, Timer, UserRound, Briefcase, TrendingUp, Crosshair, MapPin, Quote, ShieldAlert } from 'lucide-react';
-import { sendGuestMessage, startGuestSession } from '@/lib/guest-api';
-import { trackEvent } from '@/lib/analytics';
+import Link from "next/link";
 import {
-  EXAMPLE_DEFENSE_BRIEF,
-  EXAMPLE_DEFENSE_BRIEF_CONTEXT_NOTE,
-} from '@/lib/example-defense-brief';
-import { useAuthStore } from '@/store/authStore';
+  ArrowRight,
+  BriefcaseBusiness,
+  CalendarDays,
+  FileText,
+  GraduationCap,
+  Layers3,
+  MessageSquareText,
+  UploadCloud,
+  Users,
+} from "lucide-react";
+import { MarketingNav } from "@/components/peak/MarketingNav";
 
-type Step = 'input' | 'chat' | 'paywall';
-
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-};
-
-const PERSONAS = [
-  { id: 'cfo', label: 'Руководитель', note: 'бюджет, ресурсы, сроки', icon: Briefcase },
-  { id: 'client', label: 'Клиент', note: 'ценность, доверие, продление', icon: UserRound },
-  { id: 'investor', label: 'Инвестор', note: 'рост, рынок, риски', icon: TrendingUp },
+const intents = [
+  { label: "Мероприятие", icon: CalendarDays },
+  { label: "Кадровое сообщение", icon: Users },
+  { label: "Защита идеи", icon: BriefcaseBusiness },
+  { label: "Интервью", icon: MessageSquareText },
+  { label: "Дипломная защита", icon: GraduationCap },
 ];
 
-const DIFFICULTIES = [
-  { value: 1, label: 'Спокойно' },
-  { value: 3, label: 'Рабоче' },
-  { value: 5, label: 'Жёстко' },
+const questions = [
+  "Кто будет слушать материал?",
+  "Что нельзя уступить?",
+  "Какие цифры могут оспорить?",
 ];
 
-const MAX_GUEST_TURNS = 3;
-const MAX_TEXT_LENGTH = 8000;
-const SAMPLE_TEXT = 'Нужно защитить бюджет внедрения. Если сократить расходы сейчас, релиз сдвинется на месяц, а команда потеряет окно у ключевого клиента.';
+const outputs = [
+  "Сильная версия выступления",
+  "Короткая выжимка",
+  "Тайминг и структура",
+  "Проверка оппонентом",
+];
 
-const safariMotionStyle: React.CSSProperties = {
-  willChange: 'transform, opacity',
-  transform: 'translateZ(0)',
-  WebkitTransform: 'translateZ(0)',
-  backfaceVisibility: 'hidden',
-  WebkitBackfaceVisibility: 'hidden',
-};
-
-function Header() {
+function UploadPreview() {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-5 sm:px-8">
-      <Link
-        href="/"
-        className="flex items-center gap-2 transition-opacity hover:opacity-75"
-        aria-label="PeakTalk"
-      >
-        <Image src="/logo_svg.svg" alt="PeakTalk" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" />
-        <span className="brand-wordmark text-[18px] text-neutral-950">PeakTalk</span>
-      </Link>
-      <div className="flex items-center gap-4">
-        <Link
-          href="/login"
-          className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950"
-        >
-          Вход
-        </Link>
-        <Link
-          href="/scenarios"
-          className="inline-flex min-h-[44px] items-center justify-center border border-neutral-950 bg-neutral-950 px-5 font-inter text-[13px] font-bold text-white transition-colors hover:border-[#E8600A] hover:bg-[#E8600A]"
-        >
-          Сценарии
-        </Link>
-      </div>
-    </header>
-  );
-}
-
-function Label({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-function formatTime(seconds: number) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function ExampleDefenseBriefPreview() {
-  const topArguments = (EXAMPLE_DEFENSE_BRIEF.top_arguments ?? []).filter((item) => item.text);
-  const dangerZones = (EXAMPLE_DEFENSE_BRIEF.danger_zones ?? []).filter((item) => item.topic || item.risk);
-  const anchorPhrases = (EXAMPLE_DEFENSE_BRIEF.anchor_phrases ?? []).filter(Boolean);
-  const keyNumbers = (EXAMPLE_DEFENSE_BRIEF.key_numbers ?? []).filter(Boolean);
-
-  return (
-    <section className="border border-neutral-200 bg-white">
-      <div className="flex flex-col gap-2 border-b border-neutral-100 bg-[#faf8f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <Label>пример Defense Brief</Label>
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-400">
-          формат, не ваш анализ
-        </span>
-      </div>
-
-      <div className="p-4 sm:p-6">
-        <p className="max-w-2xl font-inter text-[13px] leading-relaxed text-neutral-500">
-          {EXAMPLE_DEFENSE_BRIEF_CONTEXT_NOTE}
-        </p>
-
-        {EXAMPLE_DEFENSE_BRIEF.opening_move && (
-          <div className="mt-5 border-l-2 border-[#E8600A] bg-[#E8600A]/[0.04] px-4 py-3">
-            <h2 className="mb-2 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#B74707]">
-              <Crosshair size={14} />
-              Рекомендуемый старт
-            </h2>
-            <p className="font-inter text-[14px] font-medium leading-relaxed text-neutral-800">
-              {EXAMPLE_DEFENSE_BRIEF.opening_move}
-            </p>
-          </div>
-        )}
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          {topArguments.map((argument, index) => (
-            <div key={index} className="border border-neutral-200 bg-neutral-50 px-4 py-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-neutral-500">
-                  Тезис 0{index + 1}
-                </h3>
-                <span className="font-mono text-[10px] text-[#E8600A]">{argument.strength}</span>
-              </div>
-              <p className="font-inter text-[13px] font-bold leading-relaxed text-neutral-900">
-                {argument.text}
-              </p>
-              {argument.anchor_phrase && (
-                <p className="mt-3 border-t border-neutral-200 pt-3 font-inter text-[12px] leading-relaxed text-neutral-600">
-                  “{argument.anchor_phrase}”
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="border border-red-100 bg-red-50/30 px-4 py-3">
-            <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-red-700">
-              <ShieldAlert size={14} />
-              Danger zones
-            </h3>
-            <div className="grid gap-3">
-              {dangerZones.map((zone, index) => (
-                <div key={index}>
-                  <p className="font-inter text-[13px] font-bold text-neutral-900">{zone.topic}</p>
-                  <p className="mt-1 font-inter text-[12px] leading-relaxed text-red-800">{zone.risk}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="border border-violet-100 bg-violet-50/40 px-4 py-3">
-            <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-violet-700">
-              <Quote size={14} />
-              Фразы-опоры
-            </h3>
-            <div className="grid gap-2">
-              {anchorPhrases.map((phrase, index) => (
-                <p key={index} className="font-inter text-[12px] font-medium leading-relaxed text-neutral-800">
-                  “{phrase}”
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5 border border-indigo-100 bg-indigo-50/40 px-4 py-3">
-          <h3 className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-indigo-700">
-            <MapPin size={14} />
-            Цифры, которые нужно принести
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {keyNumbers.map((number) => (
-              <span key={number} className="border border-indigo-200 bg-white px-2 py-1 font-mono text-[10px] text-indigo-800">
-                {number}
+    <div id="upload" className="relative overflow-hidden rounded-[36px] border border-[color:var(--pt-line)] bg-white p-4 shadow-[0_34px_110px_rgba(20,34,55,0.1)] sm:p-5">
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <section className="rounded-[30px] border border-dashed border-[color:var(--pt-line-strong)] bg-[color:var(--pt-bg)] p-5">
+          <div className="flex min-h-[330px] flex-col justify-between">
+            <div>
+              <span className="flex size-13 items-center justify-center rounded-[20px] bg-white text-[color:var(--pt-cobalt)] shadow-[0_14px_34px_rgba(20,34,55,0.08)]">
+                <UploadCloud size={26} strokeWidth={1.8} />
               </span>
-            ))}
+              <h2 className="mt-6 font-display text-[34px] font-semibold leading-[1.02] tracking-[-0.04em]">
+                Загрузите материал
+              </h2>
+              <p className="mt-4 text-[15px] leading-7 text-[color:var(--pt-muted)]">
+                Текст, презентация, резюме, сценарий или заметки. PeakTalk покажет, что можно собрать дальше.
+              </p>
+            </div>
+            <label className="mt-8 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[color:var(--pt-ink)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--pt-cobalt)]">
+                Выбрать файл
+              <ArrowRight size={16} strokeWidth={1.8} />
+              <input type="file" className="sr-only" />
+            </label>
           </div>
-        </div>
+        </section>
+
+        <section className="rounded-[30px] border border-[color:var(--pt-line)] bg-[linear-gradient(135deg,#ffffff_0%,#f7f9fc_100%)] p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(220px,1fr)]">
+            <div className="relative min-h-[340px]">
+              <div className="absolute left-[45%] top-11 hidden h-[270px] w-[210px] -translate-x-1/2 rotate-[-8deg] rounded-[24px] border border-[color:var(--pt-line)] bg-[color:var(--pt-cobalt-soft)] sm:block" />
+              <div className="absolute left-[52%] top-14 hidden h-[270px] w-[210px] -translate-x-1/2 rotate-[6deg] rounded-[24px] border border-[color:var(--pt-line)] bg-white sm:block" />
+              <article className="relative z-10 mx-auto flex min-h-[320px] w-full max-w-[245px] flex-col rounded-[26px] border border-[color:var(--pt-line)] bg-white p-4 shadow-[0_26px_72px_rgba(20,34,55,0.13)]">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-[15px] bg-[color:var(--pt-cobalt-soft)] text-[color:var(--pt-cobalt)]">
+                    <FileText size={20} strokeWidth={1.8} />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[color:var(--pt-muted)]">
+                      Документ
+                    </p>
+                    <h3 className="mt-1 text-[16px] font-semibold tracking-[-0.02em]">
+                      Сценарий клиента
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="mt-7 space-y-3">
+                  {[92, 66, 84, 58, 78].map((width, index) => (
+                    <span
+                      key={index}
+                      className="block h-2 rounded-full bg-[color:var(--pt-line)]"
+                      style={{ width: `${width}%` }}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-auto space-y-2 pt-7">
+                  {["Исходник", "Версия под клиента", "Тайминг"].map((item, index) => (
+                    <div
+                      key={item}
+                      className={`flex items-center justify-between rounded-[16px] border px-3 py-3 text-[12px] font-semibold ${
+                        index === 1
+                          ? "border-[color:var(--pt-cobalt)] bg-[color:var(--pt-cobalt-soft)] text-[color:var(--pt-ink)]"
+                          : "border-[color:var(--pt-line)] bg-[color:var(--pt-bg)] text-[color:var(--pt-muted)]"
+                      }`}
+                    >
+                      <span>{item}</span>
+                      <span className="font-mono text-[10px]">0{index + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="rounded-[24px] border border-[color:var(--pt-line)] bg-white p-4">
+                <p className="text-sm font-semibold">PeakTalk предлагает задачу</p>
+                <div className="mt-4 grid gap-2">
+                  {intents.slice(0, 4).map((intent, index) => {
+                    const Icon = intent.icon;
+
+                    return (
+                      <div
+                        key={intent.label}
+                        className={`flex min-h-11 items-center gap-3 rounded-[16px] px-3 text-[13px] font-semibold ${
+                          index === 0
+                            ? "bg-[color:var(--pt-cobalt)] text-white"
+                            : "bg-[color:var(--pt-bg)] text-[color:var(--pt-ink)]"
+                        }`}
+                      >
+                        <Icon size={16} strokeWidth={1.8} />
+                        {intent.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-[color:var(--pt-line)] bg-white p-4">
+                <p className="text-sm font-semibold">Перед разбором спрашивает</p>
+                <div className="mt-4 space-y-2">
+                  {questions.map((question) => (
+                    <div
+                      key={question}
+                      className="rounded-[16px] bg-[color:var(--pt-bg)] px-3 py-3 text-[13px] leading-5 text-[color:var(--pt-ink)]"
+                    >
+                      {question}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   );
 }
 
 export default function GuestSimulationPage() {
-  const user = useAuthStore((state) => state.user);
-  const [step, setStep] = useState<Step>('input');
-  const [text, setText] = useState('');
-  const [selectedPersona, setSelectedPersona] = useState('cfo');
-  const [selectedDifficulty, setSelectedDifficulty] = useState(3);
-  const [guestSessionId, setGuestSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [turn, setTurn] = useState(0);
-  const [answer, setAnswer] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(90);
-  const [error, setError] = useState<string | null>(null);
-  const [hasScenarioParam, setHasScenarioParam] = useState(false);
-
-  const answerRef = useRef<HTMLTextAreaElement>(null);
-  const guestPageViewedRef = useRef(false);
-  const currentPersona = PERSONAS.find((persona) => persona.id === selectedPersona) ?? PERSONAS[0];
-  const isReady = text.trim().length >= 20;
-  const currentQuestion = messages.filter((message) => message.role === 'assistant').at(-1)?.content ?? 'Анализ вводных данных...';
-  const progress = Math.min((turn / MAX_GUEST_TURNS) * 100, 100);
-  const billingPath = '/billing?plan=per_session&return=/simulation/from-guest';
-  const defensePackHref = user
-    ? billingPath
-    : `/register?return=${encodeURIComponent(billingPath)}`;
-  const loginHref = `/login?return=${encodeURIComponent(billingPath)}`;
-  const funnelSource = hasScenarioParam ? 'scenario' : 'direct';
-
-  useEffect(() => {
-    if (guestPageViewedRef.current) return;
-    guestPageViewedRef.current = true;
-
-    const params = new URLSearchParams(window.location.search);
-    const isFromScenario = params.get('from_scenario') === 'true';
-    let trackedPersona = 'cfo';
-    let trackedDifficulty = 3;
-
-    if (isFromScenario) {
-      const ctx = localStorage.getItem('peaktalk_guest_context');
-      if (ctx) {
-        setHasScenarioParam(true);
-        setText(ctx);
-      }
-    }
-    const p = params.get('persona');
-    
-    // Map scenario categories to our 3 guest personas, or just use the exact match
-    const mapped = p === 'investors' ? 'investor' : p === 'clients' ? 'client' : p === 'cfo' || p === 'budget' || p === 'roadmap' || p === 'people' || p === 'crisis' ? 'cfo' : p;
-    if (mapped && PERSONAS.some(x => x.id === mapped)) {
-      trackedPersona = mapped;
-      setSelectedPersona(mapped);
-    }
-    const d = params.get('difficulty');
-    if (d) {
-      const requestedDifficulty = Number(d);
-      const closestDifficulty = DIFFICULTIES.reduce((closest, item) =>
-        Math.abs(item.value - requestedDifficulty) < Math.abs(closest.value - requestedDifficulty)
-          ? item
-          : closest,
-      DIFFICULTIES[1]);
-      trackedDifficulty = closestDifficulty.value;
-      setSelectedDifficulty(closestDifficulty.value);
-    }
-
-    trackEvent('guest_page_viewed', {
-      source: isFromScenario ? 'scenario' : 'direct',
-      persona: trackedPersona,
-      difficulty: trackedDifficulty,
-    });
-  }, []);
-
-  const transcript = useMemo(() => {
-    return messages.reduce<Array<{ question?: string; answer?: string }>>((acc, message) => {
-      if (message.role === 'assistant') {
-        acc.push({ question: message.content });
-        return acc;
-      }
-      const last = acc.at(-1);
-      if (last && !last.answer) last.answer = message.content;
-      return acc;
-    }, []);
-  }, [messages]);
-
-  useEffect(() => {
-    if (step === 'chat') {
-      setTimeout(() => answerRef.current?.focus(), 100);
-    }
-  }, [step, turn]);
-
-  useEffect(() => {
-    if (step !== 'chat' || isLoading || timeLeft <= 0) return;
-    const interval = setInterval(() => setTimeLeft((value) => value - 1), 1000);
-    return () => clearInterval(interval);
-  }, [step, isLoading, timeLeft]);
-
-  const handleStart = async () => {
-    if (!isReady || isLoading) return;
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await startGuestSession(text, selectedPersona, selectedDifficulty);
-      setGuestSessionId(response.guest_session_id);
-      setMessages([{ role: 'assistant', content: response.first_question }]);
-      setTurn(response.turn);
-      setTimeLeft(90);
-      setStep('chat');
-      trackEvent('guest_started', {
-        source: funnelSource,
-        persona: selectedPersona,
-        difficulty: selectedDifficulty,
-        text_length: text.trim().length,
-      });
-      trackEvent('guest_question_seen', {
-        source: funnelSource,
-        persona: selectedPersona,
-        difficulty: selectedDifficulty,
-        turn: response.turn,
-        max_turns: response.max_turns,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка инициализации сессии');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSendAnswer = useCallback(async (timeoutAnswer?: string) => {
-    const nextAnswer = (timeoutAnswer ?? answer).trim();
-    if (!nextAnswer || !guestSessionId || isLoading) return;
-
-    if (!timeoutAnswer) setAnswer('');
-    setIsLoading(true);
-    setError(null);
-    setMessages((prev) => [...prev, { role: 'user', content: nextAnswer }]);
-    const answeredTurn = turn;
-
-    try {
-      const response = await sendGuestMessage(guestSessionId, nextAnswer);
-      trackEvent('guest_answer_submitted', {
-        source: funnelSource,
-        persona: selectedPersona,
-        difficulty: selectedDifficulty,
-        turn: answeredTurn,
-        answer_length: nextAnswer.length,
-        timed_out: Boolean(timeoutAnswer),
-        limit_reached: response.limit_reached,
-      });
-
-      if (response.limit_reached) {
-        localStorage.setItem('peaktalk_guest_session_id', guestSessionId);
-        localStorage.setItem('peaktalk_guest_difficulty', String(selectedDifficulty));
-        trackEvent('guest_paywall_seen', {
-          source: funnelSource,
-          persona: selectedPersona,
-          difficulty: selectedDifficulty,
-          turn: response.turn,
-          questions_seen: MAX_GUEST_TURNS,
-          plan_context: 'defense_brief',
-        });
-        setStep('paywall');
-        return;
-      }
-
-      if (response.question) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: response.question! }]);
-        setTurn(response.turn);
-        setTimeLeft(90);
-        trackEvent('guest_question_seen', {
-          source: funnelSource,
-          persona: selectedPersona,
-          difficulty: selectedDifficulty,
-          turn: response.turn,
-          max_turns: response.max_turns,
-          remaining_turns: response.remaining_turns,
-        });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка отправки данных');
-      if (!timeoutAnswer) setAnswer(nextAnswer);
-      setMessages((prev) => prev.slice(0, -1));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [answer, funnelSource, guestSessionId, isLoading, selectedDifficulty, selectedPersona, turn]);
-
-  const trackGuestPaywallCta = useCallback((destination: 'billing' | 'register' | 'login') => {
-    trackEvent('guest_paywall_cta_clicked', {
-      source: funnelSource,
-      persona: selectedPersona,
-      difficulty: selectedDifficulty,
-      destination,
-      turn: Math.min(turn, MAX_GUEST_TURNS),
-      questions_seen: MAX_GUEST_TURNS,
-      plan_context: 'defense_brief',
-    });
-  }, [funnelSource, selectedDifficulty, selectedPersona, turn]);
-
-  useEffect(() => {
-    if (step !== 'chat' || timeLeft > 0 || isLoading) return;
-    void handleSendAnswer(answer.trim() || '[Истекло время на ответ]');
-  }, [answer, handleSendAnswer, isLoading, step, timeLeft]);
-
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <Header />
+    <main className="min-h-[100dvh] bg-[color:var(--pt-bg)] pt-16 text-[color:var(--pt-ink)]">
+      <MarketingNav />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        <AnimatePresence mode="wait">
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-[1440px] gap-9 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+          <div>
+            <p className="text-[13px] font-semibold text-[color:var(--pt-cobalt)]">
+              Начните с файла
+            </p>
+            <h1 className="mt-5 font-display text-[44px] font-semibold leading-[1.02] tracking-[-0.04em] sm:text-[68px]">
+              Загрузите материал. Посмотрите, что получится
+            </h1>
+            <p className="mt-6 max-w-[58ch] text-[18px] leading-8 text-[color:var(--pt-muted)]">
+              PeakTalk определит задачу, задаст короткие вопросы и покажет будущие результаты: речь, тайминг, выжимку или проверку.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="#upload"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[color:var(--pt-cobalt)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[color:var(--pt-cobalt-strong)]"
+              >
+                Выбрать файл
+                <ArrowRight size={16} strokeWidth={1.8} />
+              </Link>
+              <Link
+                href="/scenarios"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[color:var(--pt-line-strong)] bg-white px-6 text-sm font-semibold text-[color:var(--pt-ink)] transition-colors hover:border-[color:var(--pt-ink)]"
+              >
+                Выбрать сценарий
+              </Link>
+            </div>
+          </div>
 
-          {/* INPUT STATE */}
-          {step === 'input' && (
-            <motion.div
-              key="input"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              style={safariMotionStyle}
+          <UploadPreview />
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-[1440px] gap-4 lg:grid-cols-4">
+          {outputs.map((item, index) => (
+            <article
+              key={item}
+              className={`rounded-[28px] border p-6 shadow-[0_20px_70px_rgba(20,34,55,0.05)] ${
+                index === 0
+                  ? "border-[color:var(--pt-cobalt)] bg-[color:var(--pt-cobalt-soft)]"
+                  : "border-[color:var(--pt-line)] bg-white"
+              }`}
             >
-              <div className="mb-4">
-                <Label className="mb-2 text-[#E8600A]">pressure scan материала</Label>
-                <h1 className="font-display text-[32px] font-black leading-[1.05] text-neutral-950 sm:text-[42px]">
-                  Проверьте материал перед встречей
-                </h1>
-                <p className="mt-3 max-w-2xl font-inter text-[16px] leading-relaxed text-neutral-600">
-                  Сначала вставьте тезисы, memo, КП или план разговора. PeakTalk найдет слабые места позиции, затем задаст первые вопросы будущего оппонента.
-                </p>
-              </div>
-
-              <div className="border border-neutral-200 bg-white">
-                <div className="flex flex-col p-4 sm:p-6">
-                  {/* Persona Selection */}
-                  {!hasScenarioParam && (
-                    <div className="order-2 mb-6">
-                      <Label className="mb-3">оппонент на встрече</Label>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {PERSONAS.map((persona) => {
-                          const isSelected = selectedPersona === persona.id;
-                          const Icon = persona.icon;
-                          return (
-                            <button
-                              key={persona.id}
-                              type="button"
-                              onClick={() => setSelectedPersona(persona.id)}
-                              className={`group flex flex-col items-start gap-3 border p-4 text-left transition-all duration-200 ${
-                                isSelected
-                                  ? 'border-[#E8600A] bg-[#E8600A]/[0.04]'
-                                  : 'border-neutral-200 bg-white hover:border-neutral-400'
-                              }`}
-                            >
-                              <Icon size={20} className={isSelected ? 'text-[#E8600A]' : 'text-neutral-400 group-hover:text-neutral-600'} />
-                              <div>
-                                <span className={`block text-[16px] font-bold ${isSelected ? 'text-neutral-950' : 'text-neutral-700'}`}>
-                                  {persona.label}
-                                </span>
-                                <span className="mt-1 block text-[13px] leading-relaxed text-neutral-500">
-                                  {persona.note}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Context Input */}
-                  <div className={hasScenarioParam ? 'order-1' : 'order-1 mb-6'}>
-                    {!hasScenarioParam ? (
-                      <>
-                        <div className="mb-3 flex items-center justify-between">
-                          <Label>материал встречи</Label>
-                          <span className="font-mono text-[10px] text-neutral-300">{text.length}/{MAX_TEXT_LENGTH}</span>
-                        </div>
-                        <div>
-                          <textarea
-                            id="meeting-material"
-                            value={text}
-                            onChange={(event) => setText(event.target.value.slice(0, MAX_TEXT_LENGTH))}
-                            placeholder="Вставьте тезисы защиты, КП, memo, письмо клиенту или план разговора. Чем конкретнее материал, тем точнее pressure scan."
-                            className="h-[150px] w-full resize-none border border-neutral-200 bg-[#faf8f4] p-4 font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 transition-colors"
-                          />
-                          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                            {['Дыры в доказательствах', 'Вопросы оппонента', 'Defense Brief'].map((item) => (
-                              <div key={item} className="border border-neutral-200 bg-white px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-500">
-                                {item}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="flex gap-2 font-inter text-[13px] leading-relaxed text-neutral-500 sm:max-w-[85%]">
-                              <Lock size={14} className="mt-0.5 shrink-0 text-neutral-400" />
-                              <span>Не вставляйте пароли, персональные данные, коммерческую тайну или NDA-фрагменты. Сначала PeakTalk ищет слабые места, затем задает вопросы по этому материалу и переносит выводы в Defense Brief после оплаты.</span>
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => setText(SAMPLE_TEXT)}
-                              className="shrink-0 self-end font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-neutral-950"
-                            >
-                              [вставить пример]
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="mb-2 bg-neutral-50 border border-neutral-200 p-5">
-                        <Label className="mb-2 text-[#E8600A]">готовый сценарий</Label>
-                        <p className="font-inter text-[15px] leading-relaxed text-neutral-700">
-                          Контекст и вводные данные успешно загружены. Вы можете сразу начинать стресс-тест.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Difficulty & Start */}
-                  <div className={`order-3 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between ${hasScenarioParam ? 'mt-6' : 'border-t border-neutral-200 pt-6'}`}>
-                    {!hasScenarioParam && (
-                      <div className="pt-2">
-                        <Label className="mb-3">уровень давления</Label>
-                        <div className="flex gap-2">
-                          {DIFFICULTIES.map((item) => (
-                            <button
-                              key={item.value}
-                              type="button"
-                              onClick={() => setSelectedDifficulty(item.value)}
-                              className={`min-h-[44px] px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-all ${
-                                selectedDifficulty === item.value
-                                  ? 'bg-neutral-950 text-white shadow-md'
-                                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900'
-                              }`}
-                            >
-                              {item.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {hasScenarioParam && (
-                      <div className="pt-2">
-                        <div className="flex items-center gap-2">
-                          <Label>Сложность: {DIFFICULTIES.find(d => d.value === selectedDifficulty)?.label || 'Рабоче'}</Label>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col items-end gap-2">
-                      {error && (
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-red-500">{error}</div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleStart}
-                        disabled={!isReady || isLoading}
-                        className="group flex min-h-[52px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-8 text-[14px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none sm:w-auto"
-                      >
-                        {isLoading ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          <>
-                            Проверить материал
-                            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-                          </>
-                        )}
-                      </button>
-                      <span className="font-mono text-[10px] text-neutral-400">без регистрации</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* CHAT STATE */}
-          {step === 'chat' && (
-            <motion.div
-              key="chat"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              style={safariMotionStyle}
-            >
-              {/* Header row */}
-              <div className="mb-5 flex flex-col gap-3 border-b border-neutral-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 bg-[#E8600A] animate-pulse" />
-                    <Label>живой стресс-тест</Label>
-                  </div>
-                  <h1 className="mt-3 font-display text-3xl font-black text-neutral-950 sm:text-4xl">
-                    Раунд 0{Math.min(turn, MAX_GUEST_TURNS)} / 0{MAX_GUEST_TURNS}
-                  </h1>
-                </div>
-
-                <div className="flex items-center gap-5">
-                  <div className="text-right">
-                    <Label className="mb-1">оппонент</Label>
-                    <div className="font-inter text-sm font-bold text-neutral-950">{currentPersona.label}</div>
-                  </div>
-                  <div className={`flex flex-col items-end border-l border-neutral-200 pl-6 ${timeLeft <= 15 ? 'text-[#E8600A]' : 'text-neutral-950'}`}>
-                    <Label className="mb-1">таймер</Label>
-                    <div className="flex items-center gap-2 font-mono text-xl tracking-tight font-bold">
-                      <Timer size={20} className={timeLeft <= 15 ? 'animate-pulse' : ''} />
-                      {formatTime(timeLeft)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mb-6 h-px w-full bg-neutral-200">
-                <div
-                  className="h-full bg-[#E8600A] transition-all duration-500 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-
-              {/* Question card */}
-              <div className="mb-4 border border-neutral-200 bg-white p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between border-b border-neutral-100 pb-3">
-                  <Label>входящий вопрос</Label>
-                  <span className="font-mono text-[10px] font-bold text-[#E8600A]">
-                    0{Math.min(turn, MAX_GUEST_TURNS)}/0{MAX_GUEST_TURNS}
-                  </span>
-                </div>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={turn}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="font-inter text-[18px] font-medium leading-relaxed text-neutral-950 sm:text-[20px]"
-                  >
-                    {currentQuestion}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-
-              {/* Answer area */}
-              <div className="mb-4 border border-neutral-200 bg-[#faf8f4] p-5 sm:p-6">
-                <Label className="mb-4">ваш ответ</Label>
-                <textarea
-                  id="guest-answer"
-                  ref={answerRef}
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-                      event.preventDefault();
-                      void handleSendAnswer();
-                    }
-                  }}
-                  placeholder="Ваш аргумент..."
-                  disabled={isLoading}
-                  className="w-full min-h-[120px] resize-none bg-transparent font-inter text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-300 disabled:opacity-50"
-                />
-                {error && (
-                  <div className="mt-3 border-l-2 border-red-400 pl-3 font-mono text-[10px] uppercase text-red-500">
-                    {error}
-                  </div>
-                )}
-
-                <div className="mt-4 flex items-center justify-between border-t border-neutral-200 pt-4">
-                  <Label className="hidden sm:block">ctrl + enter</Label>
-                  <button
-                    type="button"
-                    onClick={() => void handleSendAnswer()}
-                    disabled={!answer.trim() || isLoading}
-                    className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-10 text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none sm:w-auto"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" /> Анализ
-                      </>
-                    ) : (
-                      <>
-                        Ответить
-                        <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* History */}
-              {transcript.length > 1 && (
-                <div className="mt-8 opacity-50 transition-opacity hover:opacity-100">
-                  <Label className="mb-4">лог стресс-теста</Label>
-                  <div className="grid gap-3 border-l-2 border-neutral-200 pl-4">
-                    {transcript.slice(0, -1).map((item, index) => (
-                      <div key={index} className="grid gap-1.5">
-                        <div className="flex gap-3">
-                          <span className="font-mono text-[11px] font-bold text-neutral-400 pt-0.5">Q</span>
-                          <p className="text-[15px] font-medium text-neutral-700">{item.question}</p>
-                        </div>
-                        {item.answer && (
-                          <div className="flex gap-3">
-                            <span className="font-mono text-[11px] font-bold text-[#E8600A] pt-0.5">A</span>
-                            <p className="text-[15px] text-neutral-600">{item.answer}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* PAYWALL STATE */}
-          {step === 'paywall' && (
-            <motion.div
-              key="paywall"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              style={safariMotionStyle}
-            >
-              <div className="mb-6">
-                <Label className="mb-3 text-[#E8600A]">Defense Brief</Label>
-                <h1 className="font-inter text-[28px] font-black leading-[1.08] text-neutral-950 sm:text-[36px]">
-                  Соберите Defense Brief для этой встречи
-                </h1>
-                <p className="mt-5 font-inter text-[17px] leading-relaxed text-neutral-600">
-                  Вы прошли 3 неудобных вопроса. Полная подготовка за 299 ₽ сохранит материал, перенесёт ответы и даст Defense Brief: слабые места позиции, контраргументы и короткий план защиты перед встречей.
-                </p>
-              </div>
-
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <ExampleDefenseBriefPreview />
-
-                <aside className="border border-neutral-200 bg-[#faf8f4] p-5 sm:p-6 lg:sticky lg:top-6 lg:self-start">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center border border-neutral-200 bg-white text-neutral-500">
-                    <Lock size={18} />
-                  </div>
-                  <Label className="mb-3 text-[#E8600A]">после оплаты</Label>
-                  <h2 className="font-inter text-[20px] font-black leading-tight text-neutral-950">
-                    Персональный Defense Brief по вашему материалу
-                  </h2>
-                  <ul className="mt-4 grid gap-2 font-inter text-[13px] leading-relaxed text-neutral-600">
-                    <li>сохранит вводные и ответы из гостевого stress-test;</li>
-                    <li>покажет слабые места позиции после всей сессии;</li>
-                    <li>соберет фразы-опоры и вопросы CEO/CFO перед встречей.</li>
-                  </ul>
-
-                  <div className="mt-6 grid gap-3 border-t border-neutral-200 pt-6">
-                    <Link
-                      href={defensePackHref}
-                      onClick={() => trackGuestPaywallCta(user ? 'billing' : 'register')}
-                      className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-5 text-center text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
-                    >
-                      <span className="hidden sm:inline">Собрать Defense Brief — 299 ₽</span>
-                      <span className="sm:hidden">Defense Brief — 299 ₽</span>
-                      <ArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                    {!user && (
-                      <Link
-                        href={loginHref}
-                        onClick={() => trackGuestPaywallCta('login')}
-                        className="flex min-h-[44px] items-center justify-center border border-neutral-200 bg-white px-5 text-center font-inter text-[13px] font-bold text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-950"
-                      >
-                        Уже есть аккаунт — войти
-                      </Link>
-                    )}
-                    <p className="text-center font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                      Регистрация нужна, чтобы сохранить кейс и перейти к оплате
-                    </p>
-                  </div>
-                </aside>
-              </div>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </main>
-    </div>
+              <span className="flex size-11 items-center justify-center rounded-[16px] bg-white text-[color:var(--pt-cobalt)] shadow-[0_10px_24px_rgba(20,34,55,0.06)]">
+                <Layers3 size={21} strokeWidth={1.8} />
+              </span>
+              <h2 className="mt-5 text-[23px] font-semibold leading-[1.05] tracking-[-0.03em]">
+                {item}
+              </h2>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
