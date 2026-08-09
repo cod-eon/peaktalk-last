@@ -132,6 +132,7 @@ jobs:
       - name: Validate Compose syntax
         run: |
           cp backend/.env.example backend/.env
+          cp frontend/.env.example frontend/.env.local
           POSTGRES_PASSWORD=ci-placeholder docker compose config --quiet
       - name: Validate deployment shell syntax
         run: bash -n deploy.sh
