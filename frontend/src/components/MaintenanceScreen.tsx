@@ -2,25 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, LogOut, Wrench } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 export function MaintenanceScreen() {
-  const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setLoggingOut(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push('/');
-      router.refresh();
-    } finally {
-      setLoggingOut(false);
-    }
+    window.location.assign('/api/auth/logto/sign-out');
   };
 
   return (

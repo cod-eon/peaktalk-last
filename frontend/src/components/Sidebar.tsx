@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard,
     Settings,
@@ -17,7 +17,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
-import { createClient } from '@/lib/supabase/client';
 import { NotificationsPopover } from '@/components/NotificationsPopover';
 
 const NAV_ITEMS = [
@@ -32,15 +31,11 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(false);
     const { user } = useAuthStore();
 
-    const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push('/login');
-        router.refresh();
+    const handleLogout = () => {
+        window.location.assign('/api/auth/logto/sign-out');
     };
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';

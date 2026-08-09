@@ -94,20 +94,18 @@ export default function SimulationPage() {
   // Keep isFinishedRef in sync so beforeunload can read it synchronously
   useEffect(() => { isFinishedRef.current = isFinished; }, [isFinished]);
 
-  // Cache the Supabase auth token so it's available in the synchronous beforeunload handler
+  // Cache the Logto access token so it's available in the synchronous beforeunload handler
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      const supabase = createClient();
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        authTokenRef.current = session?.access_token ?? null;
+    let cancelled = false;
+    fetch('/api/auth/access-token', { credentials: 'include', cache: 'no-store' })
+      .then(async (response) => response.ok ? response.json() as Promise<{ access_token?: unknown }> : null)
+      .then((body) => {
+        if (!cancelled) authTokenRef.current = typeof body?.access_token === 'string' ? body.access_token : null;
+      })
+      .catch(() => {
+        if (!cancelled) authTokenRef.current = null;
       });
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        authTokenRef.current = session?.access_token ?? null;
-      });
-      cleanup = () => subscription.unsubscribe();
-    });
-    return () => cleanup?.();
+    return () => { cancelled = true; };
   }, []);
 
   // Fire-and-forget abandon signal when user closes the tab

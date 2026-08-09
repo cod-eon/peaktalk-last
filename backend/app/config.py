@@ -15,14 +15,8 @@ class Settings(BaseSettings):
     database_pool_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
     database_command_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
 
-    # Supabase
-    supabase_url: str
-    supabase_key: str
-    supabase_storage_bucket: str = "peaktalk-dev-bucket"
-
-    # Authentication migration gate. Keep legacy until Logto application and
-    # smoke-test evidence are complete.
-    auth_provider: Literal["legacy", "logto", "dual-validate"] = "legacy"
+    # Logto OSS authentication
+    auth_provider: Literal["logto"] = "logto"
     logto_issuer: str = "https://auth.peaktalk.ru/oidc"
     logto_jwks_uri: str = "https://auth.peaktalk.ru/oidc/jwks"
     logto_userinfo_url: str = "https://auth.peaktalk.ru/oidc/me"
@@ -30,9 +24,8 @@ class Settings(BaseSettings):
     logto_required_scopes: str = ""
     logto_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
 
-    # Object storage. Keep legacy as the default until the separate Storage
-    # migration gate has fresh credentials and upload/restore evidence.
-    storage_provider: Literal["legacy", "yandex"] = "legacy"
+    # Yandex Object Storage
+    storage_provider: Literal["yandex"] = "yandex"
     yandex_s3_endpoint_url: str = "https://storage.yandexcloud.net"
     yandex_s3_region: str = "ru-central1"
     yandex_s3_bucket: str = "peaktalk-prod-private-documents"
@@ -62,9 +55,6 @@ class Settings(BaseSettings):
     # App
     app_env: str = "development"
     debug: bool = False
-
-    # Supabase webhook secret (set in Supabase Dashboard → Database → Webhooks → custom header)
-    supabase_webhook_secret: str = ""
 
     # Payment gateway toggle — set to false to disable all payment checks
     # (everyone gets PRO behaviour, no limit enforcement, payment buttons hidden)

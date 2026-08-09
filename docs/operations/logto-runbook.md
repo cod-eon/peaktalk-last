@@ -7,7 +7,28 @@ healthy endpoints. Application Auth cutover remains a separate migration gate.
 
 Logto is a separate Compose project under `/opt/peaktalk-logto` with its own persistent PostgreSQL volume and its own secret file. It must not share the PeakTalk application database or volume. The public and admin ports bind to loopback only; nginx joins the dedicated Logto network and is the TLS boundary. The admin route relies on Logto admin authentication; PeakTalk application roles are not inferred from Logto console access.
 
-The repository pins the Logto image to `ghcr.io/logto-io/logto:1.41.0` by immutable digest. Upgrades are explicit release changes with a database backup, migration check and rollback window.
+The repository pins the Logto image to `ghcr.io/logto-io/logto:1.42.0` by immutable digest. This is the official v1.42.0 release, published 2026-07-30, and the amd64 digest is recorded in Compose. Upgrades are explicit release changes with a database backup, migration check and rollback window.
+
+The v1.42.0 release includes email access rules, reset-password magic links,
+OIDC provider hardening and an OIDC provider major dependency update. Before
+using private-network relying parties, review the release's SSRF protection
+settings and keep the default protection enabled.
+
+## Verified upgrade — 2026-08-10
+
+The VDS upgrade from 1.41.0 completed with a dedicated PostgreSQL dump, three
+v1.42.0 database alterations, container restart, loopback health check, public
+auth/admin status checks and admin console check. The backup is retained at:
+
+```text
+/var/backups/peaktalk-logto/logto-postgres-before-20260809T211334Z.dump.gz
+SHA-256: f99ed2a95f7c86453dcac2d2ebe88fa8086da175d4e019f9fa09b381f002dfa9
+```
+
+If an application-level check fails, restore the preserved pre-upgrade
+Compose file and the 1.41.0 image digest, then restart Logto. Restore the
+database dump only if the failed alteration must be reversed; do not delete
+the persistent Logto volume.
 
 ## First installation on VDS
 

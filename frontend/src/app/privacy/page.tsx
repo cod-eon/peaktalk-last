@@ -368,12 +368,11 @@ export default function PrivacyPage() {
             }}
           >
             <span style={{ color: "#171717", fontWeight: 500 }}>
-              Supabase Inc.
+              Yandex Cloud Object Storage
             </span>{" "}
-            — загружаемые вами файлы (документы) хранятся в сервисе Supabase
-            Storage. Обработка данных осуществляется на основании договора между
-            Оператором и Supabase Inc., включающего требования по защите
-            персональных данных.
+            — загружаемые вами файлы (документы) хранятся в приватном бакете
+            Yandex Cloud Object Storage с серверным шифрованием KMS. Сервис
+            авторизации PeakTalk работает на self-hosted Logto OSS в инфраструктуре Оператора.
           </p>
           <p
             style={{

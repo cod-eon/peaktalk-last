@@ -1,19 +1,21 @@
 # 0007 — Self-hosted Logto OSS Auth migration brief
 
-Status: accepted migration plan; Logto OSS staging is complete, while public
-exposure and application Auth cutover remain credential and smoke-test gated.
+Status: accepted migration plan; Logto OSS is deployed and upgraded to v1.42.0.
+The application cutover is authorized by the owner, the repository no longer
+contains a Supabase Auth/Storage runtime path, and production cutover remains
+blocked only on creating the PeakTalk Logto application/API resource and
+installing its credentials.
 
 Date: 2026-08-09
 
 ## Current constraints and facts
 
-- Supabase Auth is a live runtime dependency in the frontend and backend.
-- The backend validates bearer tokens through Supabase and maps the Supabase
-  subject to the local `users.id` UUID.
-- The frontend uses Supabase browser/server clients and Supabase `User` and
-  `Session` types.
-- Current production data includes 11 local users and 1 simulation; identity
-  continuity matters even though there is no validated user migration export.
+- The production VDS has no active PeakTalk users after the approved
+  application-database reset; Logto admin data is separate and preserved.
+- The backend validates bearer tokens through Logto and maps the Logto subject
+  through `user_identities` to a local PeakTalk UUID.
+- The frontend uses Logto Authorization Code flow through same-origin server
+  routes; access tokens are never stored in browser local storage.
 
 ## Options
 
@@ -80,13 +82,12 @@ configuration](https://docs.logto.io/logto-oss/deployment-and-configuration).
 
 ### Cutover and rollback
 
-Implement `AUTH_PROVIDER=legacy|logto|dual-validate` as an operational flag,
-with legacy as the default until evidence passes. Keep Supabase Auth available
-through a rollback window. Cut over a small controlled cohort or internal
-smoke account first, then run registration, login, logout, expiry, recovery,
+Use `AUTH_PROVIDER=logto` as the production provider. Rollback is a runtime
+image/config rollback to the previously verified application release; it does
+not restore Supabase as an active auth path. Cut over with an internal smoke
+account first, then run registration, login, logout, expiry, recovery,
 verification, protected routes, guest flow, text simulation, and negative
-authorization checks. Rollback disables Logto authentication and restores
-legacy token validation without changing local product data.
+authorization checks.
 
 ## Approval gate
 
@@ -95,26 +96,52 @@ backup destination, SMTP connector, admin bootstrap procedure, identity import
 mapping, feature-flag owner, rollback window, and fresh smoke/regression
 evidence. Logto may remain staged privately after persistence, seed,
 alteration, and loopback health checks; until the remaining evidence exists, do
-not expose it publicly, integrate it into application Auth, or remove
-Supabase dependencies.
+not enable the application's hosted sign-in route or claim production auth
+readiness.
 
 ## Current gate evidence — 2026-08-09
 
 - Logto OSS is deployed in a separate Compose project with persistent
   PostgreSQL, loopback-only container ports, public TLS routes, and a verified
   admin account.
-- The application remains `AUTH_PROVIDER=legacy`; Supabase Auth is not
-  disabled and no user migration has been performed.
-- Backend preparation is implemented locally behind the flag: strict Logto
-  JWT validation (signature, issuer, audience, expiry, required scopes),
-  verified-email userinfo lookup, and a `user_identities` mapping table.
-- Fresh local evidence: 99 backend tests passed, including Logto scope
-  rejection, identity provisioning/reuse, and invalid-token 401 behavior.
-- The migration gate remains closed for production cutover. A Logto
-  application/API resource, email connector, password recovery and
+- Official Logto v1.42.0 is pinned by amd64 digest
+  `sha256:a624bfe87e2928c9f3832957bcebbef1bb38eec7789ca04b4ce43e002aea0756`.
+  Three v1.42.0 database alterations deployed successfully.
+- Fresh remote evidence: loopback `/api/status`, public auth status, public
+  admin status and `/console/welcome` all pass after restart.
+- Fresh local evidence: 98 backend tests passed; frontend lint, typecheck and
+  production build passed; frontend and backend contain no Supabase runtime
+  imports or dependency.
+- The migration gate remains closed for application traffic until a PeakTalk
+  Logto web application/API resource, email connector, password recovery and
   verification smoke, frontend PKCE flow, protected-route checks, and full
-  negative authorization evidence are still required before moving to
-  `dual-validate`.
+  negative authorization evidence exist.
+
+## Logto v1.42.0 release evidence — 2026-08-10
+
+- Pre-upgrade dedicated Logto PostgreSQL backup:
+  `/var/backups/peaktalk-logto/logto-postgres-before-20260809T211334Z.dump.gz`
+  with SHA-256
+  `f99ed2a95f7c86453dcac2d2ebe88fa8086da175d4e019f9fa09b381f002dfa9`.
+- Previous Compose file is preserved alongside the backup; the previous
+  application image remains available by digest for runtime rollback.
+
+## Owner authorization — 2026-08-10
+
+The owner explicitly authorized a full reset/cutover because the current
+PeakTalk application database contains no important data and there are no
+active users. The approved scope is:
+
+- preserve the Logto installation, its admin account, persistent Logto
+  PostgreSQL, TLS, DNS, backups, SSH users, firewall, and unrelated services;
+- delete or recreate only the PeakTalk application database when the final
+  cutover release requires it;
+- remove Supabase Auth and legacy Storage runtime dependencies after the
+  Logto/Yandex smoke checks pass;
+- do not invent or print missing Logto application credentials.
+
+This authorization does not permit deleting the Logto admin account or its
+database merely because PeakTalk application data is disposable.
 
 ## Non-goals
 

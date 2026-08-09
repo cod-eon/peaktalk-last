@@ -19,7 +19,6 @@ import {
   X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
   { href: '/admin', label: 'Обзор', icon: BarChart3 },
@@ -35,20 +34,12 @@ function isActiveRoute(pathname: string, href: string) {
 
 function AdminTopbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setLoggingOut(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push('/');
-      router.refresh();
-    } finally {
-      setLoggingOut(false);
-    }
+    window.location.assign('/api/auth/logto/sign-out');
   };
 
   return (
@@ -187,12 +178,10 @@ function AdminAuthGuard({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function checkAccess() {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const sessionResponse = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
+      const session = sessionResponse.ok ? await sessionResponse.json() as { isAuthenticated?: boolean } : null;
 
-      if (!session) {
+      if (!session?.isAuthenticated) {
         if (!cancelled) router.replace('/login');
         return;
       }

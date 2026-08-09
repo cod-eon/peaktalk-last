@@ -21,7 +21,7 @@ services:
     stop_grace_period: 60s
 
   logto:
-    image: ghcr.io/logto-io/logto:1.41.0@sha256:7f79547e3d1fe569a3ecae757968a7cfc579687aa8164eec35113c0adc983c5b
+    image: ghcr.io/logto-io/logto:1.42.0@sha256:a624bfe87e2928c9f3832957bcebbef1bb38eec7789ca04b4ce43e002aea0756
     restart: unless-stopped
     env_file: .env
     environment:

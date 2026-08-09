@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
@@ -14,7 +14,6 @@ import {
     LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
     { name: 'Дашборд', path: '/dashboard', icon: LayoutDashboard },
@@ -30,15 +29,11 @@ interface MobileSidebarOverlayProps {
 
 export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayProps) {
     const pathname = usePathname();
-    const router = useRouter();
     const { user } = useAuthStore();
 
-    const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
+    const handleLogout = () => {
         onClose();
-        router.push('/login');
-        router.refresh();
+        window.location.assign('/api/auth/logto/sign-out');
     };
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';

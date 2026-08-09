@@ -1,12 +1,23 @@
 import { create } from 'zustand'
-import { User, Session } from '@supabase/supabase-js'
+export interface PeakTalkUser {
+  id: string
+  email: string | null
+  user_metadata: {
+    display_name?: string
+    name?: string
+  }
+}
+
+export interface PeakTalkSession {
+  expires_at?: number
+}
 
 interface AuthState {
-  user: User | null
-  session: Session | null
+  user: PeakTalkUser | null
+  session: PeakTalkSession | null
   isLoading: boolean
-  setUser: (user: User | null) => void
-  setSession: (session: Session | null) => void
+  setUser: (user: PeakTalkUser | null) => void
+  setSession: (session: PeakTalkSession | null) => void
   setIsLoading: (isLoading: boolean) => void
 }
 

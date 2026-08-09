@@ -1,15 +1,15 @@
 # 0008 — Yandex Object Storage migration brief
 
-Status: accepted migration plan; Yandex provider is enabled on the clean
-production runtime after credential, KMS, privacy and smoke-test gates passed.
-Legacy Supabase Storage code remains available for rollback.
+Status: accepted migration plan; Yandex provider is the sole storage runtime
+path after credential, KMS, privacy and smoke-test gates passed. Legacy
+Supabase Storage runtime code and dependency have been removed.
 
 Date: 2026-08-09
 
 ## Current state
 
-The backend supports the legacy Supabase provider and a Yandex S3 adapter. The
-Yandex path uses private objects, KMS encryption, short-lived signed URLs,
+The backend uses a Yandex S3 adapter. The path uses private objects, KMS
+encryption, short-lived signed URLs,
 idempotent checksum preflight, bounded retries/timeouts, content-type checks,
 and safe key construction. Extracted text and product results remain in
 PostgreSQL.
@@ -67,18 +67,18 @@ and rollback window all pass.
 
 ## Migration and rollback
 
-1. Obtain scoped Supabase and Yandex credentials without printing them.
+1. Obtain scoped Yandex credentials without printing them.
 2. Inventory current objects and database documents; write a manifest.
 3. Provision and test the private bucket/KMS/IAM policy in a non-production
    prefix or test bucket.
-4. Add provider abstraction behind a feature flag; keep Supabase as fallback.
+4. Add the provider adapter and validate it before enabling production writes.
 5. Copy idempotently, verify checksums/metadata, and test authorized download.
 6. Switch reads, then writes, while monitoring orphan and error metrics.
-7. Keep Supabase objects during the rollback window; delete only from an
-   explicitly approved manifest after backup and restore evidence.
+7. Keep any legacy objects only until the explicitly approved cleanup window;
+   delete only from a verified manifest after backup and restore evidence.
 
-Rollback switches the provider flag to Supabase and preserves the local
-`storage_path` mapping. If a copy is incomplete, no legacy object is removed.
+Rollback uses the previous verified application image/configuration and keeps
+the Yandex bucket untouched. If a copy is incomplete, no object is removed.
 
 ## Approval gate
 
@@ -86,8 +86,7 @@ Approval requires actual bucket/KMS/IAM inventory, retention period, service
 account owner, cost ceiling, backup/restore test, object manifest, feature-flag
 owner, cutover window, and smoke/regression evidence. Credential, IAM, KMS,
 privacy and application smoke evidence now exists; retention, lifecycle and
-policy inventory remain operator checks. Supabase Storage is retained as
-rollback code and is not deleted.
+policy inventory remain operator checks.
 
 ## Gate evidence — 2026-08-09
 
@@ -100,8 +99,8 @@ rollback code and is not deleted.
 - PostgreSQL contains zero `documents`, `session_artifacts`, and
   `ai_analysis_results` rows after the approved database reset, so no legacy
   object migration or deletion is required for this clean runtime.
-- Runtime remains on exact deploy commit `c8333dc`; migration head is
-  `0021_draft_case_context` and public API health passes.
+- The clean runtime has no document rows requiring object migration; public
+  API health and KMS/privacy smoke checks passed before the Auth cutover.
 
 The remaining operator follow-up is to inspect and record the bucket policy,
 lifecycle and retention settings from the Yandex console. Do not replace an

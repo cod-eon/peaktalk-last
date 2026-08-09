@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.dependencies import get_current_user, _get_supabase
+from app.dependencies import get_current_user, get_user_from_token
 from app.models.notification import Notification, PushSubscription
 from app.models.user import User
 from app.services.notification_payloads import serialize_notification
@@ -151,16 +151,13 @@ async def send_test_notification(
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket, 
-    token: str = Query(...)
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
 ):
     """WebSocket endpoint for real-time notifications."""
     try:
-        response = _get_supabase().auth.get_user(token)
-        sb_user = response.user
-        if not sb_user:
-            await websocket.close(code=1008)
-            return
-        user_id = uuid.UUID(sb_user.id)
+        user = await get_user_from_token(token, db)
+        user_id = user.id
     except Exception:
         await websocket.close(code=1008)
         return

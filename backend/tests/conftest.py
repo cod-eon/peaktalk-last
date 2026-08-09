@@ -4,8 +4,6 @@ from collections.abc import AsyncGenerator
 
 # Set test environment variables BEFORE importing any app modules
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
-os.environ.setdefault("SUPABASE_KEY", "test-key")
 os.environ.setdefault("CLOUD_RU_API_KEY", "test-cloud-ru-key")
 os.environ.setdefault("PAYMENTS_ENABLED", "false")  # Disable billing limits in tests
 os.environ.setdefault("APP_ENV", "test")  # Disable rate limiting in tests

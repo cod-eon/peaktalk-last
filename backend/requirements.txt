@@ -9,9 +9,6 @@ asyncpg==0.30.0
 greenlet==3.2.1
 alembic==1.14.0
 
-# Supabase
-supabase>=2.10.0
-
 # Yandex Object Storage (S3-compatible API; enabled only behind STORAGE_PROVIDER)
 boto3==1.43.67
 
@@ -29,6 +26,7 @@ celery[redis]==5.4.0
 redis==5.2.1
 pywebpush==2.0.3
 cryptography==45.0.4
+PyJWT==2.13.0
 
 # Rate limiting
 slowapi==0.1.9

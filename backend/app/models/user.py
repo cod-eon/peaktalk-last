@@ -40,7 +40,7 @@ class User(Base):
         Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
-        comment="Matches Supabase Auth user_id (sub claim)",
+        comment="Local PeakTalk user id; external identity is stored in user_identities",
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(

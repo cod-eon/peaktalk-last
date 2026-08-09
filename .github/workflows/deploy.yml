@@ -52,10 +52,6 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: "sqlite+aiosqlite:///:memory:"
-      SUPABASE_URL: https://test.supabase.co
-      SUPABASE_KEY: test-key
-      SUPABASE_SERVICE_KEY: test-service-key
-      GEMINI_API_KEY: test-gemini-key
       REDIS_URL: redis://localhost:6379/0
       APP_ENV: test
     steps:
@@ -79,8 +75,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
       NEXT_PUBLIC_API_URL: https://example.invalid/api
       NEXT_PUBLIC_HCAPTCHA_SITEKEY: test-site-key
     steps:
@@ -149,8 +143,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       NEXT_PUBLIC_HCAPTCHA_SITEKEY: ${{ secrets.NEXT_PUBLIC_HCAPTCHA_SITEKEY }}
     steps:
@@ -159,7 +151,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for variable in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_API_URL NEXT_PUBLIC_HCAPTCHA_SITEKEY; do
+          for variable in NEXT_PUBLIC_API_URL NEXT_PUBLIC_HCAPTCHA_SITEKEY; do
             if [[ -z "${!variable}" ]]; then
               echo "Missing required build secret: ${variable}" >&2
               exit 1
@@ -172,8 +164,6 @@ jobs:
           docker build --pull -t "peaktalk-backend:${GITHUB_SHA}" backend
           docker build --pull -t "peaktalk-worker:${GITHUB_SHA}" -f backend/Dockerfile.worker backend
           docker build --pull \
-            --build-arg "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}" \
-            --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
             --build-arg "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" \
             --build-arg "NEXT_PUBLIC_HCAPTCHA_SITEKEY=${NEXT_PUBLIC_HCAPTCHA_SITEKEY}" \
             -t "peaktalk-frontend:${GITHUB_SHA}" frontend

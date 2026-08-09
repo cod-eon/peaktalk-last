@@ -190,12 +190,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://placeholder.supabase.co}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-placeholder_anon_key}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
         NEXT_PUBLIC_HCAPTCHA_SITEKEY: ${NEXT_PUBLIC_HCAPTCHA_SITEKEY:-placeholder_sitekey}
     image: peaktalk-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    env_file: ./frontend/.env.local
     environment:
       NODE_ENV: production
       PORT: 3000

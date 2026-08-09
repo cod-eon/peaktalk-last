@@ -1,4 +1,4 @@
-"""Private document storage with a gated legacy/Yandex provider switch."""
+"""Private document storage in Yandex Object Storage with KMS encryption."""
 
 import asyncio
 import hashlib
@@ -6,8 +6,6 @@ import logging
 import re
 import uuid
 from functools import lru_cache
-
-from supabase import Client, create_client
 
 from app.config import settings
 
@@ -19,11 +17,6 @@ _SAFE_FILENAME = re.compile(r"[^A-Za-z0-9._-]+")
 
 class StorageError(RuntimeError):
     """A provider operation failed without exposing provider credentials."""
-
-
-@lru_cache
-def _get_supabase_client() -> Client:
-    return create_client(settings.supabase_url, settings.supabase_key)
 
 
 def _safe_filename(filename: str, document_id: uuid.UUID) -> str:
@@ -127,14 +120,6 @@ def _download_yandex(storage_path: str) -> bytes:
 def create_download_url(storage_path: str) -> str:
     """Create a short-lived signed URL for a private object."""
 
-    if settings.storage_provider == "legacy":
-        try:
-            return _get_supabase_client().storage.from_(settings.supabase_storage_bucket).create_signed_url(
-                storage_path, settings.yandex_s3_presign_ttl_seconds
-            )["signedURL"]
-        except Exception as exc:
-            raise StorageError("Could not create signed download URL") from exc
-
     try:
         return _get_yandex_client().generate_presigned_url(
             "get_object",
@@ -147,33 +132,21 @@ def create_download_url(storage_path: str) -> str:
 
 async def upload_file(file_bytes: bytes, storage_path: str, content_type: str) -> str:
     def _do_upload() -> str:
-        if settings.storage_provider == "yandex":
-            return _upload_yandex(file_bytes, storage_path, content_type)
-        _get_supabase_client().storage.from_(settings.supabase_storage_bucket).upload(
-            path=storage_path,
-            file=file_bytes,
-            file_options={"content-type": content_type, "upsert": "false"},
-        )
-        return storage_path
+        return _upload_yandex(file_bytes, storage_path, content_type)
 
     return await asyncio.to_thread(_do_upload)
 
 
 async def delete_file(storage_path: str) -> None:
     def _do_delete() -> None:
-        if settings.storage_provider == "yandex":
-            _delete_yandex(storage_path)
-            return
-        _get_supabase_client().storage.from_(settings.supabase_storage_bucket).remove([storage_path])
+        _delete_yandex(storage_path)
 
     await asyncio.to_thread(_do_delete)
 
 
 async def download_file(storage_path: str) -> bytes:
     def _do_download() -> bytes:
-        if settings.storage_provider == "yandex":
-            return _download_yandex(storage_path)
-        return _get_supabase_client().storage.from_(settings.supabase_storage_bucket).download(storage_path)
+        return _download_yandex(storage_path)
 
     return await asyncio.to_thread(_do_download)
 

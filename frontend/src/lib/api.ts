@@ -1,6 +1,18 @@
-import { createClient } from './supabase/client'
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const response = await fetch('/api/auth/access-token', {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+    if (!response.ok) return null
+    const body = await response.json() as { access_token?: unknown }
+    return typeof body.access_token === 'string' ? body.access_token : null
+  } catch {
+    return null
+  }
+}
 
 const getDefaultErrorMessage = (status: number) => {
   switch (status) {
@@ -112,9 +124,6 @@ export const api = {
   },
 
   async request(endpoint: string, options: RequestInit = {}) {
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-
     const headers = new Headers(options.headers)
 
     // Only set Content-Type to JSON if it's not FormData
@@ -122,8 +131,9 @@ export const api = {
       headers.set('Content-Type', 'application/json')
     }
 
-    if (session?.access_token) {
-      headers.set('Authorization', `Bearer ${session.access_token}`)
+    const accessToken = await getAccessToken()
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`)
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -133,22 +143,14 @@ export const api = {
 
     if (!response.ok) {
       if (response.status === 401) {
-        // Try getting session again (it might have been refreshed by another concurrent request)
-        const supabase = createClient()
-        let { data: { session: refreshedSession } } = await supabase.auth.getSession()
-
-        if (refreshedSession?.access_token === session?.access_token) {
-          const { data } = await supabase.auth.refreshSession()
-          refreshedSession = data.session
-        }
-
-        if (refreshedSession?.access_token) {
+        const refreshedToken = await getAccessToken()
+        if (refreshedToken && refreshedToken !== accessToken) {
           // Retry the request with the new token
           const retryHeaders = new Headers(options.headers)
           if (!(options.body instanceof FormData)) {
             retryHeaders.set('Content-Type', 'application/json')
           }
-          retryHeaders.set('Authorization', `Bearer ${refreshedSession.access_token}`)
+          retryHeaders.set('Authorization', `Bearer ${refreshedToken}`)
           const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...options, headers: retryHeaders })
           if (retryResponse.ok) {
             if (retryResponse.status === 204) return null
@@ -157,11 +159,9 @@ export const api = {
           }
         }
         
-        // If we reach here, session is truly invalid
-        await supabase.auth.signOut()
         if (typeof window !== 'undefined') {
           // Use safe redirect that preserves Next.js router cache limits
-          window.location.replace('/login')
+          window.location.replace(`/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`)
         }
         throw new ApiError('Сессия истекла. Пожалуйста, войдите снова.', 401)
       }

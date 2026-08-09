@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, Bell, Shield, Loader2, LogOut, Check, Lock, Clock } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { createClient } from '@/lib/supabase/client';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -40,14 +38,8 @@ export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
 
   const [displayName, setDisplayName] = useState('');
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const router = useRouter();
   const [onboardingProfile, setOnboardingProfile] = useState<OnboardingProfile | null>(null);
-
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -83,51 +75,9 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSaveProfile = async () => {
-    const trimmed = displayName.trim();
-    if (trimmed.length > 100) { toast.error('Имя превышает лимит (100)'); return; }
-    setIsSavingProfile(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ data: { display_name: trimmed } });
-      if (error) throw error;
-      toast.success('Профиль сохранён');
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить профиль');
-    } finally {
-      setIsSavingProfile(false);
-    }
-  };
-
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setIsLoggingOut(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push('/');
-      toast.success('Вы вышли из аккаунта');
-    } catch {
-      toast.error('Не удалось выйти. Попробуйте ещё раз.');
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) { toast.error('Пароли не совпадают'); return; }
-    if (newPassword.length < 8) { toast.error('Пароль должен содержать минимум 8 символов'); return; }
-    setIsSavingPassword(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      toast.success('Пароль успешно изменён');
-      setNewPassword(''); setConfirmPassword('');
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось сменить пароль');
-    } finally {
-      setIsSavingPassword(false);
-    }
+    window.location.assign('/api/auth/logto/sign-out');
   };
 
   const inputClasses = "w-full bg-white border border-[#D9D5CC] text-[#111827] rounded-none py-2.5 px-3.5 text-sm focus:outline-none focus:ring-0 focus:border-[#111827] transition-all font-inter ";
@@ -212,9 +162,9 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    readOnly
                     maxLength={100}
-                    className={inputClasses}
+                    className={`${inputClasses} bg-neutral-100 text-neutral-500 cursor-not-allowed`}
                   />
                   {displayName.length > 80 && (
                     <p className="text-[10px] font-mono text-amber-600 mt-2">
@@ -239,16 +189,7 @@ export default function SettingsPage() {
                   <p className="text-[12px] text-neutral-400 mt-2 font-medium">Email нельзя изменить.</p>
                 </div>
 
-                <div className="pt-4 flex justify-end">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={isSavingProfile}
-                    className="inline-flex items-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all  disabled:opacity-50"
-                  >
-                    {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Сохранить изменения
-                  </button>
-                </div>
+                <p className="text-xs text-neutral-400">Имя аккаунта управляется в профиле Logto.</p>
               </div>
             </div>
           )}
@@ -257,45 +198,21 @@ export default function SettingsPage() {
             <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
               <div>
                 <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Смена пароля</h2>
-                <p className="text-xs text-neutral-400">Установите новый пароль для вашего аккаунта.</p>
+                <p className="text-xs text-neutral-400">Пароль и восстановление доступа обслуживаются в Logto.</p>
               </div>
 
               <div className="space-y-5">
-                <div>
-                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
-                    Новый пароль
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Мин. 8 символов"
-                    className={inputClasses}
-                  />
-                </div>
-                <div>
-                  <label className="block font-inter text-sm font-semibold text-neutral-700 mb-2">
-                    Подтверждение пароля
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Повторите пароль"
-                    className={inputClasses}
-                  />
-                </div>
-                
-                <div className="pt-4">
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={isSavingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all  disabled:opacity-50"
-                  >
-                    {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-                    Обновить пароль
-                  </button>
-                </div>
+                <p className="text-sm leading-relaxed text-neutral-600">
+                  Чтобы сменить пароль или восстановить доступ, подтвердите email
+                  в защищённом окне Logto.
+                </p>
+                <a
+                  href="/forgot-password"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-neutral-900 text-white rounded-none px-6 py-2.5 text-sm font-medium hover:bg-neutral-800 transition-all"
+                >
+                  <Shield className="w-4 h-4" />
+                  Открыть восстановление пароля
+                </a>
               </div>
             </div>
           )}

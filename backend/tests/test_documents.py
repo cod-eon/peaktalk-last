@@ -12,7 +12,7 @@ def _make_txt_bytes(content: str = "Hello, this is a test speech document.") -> 
 
 @pytest.fixture(autouse=True)
 def mock_storage(monkeypatch):
-    """Mock all Supabase Storage calls (now async) so tests don't need real credentials."""
+    """Mock object storage calls so tests don't need external credentials."""
     monkeypatch.setattr(
         "app.routers.documents.storage.upload_file",
         AsyncMock(side_effect=lambda file_bytes, path, ct: path),
