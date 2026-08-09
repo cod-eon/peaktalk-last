@@ -46,9 +46,22 @@ test("unknown and unapproved skill content cannot be loaded", () => {
 });
 
 test("known but unapproved catalog skill remains metadata-only", () => {
-  const metadata = router.inspectSkill({ id: "behavioral-modes", includeContent: false });
+  const aasRoot = fs.mkdtempSync(path.join(os.tmpdir(), "peaktalk-aas-fixture-"));
+  const dataDir = path.join(aasRoot, "data");
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(path.join(dataDir, "skills_index.json"), JSON.stringify([
+    {
+      id: "behavioral-modes",
+      name: "Behavioral modes fixture",
+      description: "Metadata-only router fixture",
+      risk: "safe",
+      path: "skills/behavioral-modes"
+    }
+  ]));
+  const fixtureRouter = createRouter({ aasRoot });
+  const metadata = fixtureRouter.inspectSkill({ id: "behavioral-modes", includeContent: false });
   assert.equal(metadata.approved, false);
-  assert.throws(() => router.inspectSkill({ id: "behavioral-modes", includeContent: true }), /not approved/);
+  assert.throws(() => fixtureRouter.inspectSkill({ id: "behavioral-modes", includeContent: true }), /not approved/);
 });
 
 test("task contract cannot complete without every required passing check", () => {
@@ -71,7 +84,7 @@ test("task contract cannot complete without every required passing check", () =>
 });
 
 test("code context falls back from unavailable CodeGraph CLI to rg", () => {
-  const fallback = createRouter({ codegraphBin: "false" }).codeContext({ query: "routeTask", timeoutMs: 500, paths: [".harness/lib/router.mjs"] });
+  const fallback = createRouter({ codegraphBin: "false", rgBin: "true" }).codeContext({ query: "routeTask", timeoutMs: 500, paths: [".harness/lib/router.mjs"] });
   assert.equal(fallback.provider, "rg");
   assert.ok(fallback.failures.some((failure) => failure.provider === "mcp"));
   assert.ok(fallback.failures.some((failure) => failure.provider === "codegraph-cli"));
