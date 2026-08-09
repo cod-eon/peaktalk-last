@@ -302,7 +302,7 @@ jobs:
             "$runtime_env" "${VDS_USER}@${VDS_HOST}:/tmp/peaktalk-frontend-env"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
             "${VDS_USER}@${VDS_HOST}" \
-            "sudo install -o peaktalk-agent -g docker -m 600 /tmp/peaktalk-frontend-env '${VDS_APP_DIR}/frontend/.env.local' && rm -f /tmp/peaktalk-frontend-env"
+            "sudo install -o '${VDS_USER}' -g docker -m 640 /tmp/peaktalk-frontend-env '${VDS_APP_DIR}/frontend/.env.local' && rm -f /tmp/peaktalk-frontend-env"
       - name: Activate Logto and Yandex runtime providers
         shell: bash
         run: |
@@ -341,6 +341,9 @@ jobs:
               if os.path.exists(temporary):
                   os.unlink(temporary)
           PY
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+            "${VDS_USER}@${VDS_HOST}" \
+            "sudo chown '${VDS_USER}:docker' '${VDS_APP_DIR}/backend/.env' && sudo chmod 640 '${VDS_APP_DIR}/backend/.env'"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
             "${VDS_USER}@${VDS_HOST}" \
             "cd '${VDS_APP_DIR}' && DEPLOY_SHA='${GITHUB_SHA}' DEPLOY_HEALTH_HOST='${VDS_DOMAIN}' ARTIFACT_DIR='${VDS_APP_DIR}/.release' bash deploy.sh"
