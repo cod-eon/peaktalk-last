@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { format, parseISO, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { format } from 'date-fns/format';
+import { parseISO } from 'date-fns/parseISO';
+import { subDays } from 'date-fns/subDays';
+import { ru } from 'date-fns/locale/ru';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { formatAdminCurrency, formatAdminDateTime } from '@/lib/admin';

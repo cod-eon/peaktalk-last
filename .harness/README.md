@@ -49,8 +49,8 @@ debugging and CI without Codex.
 - `./.harness/scripts/bootstrap.sh --full` also runs the full application gate.
 - `./.harness/scripts/doctor.sh --full` runs router/eval tests, project skill
   validation, AAS audit, secret filename check, CodeGraph health, frontend
-  lint/build/audit, backend tests, and Compose validation when Docker is
-  available.
+  lint/typecheck/build/audit, backend tests, and Compose validation when Docker
+  is available.
 
 ## Normal task usage
 

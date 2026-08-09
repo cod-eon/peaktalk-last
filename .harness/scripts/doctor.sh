@@ -51,7 +51,9 @@ fi
 
 runner="$harness_dir/scripts/run-bounded.py"
 "$skill_python" "$runner" --timeout 60 --cwd "$workspace_dir/frontend" -- npm run lint
+"$skill_python" "$runner" --timeout 60 --cwd "$workspace_dir/frontend" -- npm run typecheck
 "$skill_python" "$runner" --timeout 180 --cwd "$workspace_dir/frontend" \
+  --env NEXT_IGNORE_INCORRECT_LOCKFILE=1 \
   --env NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co \
   --env NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key \
   --env NEXT_PUBLIC_API_URL=http://localhost:8000 \

@@ -48,7 +48,7 @@ export default function SimulationPage() {
     }
   }, []);
 
-  const { isListening, isSupported, startListening, stopListening } = useSpeechRecognition(handleSpeechResult);
+  const { isListening, isSupported, startListening, stopListening, error: speechError } = useSpeechRecognition(handleSpeechResult);
 
   // Refs for beforeunload beacon (can't use state inside event handler reliably)
   const authTokenRef = useRef<string | null>(null);
@@ -457,6 +457,12 @@ export default function SimulationPage() {
                 className={`w-full bg-neutral-50 border ${isListening ? 'border-neutral-900 ring-1 ring-neutral-900' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-neutral-200'} rounded-none p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all resize-none shadow-sm relative z-0`}
                 style={{ fontSize: '16px' }}
               />
+
+              {speechError && (
+                <p className="mt-2 text-xs text-amber-700" role="status" aria-live="polite">
+                  Диктовка недоступна. Можно продолжить ответ текстом.
+                </p>
+              )}
 
               <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div className="text-[11px] font-mono text-neutral-500 uppercase tracking-wider shrink-0 w-full sm:w-auto text-left pl-1">

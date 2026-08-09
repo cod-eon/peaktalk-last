@@ -123,7 +123,7 @@ git diff --check
 bash .harness/scripts/doctor.sh --full
 ```
 
-Full doctor включает frontend lint/build, dependency audit и Compose validation.
+Full doctor включает frontend lint/typecheck/build, dependency audit и Compose validation.
 Docker или внешний registry могут быть недоступны локально; это limitation,
 а не pass. Не запускай автоматически `npm audit fix --force`.
 

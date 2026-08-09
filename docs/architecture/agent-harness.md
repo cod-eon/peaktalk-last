@@ -130,9 +130,11 @@ have exactly one active MCP registration for this workspace.
 - A CodeGraph outage degrades navigation quality but never blocks development.
 - Duplicate or wedged MCP processes are treated as a health failure.
 
-Current diagnosis: the index is healthy and CLI responds quickly, but CodeGraph
-is registered both globally and in the project, producing duplicate MCP server
-processes. Generic queries are also polluted by harness symbols.
+Current state: CodeGraph is registered globally once and the project duplicate
+registration is removed. The index is healthy and CLI responds quickly. Generic
+semantic queries can still surface harness symbols, so product queries should
+use path or symbol-specific context; `.harness/` is not added to the root
+`.gitignore` because that would hide control-plane files from Git.
 
 ### Verification and evals
 
@@ -145,8 +147,8 @@ The doctor has two levels:
 
 - quick: harness tests, skill audit, secret filename scan, Git diff check, and
   CodeGraph health;
-- full: quick checks plus frontend lint/build, backend tests, dependency audit,
-  and Compose validation when Docker is available.
+- full: quick checks plus frontend lint/typecheck/build, backend tests,
+  dependency audit, and Compose validation when Docker is available.
 
 ## Failure handling
 
