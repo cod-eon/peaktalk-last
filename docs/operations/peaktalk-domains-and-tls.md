@@ -1,6 +1,7 @@
 # PeakTalk domains, DNS and TLS
 
-Status: operator checklist; the VDS currently serves `peaktalk.ru` and `www.peaktalk.ru`. New Logto hostnames are not enabled yet.
+Status: DNS, TLS and Nginx routing are enabled for the Logto hostnames. Logto
+application Auth integration remains a separate migration gate.
 
 ## DNS records to add
 
@@ -19,23 +20,31 @@ Keep existing MX, SPF, DKIM, DMARC, DNSSEC, certificate-related and unrelated re
 
 ## Values I need after DNS changes
 
-Send only the fact that DNS is configured and the names, not credentials. I will verify from the VDS and public resolvers:
+Send only the fact that DNS is configured and the names, not credentials. The
+records now resolve from public DNS and were verified from the VDS and local
+resolver:
 
 ```text
 auth.peaktalk.ru -> 89.169.169.98
 admin.auth.peaktalk.ru -> 89.169.169.98
 ```
 
-Propagation is complete for this release gate when authoritative DNS and at least two public resolvers return the expected address. The VDS nginx configuration and certificates will be changed only after that check.
+Propagation was sufficient for this release gate: both names resolve to the
+expected address and public HTTPS requests return successfully.
 
 ## TLS plan on VDS
 
 1. Preserve the existing `peaktalk.ru` / `www.peaktalk.ru` certificate and renewal job.
-2. Obtain a separate certificate containing `auth.peaktalk.ru` and `admin.auth.peaktalk.ru` using the existing HTTP-01 webroot flow, or use a DNS-01 certificate if the DNS provider supports it.
-3. Add separate nginx virtual hosts:
+2. A separate certificate containing `auth.peaktalk.ru` and
+   `admin.auth.peaktalk.ru` is installed at
+   `/etc/letsencrypt/live/auth.peaktalk.ru/` and renews through Certbot.
+3. Separate nginx virtual hosts are installed:
    - `auth.peaktalk.ru` → Logto public endpoint;
-   - `admin.auth.peaktalk.ru` → Logto admin endpoint, with an additional access-control decision before public exposure.
-4. Validate `nginx -t`, certificate SANs, TLS protocol policy, redirect behavior, OAuth issuer URL and Logto health before enabling application integration.
+   - `admin.auth.peaktalk.ru` → Logto admin endpoint, protected by Logto
+     admin authentication and an edge rate limit.
+4. `nginx -t`, certificate SANs, TLS protocol policy, redirect behavior,
+   endpoint routing and Logto health have passed. Application integration
+   remains separately gated.
 5. Keep a timestamped copy of nginx configuration and certificate metadata for rollback. Private keys stay on VDS and are never copied into GitHub artifacts.
 
 Logto's official deployment settings distinguish the public endpoint, admin endpoint, ports and secret vault key; those values will be configured in the separate Logto Compose project, not in the PeakTalk application Compose file: [Logto OSS deployment and configuration](https://docs.logto.io/logto-oss/deployment-and-configuration).

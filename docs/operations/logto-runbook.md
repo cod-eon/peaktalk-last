@@ -1,10 +1,11 @@
 # Logto OSS VDS runbook
 
-Status: staged deployment definition; public cutover and application integration remain separate migration gates.
+Status: Logto OSS is deployed with persistent PostgreSQL, public TLS routes and
+healthy endpoints. Application Auth cutover remains a separate migration gate.
 
 ## Architecture
 
-Logto is a separate Compose project under `/opt/peaktalk-logto` with its own persistent PostgreSQL volume and its own secret file. It must not share the PeakTalk application database or volume. The public and admin ports bind to loopback only; nginx is the TLS boundary.
+Logto is a separate Compose project under `/opt/peaktalk-logto` with its own persistent PostgreSQL volume and its own secret file. It must not share the PeakTalk application database or volume. The public and admin ports bind to loopback only; nginx joins the dedicated Logto network and is the TLS boundary. The admin route has an edge rate limit and still relies on Logto admin authentication; PeakTalk application roles are not inferred from Logto console access.
 
 The repository pins the Logto image to `ghcr.io/logto-io/logto:1.41.0` by immutable digest. Upgrades are explicit release changes with a database backup, migration check and rollback window.
 
@@ -17,7 +18,7 @@ sudo install -d -m 750 -o peaktalk-agent -g peaktalk-agent /var/backups/peaktalk
 
 Install the compose file and `.env` from the verified repository artifact. Generate the database password and the 32-byte base64 Secret Vault KEK on VDS; do not generate or transport them in chat. The populated `.env` must be mode `600` and owned by `peaktalk-agent` or the operator account that runs the deployment.
 
-Before starting, verify DNS and certificate readiness for `auth.peaktalk.ru` and `admin.auth.peaktalk.ru`. Until then, keep the ports loopback-only and use an SSH tunnel for bootstrap:
+Before starting, verify DNS and certificate readiness for `auth.peaktalk.ru` and `admin.auth.peaktalk.ru`. The ports remain loopback-only; public TLS routes terminate at nginx:
 
 ```bash
 ssh -L 3002:127.0.0.1:3002 -L 3001:127.0.0.1:3001 codeon@89.169.169.98
