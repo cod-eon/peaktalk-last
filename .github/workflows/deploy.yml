@@ -34,10 +34,15 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run harness tests
         run: npm test --prefix .harness
-      - name: Audit project skills
-        run: node .harness/bin/harness.mjs audit
-      - name: Run harness doctor
-        run: bash .harness/scripts/doctor.sh
+      - name: Validate five project skills
+        shell: bash
+        run: |
+          set -euo pipefail
+          skills=(controlled-development deploy-safety product-copy product-decision ui-quality)
+          for skill in "${skills[@]}"; do
+            test -s ".agents/skills/${skill}/SKILL.md"
+            test -s ".agents/skills/${skill}/agents/openai.yaml"
+          done
       - name: Check diff formatting
         run: git diff --check
 

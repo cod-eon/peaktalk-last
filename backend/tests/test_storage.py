@@ -14,7 +14,7 @@ def test_build_storage_path_sanitizes_filename() -> None:
     assert path == f"{user_id}/{document_id}/draft_.pdf"
 
 
-class _NotFound:
+class _NotFound(Exception):
     response = {"Error": {"Code": "404"}}
 
 
