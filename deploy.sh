@@ -72,7 +72,7 @@ manifest_value() {
 [[ "$(manifest_value frontend_tag)" == "peaktalk-frontend:${DEPLOY_SHA}" ]] || fail "Frontend image tag mismatch"
 
 log "Preparing verified deployment ${DEPLOY_SHA}"
-sha256sum -c "$IMAGE_CHECKSUMS" >/dev/null || fail "Image artifact checksum mismatch"
+(cd "$ARTIFACT_DIR" && sha256sum -c "$(basename "$IMAGE_CHECKSUMS")" >/dev/null) || fail "Image artifact checksum mismatch"
 docker compose -f "$COMPOSE_FILE" config >/dev/null
 
 if [[ ! -r backend/.env || ! -r frontend/.env.local ]]; then
