@@ -16,10 +16,12 @@ from app.models.simulation import (
 from app.models.notification import Notification, PushSubscription
 from app.models.subscription import Payment, Subscription, UsageCounter
 from app.models.user import OnboardingProfile, User
+from app.models.user_identity import UserIdentity
 
 __all__ = [
     "User",
     "OnboardingProfile",
+    "UserIdentity",
     "AppSetting",
     "Document",
     "SpeechDraft",

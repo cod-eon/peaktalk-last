@@ -13,6 +13,7 @@ from app.database import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from app.models.user_identity import UserIdentity
     from app.models.subscription import Payment, Subscription, UsageCounter
 
 
@@ -59,6 +60,9 @@ class User(Base):
 
     onboarding_profile: Mapped["OnboardingProfile | None"] = relationship(
         "OnboardingProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    identities: Mapped[list["UserIdentity"]] = relationship(
+        "UserIdentity", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Billing relationships

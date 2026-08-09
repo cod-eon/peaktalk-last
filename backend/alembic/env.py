@@ -15,6 +15,7 @@ import app.models.guest  # noqa: F401
 import app.models.simulation  # noqa: F401
 import app.models.subscription  # noqa: F401
 import app.models.user  # noqa: F401
+import app.models.user_identity  # noqa: F401
 import app.models.notification  # noqa: F401
 
 config = context.config

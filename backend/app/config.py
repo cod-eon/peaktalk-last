@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     supabase_key: str
     supabase_storage_bucket: str = "peaktalk-dev-bucket"
 
+    # Authentication migration gate. Keep legacy until Logto application and
+    # smoke-test evidence are complete.
+    auth_provider: Literal["legacy", "logto", "dual-validate"] = "legacy"
+    logto_issuer: str = "https://auth.peaktalk.ru/oidc"
+    logto_jwks_uri: str = "https://auth.peaktalk.ru/oidc/jwks"
+    logto_userinfo_url: str = "https://auth.peaktalk.ru/oidc/me"
+    logto_audience: str = ""
+    logto_required_scopes: str = ""
+    logto_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+
     # Object storage. Keep legacy as the default until the separate Storage
     # migration gate has fresh credentials and upload/restore evidence.
     storage_provider: Literal["legacy", "yandex"] = "legacy"

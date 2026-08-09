@@ -98,6 +98,24 @@ alteration, and loopback health checks; until the remaining evidence exists, do
 not expose it publicly, integrate it into application Auth, or remove
 Supabase dependencies.
 
+## Current gate evidence — 2026-08-09
+
+- Logto OSS is deployed in a separate Compose project with persistent
+  PostgreSQL, loopback-only container ports, public TLS routes, and a verified
+  admin account.
+- The application remains `AUTH_PROVIDER=legacy`; Supabase Auth is not
+  disabled and no user migration has been performed.
+- Backend preparation is implemented locally behind the flag: strict Logto
+  JWT validation (signature, issuer, audience, expiry, required scopes),
+  verified-email userinfo lookup, and a `user_identities` mapping table.
+- Fresh local evidence: 99 backend tests passed, including Logto scope
+  rejection, identity provisioning/reuse, and invalid-token 401 behavior.
+- The migration gate remains closed for production cutover. A Logto
+  application/API resource, email connector, password recovery and
+  verification smoke, frontend PKCE flow, protected-route checks, and full
+  negative authorization evidence are still required before moving to
+  `dual-validate`.
+
 ## Non-goals
 
 No voice simulation, speech scoring, generic coaching, new product features,
