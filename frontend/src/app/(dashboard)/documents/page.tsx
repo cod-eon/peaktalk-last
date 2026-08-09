@@ -37,7 +37,7 @@ function getExt(doc: Doc): string {
     if (doc.source === 'text') return 'ТЕКСТ';
     const ext = doc.name.split('.').pop()?.toUpperCase() ?? '';
     if (ext === 'PDF') return 'PDF';
-    if (ext === 'DOC') return 'DOCX';
+    if (ext === 'DOC') return 'DOC';
     if (['DOCX', 'TXT'].includes(ext)) return ext;
     return 'ФАЙЛ';
 }

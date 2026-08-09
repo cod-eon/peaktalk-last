@@ -6,6 +6,34 @@
   },
   "operatingModel": "risk-adaptive-autonomy",
   "maxSelectedSkills": 3,
+  "maxAasSkills": 1,
+  "context": {
+    "documents": {
+      "harness": [
+        "docs/architecture/agent-harness.md",
+        "docs/decisions/0001-hybrid-agent-harness.md",
+        ".harness/README.md"
+      ],
+      "product": [
+        "docs/product/product-model.md",
+        "docs/product/mvp-boundaries.md"
+      ],
+      "spec": [
+        "docs/specs/core-flow.md"
+      ],
+      "architecture": [
+        "docs/architecture/current-system.md"
+      ],
+      "operations": [
+        "docs/operations/harness-recovery.md"
+      ]
+    },
+    "codeNavigation": {
+      "providerOrder": ["mcp", "codegraph-cli", "rg"],
+      "timeoutMs": 1200,
+      "maxFiles": 5
+    }
+  },
   "principles": [
     "Inspect evidence before changing code.",
     "Separate facts, assumptions, and recommendations.",

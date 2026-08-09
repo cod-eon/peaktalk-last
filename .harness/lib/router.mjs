@@ -23,9 +23,29 @@ function includesAny(text, signals) {
   return signals.some((signal) => text.includes(normalize(signal)));
 }
 
+function runBounded(command, args, options = {}) {
+  try {
+    const output = execFileSync(command, args, {
+      cwd: options.cwd,
+      encoding: "utf8",
+      timeout: options.timeoutMs ?? 1200,
+      maxBuffer: options.maxBuffer ?? 512_000,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    return { ok: true, output: output.trim(), error: null };
+  } catch (error) {
+    return {
+      ok: false,
+      output: String(error.stdout ?? "").trim(),
+      error: String(error.stderr ?? error.message ?? "command failed").trim()
+    };
+  }
+}
+
 export function createRouter(options = {}) {
   const config = readJson(options.configPath ?? path.join(harnessRoot, "config/harness.json"));
   const policy = readJson(options.policyPath ?? path.join(harnessRoot, "config/skills-policy.json"));
+  const projectPolicy = readJson(options.projectPolicyPath ?? path.join(harnessRoot, "config/project-skills.json"));
   const lock = readJson(options.lockPath ?? path.join(harnessRoot, "catalogs/aas.lock.json"));
   const aasRoot = path.resolve(options.aasRoot ?? process.env.PEAKTALK_AAS_ROOT ?? path.join(harnessRoot, "vendor/aas"));
   const runtimeRoot = path.resolve(options.runtimeRoot ?? path.join(harnessRoot, "runtime"));
@@ -42,29 +62,55 @@ export function createRouter(options = {}) {
   }
 
   function detectMode(text) {
-    if (/(review|ревью|аудит|проверь\s+(код|diff)|code review)/u.test(text)) return "review";
-    if (/(debug|diagnos|root cause|bug|ошиб|сломал|не работает|регресс)/u.test(text)) return "debug";
-    if (/(test|qa|playwright|e2e|тест|провер)/u.test(text)) return "test";
-    if (/(plan|architect|design decision|prd|roadmap|спроект|архитект|продуктов.*решен|обсуд|соглас|выбрать)/u.test(text)) return "plan";
+    if (/(review|ревью|аудит|проверь\s+(код|diff|измен)|code review|код-ревью)/u.test(text)) return "review";
+    if (/(debug|diagnos|root cause|bug|ошиб|сломал|не работает|регресс|исправь дефект)/u.test(text)) return "debug";
+    if (/(\btest\b|\bqa\b|playwright|e2e|unit test|integration test|тест(?:ы|ирование)?|покрыти[ея])/u.test(text)) return "test";
+    if (/(plan|architect|design decision|prd|roadmap|спроект|архитект|продуктов.*решен|обсуд|соглас|выбрать|решить)/u.test(text)) return "plan";
     return "implement";
   }
 
   function detectDomains(text, paths = []) {
-    const joined = `${text} ${paths.join(" ")}`;
-    const rules = {
-      product: /(product|prd|roadmap|position|pricing|onboarding|paywall|persona|scenario|продукт|позиционир|онбординг|пейвол|сценари)/u,
-      architecture: /(architect|adr|system design|migration strategy|архитект|системн.*дизайн)/u,
-      ui: /(ui|ux|layout|responsive|visual|screen|page|component|mobile|desktop|интерфейс|экран|дизайн|верст)/u,
-      frontend: /(frontend|next\.?js|react|tailwind|zustand|tanstack|frontend\/|src\/app|src\/components|фронтенд)/u,
-      backend: /(backend|fastapi|python|sqlalchemy|celery|backend\/|бэкенд)/u,
-      api: /(^|\W)(api|endpoint|router|webhook)(\W|$)|контракт.*api/u,
-      database: /(database|postgres|sql|alembic|schema|migration|rls|таблиц|баз.*данн)/u,
-      auth: /(auth|login|register|session|jwt|oauth|logto|supabase auth|авторизац|аутентиф)/u,
-      security: /(security|secret|permission|authorization|vulnerab|idor|безопас|секрет|доступ)/u,
-      deploy: /(deploy|production|docker|nginx|ci\/cd|workflow|infra|депло|продакшн)/u,
-      code: /(code|diff|refactor|implement|bug|код|рефактор|реализ)/u
-    };
-    return Object.entries(rules).filter(([, regex]) => regex.test(joined)).map(([domain]) => domain);
+    const taskText = normalize(text);
+    const pathText = normalize(paths.join(" "));
+    const joined = `${taskText} ${pathText}`;
+    const hasHarnessScope = /(agent harness|harness|skill router|task contract|completion gate|codegraph|mcp server|bootstrap|doctor|eval fixture|\.harness|\.agents\/skills|\.codex\/config)/u.test(joined);
+    const hasProductSignal = /(product|prd|roadmap|position|pricing|onboarding|paywall|persona|scenario|продукт|позиционир|онбординг|пейвол|сценари)/u.test(taskText);
+    const hasCopySignal = /(copy|microcopy|headline|cta|tone|текст|копирайт|заголовок|кнопк|формулировк)/u.test(taskText);
+    const hasArchitectureSignal = /(architect|adr|system design|migration strategy|migration plan|migration.*strategy|архитект|системн.*дизайн|план миграц|стратег.*миграц)/u.test(taskText);
+    const hasUiSignal = /(\bui\b|\bux\b|layout|responsive|visual|screen|page|component|mobile|desktop|интерфейс|экран|дизайн|верст|адаптив)/u.test(taskText);
+    const hasFrontendPath = /(frontend\/(src\/)?(app|components|hooks|lib)|\.(tsx|jsx|css|scss)$)/u.test(pathText);
+    const hasFrontendSignal = /(frontend|next\.?js|react|tailwind|zustand|tanstack|фронтенд)/u.test(joined);
+    const hasBackendPath = /(^|\s)backend\//u.test(pathText);
+    const hasBackendSignal = /(backend|fastapi|python|sqlalchemy|celery|бэкенд)/u.test(joined);
+    const hasApiSignal = /(^|[^a-zа-я])(api|endpoint|webhook)([^a-zа-я]|$)|контракт.*api/u.test(taskText);
+    const hasApiPath = /backend\/app\/routers\//u.test(pathText);
+    const hasDatabaseSignal = /(database|postgres|sql|alembic|schema|migration|rls|таблиц|баз.*данн)/u.test(joined);
+    const hasAuthSignal = /(auth|login|register|session|jwt|oauth|logto|supabase auth|авторизац|аутентиф)/u.test(joined);
+    const hasSecuritySignal = /(security|secret|permission|authorization|vulnerab|idor|безопас|секрет|доступ)/u.test(joined);
+    const hasDeploySignal = /(deploy|production|docker|nginx|ci\/cd|workflow|infra|депло|продакшн)/u.test(joined);
+    const hasCodeSignal = /(\bcode\b|\bdiff\b|refactor|implement|review|bug|код|рефактор|реализ|исправ)/u.test(taskText) || /\.(mjs|js|ts|tsx|py|css|json)$/u.test(pathText);
+
+    const domains = [];
+    if (hasHarnessScope) domains.push("harness");
+    if (hasProductSignal) domains.push("product");
+    if (hasCopySignal) domains.push("copy");
+    if (hasArchitectureSignal) domains.push("architecture");
+    if (hasUiSignal || (hasFrontendPath && /\b(page|component|layout|screen)\b/u.test(taskText))) domains.push("ui");
+    if (hasFrontendSignal || hasFrontendPath) domains.push("frontend");
+    if (hasBackendSignal || hasBackendPath) domains.push("backend");
+    if (hasApiSignal || hasApiPath) domains.push("api");
+    if (hasDatabaseSignal) domains.push("database");
+    if (hasAuthSignal) domains.push("auth");
+    if (hasSecuritySignal) domains.push("security");
+    if (hasDeploySignal) domains.push("deploy");
+    if (hasCodeSignal) domains.push("code");
+
+    // Harness vocabulary is not evidence of product API/UI work. Keep explicit
+    // technical signals, but discard accidental matches from generic prose.
+    if (hasHarnessScope) {
+      return unique(domains.filter((domain) => ["harness", "architecture", "product", "database", "auth", "security", "deploy", "code"].includes(domain)));
+    }
+    return unique(domains);
   }
 
   function classifyRisk(text, domains) {
@@ -107,6 +153,26 @@ export function createRouter(options = {}) {
     return unique(checks);
   }
 
+  function contextFor(domains, paths) {
+    const keys = new Set(["spec"]);
+    if (domains.includes("harness")) keys.add("harness");
+    if (domains.includes("product")) keys.add("product");
+    if (domains.some((domain) => ["architecture", "frontend", "backend", "api", "database", "auth", "security"].includes(domain))) keys.add("architecture");
+    if (domains.includes("deploy")) keys.add("operations");
+    const documents = unique([...keys].flatMap((key) => config.context?.documents?.[key] ?? []));
+    return {
+      strategy: "minimal-first",
+      documents: documents.map((document) => ({ path: document, exists: fs.existsSync(path.join(workspaceRoot, document)) })),
+      codeNavigation: {
+        providerOrder: config.context?.codeNavigation?.providerOrder ?? ["mcp", "codegraph-cli", "rg"],
+        timeoutMs: config.context?.codeNavigation?.timeoutMs ?? 1200,
+        maxFiles: config.context?.codeNavigation?.maxFiles ?? 5,
+        paths: paths.length ? paths : ["."],
+        query: "Use the task wording and affected paths; avoid generic symbol names."
+      }
+    };
+  }
+
   function scoreSkill(entry, text, mode, domains) {
     let score = 0;
     const reasons = [];
@@ -127,27 +193,57 @@ export function createRouter(options = {}) {
     return { score, reasons };
   }
 
+  function projectSkillCandidates(text, mode, domains, gates = []) {
+    return projectPolicy.skills
+      .map((entry) => ({ entry, ...scoreSkill(entry, text, mode, domains) }))
+      .filter((candidate) => candidate.score >= 7)
+      .sort((a, b) => {
+        const aDecision = a.entry.id === "product-decision" && gates.some((gate) => ["product", "costlyArchitecture"].includes(gate.id));
+        const bDecision = b.entry.id === "product-decision" && gates.some((gate) => ["product", "costlyArchitecture"].includes(gate.id));
+        return Number(bDecision) - Number(aDecision) || b.score - a.score || a.entry.id.localeCompare(b.entry.id);
+      });
+  }
+
+  function systemSkillCandidates(domains) {
+    const ids = [];
+    for (const domain of ["ui", "frontend", "backend", "deploy"]) {
+      if (domains.includes(domain) && projectPolicy.trustedSystemSkills?.[domain]) ids.push(projectPolicy.trustedSystemSkills[domain]);
+    }
+    return unique(ids).slice(0, 1);
+  }
+
   function routeTask(input) {
     const task = String(input.task ?? "").trim();
     if (!task) throw new Error("task is required");
     const paths = Array.isArray(input.paths) ? input.paths.map(String) : [];
     const text = normalize(`${task} ${paths.join(" ")}`);
     const mode = input.mode ?? detectMode(text);
+    if (!["plan", "implement", "debug", "test", "review"].includes(mode)) throw new Error(`unsupported mode: ${mode}`);
     const domains = detectDomains(text, paths);
     const gates = decisionGates(text, mode, domains);
     const baseRisk = classifyRisk(text, domains);
     const risk = gates.some((gate) => gate.id === "product" || gate.id === "costlyArchitecture") ? "high" : baseRisk;
     const byId = catalogById();
-
-    const selectedSkills = policy.approved
+    const selectedSkills = [];
+    const projectCandidates = projectSkillCandidates(text, mode, domains, gates);
+    if (projectCandidates[0]) {
+      const { entry, score, reasons } = projectCandidates[0];
+      selectedSkills.push({ id: entry.id, source: "project", score, reasons, available: true, scriptsAllowed: false });
+    }
+    for (const id of systemSkillCandidates(domains)) {
+      selectedSkills.push({ id, source: "system", score: null, reasons: [`domain:${domains.find((domain) => projectPolicy.trustedSystemSkills?.[domain] === id)}`], available: true, scriptsAllowed: false });
+    }
+    const aasSkills = policy.approved
       .map((entry) => ({ entry, ...scoreSkill(entry, text, mode, domains) }))
       .filter((candidate) => candidate.score >= 7)
       .sort((a, b) => b.score - a.score || a.entry.id.localeCompare(b.entry.id))
-      .slice(0, config.maxSelectedSkills)
+      .filter(({ entry }) => !selectedSkills.some((skill) => skill.id === entry.id))
+      .slice(0, config.maxAasSkills ?? 1)
       .map(({ entry, score, reasons }) => {
         const metadata = byId.get(entry.id);
         return {
           id: entry.id,
+          source: "aas",
           score,
           reasons,
           available: Boolean(metadata),
@@ -156,13 +252,17 @@ export function createRouter(options = {}) {
           scriptsAllowed: false
         };
       });
+    selectedSkills.push(...aasSkills);
 
+    const context = contextFor(domains, paths);
     return {
       task,
       classification: { mode, domains, risk },
       autonomy: gates.length ? "pause-at-decision-gate" : risk === "high" ? "controlled-with-explicit-risk-review" : "autonomous",
       decisionGates: gates,
-      selectedSkills,
+      selectedSkills: selectedSkills.slice(0, config.maxSelectedSkills),
+      context,
+      requiredContext: context.documents,
       coreProtocol: {
         beforeWork: ["inspect current state", "state acceptance criteria", "identify blast radius and risk"],
         productDecisionStyle: "critical, explanatory, options-first, realistic; recommendation must include trade-offs and non-goals",
@@ -173,6 +273,54 @@ export function createRouter(options = {}) {
       warnings: selectedSkills.some((skill) => !skill.available)
         ? ["Pinned AAS catalog is unavailable. Run ./.harness/scripts/setup-aas.sh before loading skill content."]
         : []
+    };
+  }
+
+  function codeContext(input) {
+    const query = String(input.query ?? "").trim();
+    if (!query) throw new Error("query is required");
+    const timeoutMs = Math.max(250, Math.min(Number(input.timeoutMs ?? config.context?.codeNavigation?.timeoutMs ?? 1200), 5000));
+    const failures = [];
+    if (typeof options.mcpExplore === "function") {
+      try {
+        const result = options.mcpExplore({ query, paths: input.paths ?? [] });
+        if (result) return { provider: "mcp", query, result, failures };
+      } catch (error) {
+        failures.push({ provider: "mcp", error: error.message });
+      }
+    } else {
+      failures.push({ provider: "mcp", error: "MCP connector is not injectable into the local CLI process" });
+    }
+    const cli = runBounded(options.codegraphBin ?? process.env.PEAKTALK_CODEGRAPH_BIN ?? "codegraph", ["explore", "--path", workspaceRoot, "--max-files", String(config.context?.codeNavigation?.maxFiles ?? 5), query], { cwd: workspaceRoot, timeoutMs });
+    if (cli.ok && cli.output) return { provider: "codegraph-cli", query, result: cli.output, failures };
+    failures.push({ provider: "codegraph-cli", error: cli.error || "empty result" });
+    const searchPaths = Array.isArray(input.paths) && input.paths.length ? input.paths : ["."];
+    const rgArgs = ["-n", "-S", "--hidden", "--glob", "!.git", "--glob", "!.harness/vendor/**", "--glob", "!.codegraph/**", "--", query, ...searchPaths];
+    const rg = runBounded(options.rgBin ?? "rg", rgArgs, { cwd: workspaceRoot, timeoutMs });
+    if (rg.ok) return { provider: "rg", query, result: rg.output, failures };
+    failures.push({ provider: "rg", error: rg.error || "empty result" });
+    return { provider: "none", query, result: "", failures };
+  }
+
+  function codegraphHealth(input = {}) {
+    const timeoutMs = Math.max(250, Math.min(Number(input.timeoutMs ?? config.context?.codeNavigation?.timeoutMs ?? 1200), 5000));
+    const binary = options.codegraphBin ?? process.env.PEAKTALK_CODEGRAPH_BIN ?? "codegraph";
+    const statusResult = runBounded(binary, ["status", workspaceRoot], { cwd: workspaceRoot, timeoutMs });
+    const smokeResult = statusResult.ok
+      ? runBounded(binary, ["explore", "--path", workspaceRoot, "--max-files", "2", "routeTask"], { cwd: workspaceRoot, timeoutMs })
+      : { ok: false, output: "", error: "status failed; semantic smoke was not attempted" };
+    const psResult = runBounded("ps", ["-axo", "pid=,command="], { cwd: workspaceRoot, timeoutMs: 500 });
+    const workspaceMcpProcesses = psResult.ok
+      ? psResult.output.split("\n").filter((line) => line.includes("codegraph") && line.includes("serve --mcp") && line.includes(workspaceRoot)).length
+      : null;
+    return {
+      ok: statusResult.ok && /Index is up to date/u.test(statusResult.output) && smokeResult.ok && Boolean(smokeResult.output) && (workspaceMcpProcesses === null || workspaceMcpProcesses <= 1),
+      binary,
+      timeoutMs,
+      status: { ok: statusResult.ok && /Index is up to date/u.test(statusResult.output), output: statusResult.output, error: statusResult.error },
+      semanticSmoke: { ok: smokeResult.ok && Boolean(smokeResult.output), output: smokeResult.output.slice(0, 1000), error: smokeResult.error },
+      mcpProcesses: { workspaceScoped: workspaceMcpProcesses, duplicate: workspaceMcpProcesses !== null && workspaceMcpProcesses > 1 },
+      fallbackOrder: ["mcp", "codegraph-cli", "rg"]
     };
   }
 
@@ -256,12 +404,10 @@ export function createRouter(options = {}) {
     const actualSha256 = indexExists ? crypto.createHash("sha256").update(fs.readFileSync(indexPath)).digest("hex") : null;
     let actualCommit = null;
     let gitTreeClean = false;
-    try {
-      actualCommit = execFileSync("git", ["-C", aasRoot, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-      gitTreeClean = execFileSync("git", ["-C", aasRoot, "status", "--porcelain"], { encoding: "utf8" }).trim() === "";
-    } catch {
-      actualCommit = null;
-    }
+    const commitResult = runBounded("git", ["-C", aasRoot, "rev-parse", "HEAD"], { cwd: workspaceRoot, timeoutMs: 700 });
+    const treeResult = runBounded("git", ["-C", aasRoot, "status", "--porcelain=v1", "-uno"], { cwd: workspaceRoot, timeoutMs: 1200 });
+    if (commitResult.ok) actualCommit = commitResult.output;
+    gitTreeClean = treeResult.ok && treeResult.output === "";
     return {
       workspaceRoot,
       operatingModel: config.operatingModel,
@@ -281,6 +427,11 @@ export function createRouter(options = {}) {
         approvedSkillCount: policy.approved.length,
         allowSkillScripts: policy.allowSkillScripts,
         maxSelectedSkills: config.maxSelectedSkills
+      },
+      codegraph: {
+        registration: "global",
+        projectRegistration: "removed; restart Codex to clear already spawned duplicate processes",
+        fallbackOrder: config.context?.codeNavigation?.providerOrder ?? ["mcp", "codegraph-cli", "rg"]
       }
     };
   }
@@ -360,11 +511,16 @@ export function createRouter(options = {}) {
     if (acceptanceCriteria.length === 0) throw new Error("at least one acceptance criterion is required");
     const route = routeTask({ task: input.task, mode: input.mode, paths: input.paths });
     const now = new Date().toISOString();
+    const initialStatus = route.decisionGates.length ? "awaiting-decision" : "ready";
     return writeTask({
       schemaVersion: 1,
       taskId,
       task: route.task,
-      status: route.decisionGates.length ? "awaiting-decision" : "ready",
+      status: initialStatus,
+      statusHistory: [
+        { status: "draft", recordedAt: now },
+        { status: initialStatus, recordedAt: now }
+      ],
       acceptanceCriteria,
       nonGoals: Array.isArray(input.nonGoals) ? input.nonGoals.map(String) : [],
       paths: Array.isArray(input.paths) ? input.paths.map(String) : [],
@@ -376,12 +532,22 @@ export function createRouter(options = {}) {
     });
   }
 
+  function beginTask(input) {
+    const contract = readTask(validateTaskId(input.taskId));
+    if (contract.status !== "ready") throw new Error(`task cannot begin from status: ${contract.status}`);
+    contract.status = "in-progress";
+    contract.statusHistory = [...(contract.statusHistory ?? []), { status: "in-progress", recordedAt: new Date().toISOString() }];
+    contract.updatedAt = new Date().toISOString();
+    return writeTask(contract);
+  }
+
   function getTask(input) {
     return readTask(validateTaskId(input.taskId));
   }
 
   function recordDecision(input) {
     const contract = readTask(validateTaskId(input.taskId));
+    if (["in-progress", "verifying", "complete"].includes(contract.status)) throw new Error(`cannot change decisions from status: ${contract.status}`);
     const gateId = String(input.gateId ?? "");
     if (!contract.route.decisionGates.some((gate) => gate.id === gateId)) throw new Error(`decision gate is not required: ${gateId}`);
     const decisionRef = String(input.decisionRef ?? "").trim();
@@ -396,6 +562,7 @@ export function createRouter(options = {}) {
     contract.decisions.push({ gateId, decision, decisionRef, approvedBy: "user", recordedAt: new Date().toISOString() });
     const unresolved = contract.route.decisionGates.filter((gate) => !contract.decisions.some((item) => item.gateId === gate.id));
     contract.status = unresolved.length ? "awaiting-decision" : "ready";
+    contract.statusHistory = [...(contract.statusHistory ?? []), { status: contract.status, recordedAt: new Date().toISOString() }];
     contract.updatedAt = new Date().toISOString();
     return writeTask(contract);
   }
@@ -411,13 +578,16 @@ export function createRouter(options = {}) {
     if (!evidence) throw new Error("evidence is required");
     contract.checks = contract.checks.filter((check) => check.checkId !== checkId);
     contract.checks.push({ checkId, result, evidence, command: input.command ? String(input.command) : null, recordedAt: new Date().toISOString() });
+    if (!["in-progress", "verifying"].includes(contract.status)) throw new Error(`cannot record checks from status: ${contract.status}`);
     contract.status = "verifying";
+    contract.statusHistory = [...(contract.statusHistory ?? []), { status: "verifying", recordedAt: new Date().toISOString() }];
     contract.updatedAt = new Date().toISOString();
     return writeTask(contract);
   }
 
   function completeTask(input) {
     const contract = readTask(validateTaskId(input.taskId));
+    if (contract.status !== "verifying") throw new Error(`task cannot complete from status: ${contract.status}`);
     const unresolved = contract.route.decisionGates.filter((gate) => !contract.decisions.some((item) => item.gateId === gate.id));
     if (unresolved.length) throw new Error(`unresolved decision gates: ${unresolved.map((gate) => gate.id).join(", ")}`);
     const failed = contract.checks.filter((check) => check.result === "fail");
@@ -425,6 +595,7 @@ export function createRouter(options = {}) {
     const missing = contract.route.requiredCheckIds.filter((required) => !contract.checks.some((check) => check.checkId === required && check.result === "pass"));
     if (missing.length) throw new Error(`missing passing checks: ${missing.join(", ")}`);
     contract.status = "complete";
+    contract.statusHistory = [...(contract.statusHistory ?? []), { status: "complete", recordedAt: new Date().toISOString() }];
     contract.summary = String(input.summary ?? "").trim();
     if (!contract.summary) throw new Error("completion summary is required");
     contract.updatedAt = new Date().toISOString();
@@ -439,8 +610,11 @@ export function createRouter(options = {}) {
     readSkillReference,
     status,
     auditApprovedSkills,
+    codeContext,
+    codegraphHealth,
     recordOutcome,
     startTask,
+    beginTask,
     getTask,
     recordDecision,
     recordCheck,

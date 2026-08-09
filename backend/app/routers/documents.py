@@ -14,6 +14,7 @@ from app.models.draft import SpeechDraft
 from app.models.user import User
 from app.schemas.document import DocumentListResponse, DocumentResponse, DocumentTextCreate
 from app.services import parser, storage
+from app.services.parser import DocumentParseError
 from app.services.limits import check_document_limit, increment_document_counter
 
 logger = logging.getLogger("peaktalk.documents")
@@ -75,7 +76,14 @@ async def upload_document(
         parse_document_task.delay(str(document_id))
         logger.info("Large file queued for async parsing document=%s", document_id)
     else:
-        parse_result = await asyncio.to_thread(parser.parse_file, file_bytes, file_type, filename)
+        try:
+            parse_result = await asyncio.to_thread(parser.parse_file, file_bytes, file_type, filename)
+        except DocumentParseError as exc:
+            await storage.delete_file(storage_path)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(exc),
+            ) from exc
         if parse_result.text:
             doc.extracted_text = parse_result.text
             doc.parsed_at = datetime.now(timezone.utc)

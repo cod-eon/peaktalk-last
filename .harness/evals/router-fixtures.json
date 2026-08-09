@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "harness-router-maintenance",
+      "task": "Настрой новый agent harness: исправь skill router, doctor и MCP CodeGraph",
+      "mode": "plan",
+      "expected": { "domains": ["harness"], "risk": "medium", "skills": ["controlled-development"], "forbiddenSkills": ["python-fastapi-development", "design-taste-frontend"] }
+    },
+    {
+      "id": "product-paywall-decision",
+      "task": "Выбрать paywall для первой платной подготовки PeakTalk и зафиксировать продуктовое решение",
+      "expected": { "domains": ["product"], "risk": "high", "gate": "product", "skills": ["product-decision"] }
+    },
+    {
+      "id": "responsive-prep-page",
+      "task": "Implement a responsive React preparation page and verify desktop and mobile states",
+      "paths": ["frontend/src/app/(dashboard)/preparation/page.tsx"],
+      "expected": { "domains": ["ui", "frontend"], "risk": "medium", "skills": ["ui-quality", "design-taste-frontend"], "forbiddenSkills": ["python-fastapi-development"] }
+    },
+    {
+      "id": "guest-auth-endpoint",
+      "task": "Implement a FastAPI authorization endpoint for guest conversion with negative cases",
+      "expected": { "domains": ["backend", "api", "auth", "security"], "risk": "high", "skills": ["controlled-development", "backend-dev-guidelines"], "forbiddenSkills": ["design-taste-frontend"] }
+    },
+    {
+      "id": "small-copy-edit",
+      "task": "Rewrite the upload CTA microcopy to be clearer without changing behavior",
+      "expected": { "domains": ["copy"], "risk": "low", "skills": ["product-copy"], "forbiddenGates": ["product"] }
+    },
+    {
+      "id": "production-deploy",
+      "task": "Deploy the current PeakTalk release to production and keep a rollback path",
+      "expected": { "domains": ["deploy"], "risk": "high", "gate": "externalOrDestructive", "skills": ["deploy-safety"] }
+    },
+    {
+      "id": "storage-migration-plan",
+      "task": "Plan the Supabase Storage to Yandex Object Storage migration and rollback strategy",
+      "expected": { "domains": ["architecture", "database"], "risk": "high", "gate": "costlyArchitecture", "skills": ["product-decision", "architecture"] }
+    },
+    {
+      "id": "harness-router-review",
+      "task": "Review the harness router classification and add regression fixtures",
+      "expected": { "domains": ["harness", "code"], "risk": "medium", "skills": ["controlled-development"], "forbiddenSkills": ["python-fastapi-development", "design-taste-frontend"] }
+    }
+  ]
+}

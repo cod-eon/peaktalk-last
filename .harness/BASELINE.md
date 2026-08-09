@@ -1,15 +1,15 @@
-# Verified baseline — 2026-08-09
+# Verified harness baseline — 2026-08-09
 
 ## Green checks
 
-- Harness router: 8 protocol, policy, and lifecycle tests passed.
+- Harness router and committed evals: 18 tests passed.
 - Approved AAS skills: 12 checked, no policy findings.
 - AAS catalog: 2,007 skills; pinned commit and index SHA-256 match.
-- Codex discovery: project-scoped `peaktalk-harness` and `codegraph` MCP
-  servers are enabled.
-- CodeGraph: 215 files, 2,865 nodes, 5,688 edges; index up to date.
-- Frontend lint: passed.
-- Frontend production build: passed and generated 33 static pages.
+- Project skills: 5/5 `SKILL.md` and `agents/openai.yaml` validations passed.
+- Codex discovery: project-scoped `peaktalk-harness` is enabled; CodeGraph is
+  registered globally once, with no project duplicate.
+- CodeGraph: 222 files, 2,892 nodes, 5,735 edges; status and semantic smoke
+  passed, with one workspace-scoped MCP process detected.
 - Backend: 92 tests passed on Python 3.13.3.
 
 ## Known baseline findings
@@ -29,6 +29,12 @@
   breaking `npm audit fix --force`; investigate and upgrade as a dedicated task.
 - Next.js reports that the `middleware` convention is deprecated in favor of
   `proxy`.
+- Current frontend lint and production build reruns timed out without output
+  while loading the existing frontend toolchain under the available Node 24/25
+  runtimes. This is not a fresh pass; investigate as a separate environment or
+  frontend-tooling task.
+- Current `npm audit --omit=dev --audit-level=critical` could not reach the npm
+  advisory endpoint. The known dependency findings below remain unresolved.
 - Supabase 2.16.0 emits deprecation warnings for its legacy `gotrue` and
   `supafunc` packages.
 - Docker is not installed locally, so Compose parsing and image builds were not

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Controlled Development"
+  short_description: "Bounded PeakTalk changes with fresh evidence"
+  default_prompt: "Use $controlled-development to implement and verify a bounded PeakTalk change."

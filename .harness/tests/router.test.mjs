@@ -60,10 +60,31 @@ test("task contract cannot complete without every required passing check", () =>
     acceptanceCriteria: ["Actionable correctness review is complete"]
   });
   assert.equal(contract.status, "ready");
+  lifecycle.beginTask({ taskId: "review-1" });
+  lifecycle.recordCheck({ taskId: "review-1", checkId: contract.route.requiredCheckIds[0], result: "pass", evidence: "First check evidence" });
   assert.throws(() => lifecycle.completeTask({ taskId: "review-1", summary: "Reviewed" }), /missing passing checks/);
   for (const checkId of contract.route.requiredCheckIds) {
     lifecycle.recordCheck({ taskId: "review-1", checkId, result: "pass", evidence: `Evidence for ${checkId}` });
   }
   const completed = lifecycle.completeTask({ taskId: "review-1", summary: "Reviewed against acceptance criteria" });
   assert.equal(completed.status, "complete");
+});
+
+test("code context falls back from unavailable CodeGraph CLI to rg", () => {
+  const fallback = createRouter({ codegraphBin: "false" }).codeContext({ query: "routeTask", timeoutMs: 500, paths: [".harness/lib/router.mjs"] });
+  assert.equal(fallback.provider, "rg");
+  assert.ok(fallback.failures.some((failure) => failure.provider === "mcp"));
+  assert.ok(fallback.failures.some((failure) => failure.provider === "codegraph-cli"));
+});
+
+test("ready task can explicitly enter implementation", () => {
+  const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "peaktalk-harness-begin-"));
+  const lifecycle = createRouter({ runtimeRoot });
+  lifecycle.startTask({
+    taskId: "begin-1",
+    task: "Review the code diff",
+    acceptanceCriteria: ["Review is recorded"]
+  });
+  const begun = lifecycle.beginTask({ taskId: "begin-1" });
+  assert.equal(begun.status, "in-progress");
 });

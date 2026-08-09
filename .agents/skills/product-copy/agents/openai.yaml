@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Copy"
+  short_description: "PeakTalk copy tied to user decisions"
+  default_prompt: "Use $product-copy to revise PeakTalk copy without inventing product claims."

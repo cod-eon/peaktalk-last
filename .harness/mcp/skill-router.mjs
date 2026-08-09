@@ -20,6 +20,20 @@ const tools = [
     }
   },
   {
+    name: "code_context",
+    description: "Resolve minimal code context through MCP when available, then CodeGraph CLI, then rg with bounded timeouts.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string" },
+        paths: { type: "array", items: { type: "string" } },
+        timeoutMs: { type: "integer", minimum: 250, maximum: 5000 }
+      },
+      required: ["query"],
+      additionalProperties: false
+    }
+  },
+  {
     name: "search_skills",
     description: "Search the pinned AAS catalog. Defaults to the approved PeakTalk allowlist; unapproved results are metadata-only and never load content.",
     inputSchema: {
@@ -60,6 +74,11 @@ const tools = [
     }
   },
   {
+    name: "codegraph_health",
+    description: "Run a bounded CodeGraph status and semantic smoke check and report duplicate workspace-scoped MCP processes.",
+    inputSchema: { type: "object", properties: { timeoutMs: { type: "integer", minimum: 250, maximum: 5000 } }, additionalProperties: false }
+  },
+  {
     name: "harness_status",
     description: "Report router policy, pinned catalog availability, integrity, and active limits.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
@@ -98,6 +117,16 @@ const tools = [
         nonGoals: { type: "array", items: { type: "string" } }
       },
       required: ["taskId", "task", "acceptanceCriteria"],
+      additionalProperties: false
+    }
+  },
+  {
+    name: "begin_task",
+    description: "Move a ready task contract into in-progress before implementation begins.",
+    inputSchema: {
+      type: "object",
+      properties: { taskId: { type: "string" } },
+      required: ["taskId"],
       additionalProperties: false
     }
   },
@@ -160,13 +189,16 @@ const tools = [
 function callTool(name, args) {
   switch (name) {
     case "route_task": return router.routeTask(args);
+    case "code_context": return router.codeContext(args);
     case "search_skills": return router.searchSkills(args);
     case "inspect_skill": return router.inspectSkill(args);
     case "read_skill_reference": return router.readSkillReference(args);
     case "harness_status": return router.status();
+    case "codegraph_health": return router.codegraphHealth(args);
     case "audit_approved_skills": return router.auditApprovedSkills();
     case "record_outcome": return router.recordOutcome(args);
     case "start_task": return router.startTask(args);
+    case "begin_task": return router.beginTask(args);
     case "get_task": return router.getTask(args);
     case "record_decision": return router.recordDecision(args);
     case "record_check": return router.recordCheck(args);
