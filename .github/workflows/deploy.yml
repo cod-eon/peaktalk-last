@@ -230,10 +230,31 @@ jobs:
         with:
           name: peaktalk-release-${{ github.sha }}
           path: .release
+      - name: Normalize release artifact layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f .release/images.tar.gz && -f .release/images.sha256 && -f .release/release-manifest ]]; then
+            exit 0
+          fi
+
+          archive_path="$(find .release -type f -name images.tar.gz -print -quit)"
+          [[ -n "$archive_path" ]] || { echo "Release image archive is missing" >&2; exit 1; }
+          artifact_dir="$(dirname "$archive_path")"
+          for required_file in images.tar.gz images.sha256 release-manifest; do
+            test -f "$artifact_dir/$required_file" || {
+              echo "Release artifact file is missing: $required_file" >&2
+              exit 1
+            }
+            cp "$artifact_dir/$required_file" ".release/$required_file"
+          done
       - name: Validate deployment configuration
         shell: bash
         run: |
           set -euo pipefail
+          test -f .release/images.tar.gz
+          test -f .release/images.sha256
+          test -f .release/release-manifest
           for variable in VDS_HOST VDS_USER VDS_APP_DIR VDS_DOMAIN VDS_KNOWN_HOSTS VDS_SSH_KEY; do
             if [[ -z "${!variable}" ]]; then
               echo "Missing required deployment secret: ${variable}" >&2
@@ -260,6 +281,7 @@ jobs:
             --exclude='.env.*' \
             --exclude='backend/.env' \
             --exclude='frontend/.env.local' \
+            --exclude='.release' \
             --exclude='ВРЕМЕННО_key' \
             --exclude='*.key' \
             --exclude='node_modules' \
