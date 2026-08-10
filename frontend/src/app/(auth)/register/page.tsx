@@ -20,14 +20,14 @@ function RegisterForm() {
       className="bg-white p-6 sm:p-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Начать бесплатно</h1>
-        <p className="text-neutral-500 text-sm">Укажите email, подтвердите его — и начните с onboarding.</p>
+        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Создать аккаунт</h1>
+        <p className="text-neutral-500 text-sm">Укажите email и подтвердите его.</p>
       </div>
 
       <a href={signUpHref} className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium rounded-none py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
-        Создать аккаунт по email
+        Создать аккаунт
       </a>
-      <p className="mt-4 text-center text-xs text-neutral-500">В защищённом окне PeakTalk вы зададите пароль и подтвердите email.</p>
+      <p className="mt-4 text-center text-xs text-neutral-500">Пароль задаётся на странице PeakTalk.</p>
 
       <p className="mt-6 text-xs text-center text-neutral-400">
         Нажимая кнопку, вы соглашаетесь с{" "}

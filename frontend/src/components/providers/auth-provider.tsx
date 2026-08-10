@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.replace(`/login?return=${encodeURIComponent(`${pathname}${window.location.search}`)}`);
         } else if (!user && isVerificationPage) {
           router.replace('/login?return=%2Fverify-email');
-        } else if (user && nextAuthState === 'email_verification_required' && !isVerificationPage) {
+        } else if (user && nextAuthState === 'email_verification_required' && !isVerificationPage && !isAuthPage) {
           const returnPath = normalizeOptionalInternalReturnPath(`${pathname}${window.location.search}`) ?? '/onboarding';
           router.replace(`/verify-email?return=${encodeURIComponent(returnPath)}`);
         } else if (user && nextAuthState === 'ready' && isAuthPage) {

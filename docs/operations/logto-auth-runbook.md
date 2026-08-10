@@ -57,3 +57,39 @@ Record the Logto sign-in experience configuration, a verified registration,
 one negative unverified-account check, one onboarding completion, and remote
 health/container evidence. Never record access tokens, cookies, SMTP keys, or
 Logto application secrets.
+# Hosted Logto v1.42.0 configuration
+
+The hosted pages at `https://auth.peaktalk.ru` are the source of truth for
+credentials. The local PeakTalk auth routes only start the OIDC flow.
+
+Before changing settings, record the current Sign-in Experience values and the
+application-level branding values. Do not delete users, connectors, Postbox
+data, or persistent volumes.
+
+In the Logto Console at `https://admin.auth.peaktalk.ru`:
+
+1. Open **Sign-in & account → Branding**. Set the PeakTalk logo (use the
+   existing public `/logo_svg.svg` asset or upload the same SVG), primary color
+   `#E8600A`, light background treatment `#faf8f4`, graphite text `#171717`,
+   and Russian as the fallback language.
+2. Open **Sign-up and sign-in**. Set email as the required identifier, enable
+   password, enable email verification, and remove phone and username from the
+   required sign-up/sign-in methods. Keep the email forgot-password method
+   enabled.
+3. Configure MFA factors and policy only according to the approved product
+   requirement. The hosted MFA screens must remain in the Logto interaction
+   flow.
+4. Add only supported CSS in **Branding → Custom CSS**. Do not edit Nginx to
+   inject CSS into `auth.peaktalk.ru`.
+5. Use **Live preview** for sign-in, sign-up, verification, recovery, MFA,
+   loading, and error states. Then start the real flow from PeakTalk and verify
+   the exact callback and return path.
+
+If the Console does not expose a setting, use the Logto Management API with an
+admin access token kept out of shell history and logs. The relevant endpoints
+are `PATCH /api/sign-in-exp` and the application-level sign-in-experience
+endpoint. Never paste that token into an issue, terminal transcript, or chat.
+
+The self-hosted Logto OSS v1.42.0 Bring Your UI asset endpoint depends on the
+Azure experience-blob processing configuration. It is not the selected path for
+PeakTalk; use the built-in hosted experience plus supported Custom CSS instead.

@@ -49,7 +49,8 @@ async function getAccessCredentials(): Promise<AccessCredentials | null> {
       accessToken: body.access_token,
       identityAssertion: typeof body.identity_assertion === 'string' ? body.identity_assertion : null,
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError) throw error
     return null
   }
 }

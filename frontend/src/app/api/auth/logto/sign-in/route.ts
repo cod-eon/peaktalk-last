@@ -1,4 +1,5 @@
 import { signIn } from '@logto/next/server-actions';
+import { Prompt } from '@logto/js';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -10,6 +11,10 @@ export async function GET(request: NextRequest) {
   }
 
   const returnPath = safeReturnPath(request.nextUrl.searchParams.get('return'));
+  const forceLogin = request.nextUrl.searchParams.get('force') === '1';
+  const firstScreen = request.nextUrl.searchParams.get('screen') === 'reset_password'
+    ? ('reset_password' as const)
+    : undefined;
   const cookieStore = await cookies();
   cookieStore.set('peaktalk_auth_return', returnPath, {
     httpOnly: true,
@@ -23,6 +28,8 @@ export async function GET(request: NextRequest) {
     redirectUri: new URL('/api/auth/logto/callback', appBaseUrl),
     interactionMode: 'signIn',
     clearTokens: true,
+    ...(firstScreen ? { firstScreen } : {}),
+    ...(forceLogin ? { prompt: Prompt.Login } : {}),
     extraParams: { ui_locales: 'ru' },
   });
 }

@@ -11,12 +11,12 @@ export default function ForgotPasswordPage() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="bg-white p-6 sm:p-8 text-center"
     >
-      <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Восстановление доступа</h1>
+      <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Восстановить пароль</h1>
       <p className="text-neutral-500 text-sm mb-8">
-        Logto отправит письмо для восстановления пароля в защищённом окне.
+        Откройте форму восстановления и укажите email.
       </p>
-      <a href="/api/auth/logto/sign-in" className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium rounded-none py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
-        Открыть восстановление пароля
+      <a href="/api/auth/logto/sign-in?screen=reset_password" className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium rounded-none py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
+        Восстановить пароль
       </a>
       <div className="mt-8 text-sm text-neutral-500">
         <Link href="/login" className="text-neutral-900 hover:text-black font-medium">Вернуться ко входу</Link>

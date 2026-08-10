@@ -20,14 +20,14 @@ function LoginForm() {
       className="bg-white p-6 sm:p-8"
     >
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">С возвращением</h1>
-        <p className="text-neutral-500 text-sm">Войдите, чтобы продолжить подготовку к сложному разговору.</p>
+        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Войти</h1>
+        <p className="text-neutral-500 text-sm">Войдите в PeakTalk, чтобы продолжить.</p>
       </div>
 
       <a href={signInHref} className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
-        Войти по email
+        Войти
       </a>
-      <p className="mt-4 text-center text-xs text-neutral-500">Email, пароль и восстановление откроются в защищённом окне PeakTalk.</p>
+      <p className="mt-4 text-center text-xs text-neutral-500">Email и пароль вводятся на странице PeakTalk.</p>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
         Нет аккаунта?{" "}
