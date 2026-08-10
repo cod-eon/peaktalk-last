@@ -43,6 +43,7 @@ function OnboardingForm() {
     const returnUrl = normalizeInternalReturnPath(searchParams.get('return'));
     const isBillingContinuation = returnUrl === '/billing' || returnUrl.startsWith('/billing?');
     const user = useAuthStore((state) => state.user);
+    const authState = useAuthStore((state) => state.authState);
     const isAuthLoading = useAuthStore((state) => state.isLoading);
     
     const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -63,7 +64,11 @@ function OnboardingForm() {
 
     // Skip onboarding if already completed
     useEffect(() => {
-        if (isAuthLoading || !user) return;
+        if (isAuthLoading || !user || authState === 'loading') return;
+        if (authState !== 'ready') {
+            setIsChecking(false);
+            return;
+        }
 
         let cancelled = false;
 
@@ -74,6 +79,10 @@ function OnboardingForm() {
                     router.replace(returnUrl);
                 }
             } catch (error) {
+                if (error instanceof ApiError && error.code === 'email_verification_required') {
+                    router.replace(`/verify-email?return=${encodeURIComponent(returnUrl)}`);
+                    return;
+                }
                 if (error instanceof ApiError && error.status === 401) {
                     setAuthError(true);
                 }
@@ -86,7 +95,7 @@ function OnboardingForm() {
         return () => {
             cancelled = true;
         };
-    }, [isAuthLoading, router, returnUrl, user]);
+    }, [authState, isAuthLoading, router, returnUrl, user]);
 
     const restartAuthentication = () => {
         const returnPath = `${window.location.pathname}${window.location.search}`;
@@ -232,7 +241,7 @@ function OnboardingForm() {
                 <div className="w-full max-w-md border border-neutral-200 bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
                     <h1 className="text-xl font-bold text-neutral-900">Сессия не готова</h1>
                     <p className="mt-3 text-sm leading-relaxed text-neutral-500">
-                        Авторизация в браузере есть, но API ещё не принял токен. Повторите вход — данные onboarding не потеряются.
+                        Не удалось подтвердить API-сессию. Повторите вход — выбранные шаги onboarding не потеряются.
                     </p>
                     <button
                         type="button"

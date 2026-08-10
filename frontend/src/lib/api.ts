@@ -26,7 +26,20 @@ async function getAccessCredentials(): Promise<AccessCredentials | null> {
       credentials: 'include',
       cache: 'no-store',
     })
-    if (!response.ok) return null
+    if (!response.ok) {
+      if (response.status === 403) {
+        try {
+          const errorData = await response.json()
+          const parsed = parseApiErrorBody(errorData, 'Подтвердите email, чтобы продолжить.')
+          if (parsed.code === 'email_verification_required') {
+            throw new ApiError(parsed.message, response.status, parsed.code)
+          }
+        } catch (error) {
+          if (error instanceof ApiError) throw error
+        }
+      }
+      return null
+    }
     const body = await response.json() as { access_token?: unknown; identity_assertion?: unknown }
     if (typeof body.access_token !== 'string') return null
     if (typeof window !== 'undefined') {

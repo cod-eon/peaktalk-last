@@ -23,5 +23,6 @@ export async function GET(request: NextRequest) {
     redirectUri: new URL('/api/auth/logto/callback', appBaseUrl),
     interactionMode: 'signIn',
     clearTokens: true,
+    extraParams: { ui_locales: 'ru' },
   });
 }

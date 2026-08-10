@@ -53,12 +53,27 @@ export async function GET() {
       return NextResponse.json({ detail: 'Authentication required.' }, { status: 401 });
     }
 
-    const accessToken = await getAccessToken(logtoConfig, logtoApiResource);
     const profile = context.userInfo ?? context.claims;
+    if (
+      !profile ||
+      typeof profile.email !== 'string' ||
+      !profile.email.trim() ||
+      profile.email_verified !== true
+    ) {
+      return NextResponse.json(
+        {
+          code: 'email_verification_required',
+          detail: 'Подтвердите email, чтобы продолжить работу в PeakTalk.',
+        },
+        { status: 403, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+
+    const accessToken = await getAccessToken(logtoConfig, logtoApiResource);
     return NextResponse.json(
       {
         access_token: accessToken,
-        identity_assertion: createIdentityAssertion(profile ?? {}),
+        identity_assertion: createIdentityAssertion(profile),
       },
       { headers: { 'Cache-Control': 'no-store' } },
     );
