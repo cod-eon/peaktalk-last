@@ -16,7 +16,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionCheckPath, setSessionCheckPath] = useState<string | null>(null);
 
   const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding', '/billing', '/admin'];
-  const isProtected = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const isGuestSimulation = pathname === '/simulation/guest';
+  const isProtected = !isGuestSimulation && protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
     captureUTM();
