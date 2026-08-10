@@ -15,19 +15,27 @@ function redirectToAuthRecovery() {
   return true
 }
 
-async function getAccessToken(): Promise<string | null> {
+type AccessCredentials = {
+  accessToken: string
+  identityAssertion: string | null
+}
+
+async function getAccessCredentials(): Promise<AccessCredentials | null> {
   try {
     const response = await fetch('/api/auth/access-token', {
       credentials: 'include',
       cache: 'no-store',
     })
     if (!response.ok) return null
-    const body = await response.json() as { access_token?: unknown }
+    const body = await response.json() as { access_token?: unknown; identity_assertion?: unknown }
     if (typeof body.access_token !== 'string') return null
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(AUTH_RECOVERY_STORAGE_KEY)
     }
-    return body.access_token
+    return {
+      accessToken: body.access_token,
+      identityAssertion: typeof body.identity_assertion === 'string' ? body.identity_assertion : null,
+    }
   } catch {
     return null
   }
@@ -155,9 +163,13 @@ export const api = {
       headers.set('Content-Type', 'application/json')
     }
 
-    const accessToken = await getAccessToken()
-    if (accessToken) {
-      headers.set('Authorization', `Bearer ${accessToken}`)
+    const credentials = await getAccessCredentials()
+    const accessToken = credentials?.accessToken ?? null
+    if (credentials) {
+      headers.set('Authorization', `Bearer ${credentials.accessToken}`)
+      if (credentials.identityAssertion) {
+        headers.set('X-PeakTalk-Identity', credentials.identityAssertion)
+      }
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -167,14 +179,22 @@ export const api = {
 
     if (!response.ok) {
       if (response.status === 401) {
-        const refreshedToken = await getAccessToken()
-        if (refreshedToken && refreshedToken !== accessToken) {
+        const refreshedCredentials = await getAccessCredentials()
+        const refreshedToken = refreshedCredentials?.accessToken ?? null
+        if (
+          refreshedCredentials &&
+          refreshedToken &&
+          (refreshedToken !== accessToken || refreshedCredentials.identityAssertion !== credentials?.identityAssertion)
+        ) {
           // Retry the request with the new token
           const retryHeaders = new Headers(requestOptions.headers)
           if (!(requestOptions.body instanceof FormData)) {
             retryHeaders.set('Content-Type', 'application/json')
           }
           retryHeaders.set('Authorization', `Bearer ${refreshedToken}`)
+          if (refreshedCredentials.identityAssertion) {
+            retryHeaders.set('X-PeakTalk-Identity', refreshedCredentials.identityAssertion)
+          }
           const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...requestOptions, headers: retryHeaders })
           if (retryResponse.ok) {
             if (retryResponse.status === 204) return null

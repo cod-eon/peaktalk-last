@@ -1,7 +1,9 @@
+import asyncio
 import logging
 import uuid
 
 from fastapi import Depends, HTTPException, status
+from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.user import User
 from app.models.user_identity import UserIdentity
-from app.services.logto_auth import LogtoAuthError, validate_access_token
+from app.services.logto_auth import LogtoAuthError, _decode_token, validate_access_token
 
 logger = logging.getLogger("peaktalk.auth")
 
@@ -30,24 +32,39 @@ async def _get_logto_user(
     token: str,
     db: AsyncSession,
     credentials_exception: HTTPException,
+    identity_assertion: str | None = None,
 ) -> User:
+    # Existing identities can be resolved from the locally validated JWT
+    # subject without a network call to Logto userinfo. This is important for
+    # resource JWTs, which Logto does not accept at /oidc/me.
     try:
-        profile = await validate_access_token(token)
+        subject = await asyncio.to_thread(_decode_token, token)
     except LogtoAuthError as exc:
         logger.warning("auth: Logto token rejected: %s", exc)
         raise credentials_exception
-
-    profile_email = profile.email.strip().lower()
 
     result = await db.execute(
         select(UserIdentity)
         .options(selectinload(UserIdentity.user).selectinload(User.onboarding_profile))
         .where(
             UserIdentity.provider == "logto",
-            UserIdentity.subject == profile.subject,
+            UserIdentity.subject == subject,
         )
     )
     identity = result.scalar_one_or_none()
+    if identity is not None and not identity_assertion:
+        return identity.user
+
+    try:
+        profile = await validate_access_token(token, identity_assertion)
+    except LogtoAuthError as exc:
+        logger.warning("auth: Logto token rejected: %s", exc)
+        raise credentials_exception
+
+    profile_email = profile.email.strip().lower()
+
+    # Re-check after profile validation so an identity assertion cannot be
+    # used to bypass the subject binding above.
     if identity is not None:
         if identity.email != profile_email:
             identity.email = profile_email
@@ -97,14 +114,23 @@ async def _get_logto_user(
     return user
 
 
-async def get_user_from_token(token: str, db: AsyncSession) -> User:
+async def get_user_from_token(
+    token: str,
+    db: AsyncSession,
+    identity_assertion: str | None = None,
+) -> User:
     """Validate one Logto bearer token and resolve its local PeakTalk user."""
 
-    return await _get_logto_user(token, db, _credentials_exception())
+    return await _get_logto_user(token, db, _credentials_exception(), identity_assertion)
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    return await get_user_from_token(credentials.credentials, db)
+    return await get_user_from_token(
+        credentials.credentials,
+        db,
+        request.headers.get("X-PeakTalk-Identity"),
+    )

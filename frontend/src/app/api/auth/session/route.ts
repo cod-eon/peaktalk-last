@@ -8,17 +8,18 @@ export async function GET() {
     return NextResponse.json({ isAuthenticated: false, configured: false });
   }
 
-  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+  const { isAuthenticated, claims, userInfo } = await getLogtoContext(logtoConfig, { fetchUserInfo: true });
+  const profile = userInfo ?? claims;
   return NextResponse.json({
     isAuthenticated,
     configured: true,
-    user: isAuthenticated && claims
+    user: isAuthenticated && profile
       ? {
-          sub: claims.sub,
-          email: claims.email,
-          email_verified: claims.email_verified,
-          name: claims.name,
-          picture: claims.picture,
+          sub: profile.sub,
+          email: profile.email,
+          email_verified: profile.email_verified,
+          name: profile.name,
+          picture: profile.picture,
         }
       : null,
   }, { headers: { 'Cache-Control': 'no-store' } });

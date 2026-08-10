@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     logto_userinfo_url: str = "https://auth.peaktalk.ru/oidc/me"
     logto_audience: str = ""
     logto_required_scopes: str = ""
+    # HMAC secret shared only by the Next.js server and FastAPI. The frontend
+    # uses it to sign verified identity claims from the Logto server session;
+    # the API never trusts email claims supplied directly by the browser.
+    logto_identity_assertion_secret: str = ""
     logto_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
 
     # Yandex Object Storage

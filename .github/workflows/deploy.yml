@@ -296,6 +296,7 @@ jobs:
           printf 'LOGTO_APP_ID=%s\n' "$LOGTO_APP_ID" >> "$runtime_env"
           printf 'LOGTO_APP_SECRET=%s\n' "$LOGTO_APP_SECRET" >> "$runtime_env"
           printf 'LOGTO_COOKIE_SECRET=%s\n' "$LOGTO_COOKIE_SECRET" >> "$runtime_env"
+          printf 'LOGTO_IDENTITY_ASSERTION_SECRET=%s\n' "$LOGTO_COOKIE_SECRET" >> "$runtime_env"
           printf 'LOGTO_API_RESOURCE=https://peaktalk.ru/api\n' >> "$runtime_env"
           printf 'APP_BASE_URL=https://peaktalk.ru\n' >> "$runtime_env"
           scp -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
@@ -307,17 +308,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          backend_auth_secret="$(mktemp)"
+          trap 'rm -f "$backend_auth_secret"' EXIT
+          chmod 600 "$backend_auth_secret"
+          printf '%s\n' "$LOGTO_COOKIE_SECRET" > "$backend_auth_secret"
+          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+            "$backend_auth_secret" "${VDS_USER}@${VDS_HOST}:/tmp/peaktalk-logto-identity-secret"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "${VDS_USER}@${VDS_HOST}" "sudo python3 - '${VDS_APP_DIR}/backend/.env'" <<'PY'
+            "${VDS_USER}@${VDS_HOST}" "sudo python3 - '${VDS_APP_DIR}/backend/.env' /tmp/peaktalk-logto-identity-secret" <<'PY'
           import os
           import pathlib
           import sys
           import tempfile
 
           path = pathlib.Path(sys.argv[1])
+          secret_path = pathlib.Path(sys.argv[2])
+          identity_secret = secret_path.read_text().strip()
+          if not identity_secret:
+              raise SystemExit("identity assertion secret is empty")
           values = {
               "AUTH_PROVIDER": "logto",
               "LOGTO_AUDIENCE": "https://peaktalk.ru/api",
+              "LOGTO_IDENTITY_ASSERTION_SECRET": identity_secret,
               "STORAGE_PROVIDER": "yandex",
           }
           existing = path.read_text().splitlines()
@@ -340,6 +352,8 @@ jobs:
           finally:
               if os.path.exists(temporary):
                   os.unlink(temporary)
+              if secret_path.exists():
+                  secret_path.unlink()
           PY
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
             "${VDS_USER}@${VDS_HOST}" \
