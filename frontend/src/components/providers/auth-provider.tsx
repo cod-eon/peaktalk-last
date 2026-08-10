@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { captureUTM } from '@/lib/utm';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setSession, setIsLoading } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
   const pathname = usePathname();
   const router = useRouter();
+  const [sessionCheckPath, setSessionCheckPath] = useState<string | null>(null);
+
+  const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding', '/billing', '/admin'];
+  const isProtected = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
     captureUTM();
 
     let cancelled = false;
-    const protectedPaths = ['/dashboard', '/documents', '/upload', '/simulation', '/analytics', '/settings', '/analysis', '/onboarding', '/billing', '/admin'];
-    const isProtected = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password');
 
     fetch('/api/auth/session', { cache: 'no-store' })
@@ -35,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user);
         setSession(user ? {} : null);
         setIsLoading(false);
+        setSessionCheckPath(pathname);
         if (!user && isProtected) {
           router.replace(`/login?return=${encodeURIComponent(`${pathname}${window.location.search}`)}`);
         } else if (user && isAuthPage) {
@@ -46,13 +51,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setSession(null);
         setIsLoading(false);
+        setSessionCheckPath(pathname);
         if (isProtected) router.replace('/login');
       });
 
     return () => {
       cancelled = true;
     };
-  }, [pathname, router, setSession, setUser, setIsLoading]);
+  }, [isProtected, pathname, router, setSession, setUser, setIsLoading]);
+
+  // Do not mount protected pages until the cookie session is resolved. This
+  // prevents onboarding from racing the session check and calling the API
+  // without a usable bearer token.
+  if (isProtected && (sessionCheckPath !== pathname || isLoading || !user)) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center" aria-live="polite">
+        <span className="text-sm text-neutral-500">Проверяем сессию…</span>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }

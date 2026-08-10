@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Briefcase, Rocket, Users, ChevronRight, Mic, FileText, Globe, CheckCircle2, Loader2, MessageSquare, BarChart2, Download, Monitor, Smartphone } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { getUTM } from '@/lib/utm';
 import { normalizeInternalReturnPath } from '@/lib/return-path';
+import { useAuthStore } from '@/store/authStore';
 
 type Segment = 'manager' | 'head' | 'founder' | 'customer_facing' | 'other';
 type Goal = 'budget_defense' | 'pitch' | 'qbr' | 'stakeholder' | 'other';
@@ -41,12 +42,15 @@ function OnboardingForm() {
     const searchParams = useSearchParams();
     const returnUrl = normalizeInternalReturnPath(searchParams.get('return'));
     const isBillingContinuation = returnUrl === '/billing' || returnUrl.startsWith('/billing?');
+    const user = useAuthStore((state) => state.user);
+    const isAuthLoading = useAuthStore((state) => state.isLoading);
     
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [segment, setSegment] = useState<Segment | null>(null);
     const [goal, setGoal] = useState<Goal | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
+    const [authError, setAuthError] = useState(false);
     const [installDevice, setInstallDevice] = useState<InstallDevice>('desktop');
     const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [isInstallPromptAvailable, setIsInstallPromptAvailable] = useState(false);
@@ -59,20 +63,35 @@ function OnboardingForm() {
 
     // Skip onboarding if already completed
     useEffect(() => {
+        if (isAuthLoading || !user) return;
+
+        let cancelled = false;
+
         async function checkProfile() {
             try {
-                const me = await api.get('/me');
-                if (me?.onboarding_profile) {
+                const me = await api.get('/me', { skipAuthRecovery: true });
+                if (!cancelled && me?.onboarding_profile) {
                     router.replace(returnUrl);
                 }
-            } catch {
-                // Not logged in or error — stay on page (auth middleware will handle redirect)
+            } catch (error) {
+                if (error instanceof ApiError && error.status === 401) {
+                    setAuthError(true);
+                }
             } finally {
-                setIsChecking(false);
+                if (!cancelled) setIsChecking(false);
             }
         }
         checkProfile();
-    }, [router, returnUrl]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isAuthLoading, router, returnUrl, user]);
+
+    const restartAuthentication = () => {
+        const returnPath = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(`/api/auth/logto/sign-in?return=${encodeURIComponent(returnPath)}`);
+    };
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -203,6 +222,26 @@ function OnboardingForm() {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
                 <Loader2 size={32} className="animate-spin text-neutral-900" />
+            </div>
+        );
+    }
+
+    if (authError) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center px-4">
+                <div className="w-full max-w-md border border-neutral-200 bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+                    <h1 className="text-xl font-bold text-neutral-900">Сессия не готова</h1>
+                    <p className="mt-3 text-sm leading-relaxed text-neutral-500">
+                        Авторизация в браузере есть, но API ещё не принял токен. Повторите вход — данные onboarding не потеряются.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={restartAuthentication}
+                        className="mt-6 h-11 w-full bg-neutral-900 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-black"
+                    >
+                        Повторить вход
+                    </button>
+                </div>
             </div>
         );
     }

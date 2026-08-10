@@ -1,13 +1,18 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-let authRecoveryStarted = false
+const AUTH_RECOVERY_STORAGE_KEY = 'peaktalk_auth_recovery_started_at'
+const AUTH_RECOVERY_COOLDOWN_MS = 30_000
 
 function redirectToAuthRecovery() {
-  if (typeof window === 'undefined' || authRecoveryStarted) return
+  if (typeof window === 'undefined') return false
 
-  authRecoveryStarted = true
+  const startedAt = Number(window.sessionStorage.getItem(AUTH_RECOVERY_STORAGE_KEY) || 0)
+  if (startedAt > 0 && Date.now() - startedAt < AUTH_RECOVERY_COOLDOWN_MS) return false
+
+  window.sessionStorage.setItem(AUTH_RECOVERY_STORAGE_KEY, String(Date.now()))
   const returnPath = `${window.location.pathname}${window.location.search}`
   window.location.replace(`/api/auth/logto/sign-in?return=${encodeURIComponent(returnPath)}`)
+  return true
 }
 
 async function getAccessToken(): Promise<string | null> {
@@ -18,7 +23,11 @@ async function getAccessToken(): Promise<string | null> {
     })
     if (!response.ok) return null
     const body = await response.json() as { access_token?: unknown }
-    return typeof body.access_token === 'string' ? body.access_token : null
+    if (typeof body.access_token !== 'string') return null
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(AUTH_RECOVERY_STORAGE_KEY)
+    }
+    return body.access_token
   } catch {
     return null
   }
@@ -63,6 +72,10 @@ export class ApiError extends Error {
   }
 }
 
+type ApiRequestOptions = RequestInit & {
+  skipAuthRecovery?: boolean
+}
+
 export function parseApiErrorBody(errorData: unknown, fallback: string): { message: string; code?: string } {
   if (!errorData || typeof errorData !== 'object') return { message: fallback }
 
@@ -101,11 +114,11 @@ export function parseApiErrorBody(errorData: unknown, fallback: string): { messa
 }
 
 export const api = {
-  async get(endpoint: string, options: RequestInit = {}) {
+  async get(endpoint: string, options: ApiRequestOptions = {}) {
     return this.request(endpoint, { ...options, method: 'GET' })
   },
 
-  async post(endpoint: string, data?: unknown, options: RequestInit = {}) {
+  async post(endpoint: string, data?: unknown, options: ApiRequestOptions = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'POST',
@@ -113,7 +126,7 @@ export const api = {
     })
   },
 
-  async put(endpoint: string, data?: unknown, options: RequestInit = {}) {
+  async put(endpoint: string, data?: unknown, options: ApiRequestOptions = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
@@ -121,7 +134,7 @@ export const api = {
     })
   },
 
-  async patch(endpoint: string, data?: unknown, options: RequestInit = {}) {
+  async patch(endpoint: string, data?: unknown, options: ApiRequestOptions = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'PATCH',
@@ -129,15 +142,16 @@ export const api = {
     })
   },
 
-  async delete(endpoint: string, options: RequestInit = {}) {
+  async delete(endpoint: string, options: ApiRequestOptions = {}) {
     return this.request(endpoint, { ...options, method: 'DELETE' })
   },
 
-  async request(endpoint: string, options: RequestInit = {}) {
-    const headers = new Headers(options.headers)
+  async request(endpoint: string, options: ApiRequestOptions = {}) {
+    const { skipAuthRecovery = false, ...requestOptions } = options
+    const headers = new Headers(requestOptions.headers)
 
     // Only set Content-Type to JSON if it's not FormData
-    if (!(options.body instanceof FormData)) {
+    if (!(requestOptions.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json')
     }
 
@@ -147,7 +161,7 @@ export const api = {
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
+      ...requestOptions,
       headers,
     })
 
@@ -156,12 +170,12 @@ export const api = {
         const refreshedToken = await getAccessToken()
         if (refreshedToken && refreshedToken !== accessToken) {
           // Retry the request with the new token
-          const retryHeaders = new Headers(options.headers)
-          if (!(options.body instanceof FormData)) {
+          const retryHeaders = new Headers(requestOptions.headers)
+          if (!(requestOptions.body instanceof FormData)) {
             retryHeaders.set('Content-Type', 'application/json')
           }
           retryHeaders.set('Authorization', `Bearer ${refreshedToken}`)
-          const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...options, headers: retryHeaders })
+          const retryResponse = await fetch(`${API_URL}${endpoint}`, { ...requestOptions, headers: retryHeaders })
           if (retryResponse.ok) {
             if (retryResponse.status === 204) return null
             const ct = retryResponse.headers.get('content-type')
@@ -172,7 +186,9 @@ export const api = {
         // A browser session can outlive an unusable API token. Re-enter the
         // Logto flow with clearTokens instead of bouncing through /login,
         // whose authenticated-session guard would send the user back here.
-        redirectToAuthRecovery()
+        if (!skipAuthRecovery) {
+          redirectToAuthRecovery()
+        }
         throw new ApiError('Сессия истекла. Пожалуйста, войдите снова.', 401)
       }
 
