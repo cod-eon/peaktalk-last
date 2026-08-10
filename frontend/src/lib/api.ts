@@ -1,5 +1,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+let authRecoveryStarted = false
+
+function redirectToAuthRecovery() {
+  if (typeof window === 'undefined' || authRecoveryStarted) return
+
+  authRecoveryStarted = true
+  const returnPath = `${window.location.pathname}${window.location.search}`
+  window.location.replace(`/api/auth/logto/sign-in?return=${encodeURIComponent(returnPath)}`)
+}
+
 async function getAccessToken(): Promise<string | null> {
   try {
     const response = await fetch('/api/auth/access-token', {
@@ -159,10 +169,10 @@ export const api = {
           }
         }
         
-        if (typeof window !== 'undefined') {
-          // Use safe redirect that preserves Next.js router cache limits
-          window.location.replace(`/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`)
-        }
+        // A browser session can outlive an unusable API token. Re-enter the
+        // Logto flow with clearTokens instead of bouncing through /login,
+        // whose authenticated-session guard would send the user back here.
+        redirectToAuthRecovery()
         throw new ApiError('Сессия истекла. Пожалуйста, войдите снова.', 401)
       }
 

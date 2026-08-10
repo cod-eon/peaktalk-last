@@ -22,6 +22,38 @@ def test_logto_claims_require_subject_and_configured_scopes(monkeypatch):
     ) == "user-1"
 
 
+def test_logto_decode_accepts_current_es384_signing_algorithm(monkeypatch):
+    class FakeSigningKey:
+        key = object()
+
+    class FakeJwksClient:
+        def get_signing_key_from_jwt(self, token):
+            assert token == "token"
+            return FakeSigningKey()
+
+    decoded = {}
+
+    def fake_decode(token, key, *, algorithms, issuer, audience, options):
+        decoded.update(
+            token=token,
+            key=key,
+            algorithms=algorithms,
+            issuer=issuer,
+            audience=audience,
+            options=options,
+        )
+        return {"sub": "user-1", "scope": ""}
+
+    monkeypatch.setattr(logto_auth, "_get_jwks_client", lambda: FakeJwksClient())
+    monkeypatch.setattr(logto_auth.jwt, "decode", fake_decode)
+    monkeypatch.setattr(settings, "logto_issuer", "https://auth.example/oidc")
+    monkeypatch.setattr(settings, "logto_audience", "https://app.example/api")
+    monkeypatch.setattr(settings, "logto_required_scopes", "")
+
+    assert logto_auth._decode_token("token") == "user-1"
+    assert decoded["algorithms"] == ["ES384", "RS256"]
+
+
 @pytest.mark.asyncio
 async def test_logto_identity_is_provisioned_and_reused(db_session, monkeypatch):
     local_subject = f"user-{uuid.uuid4()}"

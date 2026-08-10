@@ -22,6 +22,11 @@ class LogtoProfile:
 
 _jwks_client: jwt.PyJWKClient | None = None
 
+# Logto OSS currently publishes an ES384/P-384 signing key. Keep RS256 in the
+# allowlist for a controlled key rotation/configuration transition, but do not
+# accept arbitrary algorithms from the token header.
+_LOGTO_ALLOWED_ALGORITHMS = ["ES384", "RS256"]
+
 
 def _get_jwks_client() -> jwt.PyJWKClient:
     global _jwks_client
@@ -53,7 +58,7 @@ def _decode_token(token: str) -> str:
         claims = jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=_LOGTO_ALLOWED_ALGORITHMS,
             issuer=settings.logto_issuer,
             audience=settings.logto_audience,
             options={"require": ["exp", "iat", "iss", "sub", "aud"]},
