@@ -18,6 +18,11 @@
 
 @layer base {
   :root {
+    /* Local/system stacks keep production builds independent of font CDNs. */
+    --font-inter: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-syne: "Unbounded", "Arial Narrow", "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
     /* ─── Backgrounds — light, breathing ─── */
     --bg-main: #F9FAFB;
     --bg-surface: #FFFFFF;
