@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/*
+ * PeakTalk's pre-regression type system. These files are shipped with the
+ * application so CI and production do not silently substitute a system font.
+ */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/ibm-plex.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Unbounded;
+  src: url("/fonts/unbounded.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
 @theme {
   --color-accent-50: #FEF3E8;
   --color-accent-100: #FDDEC4;
@@ -18,10 +46,10 @@
 
 @layer base {
   :root {
-    /* Local/system stacks keep production builds independent of font CDNs. */
-    --font-inter: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-syne: "Unbounded", "Arial Narrow", "Segoe UI", sans-serif;
-    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    /* Deterministic local fonts restored from the pre-198907f PeakTalk build. */
+    --font-inter: "IBM Plex Sans", sans-serif;
+    --font-syne: "Unbounded", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
 
     /* ─── Backgrounds — light, breathing ─── */
     --bg-main: #F9FAFB;
@@ -109,7 +137,7 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+    font-family: var(--font-inter);
     position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

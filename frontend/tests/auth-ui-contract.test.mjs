@@ -44,6 +44,8 @@ test('auth state surfaces have status semantics and safe recovery actions', () =
     assert.match(read(route), /runtime = "nodejs"/);
     assert.match(read(route), /await import\("@\/lib\/auth"\)/);
   }
+  const authHandler = read('src/app/api/auth/[...all]/route.ts');
+  assert.match(authHandler, /toNextJsHandler\(auth\)\.POST/);
 });
 
 test('return paths and reduced-motion styling remain explicit security and accessibility contracts', () => {

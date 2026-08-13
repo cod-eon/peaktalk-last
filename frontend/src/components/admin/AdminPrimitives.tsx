@@ -29,26 +29,21 @@ export function AdminPageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <section className="relative overflow-hidden border border-black/10 bg-white/86 shadow-[0_24px_80px_rgba(17,24,39,0.08)] backdrop-blur">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(232,96,10,0.07),transparent_48%),linear-gradient(90deg,rgba(17,24,39,0.03)_1px,transparent_1px),linear-gradient(rgba(17,24,39,0.03)_1px,transparent_1px)] bg-[length:auto,36px_36px,36px_36px]" />
-      <div className="absolute right-4 top-2 text-[84px] font-syne font-bold tracking-[-0.08em] text-black/[0.05] sm:right-8 sm:top-4 sm:text-[120px]">
-        {index}
-      </div>
-
-      <div className="relative grid gap-6 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+    <section data-section-index={index} className="border border-black/10 bg-white shadow-sm">
+      <div className="grid gap-5 px-5 py-6 sm:px-7 sm:py-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="max-w-3xl">
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-neutral-500">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
             {eyebrow}
           </p>
-          <h1 className="mt-3 max-w-2xl font-syne text-[34px] leading-[0.92] tracking-[-0.05em] text-neutral-950 sm:text-[48px]">
+          <h1 className="mt-2 max-w-2xl text-2xl font-semibold leading-tight tracking-[-0.025em] text-neutral-950 sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-600">
             {description}
           </p>
         </div>
 
-        {actions ? <div className="relative flex flex-wrap items-center gap-3">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
     </section>
   );
@@ -70,14 +65,13 @@ export function AdminPanel({
   return (
     <section
       className={cn(
-        'relative overflow-hidden border border-black/10 bg-white/92 shadow-[0_18px_60px_rgba(17,24,39,0.06)]',
+        'relative overflow-hidden border border-black/10 bg-white shadow-sm',
         className,
       )}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(232,96,10,0.3),transparent)]" />
-      <div className="relative flex flex-wrap items-start justify-between gap-4 border-b border-black/8 px-5 py-5 sm:px-6">
+      <div className="relative flex flex-wrap items-start justify-between gap-4 border-b border-black/8 px-5 py-4 sm:px-6">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-neutral-500">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
             {title}
           </p>
           {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">{subtitle}</p> : null}
@@ -101,15 +95,15 @@ export function AdminMetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <article className="relative overflow-hidden border border-black/10 bg-white/90 p-5 shadow-[0_14px_36px_rgba(17,24,39,0.05)]">
-      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#E8600A,rgba(232,96,10,0.18))]" />
+    <article className="relative overflow-hidden border border-black/10 bg-white p-5 shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-[var(--accent-primary)]" />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-neutral-500">{label}</p>
-          <div className="mt-4 text-[30px] font-semibold tracking-[-0.04em] text-neutral-950">{value}</div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">{label}</p>
+          <div className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-neutral-950">{value}</div>
           <p className="mt-2 text-sm leading-6 text-neutral-600">{helper}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center border border-black/10 bg-neutral-950 text-white">
+        <div className="flex h-9 w-9 items-center justify-center border border-black/10 bg-neutral-950 text-white">
           <Icon size={18} />
         </div>
       </div>
@@ -169,6 +163,23 @@ export function AdminEmptyState({
       </div>
       <h3 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-neutral-950">{title}</h3>
       <p className="mt-2 max-w-md text-sm leading-6 text-neutral-600">{description}</p>
+    </div>
+  );
+}
+
+export function AdminErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center" role="alert">
+      <p className="text-sm text-red-700">{message}</p>
+      <button type="button" onClick={onRetry} className="min-h-10 border border-black/15 bg-white px-4 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]">
+        Повторить
+      </button>
     </div>
   );
 }

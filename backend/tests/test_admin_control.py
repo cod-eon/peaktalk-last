@@ -58,6 +58,73 @@ async def test_admin_control_admin_can_list_without_exposing_session_tokens(clie
     assert "token" not in response.text
 
 
+async def test_admin_control_list_forwards_sort_contract(client, monkeypatch):
+    async def admin_profile(_cookie):
+        return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")
+
+    async def fake_admin_request(cookie, path, **kwargs):
+        assert path == "admin/list-users"
+        assert kwargs["query"] == {
+            "limit": 20,
+            "offset": 0,
+            "searchValue": "long@example.com",
+            "searchField": "email",
+            "sortBy": "email",
+            "sortDirection": "asc",
+        }
+        return httpx.Response(200, json={"users": [], "total": 0})
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "better_auth_admin_request", fake_admin_request)
+    response = await client.get(
+        "/admin/control/users?page=1&per_page=20&search=long%40example.com&sort_by=email&sort_direction=asc",
+        headers={"cookie": "session=admin"},
+    )
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+
+
+async def test_admin_overview_is_server_authorized(client, monkeypatch):
+    async def ordinary_profile(_cookie):
+        return BetterAuthProfile(subject="ordinary", email="ordinary@example.com", role="user")
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", ordinary_profile)
+    response = await client.get("/admin/control/overview", headers={"cookie": "session=ordinary"})
+    assert response.status_code == 403
+
+
+async def test_admin_overview_returns_only_aggregate_data(client, monkeypatch):
+    async def admin_profile(_cookie):
+        return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
+    async def fake_stats(_db):
+        return admin_control.AdminAuthStats(
+            total_users=1,
+            new_users_24h=1,
+            new_users_7d=1,
+            new_users_30d=1,
+            verified_users=1,
+            unverified_users=0,
+            active_sessions=1,
+            banned_users=0,
+            role_distribution={"admin": 1},
+        )
+
+    async def fake_audit(_db):
+        return []
+
+    monkeypatch.setattr(admin_control, "_read_auth_stats", fake_stats)
+    monkeypatch.setattr(admin_control, "_recent_audit", fake_audit)
+    response = await client.get("/admin/control/overview", headers={"cookie": "session=admin"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["stats"]["total_users"] == 1
+    assert "password" not in response.text.lower()
+    assert "token" not in response.text.lower()
+
+
 async def test_rejected_admin_action_is_audited(client, db_session, monkeypatch):
     async def admin_profile(_cookie):
         return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")

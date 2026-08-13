@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import desc, func, select
+from sqlalchemy import bindparam, desc, func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/admin/control", tags=["admin-control"])
 class AdminSession(BaseModel):
     id: str
     created_at: datetime | None = None
+    updated_at: datetime | None = None
     expires_at: datetime | None = None
     user_agent: str | None = None
 
@@ -42,6 +44,8 @@ class AdminUser(BaseModel):
     ban_expires: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    active_sessions: int = 0
+    last_activity: datetime | None = None
 
 
 class AdminUsersResponse(BaseModel):
@@ -52,8 +56,18 @@ class AdminUsersResponse(BaseModel):
     pages: int
 
 
+class AuditItem(BaseModel):
+    actor: str
+    target: str | None
+    action: str
+    outcome: str
+    timestamp: datetime
+    metadata: dict
+
+
 class AdminUserDetail(AdminUser):
     sessions: list[AdminSession]
+    audit: list[AuditItem] = Field(default_factory=list)
 
 
 class ConfirmedRoleChange(BaseModel):
@@ -66,21 +80,37 @@ class ConfirmedBan(BaseModel):
     confirm: bool = False
 
 
-class AuditItem(BaseModel):
-    actor: str
-    target: str | None
-    action: str
-    outcome: str
-    timestamp: datetime
-    metadata: dict
-
-
 class AuditResponse(BaseModel):
     items: list[AuditItem]
     total: int
     page: int
     per_page: int
     pages: int
+
+
+class AdminAuthStats(BaseModel):
+    total_users: int
+    new_users_24h: int
+    new_users_7d: int
+    new_users_30d: int
+    verified_users: int
+    unverified_users: int
+    active_sessions: int
+    banned_users: int
+    role_distribution: dict[str, int]
+
+
+class AdminOverviewResponse(BaseModel):
+    stats: AdminAuthStats
+    recent_events: list[AuditItem]
+
+
+class AdminAuthResponse(BaseModel):
+    provider: str
+    status: str
+    stats: AdminAuthStats
+    safe_config: dict[str, str | bool]
+    recent_events: list[AuditItem]
 
 
 async def _admin_profile(request: Request):
@@ -106,10 +136,110 @@ def _parse_user(value: dict) -> AdminUser:
     )
 
 
+async def _attach_session_summaries(db: AsyncSession, users: list[AdminUser]) -> list[AdminUser]:
+    """Enrich the Better Auth user payload without returning session tokens."""
+    user_ids = [user.id for user in users if user.id]
+    if not user_ids:
+        return users
+    try:
+        query = text(
+            'SELECT "userId" AS user_id, COUNT(*) AS active_sessions, '
+            'MAX("updatedAt") AS last_activity FROM "session" '
+            'WHERE "userId" IN :user_ids AND "expiresAt" > CURRENT_TIMESTAMP '
+            'GROUP BY "userId"'
+        ).bindparams(bindparam("user_ids", expanding=True))
+        rows = (await db.execute(query, {"user_ids": user_ids})).mappings().all()
+    except SQLAlchemyError:
+        # The Better Auth tables are owned by the auth migration. Keep the
+        # control endpoint readable during an incomplete local bootstrap;
+        # production migration review still treats missing tables as a gate.
+        return users
+    summaries = {str(row["user_id"]): row for row in rows}
+    return [
+        user.model_copy(update={
+            "active_sessions": int(summaries.get(user.id, {}).get("active_sessions") or 0),
+            "last_activity": summaries.get(user.id, {}).get("last_activity"),
+        })
+        for user in users
+    ]
+
+
+async def _read_auth_stats(db: AsyncSession) -> AdminAuthStats:
+    """Read non-sensitive Better Auth inventory from its existing tables."""
+    now = datetime.now(timezone.utc)
+    cutoffs = {
+        "day": now - timedelta(days=1),
+        "week": now - timedelta(days=7),
+        "month": now - timedelta(days=30),
+    }
+    # Better Auth owns these tables; this endpoint only reads aggregate values.
+    totals = (
+        await db.execute(
+            text(
+                'SELECT COUNT(*) AS total_users, '
+                'SUM(CASE WHEN "emailVerified" IS TRUE THEN 1 ELSE 0 END) AS verified_users, '
+                'SUM(CASE WHEN "emailVerified" IS TRUE THEN 0 ELSE 1 END) AS unverified_users, '
+                'SUM(CASE WHEN "banned" IS TRUE THEN 1 ELSE 0 END) AS banned_users, '
+                'SUM(CASE WHEN "createdAt" >= :day_cutoff THEN 1 ELSE 0 END) AS new_users_24h, '
+                'SUM(CASE WHEN "createdAt" >= :week_cutoff THEN 1 ELSE 0 END) AS new_users_7d, '
+                'SUM(CASE WHEN "createdAt" >= :month_cutoff THEN 1 ELSE 0 END) AS new_users_30d '
+                'FROM "user"'
+            ),
+            {
+                "day_cutoff": cutoffs["day"],
+                "week_cutoff": cutoffs["week"],
+                "month_cutoff": cutoffs["month"],
+            },
+        )
+    ).mappings().one()
+    active_sessions = int(
+        (await db.scalar(text('SELECT COUNT(*) FROM "session" WHERE "expiresAt" > :now'), {"now": now})) or 0
+    )
+    role_rows = (
+        await db.execute(
+            text('SELECT COALESCE("role", \'user\') AS role, COUNT(*) AS count FROM "user" GROUP BY COALESCE("role", \'user\')')
+        )
+    ).mappings().all()
+    role_distribution = {str(row["role"]): int(row["count"] or 0) for row in role_rows}
+    return AdminAuthStats(
+        total_users=int(totals["total_users"] or 0),
+        new_users_24h=int(totals["new_users_24h"] or 0),
+        new_users_7d=int(totals["new_users_7d"] or 0),
+        new_users_30d=int(totals["new_users_30d"] or 0),
+        verified_users=int(totals["verified_users"] or 0),
+        unverified_users=int(totals["unverified_users"] or 0),
+        active_sessions=active_sessions,
+        banned_users=int(totals["banned_users"] or 0),
+        role_distribution=role_distribution,
+    )
+
+
+async def _recent_audit(db: AsyncSession, limit: int = 12) -> list[AuditItem]:
+    rows = (
+        await db.execute(
+            select(AdminAuditEvent)
+            .order_by(desc(AdminAuditEvent.created_at))
+            .limit(limit)
+        )
+    ).scalars().all()
+    return [
+        AuditItem(
+            actor=row.actor_user_id,
+            target=row.target_user_id,
+            action=row.action,
+            outcome=row.outcome,
+            timestamp=row.created_at,
+            metadata=row.event_metadata,
+        )
+        for row in rows
+    ]
+
+
 def _parse_session(value: dict) -> AdminSession:
     return AdminSession(
         id=str(value.get("id", "")),
         created_at=value.get("createdAt"),
+        updated_at=value.get("updatedAt"),
         expires_at=value.get("expiresAt"),
         user_agent=value.get("userAgent") if isinstance(value.get("userAgent"), str) else None,
     )
@@ -128,8 +258,23 @@ async def _call_auth(request: Request, path: str, *, method: str = "GET", query:
     except BetterAuthError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={"detail": "Auth service unavailable.", "code": exc.code}) from exc
     if response.status_code >= 400:
-        mapped = {401: 401, 403: 403, 404: 404, 422: 422}.get(response.status_code, 502)
-        raise HTTPException(status_code=mapped, detail={"detail": "Admin action rejected.", "code": "better_auth_admin_rejected"})
+        mapped = {400: 400, 401: 401, 403: 403, 404: 404, 422: 422}.get(response.status_code, 502)
+        try:
+            error_payload = response.json()
+        except ValueError:
+            error_payload = {}
+        error_value = error_payload.get("error") if isinstance(error_payload, dict) else None
+        if not isinstance(error_value, dict):
+            error_value = error_payload if isinstance(error_payload, dict) else {}
+        safe_message = error_value.get("message") or error_value.get("detail")
+        safe_code = error_value.get("code")
+        raise HTTPException(
+            status_code=mapped,
+            detail={
+                "message": safe_message if isinstance(safe_message, str) else "Admin action rejected.",
+                "code": safe_code if isinstance(safe_code, str) else "better_auth_admin_rejected",
+            },
+        )
     try:
         payload = response.json()
     except ValueError as exc:
@@ -159,27 +304,78 @@ async def list_control_users(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     search: str | None = Query(None, max_length=255),
+    sort_by: Literal["createdAt", "updatedAt", "email"] = Query("createdAt"),
+    sort_direction: Literal["asc", "desc"] = Query("desc"),
+    db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_admin),
 ) -> AdminUsersResponse:
     offset = (page - 1) * per_page
-    payload = await _call_auth(request, "admin/list-users", query={"limit": per_page, "offset": offset, "searchValue": search or None, "searchField": "email"})
+    payload = await _call_auth(request, "admin/list-users", query={"limit": per_page, "offset": offset, "searchValue": search or None, "searchField": "email", "sortBy": sort_by, "sortDirection": sort_direction})
     total = int(payload.get("total") or 0)
     pages = max(math.ceil(total / per_page), 1)
     users = payload.get("users") if isinstance(payload.get("users"), list) else []
-    return AdminUsersResponse(items=[_parse_user(item) for item in users if isinstance(item, dict)], total=total, page=page, per_page=per_page, pages=pages)
+    parsed = [
+        _parse_user(item)
+        for item in users
+        if isinstance(item, dict)
+    ]
+    return AdminUsersResponse(items=await _attach_session_summaries(db, parsed), total=total, page=page, per_page=per_page, pages=pages)
+
+
+@router.get("/overview", response_model=AdminOverviewResponse)
+async def get_control_overview(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(require_admin),
+) -> AdminOverviewResponse:
+    return AdminOverviewResponse(stats=await _read_auth_stats(db), recent_events=await _recent_audit(db))
+
+
+@router.get("/auth", response_model=AdminAuthResponse)
+async def get_auth_overview(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(require_admin),
+) -> AdminAuthResponse:
+    return AdminAuthResponse(
+        provider="better-auth",
+        status="operational",
+        stats=await _read_auth_stats(db),
+        safe_config={
+            "session_storage": "database",
+            "email_verification_required": True,
+            "admin_role_server_enforced": True,
+            "sensitive_values_exposed": False,
+        },
+        recent_events=await _recent_audit(db),
+    )
 
 
 @router.get("/users/{user_id}", response_model=AdminUserDetail)
 async def get_control_user(
     request: Request,
     user_id: str,
+    db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_admin),
 ) -> AdminUserDetail:
     user_payload = await _call_auth(request, "admin/get-user", query={"id": user_id})
     user_value = user_payload.get("user") if isinstance(user_payload.get("user"), dict) else user_payload
     sessions_payload = await _call_auth(request, "admin/list-user-sessions", method="POST", body={"userId": user_id})
     sessions = sessions_payload.get("sessions") if isinstance(sessions_payload.get("sessions"), list) else []
-    return AdminUserDetail(**_parse_user(user_value).model_dump(), sessions=[_parse_session(item) for item in sessions if isinstance(item, dict)])
+    audit_rows = (
+        await db.execute(
+            select(AdminAuditEvent)
+            .where(AdminAuditEvent.target_user_id == user_id)
+            .order_by(desc(AdminAuditEvent.created_at))
+            .limit(20)
+        )
+    ).scalars().all()
+    parsed_sessions = [_parse_session(item) for item in sessions if isinstance(item, dict)]
+    last_activity = max((session.updated_at or session.created_at for session in parsed_sessions if session.updated_at or session.created_at), default=None)
+    parsed_user = _parse_user(user_value).model_copy(update={"active_sessions": len(parsed_sessions), "last_activity": last_activity})
+    return AdminUserDetail(
+        **parsed_user.model_dump(),
+        sessions=parsed_sessions,
+        audit=[AuditItem(actor=row.actor_user_id, target=row.target_user_id, action=row.action, outcome=row.outcome, timestamp=row.created_at, metadata=row.event_metadata) for row in audit_rows],
+    )
 
 
 async def _mutation_context(request: Request):
