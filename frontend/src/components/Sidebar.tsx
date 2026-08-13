@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
+import { authClient } from '@/lib/auth-client';
 import { NotificationsPopover } from '@/components/NotificationsPopover';
 
 const NAV_ITEMS = [
@@ -34,8 +35,9 @@ export function Sidebar() {
     const [isExpanded, setIsExpanded] = useState(false);
     const { user } = useAuthStore();
 
-    const handleLogout = () => {
-        window.location.assign('/api/auth/logto/sign-out');
+    const handleLogout = async () => {
+        await authClient.signOut();
+        window.location.assign('/login');
     };
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';

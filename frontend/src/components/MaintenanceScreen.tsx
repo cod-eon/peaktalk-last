@@ -4,13 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, LogOut, Wrench } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 export function MaintenanceScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
-    window.location.assign('/api/auth/logto/sign-out');
+    await authClient.signOut();
+    window.location.assign('/login');
   };
 
   return (

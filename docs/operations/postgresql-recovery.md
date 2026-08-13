@@ -3,7 +3,7 @@
 This runbook is intentionally narrower than a storage-volume reset. The
 approved cleanup target is only the application database `peaktalk` in the
 existing `peaktalk-postgres-1` container. Preserve the PostgreSQL runtime,
-`peaktalk_postgres_data`, the Logto PostgreSQL volume, backup files, the backup
+`peaktalk_postgres_data`, historical authentication-provider volumes, backup files, the backup
 cron, and unrelated databases/services.
 
 ## Preflight
@@ -47,7 +47,7 @@ Only after the fresh dump and isolated restore pass:
 
 1. Stop `api`, `worker`, `beat`, and `migrate` in the PeakTalk Compose project.
 2. Confirm the target is exactly database `peaktalk` on
-   `peaktalk-postgres-1`; do not stop or modify Logto.
+   `peaktalk-postgres-1`; do not stop or modify unrelated or historical authentication-provider services.
 3. Revoke new connections, terminate existing connections to `peaktalk`,
    drop only that database, and recreate it with the application owner.
 4. Run the reviewed migration command explicitly.

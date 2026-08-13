@@ -1,11 +1,8 @@
-import asyncio
 import logging
 import uuid
 
-from fastapi import Depends, HTTPException, status
-from fastapi import Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import func, select
+from fastapi import Depends, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,124 +10,68 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.user import User
 from app.models.user_identity import UserIdentity
-from app.services.logto_auth import LogtoAuthError, _decode_token, validate_access_token
+from app.services.better_auth import (
+    BetterAuthError,
+    BetterAuthProfile,
+    get_better_auth_profile,
+    validate_unsafe_request_origin,
+)
 
 logger = logging.getLogger("peaktalk.auth")
 
-bearer_scheme = HTTPBearer()
 
-
-def _credentials_exception() -> HTTPException:
+def _credentials_exception(code: str = "authentication_required") -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось проверить учетные данные.",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail={"code": code, "message": "Authentication required."},
     )
 
 
-async def _get_logto_user(
-    token: str,
-    db: AsyncSession,
-    credentials_exception: HTTPException,
-    identity_assertion: str | None = None,
-) -> User:
-    # Existing identities can be resolved from the locally validated JWT
-    # subject without a network call to Logto userinfo. This is important for
-    # resource JWTs, which Logto does not accept at /oidc/me.
-    try:
-        subject = await asyncio.to_thread(_decode_token, token)
-    except LogtoAuthError as exc:
-        logger.warning("auth: Logto token rejected: %s", exc)
-        raise credentials_exception
-
+async def _resolve_better_auth_user(profile: BetterAuthProfile, db: AsyncSession) -> User:
     result = await db.execute(
         select(UserIdentity)
         .options(selectinload(UserIdentity.user).selectinload(User.onboarding_profile))
-        .where(
-            UserIdentity.provider == "logto",
-            UserIdentity.subject == subject,
-        )
+        .where(UserIdentity.provider == "better-auth", UserIdentity.subject == profile.subject)
     )
     identity = result.scalar_one_or_none()
-    if identity is not None and not identity_assertion:
-        return identity.user
-
-    try:
-        profile = await validate_access_token(token, identity_assertion)
-    except LogtoAuthError as exc:
-        logger.warning("auth: Logto token rejected: %s", exc)
-        raise credentials_exception
-
-    profile_email = profile.email.strip().lower()
-
-    # Re-check after profile validation so an identity assertion cannot be
-    # used to bypass the subject binding above.
     if identity is not None:
-        if identity.email != profile_email:
-            identity.email = profile_email
+        if identity.email != profile.email:
+            identity.email = profile.email
         return identity.user
 
-    # Email linking is allowed only after Logto's userinfo endpoint has
-    # confirmed email_verified=true. Never link an unverified account by email.
-    result = await db.execute(
-        select(User)
-        .options(selectinload(User.onboarding_profile))
-        .where(func.lower(User.email) == profile_email)
-    )
-    user = result.scalar_one_or_none()
-    if user is None:
-        user = User(id=uuid.uuid4(), email=profile_email)
-        db.add(user)
-        await db.flush()
-
-    db.add(
-        UserIdentity(
-            user_id=user.id,
-            provider="logto",
-            subject=profile.subject,
-            email=profile_email,
-        )
-    )
+    # Decision 0017 established an empty local identity inventory. Do not email-link:
+    # a new verified Better Auth subject always receives a new PeakTalk UUID.
+    user = User(id=uuid.uuid4(), email=profile.email)
+    db.add(user)
+    await db.flush()
+    db.add(UserIdentity(user_id=user.id, provider="better-auth", subject=profile.subject, email=profile.email))
     try:
         await db.flush()
     except IntegrityError as exc:
-        # A concurrent first request may have created the same identity. Do
-        # not leave a partially-created local user in the transaction.
         await db.rollback()
         result = await db.execute(
             select(UserIdentity)
             .options(selectinload(UserIdentity.user).selectinload(User.onboarding_profile))
-            .where(
-                UserIdentity.provider == "logto",
-                UserIdentity.subject == profile.subject,
-            )
+            .where(UserIdentity.provider == "better-auth", UserIdentity.subject == profile.subject)
         )
         identity = result.scalar_one_or_none()
         if identity is None:
-            logger.warning("auth: Logto identity provisioning race failed: %s", type(exc).__name__)
-            raise credentials_exception
+            logger.warning("auth_rejected category=identity_provisioning_race")
+            raise _credentials_exception("identity_provisioning_failed") from exc
         return identity.user
-
     return user
 
 
-async def get_user_from_token(
-    token: str,
-    db: AsyncSession,
-    identity_assertion: str | None = None,
-) -> User:
-    """Validate one Logto bearer token and resolve its local PeakTalk user."""
-
-    return await _get_logto_user(token, db, _credentials_exception(), identity_assertion)
-
-
-async def get_current_user(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    return await get_user_from_token(
-        credentials.credentials,
-        db,
-        request.headers.get("X-PeakTalk-Identity"),
-    )
+async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
+    try:
+        validate_unsafe_request_origin(request)
+        profile = await get_better_auth_profile(request.headers.get("cookie"))
+    except BetterAuthError as exc:
+        logger.warning("auth_rejected category=%s", exc.code)
+        if exc.code == "email_verification_required":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"code": exc.code, "message": "Email verification required."},
+            )
+        raise _credentials_exception(exc.code)
+    return await _resolve_better_auth_user(profile, db)

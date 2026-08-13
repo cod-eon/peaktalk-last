@@ -5,6 +5,7 @@ import { User, Bell, Shield, Loader2, LogOut, Check, Lock, Clock } from 'lucide-
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { authClient } from '@/lib/auth-client';
 
 const TABS = [
   { id: 'profile', label: 'ПРОФИЛЬ', icon: User },
@@ -46,6 +47,8 @@ export default function SettingsPage() {
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
   useEffect(() => {
+    // Keep the editable field synchronized when the authenticated user changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (user) setDisplayName(user.user_metadata?.display_name || '');
     api.get('/me')
       .then((me: { 
@@ -75,9 +78,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setIsLoggingOut(true);
-    window.location.assign('/api/auth/logto/sign-out');
+    await authClient.signOut();
+    window.location.assign('/login');
   };
 
   const inputClasses = "w-full bg-white border border-[#D9D5CC] text-[#111827] rounded-none py-2.5 px-3.5 text-sm focus:outline-none focus:ring-0 focus:border-[#111827] transition-all font-inter ";
@@ -189,7 +193,7 @@ export default function SettingsPage() {
                   <p className="text-[12px] text-neutral-400 mt-2 font-medium">Email нельзя изменить.</p>
                 </div>
 
-                <p className="text-xs text-neutral-400">Имя аккаунта управляется в профиле Logto.</p>
+                <p className="text-xs text-neutral-400">Имя аккаунта связано с профилем PeakTalk.</p>
               </div>
             </div>
           )}
@@ -198,13 +202,13 @@ export default function SettingsPage() {
             <div className="bg-white border border-neutral-200 rounded-none p-6 md:p-8 space-y-8">
               <div>
                 <h2 className="text-[11px] font-bold text-neutral-500 tracking-widest uppercase mb-1">Смена пароля</h2>
-                <p className="text-xs text-neutral-400">Пароль и восстановление доступа обслуживаются в Logto.</p>
+                <p className="text-xs text-neutral-400">Пароль и восстановление доступа обслуживаются PeakTalk.</p>
               </div>
 
               <div className="space-y-5">
                 <p className="text-sm leading-relaxed text-neutral-600">
                   Чтобы сменить пароль или восстановить доступ, подтвердите email
-                  в защищённом окне Logto.
+                  через защищённую форму PeakTalk.
                 </p>
                 <a
                   href="/forgot-password"

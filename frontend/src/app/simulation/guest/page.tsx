@@ -229,6 +229,8 @@ export default function GuestSimulationPage() {
     if (isFromScenario) {
       const ctx = localStorage.getItem('peaktalk_guest_context');
       if (ctx) {
+        // Hydrate the guest draft from the scenario hand-off stored by the browser.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHasScenarioParam(true);
         setText(ctx);
       }
@@ -389,6 +391,8 @@ export default function GuestSimulationPage() {
 
   useEffect(() => {
     if (step !== 'chat' || timeLeft > 0 || isLoading) return;
+    // Timeout is an external timer event and submits the fallback answer once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void handleSendAnswer(answer.trim() || '[Истекло время на ответ]');
   }, [answer, handleSendAnswer, isLoading, step, timeLeft]);
 

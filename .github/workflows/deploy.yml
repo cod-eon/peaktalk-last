@@ -215,9 +215,6 @@ jobs:
       VDS_DOMAIN: ${{ secrets.VDS_DOMAIN }}
       VDS_KNOWN_HOSTS: ${{ secrets.VDS_KNOWN_HOSTS }}
       VDS_SSH_KEY: ${{ secrets.VDS_SSH_KEY }}
-      LOGTO_APP_ID: ${{ secrets.LOGTO_APP_ID }}
-      LOGTO_APP_SECRET: ${{ secrets.LOGTO_APP_SECRET }}
-      LOGTO_COOKIE_SECRET: ${{ secrets.LOGTO_COOKIE_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -249,7 +246,7 @@ jobs:
           test -f .release/images.tar.gz
           test -f .release/images.sha256
           test -f .release/release-manifest
-          for variable in VDS_HOST VDS_USER VDS_APP_DIR VDS_DOMAIN VDS_KNOWN_HOSTS VDS_SSH_KEY LOGTO_APP_ID LOGTO_APP_SECRET LOGTO_COOKIE_SECRET; do
+          for variable in VDS_HOST VDS_USER VDS_APP_DIR VDS_DOMAIN VDS_KNOWN_HOSTS VDS_SSH_KEY; do
             if [[ -z "${!variable}" ]]; then
               echo "Missing required deployment secret: ${variable}" >&2
               exit 1
@@ -285,79 +282,10 @@ jobs:
           rsync -az --delete \
             -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10' \
             .release/ "${VDS_USER}@${VDS_HOST}:${VDS_APP_DIR}/.release/"
-      - name: Run server-side deployment
+      - name: Activate verified release
         shell: bash
         run: |
           set -euo pipefail
-          runtime_env="$(mktemp)"
-          trap 'rm -f "$runtime_env"' EXIT
-          chmod 600 "$runtime_env"
-          printf 'LOGTO_ENDPOINT=https://auth.peaktalk.ru\n' > "$runtime_env"
-          printf 'LOGTO_APP_ID=%s\n' "$LOGTO_APP_ID" >> "$runtime_env"
-          printf 'LOGTO_APP_SECRET=%s\n' "$LOGTO_APP_SECRET" >> "$runtime_env"
-          printf 'LOGTO_COOKIE_SECRET=%s\n' "$LOGTO_COOKIE_SECRET" >> "$runtime_env"
-          printf 'LOGTO_IDENTITY_ASSERTION_SECRET=%s\n' "$LOGTO_COOKIE_SECRET" >> "$runtime_env"
-          printf 'LOGTO_API_RESOURCE=https://peaktalk.ru/api\n' >> "$runtime_env"
-          printf 'APP_BASE_URL=https://peaktalk.ru\n' >> "$runtime_env"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "$runtime_env" "${VDS_USER}@${VDS_HOST}:/tmp/peaktalk-frontend-env"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "${VDS_USER}@${VDS_HOST}" \
-            "sudo install -o '${VDS_USER}' -g docker -m 640 /tmp/peaktalk-frontend-env '${VDS_APP_DIR}/frontend/.env.local' && rm -f /tmp/peaktalk-frontend-env"
-      - name: Activate Logto and Yandex runtime providers
-        shell: bash
-        run: |
-          set -euo pipefail
-          backend_auth_secret="$(mktemp)"
-          trap 'rm -f "$backend_auth_secret"' EXIT
-          chmod 600 "$backend_auth_secret"
-          printf '%s\n' "$LOGTO_COOKIE_SECRET" > "$backend_auth_secret"
-          scp -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "$backend_auth_secret" "${VDS_USER}@${VDS_HOST}:/tmp/peaktalk-logto-identity-secret"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "${VDS_USER}@${VDS_HOST}" "sudo python3 - '${VDS_APP_DIR}/backend/.env' /tmp/peaktalk-logto-identity-secret" <<'PY'
-          import os
-          import pathlib
-          import sys
-          import tempfile
-
-          path = pathlib.Path(sys.argv[1])
-          secret_path = pathlib.Path(sys.argv[2])
-          identity_secret = secret_path.read_text().strip()
-          if not identity_secret:
-              raise SystemExit("identity assertion secret is empty")
-          values = {
-              "AUTH_PROVIDER": "logto",
-              "LOGTO_AUDIENCE": "https://peaktalk.ru/api",
-              "LOGTO_IDENTITY_ASSERTION_SECRET": identity_secret,
-              "STORAGE_PROVIDER": "yandex",
-          }
-          existing = path.read_text().splitlines()
-          seen = set()
-          output = []
-          for line in existing:
-              key = line.split("=", 1)[0] if "=" in line else ""
-              if key in values:
-                  output.append(f"{key}={values[key]}")
-                  seen.add(key)
-              else:
-                  output.append(line)
-          output.extend(f"{key}={value}" for key, value in values.items() if key not in seen)
-          fd, temporary = tempfile.mkstemp(prefix=".peaktalk-env.", dir=path.parent)
-          try:
-              with os.fdopen(fd, "w") as handle:
-                  handle.write("\n".join(output) + "\n")
-              os.chmod(temporary, 0o600)
-              os.replace(temporary, path)
-          finally:
-              if os.path.exists(temporary):
-                  os.unlink(temporary)
-              if secret_path.exists():
-                  secret_path.unlink()
-          PY
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
-            "${VDS_USER}@${VDS_HOST}" \
-            "sudo chown '${VDS_USER}:docker' '${VDS_APP_DIR}/backend/.env' && sudo chmod 640 '${VDS_APP_DIR}/backend/.env'"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
             "${VDS_USER}@${VDS_HOST}" \
             "cd '${VDS_APP_DIR}' && DEPLOY_SHA='${GITHUB_SHA}' DEPLOY_HEALTH_HOST='${VDS_DOMAIN}' ARTIFACT_DIR='${VDS_APP_DIR}/.release' bash deploy.sh"

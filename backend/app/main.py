@@ -2,7 +2,6 @@ import logging
 import logging.config
 import time
 import uuid as uuid_lib
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +10,6 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
-from app.features import init_feature_flags, close_feature_flags
 from app.limiter import limiter
 from app.routers import admin, billing, documents, drafts, email_campaigns, feedback, guest_simulation, meetings, notifications, personas, scenarios, simulation, system, users, webhooks
 
@@ -48,12 +46,6 @@ logger = logging.getLogger("peaktalk")
 
 _is_dev = settings.app_env == "development"
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_feature_flags()
-    yield
-    close_feature_flags()
-
 app = FastAPI(
     title="PeakTalk API",
     description="AI-стресс-тест аргументов перед рабочими встречами",
@@ -61,7 +53,6 @@ app = FastAPI(
     docs_url="/docs" if _is_dev else None,
     redoc_url="/redoc" if _is_dev else None,
     openapi_url="/openapi.json" if _is_dev else None,
-    lifespan=lifespan,
 )
 
 app.state.limiter = limiter

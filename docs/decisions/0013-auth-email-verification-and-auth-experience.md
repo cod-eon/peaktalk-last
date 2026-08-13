@@ -1,3 +1,5 @@
+Status: superseded by decision 0017 (retained for historical context)
+
 # Decision 0013: Email verification and stable PeakTalk auth experience
 
 Status: accepted
@@ -57,20 +59,76 @@ active users or application records that require migration in this task.
 - Keeping a generic retry-on-401 screen was rejected: it hides the actionable
   cause and is the direct source of the observed loop.
 
+## Scoped implementation authority
+
+This accepted decision authorizes reversible local application work needed to
+implement and test the lifecycle above. It does not authorize an Auth or Storage
+migration, production deployment, hosted Logto/Postbox/VDS mutation, destructive
+data action, or secret access. Decisions 0002 and 0003 remain closed migration
+gates and cannot be used as implementation authority.
+
+The overlapping harness tasks are coordinated as follows:
+
+- `auth-email-verification-and-onboarding` owns the end-to-end application
+  lifecycle, backend authorization boundary, protected-route behavior, and the
+  integrated release evidence plan.
+- `hosted-logto-ui-and-auth-recovery` owns hosted-experience requirements,
+  local auth entry/recovery UX, and evidence about externally configured Logto
+  behavior.
+- Shared auth UI and sign-in/sign-out routes are changed once under the first
+  task and reviewed against both decisions; the second task must not create a
+  parallel credential flow or duplicate implementation.
+
 ## Acceptance criteria
 
-- Registration visibly requires an email and reaches an explicit verification
-  state before onboarding.
-- A verified email can sign in, obtain an API-accepted session, and open
-  onboarding exactly once without a reload loop.
-- An unverified email cannot reach `/me`, dashboard, or onboarding; it sees a
-  stable verification action instead of `Сессия не готова`.
-- Password recovery and logout retain safe return-path behavior.
-- Protected routes, guest flow, typed simulation, upload, and Defense Brief
-  behavior are not regressed.
-- Auth pages use the PeakTalk logo, responsive layout, and loading/error states.
-- Local, CI, and remote VDS checks are fresh and a rollback artifact is
-  identified before deployment.
+1. Registration visibly requires email and reaches
+   `email_verification_required` before any `/api/me`, protected API, dashboard,
+   or onboarding access; denial is machine-readable and does not expose secrets.
+2. A verified account reaches `ready`, obtains an API-accepted resource token,
+   opens onboarding without periodic polling/reload, preserves its draft across
+   refresh, completes onboarding once, and remains complete after reload.
+3. `signed_out`, malformed/expired token, unverified identity, callback failure,
+   session expiry, and service-unavailable cases have deterministic status/code,
+   bounded retry, and no redirect loop or swallowed `ApiError`.
+4. Login, callback, refresh, browser back/forward, deterministic logout,
+   password recovery, return-path preservation, existing unfinished Logto SSO,
+   and “Войти заново” are covered; return URLs are allowlisted against open
+   redirects.
+5. Issuer, audience, signature, identity claim mapping, `email`, and
+   `email_verified` are validated consistently between Logto and the backend.
+   Authorization headers, cookies, JWTs, bearer/query tokens, and sensitive
+   query/referrer values do not enter application, Gunicorn, or Nginx evidence.
+6. PeakTalk auth entry and verification screens use the existing logo, Russian
+   copy, `#faf8f4`, `#171717`, and `#E8600A`; desktop/mobile, keyboard focus,
+   semantic labels, contrast, loading, disabled, inline validation, callback
+   error, retry, and long-error states are visibly checked.
+7. Guest flow, upload/storage flow, typed simulation, guest simulation, and
+   Defense Brief/report behavior are regression-tested without changing Storage
+   or adding voice, SMS, social login, or unrelated product behavior.
+8. Local evidence includes backend tests, frontend lint and typecheck, a clean
+   checkout production build, harness tests/audit, CodeGraph health,
+   `git diff --check`, high/critical dependency audit, migration/environment
+   review, deploy preflight, health expectations, and rollback review.
+9. Production readiness additionally requires a real isolated-account mailbox
+   E2E covering registration, receipt and use of verification mail, ready
+   session, onboarding, logout/login, recovery/reset, invalid and expired links,
+   signed-out/unverified negatives, and MFA when enabled. Mocked sessions are
+   labeled local checks and never substitute for this E2E.
+
+## Evidence and completion rule
+
+Every criterion must cite a fresh command, browser observation, or redacted
+external check. Existing failed or stale evidence remains in task history and
+must not be overwritten or re-described as a pass. Neither auth task can be
+completed while hosted email/identifier configuration or the real mailbox E2E
+is unverified.
+
+Local scoped implementation may proceed under this decision. Any Logto Console
+or Management API change, Postbox/VDS action, deployment, migration, or other
+external/destructive mutation is a separate explicit-authority gate: record the
+exact proposed action, target, preflight, rollback, and approval before acting.
+Absence of authority is a blocker for that external step, not permission to
+infer credentials or claim production readiness.
 
 ## Rollback
 

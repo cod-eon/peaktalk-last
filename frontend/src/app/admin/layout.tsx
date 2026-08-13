@@ -18,6 +18,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 import { api } from '@/lib/api';
 
 const NAV_LINKS = [
@@ -37,9 +38,10 @@ function AdminTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
-    window.location.assign('/api/auth/logto/sign-out');
+    await authClient.signOut();
+    window.location.assign('/login');
   };
 
   return (

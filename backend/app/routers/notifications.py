@@ -1,18 +1,19 @@
 import uuid
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_user_from_token
+from app.dependencies import _resolve_better_auth_user, get_current_user
 from app.models.notification import Notification, PushSubscription
 from app.models.user import User
 from app.services.notification_payloads import serialize_notification
 from app.ws_manager import manager
 from app.config import settings
+from app.services.better_auth import get_better_auth_profile, validate_websocket_origin
 
 router = APIRouter()
 
@@ -150,13 +151,14 @@ async def send_test_notification(
 
 @router.websocket("/ws")
 async def websocket_endpoint(
-    websocket: WebSocket, 
-    token: str = Query(...),
+    websocket: WebSocket,
     db: AsyncSession = Depends(get_db),
 ):
-    """WebSocket endpoint for real-time notifications."""
+    """Authenticate notifications with the Better Auth session cookie."""
     try:
-        user = await get_user_from_token(token, db)
+        validate_websocket_origin(websocket.headers.get("origin"))
+        profile = await get_better_auth_profile(websocket.headers.get("cookie"))
+        user = await _resolve_better_auth_user(profile, db)
         user_id = user.id
     except Exception:
         await websocket.close(code=1008)

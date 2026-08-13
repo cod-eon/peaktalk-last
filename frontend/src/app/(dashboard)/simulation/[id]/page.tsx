@@ -51,7 +51,6 @@ export default function SimulationPage() {
   const { isListening, isSupported, startListening, stopListening, error: speechError } = useSpeechRecognition(handleSpeechResult);
 
   // Refs for beforeunload beacon (can't use state inside event handler reliably)
-  const authTokenRef = useRef<string | null>(null);
   const isFinishedRef = useRef(false);
 
   const PERSONA_LABELS: Record<string, string> = {
@@ -94,29 +93,15 @@ export default function SimulationPage() {
   // Keep isFinishedRef in sync so beforeunload can read it synchronously
   useEffect(() => { isFinishedRef.current = isFinished; }, [isFinished]);
 
-  // Cache the Logto access token so it's available in the synchronous beforeunload handler
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/auth/access-token', { credentials: 'include', cache: 'no-store' })
-      .then(async (response) => response.ok ? response.json() as Promise<{ access_token?: unknown }> : null)
-      .then((body) => {
-        if (!cancelled) authTokenRef.current = typeof body?.access_token === 'string' ? body.access_token : null;
-      })
-      .catch(() => {
-        if (!cancelled) authTokenRef.current = null;
-      });
-    return () => { cancelled = true; };
-  }, []);
-
   // Fire-and-forget abandon signal when user closes the tab
   useEffect(() => {
     if (!sessionId) return;
     const handleBeforeUnload = () => {
-      if (isFinishedRef.current || !authTokenRef.current) return;
+      if (isFinishedRef.current) return;
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       fetch(`${apiUrl}/simulation/${sessionId}/abandon`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${authTokenRef.current}` },
+        credentials: 'include',
         keepalive: true,
       });
     };
@@ -163,6 +148,8 @@ export default function SimulationPage() {
   useEffect(() => {
     const aiMessages = messages.filter(m => m.role === 'assistant');
     if (aiMessages.length > 0) {
+      // The countdown belongs to the latest assistant turn.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(90);
     }
   }, [messages, isAnalyzing]); // isAnalyzing flips when AI finishes answering
@@ -237,6 +224,8 @@ export default function SimulationPage() {
   // Timer Timeout execution
   useEffect(() => {
     if (timeLeft === 0 && !isAnalyzing && !isFinished) {
+       // Timeout is an external timer event and must submit exactly once at zero.
+       // eslint-disable-next-line react-hooks/set-state-in-effect
        submitAnswer(answer.trim() ? answer : "[Время на ответ истекло, ответ не предоставлен]", true);
     }
   }, [answer, isAnalyzing, isFinished, submitAnswer, timeLeft]);

@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { MailCheck, RefreshCw } from "lucide-react";
 
 import { normalizeInternalReturnPath } from "@/lib/return-path";
+import { authClient } from "@/lib/auth-client";
 import { useAuthStore } from "@/store/authStore";
 
 function VerifyEmailContent() {
@@ -19,6 +20,8 @@ function VerifyEmailContent() {
   const setAuthState = useAuthStore((state) => state.setAuthState);
   const setIsLoading = useAuthStore((state) => state.setIsLoading);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ function VerifyEmailContent() {
     setIsRefreshing(true);
     setError(null);
     try {
-      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      const response = await fetch("/api/auth/session", { cache: "no-store", credentials: "include" });
       if (!response.ok) throw new Error("session lookup failed");
       const session = await response.json() as {
         auth_state?: "signed_out" | "email_verification_required" | "ready";
@@ -59,7 +62,29 @@ function VerifyEmailContent() {
 
   const restartAuthentication = () => {
     window.sessionStorage.removeItem("peaktalk_auth_recovery_started_at");
-    window.location.assign(`/api/auth/logto/sign-in?return=${encodeURIComponent(returnPath)}&force=1`);
+    window.location.assign(`/login?return=${encodeURIComponent(returnPath)}`);
+  };
+
+  const resendVerification = async () => {
+    if (!user?.email || isResending) return;
+    setIsResending(true);
+    setError(null);
+    setResendStatus(null);
+    try {
+      const result = await authClient.sendVerificationEmail({
+        email: user.email,
+        callbackURL: `/verify-email?return=${encodeURIComponent(returnPath)}`,
+      });
+      if (result.error) {
+        setError("Не удалось отправить письмо. Попробуйте ещё раз через несколько минут.");
+      } else {
+        setResendStatus("Новое письмо отправлено. Проверьте входящие и папку «Спам».");
+      }
+    } catch {
+      setError("Не удалось отправить письмо. Проверьте соединение и попробуйте ещё раз.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -95,8 +120,16 @@ function VerifyEmailContent() {
               Войти заново
             </button>
           </div>
+          <button
+            type="button"
+            onClick={resendVerification}
+            disabled={!user?.email || isResending}
+            className="mt-3 min-h-11 text-left text-sm font-medium text-[#171717] underline underline-offset-4 transition-colors hover:text-[#e8600a] disabled:cursor-not-allowed disabled:text-[#6b7280]"
+          >
+            {isResending ? "Отправляем письмо…" : "Отправить письмо ещё раз"}
+          </button>
           <p className="mt-5 min-h-6 text-sm" aria-live="polite">
-            {error ? <span className="text-red-700">{error}</span> : authState === "ready" ? <span className="text-emerald-700">Email подтверждён. Открываем PeakTalk…</span> : null}
+            {error ? <span className="text-red-700" role="alert">{error}</span> : resendStatus ? <span className="text-emerald-700">{resendStatus}</span> : authState === "ready" ? <span className="text-emerald-700">Email подтверждён. Открываем PeakTalk…</span> : null}
           </p>
           <Link href="/" className="mt-4 inline-block text-sm text-[#6b7280] underline underline-offset-4 hover:text-[#171717]">На главную</Link>
         </div>

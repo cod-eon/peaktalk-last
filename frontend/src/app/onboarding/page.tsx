@@ -66,6 +66,8 @@ function OnboardingForm() {
     useEffect(() => {
         if (isAuthLoading || !user || authState === 'loading') return;
         if (authState !== 'ready') {
+            // Resolve the local guard immediately for a terminal auth state.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsChecking(false);
             return;
         }
@@ -99,7 +101,7 @@ function OnboardingForm() {
 
     const restartAuthentication = () => {
         const returnPath = `${window.location.pathname}${window.location.search}`;
-        window.location.assign(`/api/auth/logto/sign-in?return=${encodeURIComponent(returnPath)}`);
+        window.location.assign(`/login?return=${encodeURIComponent(returnPath)}`);
     };
 
     useEffect(() => {
@@ -114,6 +116,8 @@ function OnboardingForm() {
             ('standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
 
         if (isStandalone) {
+            // Standalone mode cannot offer another install prompt.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsInstallPromptAvailable(false);
         }
 

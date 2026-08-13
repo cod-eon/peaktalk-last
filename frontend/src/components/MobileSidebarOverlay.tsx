@@ -13,6 +13,7 @@ import {
     FileText,
     LogOut,
 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
@@ -31,9 +32,10 @@ export function MobileSidebarOverlay({ isOpen, onClose }: MobileSidebarOverlayPr
     const pathname = usePathname();
     const { user } = useAuthStore();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         onClose();
-        window.location.assign('/api/auth/logto/sign-out');
+        await authClient.signOut();
+        window.location.assign('/login');
     };
 
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь';

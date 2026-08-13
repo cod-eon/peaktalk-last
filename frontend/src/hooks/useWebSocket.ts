@@ -34,14 +34,7 @@ export const useWebSocket = () => {
     // Create an async function to get the session and connect
     const connect = async () => {
       try {
-        const tokenResponse = await fetch('/api/auth/access-token', { credentials: 'include', cache: 'no-store' });
-        if (!tokenResponse.ok) return;
-        const tokenBody = await tokenResponse.json() as { access_token?: unknown };
-        const accessToken = typeof tokenBody.access_token === 'string' ? tokenBody.access_token : null;
-        if (!accessToken) return;
         const wsUrl = buildWebSocketUrl();
-        wsUrl.searchParams.set('token', accessToken);
-
         const ws = new WebSocket(wsUrl.toString());
         
         ws.onopen = () => {

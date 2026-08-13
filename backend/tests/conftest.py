@@ -63,11 +63,18 @@ async def override_get_current_user() -> User:
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_database():
+    # Background tasks import the application session maker at execution time.
+    # Point it at the same isolated in-memory database as request dependencies.
+    from app import database as database_module
+
+    original_session_maker = database_module.async_session_maker
+    database_module.async_session_maker = TestSessionLocal
     async with TEST_ENGINE.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
     async with TEST_ENGINE.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    database_module.async_session_maker = original_session_maker
 
 
 @pytest_asyncio.fixture

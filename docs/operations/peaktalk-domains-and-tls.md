@@ -1,7 +1,6 @@
 # PeakTalk domains, DNS and TLS
 
-Status: DNS, TLS and Nginx routing are enabled for the Logto hostnames. Logto
-application Auth integration remains a separate migration gate.
+Status: historical DNS/TLS record. Current authentication routing is governed by decision 0017 and the Better Auth runbook.
 
 ## DNS records to add
 
@@ -11,8 +10,8 @@ At the DNS provider, add these records. Use the VDS address `89.169.169.98` for 
 |---|---|---|---|
 | `@` | A | `89.169.169.98` | Main PeakTalk application |
 | `www` | CNAME | `peaktalk.ru.` | Canonical web redirect |
-| `auth` | A | `89.169.169.98` | Public Logto issuer / OAuth endpoints |
-| `admin.auth` | A | `89.169.169.98` | Logto admin console, later access-restricted |
+| `auth` | A | `89.169.169.98` | Historical authentication-provider hostname; do not recreate from this document |
+| `admin.auth` | A | `89.169.169.98` | Historical authentication-provider admin hostname; do not recreate from this document |
 
 Do not add `api` unless we deliberately expose a separate API hostname. The current application uses `https://peaktalk.ru/api`, so adding extra public origins would expand the CORS and attack surface without product benefit.
 
@@ -39,15 +38,12 @@ expected address and public HTTPS requests return successfully.
    `admin.auth.peaktalk.ru` is installed at
    `/etc/letsencrypt/live/auth.peaktalk.ru/` and renews through Certbot.
 3. Separate nginx virtual hosts are installed:
-   - `auth.peaktalk.ru` → Logto public endpoint;
-   - `admin.auth.peaktalk.ru` → Logto admin endpoint, protected by Logto
-     admin authentication.
+   - `auth.peaktalk.ru` and `admin.auth.peaktalk.ru` were historical provider routes; do not recreate them from this record.
 4. `nginx -t`, certificate SANs, TLS protocol policy, redirect behavior,
-   endpoint routing and Logto health have passed. Application integration
-   remains separately gated.
+   endpoint routing and historical provider health passed at the recorded time. Current auth changes remain separately gated.
 5. Keep a timestamped copy of nginx configuration and certificate metadata for rollback. Private keys stay on VDS and are never copied into GitHub artifacts.
 
-Logto's official deployment settings distinguish the public endpoint, admin endpoint, ports and secret vault key; those values will be configured in the separate Logto Compose project, not in the PeakTalk application Compose file: [Logto OSS deployment and configuration](https://docs.logto.io/logto-oss/deployment-and-configuration).
+The former provider deployment boundary is historical. Current settings belong only to the Better Auth runtime described in `better-auth-runbook.md`.
 
 ## Required callbacks to prepare later
 

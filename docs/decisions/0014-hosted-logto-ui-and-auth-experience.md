@@ -1,3 +1,5 @@
+Status: superseded by decision 0017 (retained for historical context)
+
 # Decision 0014: hosted Logto UI and auth recovery
 
 Status: accepted for implementation
@@ -66,10 +68,39 @@ meet.
   password recovery, MFA, and API token exchange stay owned by Logto.
 - PeakTalk's local pages remain clear entry/recovery screens and do not collect
   credentials or imitate the hosted form.
-- Changing Sign-in Experience settings is an external admin action. It requires
-  a fresh hosted-page check and an end-to-end mailbox smoke before the task can
-  be complete.
 - No Logto, Postbox, PostgreSQL, Redis, or object-storage data is deleted.
+- Decision 0003 does not authorize an Auth migration, and decision 0002 does
+  not authorize a Storage migration. Neither migration is part of this release.
+
+## External-action gate and verification
+
+Local application implementation and non-mutating inspection may proceed under
+this accepted decision. Changing Sign-in Experience, branding, localization,
+connectors, MFA, application settings, or any Logto/Postbox/VDS state is an
+external admin action and is not authorized by this decision alone. Before such
+an action, obtain explicit authority for the exact target and change, confirm a
+redacted current-state capture, preflight and rollback, and avoid printing or
+persisting credentials, cookies, tokens, SMTP values, or secret configuration.
+Deployment is a separate explicit-authority action.
+
+After an authorized configuration change, fresh evidence must show on the real
+hosted v1.42.0 experience that:
+
+1. registration and sign-in require email plus password, not phone or username;
+2. Russian locale, PeakTalk logo/colors, mandatory email verification,
+   password recovery, and all enabled MFA states are actually rendered;
+3. sign-in, sign-up, verification/resend, recovery/reset, MFA, loading,
+   disabled, invalid input/link, session-expired, access-denied,
+   service-unavailable, callback-error, logout, retry, mobile, keyboard/focus,
+   and long-error states remain usable;
+4. OIDC callback and post-logout return safely to allowlisted PeakTalk paths;
+5. a real isolated mailbox flow completes registration, verification, login,
+   logout, recovery/reset, and login with the reset password.
+
+A mocked session, source inspection, local PeakTalk page, or HTTP 200 is not
+positive hosted/mailbox E2E evidence. Until the phone/username observation is
+superseded by a fresh hosted check and mailbox E2E, keep the existing failed
+acceptance/risk evidence and report production readiness as blocked.
 
 ## Rollback
 

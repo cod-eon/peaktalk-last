@@ -1,26 +1,49 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const result = await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
+      if (result.error) {
+        setError("Не удалось отправить письмо. Попробуйте ещё раз.");
+      } else {
+        setSent(true);
+      }
+    } catch {
+      setError("Не удалось отправить письмо. Попробуйте ещё раз.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white p-6 sm:p-8 text-center"
-    >
-      <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Восстановить пароль</h1>
-      <p className="text-neutral-500 text-sm mb-8">
-        Откройте форму восстановления и укажите email.
-      </p>
-      <a href="/api/auth/logto/sign-in?screen=reset_password" className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium rounded-none py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
-        Восстановить пароль
-      </a>
-      <div className="mt-8 text-sm text-neutral-500">
-        <Link href="/login" className="text-neutral-900 hover:text-black font-medium">Вернуться ко входу</Link>
+    <form className="auth-panel" onSubmit={submit} aria-busy={busy}>
+      <div className="auth-heading">
+        <p className="auth-kicker">Восстановление</p>
+        <h2>Забыли пароль?</h2>
+        <p>{sent ? "Если аккаунт существует, письмо уже отправлено." : "Укажите email — мы отправим ограниченную по времени ссылку."}</p>
       </div>
-    </motion.div>
+      {!sent && (
+        <>
+          <label className="auth-field" htmlFor="forgot-email"><span>Email</span><input id="forgot-email" name="email" aria-label="Email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          {error && <p className="auth-error" role="alert">{error}</p>}
+          <button disabled={busy} className="auth-primary-button">{busy ? "Отправляем…" : "Получить ссылку"}</button>
+        </>
+      )}
+      {sent && <p className="auth-success" role="status">Проверьте входящие и папку «Спам».</p>}
+      <p className="auth-secondary-link"><Link href="/login">Вернуться ко входу</Link></p>
+    </form>
   );
 }

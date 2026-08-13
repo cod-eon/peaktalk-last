@@ -164,6 +164,8 @@ function MeetingFormModal({
   // Reset form when modal opens/closes
   React.useEffect(() => {
     if (isOpen) {
+      // Preserve reset-on-open semantics; this state intentionally mirrors the selected record.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(initial ?? EMPTY_FORM);
     }
   }, [isOpen, initial]);

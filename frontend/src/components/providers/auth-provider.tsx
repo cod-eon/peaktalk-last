@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password');
     const isVerificationPage = pathname.startsWith('/verify-email');
 
-    fetch('/api/auth/session', { cache: 'no-store' })
+    fetch('/api/auth/session', { cache: 'no-store', credentials: 'include' })
       .then(async (response) => {
         if (!response.ok) throw new Error('session lookup failed');
         return response.json() as Promise<{
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Do not mount protected pages until the cookie session is resolved. This
   // prevents onboarding from racing the session check and calling the API
-  // without a usable bearer token.
+  // without a usable cookie session.
   if (isProtected && (
     sessionCheckPath !== pathname ||
     isLoading ||

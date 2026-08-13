@@ -1,44 +1,39 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { normalizeOptionalInternalReturnPath } from "@/lib/return-path";
 
 function LoginForm() {
-  const searchParams = useSearchParams();
-  const returnPath = normalizeOptionalInternalReturnPath(searchParams.get("return"));
-  const signInHref = `/api/auth/logto/sign-in${returnPath ? `?return=${encodeURIComponent(returnPath)}` : ""}`;
-  const signUpHref = `/register${returnPath ? `?return=${encodeURIComponent(returnPath)}` : ""}`;
+  const router = useRouter();
+  const params = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const returnPath = normalizeOptionalInternalReturnPath(params.get("return")) ?? "/dashboard";
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white p-6 sm:p-8"
-    >
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-inter font-bold text-neutral-900 mb-2">Войти</h1>
-        <p className="text-neutral-500 text-sm">Войдите в PeakTalk, чтобы продолжить.</p>
-      </div>
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await authClient.signIn.email({ email, password, callbackURL: returnPath });
+      if (result.error) setError(result.error.message ?? "Не удалось войти");
+      else router.replace(returnPath);
+    } catch {
+      setError("Не удалось войти. Проверьте соединение и попробуйте ещё раз.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
-      <a href={signInHref} className="w-full bg-[#171717] hover:bg-[#e8600a] text-white font-medium py-3.5 text-xs font-semibold h-11 transition-colors flex items-center justify-center">
-        Войти
-      </a>
-      <p className="mt-4 text-center text-xs text-neutral-500">Email и пароль вводятся на странице PeakTalk.</p>
-
-      <div className="mt-8 text-center text-sm text-neutral-500">
-        Нет аккаунта?{" "}
-        <Link href={signUpHref} className="text-neutral-900 hover:text-black transition-colors font-medium">
-          Создать бесплатно
-        </Link>
-      </div>
-    </motion.div>
-  );
+  return <form className="auth-panel" onSubmit={submit} aria-busy={busy}><div className="auth-heading"><p className="auth-kicker">Добро пожаловать</p><h2>Войти в PeakTalk</h2><p>Продолжите подготовку к важной встрече.</p></div><label className="auth-field" htmlFor="login-email"><span>Email</span><input id="login-email" name="email" aria-label="Email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><label className="auth-field" htmlFor="login-password"><span>Пароль</span><input id="login-password" name="password" aria-label="Пароль" type="password" required autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <p className="auth-error" role="alert">{error}</p>}<button disabled={busy} className="auth-primary-button">{busy ? "Входим…" : "Войти"}</button><p className="auth-secondary-link"><Link href="/forgot-password">Забыли пароль?</Link></p><p className="auth-secondary-link">Нет аккаунта? <Link href={`/register?return=${encodeURIComponent(returnPath)}`}>Создать</Link></p></form>;
 }
 
 export default function LoginPage() {
-  return <Suspense fallback={<div>Загрузка...</div>}><LoginForm /></Suspense>;
+  return <Suspense fallback={<div className="auth-loading" role="status"><span className="auth-spinner" aria-hidden="true" />Загружаем вход…</div>}><LoginForm /></Suspense>;
 }

@@ -534,7 +534,7 @@ export default function PersonalDataPage() {
             }}
           >
             <li>
-              <span style={{ color: "#171717", fontWeight: 500 }}>Logto OSS и Yandex Cloud Object Storage</span>{" "}
+              <span style={{ color: "#171717", fontWeight: 500 }}>Сервис авторизации PeakTalk и Yandex Cloud Object Storage</span>{" "}
               — для авторизации и хранения загружаемых пользователем файлов.
               Обработка выполняется в инфраструктуре, развернутой Оператором,
               с применением TLS и шифрования объектов.

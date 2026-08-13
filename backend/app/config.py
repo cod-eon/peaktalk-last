@@ -15,18 +15,10 @@ class Settings(BaseSettings):
     database_pool_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
     database_command_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
 
-    # Logto OSS authentication
-    auth_provider: Literal["logto"] = "logto"
-    logto_issuer: str = "https://auth.peaktalk.ru/oidc"
-    logto_jwks_uri: str = "https://auth.peaktalk.ru/oidc/jwks"
-    logto_userinfo_url: str = "https://auth.peaktalk.ru/oidc/me"
-    logto_audience: str = ""
-    logto_required_scopes: str = ""
-    # HMAC secret shared only by the Next.js server and FastAPI. The frontend
-    # uses it to sign verified identity claims from the Logto server session;
-    # the API never trusts email claims supplied directly by the browser.
-    logto_identity_assertion_secret: str = ""
-    logto_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+    # Better Auth is authoritative in Next.js; FastAPI introspects its database-backed session.
+    auth_provider: Literal["better-auth"] = "better-auth"
+    better_auth_session_url: str = "http://frontend:3000/api/auth/get-session"
+    better_auth_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
 
     # Yandex Object Storage
     storage_provider: Literal["yandex"] = "yandex"
@@ -76,8 +68,6 @@ class Settings(BaseSettings):
     # tax_system_code: 1=ОСН, 2=УСН доход, 3=УСН доход-расход, 6=ПСН
     yookassa_tax_system_code: int = 2
 
-    # Feature Flags (DevCycle)
-    devcycle_server_sdk_key: str = ""
     # vat_code per item: 1=без НДС, 3=10%, 4=20%
     yookassa_vat_code: int = 1
 

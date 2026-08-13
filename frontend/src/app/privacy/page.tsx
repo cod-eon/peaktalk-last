@@ -372,7 +372,7 @@ export default function PrivacyPage() {
             </span>{" "}
             — загружаемые вами файлы (документы) хранятся в приватном бакете
             Yandex Cloud Object Storage с серверным шифрованием KMS. Сервис
-            авторизации PeakTalk работает на self-hosted Logto OSS в инфраструктуре Оператора.
+            авторизации PeakTalk работает в инфраструктуре Оператора.
           </p>
           <p
             style={{
