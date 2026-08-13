@@ -447,14 +447,9 @@ function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-[calc(100vw-48px)] min-w-0 break-words [overflow-wrap:anywhere] font-display text-[30px] font-bold leading-[1.08] tracking-[-0.045em] text-neutral-950 sm:max-w-[700px] sm:text-[42px] lg:text-[48px] xl:text-[52px]"
+            className="w-full max-w-[820px] min-w-0 break-words [overflow-wrap:anywhere] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[58px] xl:text-[64px]"
           >
-            <span className="block sm:hidden">
-              Подготовьте материал,<br />
-              который выдержит<br />
-              вопросы на встрече
-            </span>
-            <span className="hidden sm:inline">Подготовьте материал, который выдержит вопросы на встрече</span>
+            Подготовьте материал, который выдержит вопросы на встрече
           </motion.h1>
 
           <motion.p
@@ -966,7 +961,7 @@ function FooterCTA() {
       <div className="container-custom relative z-10 py-[clamp(92px,13vw,150px)]">
         <RevealDiv className="mx-auto max-w-4xl text-center">
           <SectionLabel dark>final check</SectionLabel>
-          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[44px] lg:text-[52px]">
+          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">
             Не несите слабый ответ на сильную встречу.
           </h2>
           <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">

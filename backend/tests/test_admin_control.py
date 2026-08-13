@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import httpx
 from sqlalchemy import select
+from starlette.requests import Request
 
 from app.main import app
 from app.main import _safe_request_path
@@ -15,6 +16,17 @@ from app.services.better_auth import BetterAuthError, BetterAuthProfile
 def test_admin_request_logs_redact_user_and_session_identifiers():
     assert _safe_request_path("/admin/control/users/user-secret") == "/admin/control/users/:user"
     assert _safe_request_path("/admin/control/users/user-secret/sessions/session-secret/revoke") == "/admin/control/users/:user/sessions/:session/revoke"
+
+
+def test_admin_detail_origin_fallback_is_read_only(monkeypatch):
+    monkeypatch.setattr(admin_control.settings, "frontend_url", "https://peaktalk.ru")
+    monkeypatch.setattr(admin_control.settings, "allowed_origins", "https://peaktalk.ru")
+
+    def request(method: str) -> Request:
+        return Request({"type": "http", "method": method, "path": "/admin/control/users/user-1", "headers": []})
+
+    assert admin_control._admin_request_origin(request("GET")) == "https://peaktalk.ru"
+    assert admin_control._admin_request_origin(request("POST")) is None
 
 
 async def test_admin_control_signed_out_is_rejected(client):
@@ -64,6 +76,7 @@ async def test_admin_control_user_detail_loads_user_sessions_and_redacts_tokens(
 
     async def fake_admin_request(cookie, path, **kwargs):
         assert cookie == "session=admin"
+        assert kwargs["origin"] == "https://peaktalk.ru"
         if path == "admin/get-user":
             assert kwargs["method"] == "GET"
             assert kwargs["query"] == {"id": "ba-user-1"}
@@ -75,6 +88,8 @@ async def test_admin_control_user_detail_loads_user_sessions_and_redacts_tokens(
 
     monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
     monkeypatch.setattr(admin_control, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control.settings, "frontend_url", "https://peaktalk.ru")
+    monkeypatch.setattr(admin_control.settings, "allowed_origins", "https://peaktalk.ru")
     monkeypatch.setattr(admin_control, "better_auth_admin_request", fake_admin_request)
     response = await client.get("/admin/control/users/ba-user-1", headers={"cookie": "session=admin"})
     assert response.status_code == 200

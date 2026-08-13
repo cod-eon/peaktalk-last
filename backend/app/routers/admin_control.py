@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from datetime import datetime, timedelta, timezone
 from typing import Literal
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
@@ -12,6 +13,7 @@ from sqlalchemy import bindparam, desc, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.models.admin_audit import AdminAuditEvent
 from app.models.user import User
@@ -235,6 +237,34 @@ async def _recent_audit(db: AsyncSession, limit: int = 12) -> list[AuditItem]:
     ]
 
 
+def _admin_request_origin(request: Request) -> str | None:
+    """Supply Better Auth's CSRF origin for server-side admin calls.
+
+    A browser GET to the detail endpoint may not include Origin, while the
+    endpoint internally makes a cookie-authenticated POST to list sessions.
+    Only read-only outer requests may use the configured, allowlisted frontend
+    origin as the internal request origin. Mutations must carry a browser
+    origin and are rejected by Better Auth when it is absent or invalid.
+    """
+    origin = request.headers.get("origin")
+    if origin:
+        return origin
+
+    referer = request.headers.get("referer")
+    if referer:
+        parsed_referer = urlsplit(referer)
+        if parsed_referer.scheme in {"http", "https"} and parsed_referer.netloc:
+            return f"{parsed_referer.scheme}://{parsed_referer.netloc}"
+
+    if request.method.upper() in {"GET", "HEAD"}:
+        parsed_frontend = urlsplit(settings.frontend_url)
+        if parsed_frontend.scheme in {"http", "https"} and parsed_frontend.netloc:
+            candidate = f"{parsed_frontend.scheme}://{parsed_frontend.netloc}"
+            if candidate in set(settings.get_allowed_origins()):
+                return candidate
+    return None
+
+
 def _parse_session(value: dict) -> AdminSession:
     return AdminSession(
         id=str(value.get("id", "")),
@@ -253,7 +283,7 @@ async def _call_auth(request: Request, path: str, *, method: str = "GET", query:
             method=method,
             query=query,
             body=body,
-            origin=request.headers.get("origin"),
+            origin=_admin_request_origin(request),
         )
     except BetterAuthError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={"detail": "Auth service unavailable.", "code": exc.code}) from exc

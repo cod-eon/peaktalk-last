@@ -53,6 +53,42 @@ async def test_session_introspection_forwards_only_cookie_and_requires_verified_
 
 
 @pytest.mark.asyncio
+async def test_admin_request_forwards_origin_for_cookie_authenticated_post(monkeypatch):
+    seen = {}
+
+    class Client:
+        def __init__(self, **kwargs):
+            seen["options"] = kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def request(self, method, url, params, json, headers):
+            seen.update(method=method, url=url, params=params, json=json, headers=headers)
+            return httpx.Response(200, json={"sessions": []})
+
+    monkeypatch.setattr(httpx, "AsyncClient", Client)
+    response = await better_auth.better_auth_admin_request(
+        "better-auth.session_token=opaque",
+        "admin/list-user-sessions",
+        method="POST",
+        body={"userId": "ba-1"},
+        origin="https://peaktalk.ru",
+    )
+
+    assert response.status_code == 200
+    assert seen["headers"] == {
+        "cookie": "better-auth.session_token=opaque",
+        "accept": "application/json",
+        "origin": "https://peaktalk.ru",
+    }
+    assert seen["json"] == {"userId": "ba-1"}
+
+
+@pytest.mark.asyncio
 async def test_unverified_session_is_rejected(monkeypatch):
     class Response:
         status_code = 200
