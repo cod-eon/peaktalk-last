@@ -40,7 +40,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendOnSignIn: true,
-    autoSignInAfterVerification: false,
+    autoSignInAfterVerification: true,
     expiresIn: 3600,
     sendVerificationEmail: async ({ user, url }) => {
       await sendAuthMail({ to: user.email, subject: "Подтвердите email в PeakTalk", heading: "Подтвердите email", text: "Подтвердите адрес, чтобы открыть защищённые возможности PeakTalk.", action: "Подтвердить email", url });

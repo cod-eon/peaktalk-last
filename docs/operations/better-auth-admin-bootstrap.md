@@ -18,3 +18,13 @@ replace an existing different admin, is idempotent for the assigned identity,
 and writes only safe audit metadata. After a successful run, unset the runtime
 variable and remove the one-shot script from the release artifact. There is no
 web bootstrap endpoint.
+
+## Admin access
+
+After the approved admin identity has been verified and bootstrapped, sign in
+through the normal PeakTalk login page and open `/admin` for the overview or
+`/admin/users` for user administration.
+
+The frontend guard is only a navigation aid. Every admin data request and
+mutation is enforced server-side; a signed-out or ordinary user session cannot
+read admin data or perform admin actions.
