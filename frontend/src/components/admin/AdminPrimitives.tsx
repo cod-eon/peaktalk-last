@@ -22,23 +22,21 @@ export function AdminPageHeader({
   index,
   actions,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
-  index: string;
+  index?: string;
   actions?: ReactNode;
 }) {
   return (
-    <section data-section-index={index} className="border border-black/10 bg-white shadow-sm">
-      <div className="grid gap-5 px-5 py-6 sm:px-7 sm:py-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+    <section data-section-index={index}>
+      <div className="grid gap-5 py-2 sm:py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="max-w-3xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-            {eyebrow}
-          </p>
-          <h1 className="mt-2 max-w-2xl text-2xl font-semibold leading-tight tracking-[-0.025em] text-neutral-950 sm:text-3xl">
+          {eyebrow ? <p className="text-xs font-medium text-neutral-500">{eyebrow}</p> : null}
+          <h1 className="mt-1 max-w-2xl text-2xl font-semibold leading-tight tracking-[-0.025em] text-neutral-950 sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
             {description}
           </p>
         </div>
@@ -65,13 +63,13 @@ export function AdminPanel({
   return (
     <section
       className={cn(
-        'relative overflow-hidden border border-black/10 bg-white shadow-sm',
+        'relative overflow-hidden border border-black/10 bg-white',
         className,
       )}
     >
       <div className="relative flex flex-wrap items-start justify-between gap-4 border-b border-black/8 px-5 py-4 sm:px-6">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
+          <p className="text-sm font-semibold text-neutral-950">
             {title}
           </p>
           {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">{subtitle}</p> : null}
@@ -95,15 +93,14 @@ export function AdminMetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <article className="relative overflow-hidden border border-black/10 bg-white p-5 shadow-sm">
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-[var(--accent-primary)]" />
+    <article className="relative overflow-hidden border border-black/10 bg-white p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">{label}</p>
-          <div className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-neutral-950">{value}</div>
+          <p className="text-xs text-neutral-500">{label}</p>
+          <div className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-neutral-950">{value}</div>
           <p className="mt-2 text-sm leading-6 text-neutral-600">{helper}</p>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center border border-black/10 bg-neutral-950 text-white">
+        <div className="flex h-9 w-9 items-center justify-center border border-black/10 bg-neutral-50 text-neutral-700">
           <Icon size={18} />
         </div>
       </div>
@@ -205,7 +202,7 @@ export function AdminPagination({
   return (
     <div className="flex flex-col gap-4 border-t border-black/8 bg-[rgba(17,24,39,0.02)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <p className="text-sm text-neutral-600">
-        Страница {page} из {pages} · Всего записей: {total}
+        Страница {page} из {pages}. Всего записей: {total}
       </p>
 
       <div className="flex items-center gap-2">

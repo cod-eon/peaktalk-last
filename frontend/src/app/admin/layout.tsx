@@ -11,7 +11,7 @@ import { api, ApiError } from '@/lib/api';
 const NAV_LINKS = [
   { href: '/admin', label: 'Обзор', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Пользователи', icon: Users },
-  { href: '/admin/auth', label: 'Доступ и auth', icon: KeyRound },
+  { href: '/admin/auth', label: 'Доступ', icon: KeyRound },
 ];
 
 function isActiveRoute(pathname: string, href: string) {

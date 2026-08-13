@@ -185,7 +185,7 @@ const faqData = [
   {
     question: 'Что такое PeakTalk?',
     answer:
-      'PeakTalk — AI-стресс-тест аргументов перед сложной рабочей встречей. Вы вставляете материал, выбираете роль оппонента и отвечаете на вопросы, которые проверяют слабые места позиции.',
+      'PeakTalk. AI-стресс-тест аргументов перед сложной рабочей встречей. Вы вставляете материал, выбираете роль оппонента и отвечаете на вопросы, которые проверяют слабые места позиции.',
   },
   {
     question: 'Нужна ли регистрация?',
@@ -432,8 +432,8 @@ function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(250,248,244,0.4)_0%,#FAF8F4_88%)]" />
       </div>
 
-      <div className="container-custom relative z-10 grid items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] lg:gap-12 lg:pb-20">
-        <div className="max-w-3xl">
+      <div className="container-custom relative z-10 grid min-w-0 grid-cols-1 items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] lg:gap-12 lg:pb-20">
+        <div className="w-full min-w-0 max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -447,20 +447,36 @@ function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[58px] xl:text-[64px]"
+            className="w-full max-w-[calc(100vw-48px)] min-w-0 break-words [overflow-wrap:anywhere] font-display text-[30px] font-bold leading-[1.08] tracking-[-0.045em] text-neutral-950 sm:max-w-[700px] sm:text-[42px] lg:text-[48px] xl:text-[52px]"
           >
-            Подготовьте материал, который выдержит вопросы на встрече
+            <span className="block sm:hidden">
+              Подготовьте материал,<br />
+              который выдержит<br />
+              вопросы на встрече
+            </span>
+            <span className="hidden sm:inline">Подготовьте материал, который выдержит вопросы на встрече</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:text-[20px] sm:leading-[1.58]"
+            className="mt-6 w-full max-w-[calc(100vw-48px)] min-w-0 break-words [overflow-wrap:anywhere] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:max-w-[640px] sm:text-[20px] sm:leading-[1.58]"
           >
-            Вставьте тезисы, КП, memo или план разговора. PeakTalk сохранит исходник,
-            найдет слабые места, соберет короткий Defense Brief и затем прогонит позицию
-            через вопросы CFO, клиента или инвестора.
+            <span className="block sm:hidden">
+              Вставьте тезисы, КП, memo<br />
+              или план разговора.<br />
+              PeakTalk сохранит исходник,<br />
+              найдет слабые места, соберет<br />
+              короткий Defense Brief и затем<br />
+              прогонит позицию через вопросы<br />
+              CFO, клиента или инвестора.
+            </span>
+            <span className="hidden sm:inline">
+              Вставьте тезисы, КП, memo или план разговора. PeakTalk сохранит исходник,
+              найдет слабые места, соберет короткий Defense Brief и затем прогонит позицию
+              через вопросы CFO, клиента или инвестора.
+            </span>
           </motion.p>
 
           <motion.div
@@ -501,7 +517,7 @@ function Hero() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
             style={safariMotionStyle}
-            className="mt-7 md:hidden"
+            className="mt-7 w-full min-w-0 md:hidden"
           >
             <HeroVisual compact />
           </motion.div>
@@ -788,7 +804,7 @@ function PricingCTA() {
         <RevealDiv className="mx-auto mb-12 max-w-3xl text-center">
           <SectionLabel>free / Defense Brief</SectionLabel>
           <h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[46px]">
-            Бесплатно — первый pressure scan. 299 ₽ — когда нужен Defense Brief.
+            Бесплатно: первый pressure scan. 299 ₽, когда нужен Defense Brief.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-neutral-600">
             Граница простая: демо показывает давление на Вашем материале. Defense Brief сохраняет
@@ -950,7 +966,7 @@ function FooterCTA() {
       <div className="container-custom relative z-10 py-[clamp(92px,13vw,150px)]">
         <RevealDiv className="mx-auto max-w-4xl text-center">
           <SectionLabel dark>final check</SectionLabel>
-          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">
+          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[32px] font-bold leading-[1.08] tracking-[-0.045em] text-white sm:text-[44px] lg:text-[52px]">
             Не несите слабый ответ на сильную встречу.
           </h2>
           <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">

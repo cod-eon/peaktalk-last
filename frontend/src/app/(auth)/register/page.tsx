@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { normalizeOptionalInternalReturnPath } from "@/lib/return-path";
+import { translateAuthError } from "@/lib/authErrors";
 
 function RegisterForm() {
   const params = useSearchParams();
@@ -23,7 +24,7 @@ function RegisterForm() {
     setError("");
     try {
       const result = await authClient.signUp.email({ name, email, password, callbackURL: `/verify-email?return=${encodeURIComponent(returnPath)}` });
-      if (result.error) setError(result.error.message ?? "Не удалось создать аккаунт");
+      if (result.error) setError(translateAuthError(result.error.message));
       else setSent(true);
     } catch {
       setError("Не удалось создать аккаунт. Проверьте соединение и попробуйте ещё раз.");

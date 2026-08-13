@@ -16,13 +16,13 @@ type HeroVisualProps = {
 
 export default function HeroVisual({ compact = false }: HeroVisualProps) {
   return (
-    <div className={`relative mx-auto w-full ${compact ? 'max-w-[390px]' : 'max-w-[min(100%,900px)]'}`}>
+    <div className={`relative mx-auto w-full min-w-0 max-w-[calc(100vw-48px)] ${compact ? '' : 'lg:max-w-[min(100%,900px)]'}`}>
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         style={safariMotionStyle}
-        className="relative z-10 border border-neutral-300 bg-white shadow-[0_18px_46px_rgba(17,24,39,0.08)]"
+        className="relative z-10 overflow-hidden border border-neutral-300 bg-white shadow-[0_18px_46px_rgba(17,24,39,0.08)]"
       >
         <div className="flex items-center justify-between gap-3 border-b border-neutral-200 bg-white px-3 py-2.5 sm:px-4">
           <div className="min-w-0">
@@ -30,7 +30,7 @@ export default function HeroVisual({ compact = false }: HeroVisualProps) {
               Материал / разбор / стресс-тест
             </div>
           </div>
-          <div className="shrink-0 border border-neutral-200 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-neutral-500 sm:text-[10px]">
+          <div className={`${compact ? 'hidden sm:block' : 'block'} shrink-0 border border-neutral-200 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-neutral-500 sm:text-[10px]`}>
             Defense Brief
           </div>
         </div>

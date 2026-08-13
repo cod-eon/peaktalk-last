@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { normalizeOptionalInternalReturnPath } from "@/lib/return-path";
+import { translateAuthError } from "@/lib/authErrors";
 
 function LoginForm() {
   const router = useRouter();
@@ -22,7 +23,7 @@ function LoginForm() {
     setError("");
     try {
       const result = await authClient.signIn.email({ email, password, callbackURL: returnPath });
-      if (result.error) setError(result.error.message ?? "Не удалось войти");
+      if (result.error) setError(translateAuthError(result.error.message));
       else router.replace(returnPath);
     } catch {
       setError("Не удалось войти. Проверьте соединение и попробуйте ещё раз.");

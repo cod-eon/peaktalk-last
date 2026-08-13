@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { translateAuthError } from "@/lib/authErrors";
 
 function ResetPasswordForm() {
   const token = useSearchParams().get("token") ?? "";
@@ -19,7 +20,7 @@ function ResetPasswordForm() {
     setError("");
     try {
       const result = await authClient.resetPassword({ newPassword: password, token });
-      if (result.error) setError(result.error.message ?? "Ссылка недействительна или истекла");
+      if (result.error) setError(translateAuthError(result.error.message));
       else setDone(true);
     } catch {
       setError("Не удалось изменить пароль. Попробуйте ещё раз.");

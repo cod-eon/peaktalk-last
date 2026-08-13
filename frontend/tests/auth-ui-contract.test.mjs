@@ -24,6 +24,10 @@ test('credential forms expose labels, autocomplete, busy and alert states', () =
 });
 
 test('auth state surfaces have status semantics and safe recovery actions', () => {
+  const translations = read('src/lib/authErrors.ts');
+  assert.match(translations, /invalid \(\?:email or \)\?password/);
+  assert.match(translations, /Неверный email или пароль/);
+  for (const path of authPages) assert.match(read(path), /translateAuthError/);
   assert.match(read('src/app/loading.tsx'), /role="status"/);
   assert.match(read('src/app/(auth)/error.tsx'), /role="alert"/);
   assert.match(read('src/app/unauthorized.tsx'), /href="\/login"/);

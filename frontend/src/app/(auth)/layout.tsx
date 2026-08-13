@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="auth-grid" aria-hidden="true" />
       <header className="auth-header">
         <div className="auth-container">
-          <Link href="/" className="auth-brand" aria-label="PeakTalk — на главную">
+          <Link href="/" className="auth-brand" aria-label="PeakTalk. На главную">
             <Image src="/logo_svg.svg" alt="" width={44} height={44} priority />
             <span className="brand-wordmark">PeakTalk</span>
           </Link>

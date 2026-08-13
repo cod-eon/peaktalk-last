@@ -65,9 +65,9 @@ export type AuthResponse = {
 };
 
 export function formatAdminDate(value: string | null) {
-  if (!value) return '—';
+  if (!value) return 'Нет данных';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return 'Нет данных';
   return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 

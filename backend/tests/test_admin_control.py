@@ -58,6 +58,32 @@ async def test_admin_control_admin_can_list_without_exposing_session_tokens(clie
     assert "token" not in response.text
 
 
+async def test_admin_control_user_detail_loads_user_sessions_and_redacts_tokens(client, monkeypatch):
+    async def admin_profile(_cookie):
+        return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")
+
+    async def fake_admin_request(cookie, path, **kwargs):
+        assert cookie == "session=admin"
+        if path == "admin/get-user":
+            assert kwargs["method"] == "GET"
+            assert kwargs["query"] == {"id": "ba-user-1"}
+            return httpx.Response(200, json={"user": {"id": "ba-user-1", "name": "User", "email": "user@example.com", "emailVerified": True, "role": "user", "createdAt": "2026-08-13T09:00:00Z"}})
+        assert path == "admin/list-user-sessions"
+        assert kwargs["method"] == "POST"
+        assert kwargs["body"] == {"userId": "ba-user-1"}
+        return httpx.Response(200, json={"sessions": [{"id": "session-1", "token": "session-secret", "userId": "ba-user-1", "createdAt": "2026-08-13T10:00:00Z", "updatedAt": "2026-08-13T10:30:00Z", "expiresAt": "2026-08-14T10:00:00Z", "userAgent": "test-browser"}]})
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "better_auth_admin_request", fake_admin_request)
+    response = await client.get("/admin/control/users/ba-user-1", headers={"cookie": "session=admin"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["email"] == "user@example.com"
+    assert body["sessions"][0]["id"] == "session-1"
+    assert "token" not in response.text
+
+
 async def test_admin_control_list_forwards_sort_contract(client, monkeypatch):
     async def admin_profile(_cookie):
         return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")

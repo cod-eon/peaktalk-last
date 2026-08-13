@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { translateAuthError } from "@/lib/authErrors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
     try {
       const result = await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
       if (result.error) {
-        setError("Не удалось отправить письмо. Попробуйте ещё раз.");
+        setError(translateAuthError(result.error.message));
       } else {
         setSent(true);
       }
@@ -33,7 +34,7 @@ export default function ForgotPasswordPage() {
       <div className="auth-heading">
         <p className="auth-kicker">Восстановление</p>
         <h2>Забыли пароль?</h2>
-        <p>{sent ? "Если аккаунт существует, письмо уже отправлено." : "Укажите email — мы отправим ограниченную по времени ссылку."}</p>
+        <p>{sent ? "Если аккаунт существует, письмо уже отправлено." : "Укажите email. Мы отправим ссылку с ограниченным сроком действия."}</p>
       </div>
       {!sent && (
         <>

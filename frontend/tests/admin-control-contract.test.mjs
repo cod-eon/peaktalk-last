@@ -8,6 +8,8 @@ test('admin pages use the PeakTalk control API and expose action states', () => 
   const layout = read('src/app/admin/layout.tsx');
   const overview = read('src/app/admin/page.tsx');
   const users = read('src/app/admin/users/page.tsx');
+  const userPage = read('src/app/admin/users/[userId]/page.tsx');
+  const actions = read('src/components/admin/AdminActionDialog.tsx');
   const auth = read('src/app/admin/auth/page.tsx');
   const primitives = read('src/components/admin/AdminPrimitives.tsx');
   assert.match(layout, /\/admin\/control\/overview/);
@@ -15,10 +17,13 @@ test('admin pages use the PeakTalk control API and expose action states', () => 
   assert.match(users, /\/admin\/control\/users/);
   assert.match(auth, /\/admin\/control\/auth/);
   assert.doesNotMatch(overview, /fake|mock|placeholder/i);
-  assert.match(users, /role="dialog"/);
-  assert.match(users, /confirm: true/);
+  assert.match(users, /href={`\/admin\/users\/\$\{encodeURIComponent\(user.id\)\}`}/);
+  assert.match(userPage, /useParams/);
+  assert.match(userPage, /\/admin\/control\/users\//);
+  assert.match(actions, /confirm: true/);
+  assert.match(actions, /mutation\.isPending/);
   assert.match(primitives, /Повторить/);
-  assert.match(users, /aria-label={`Открыть карточку/);
+  assert.doesNotMatch(users, /UserDetailCard|selectedId|Карточка пользователя/);
 });
 
 test('admin font contract is deterministic and self-hosted', () => {
@@ -26,6 +31,6 @@ test('admin font contract is deterministic and self-hosted', () => {
   assert.match(css, /url\("\/fonts\/ibm-plex\.woff2"\)/);
   assert.match(css, /url\("\/fonts\/unbounded\.woff2"\)/);
   assert.match(css, /url\("\/fonts\/jetbrains-mono\.woff2"\)/);
-  assert.match(css, /--font-inter: "IBM Plex Sans"/);
-  assert.doesNotMatch(css, /--font-inter:.*Arial/);
+  assert.match(css, /--font-body: "IBM Plex Sans"/);
+  assert.doesNotMatch(css, /--font-body:.*Arial/);
 });
