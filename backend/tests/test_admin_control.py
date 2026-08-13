@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import httpx
+from sqlalchemy import select
+
+from app.main import app
+from app.main import _safe_request_path
+from app.models.admin_audit import AdminAuditEvent
+from app.models.user import User
+from app.routers import admin as admin_router
+from app.routers import admin_control
+from app.services.better_auth import BetterAuthError, BetterAuthProfile
+
+
+def test_admin_request_logs_redact_user_and_session_identifiers():
+    assert _safe_request_path("/admin/control/users/user-secret") == "/admin/control/users/:user"
+    assert _safe_request_path("/admin/control/users/user-secret/sessions/session-secret/revoke") == "/admin/control/users/:user/sessions/:session/revoke"
+
+
+async def test_admin_control_signed_out_is_rejected(client):
+    response = await client.get("/admin/control/users")
+    assert response.status_code == 401
+
+
+async def test_admin_control_ordinary_user_is_rejected(client, monkeypatch):
+    async def ordinary_profile(_cookie):
+        return BetterAuthProfile(subject="ordinary", email="ordinary@example.com", role="user")
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", ordinary_profile)
+    response = await client.get("/admin/control/users", headers={"cookie": "session=ordinary"})
+    assert response.status_code == 403
+
+
+async def test_admin_control_forged_session_is_rejected(client, monkeypatch):
+    async def forged_profile(_cookie):
+        raise BetterAuthError("invalid_session")
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", forged_profile)
+    response = await client.get("/admin/control/users", headers={"cookie": "session=forged"})
+    assert response.status_code == 401
+
+
+async def test_admin_control_admin_can_list_without_exposing_session_tokens(client, monkeypatch):
+    async def admin_profile(_cookie):
+        return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")
+
+    async def fake_admin_request(cookie, path, **kwargs):
+        assert cookie == "session=admin"
+        assert path == "admin/list-users"
+        return httpx.Response(200, json={"users": [{"id": "ba-user-1", "name": "User", "email": "user@example.com", "emailVerified": True, "role": "user"}], "total": 1})
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "better_auth_admin_request", fake_admin_request)
+    response = await client.get("/admin/control/users", headers={"cookie": "session=admin"})
+    assert response.status_code == 200
+    assert response.json()["items"][0]["id"] == "ba-user-1"
+    assert "token" not in response.text
+
+
+async def test_rejected_admin_action_is_audited(client, db_session, monkeypatch):
+    async def admin_profile(_cookie):
+        return BetterAuthProfile(subject="admin-subject", email="admin@example.com", role="admin")
+
+    monkeypatch.setattr(admin_router, "get_better_auth_profile", admin_profile)
+    monkeypatch.setattr(admin_control, "get_better_auth_profile", admin_profile)
+    response = await client.post(
+        "/admin/control/users/ba-user-1/role",
+        headers={"cookie": "session=admin"},
+        json={"role": "admin", "confirm": False},
+    )
+    assert response.status_code == 400
+
+    event = await db_session.scalar(
+        select(AdminAuditEvent)
+        .where(AdminAuditEvent.action == "role_change")
+        .order_by(AdminAuditEvent.created_at.desc())
+    )
+    assert event is not None
+    assert event.outcome == "rejected"
+    assert event.event_metadata == {"status": 400}

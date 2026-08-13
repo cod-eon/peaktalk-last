@@ -1,12 +1,9 @@
-"""Admin panel API for PeakTalk.
+"""Legacy PeakTalk admin APIs.
 
-All endpoints require the authenticated user's email to be present in the
-``admin_emails`` setting (comma-separated list). If the email is absent the
-request is rejected with HTTP 403.
-
-Set-plan endpoint is intentionally restricted: it only works in non-production
-environments or when ``payments_enabled`` is False so it cannot be used to
-bypass billing in live traffic.
+The private control room uses Better Auth Admin role checks from
+``admin_control.py``. These legacy reporting endpoints remain available behind
+the same server-side guard, while legacy maintenance, plan mutation, and guest
+session deletion actions are explicitly disabled.
 """
 
 from __future__ import annotations
@@ -16,7 +13,7 @@ import math
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import delete, func, select, distinct, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,6 +54,7 @@ from app.schemas.admin import (
     UtmSourceRow,
 )
 from app.services.app_settings import MAINTENANCE_MODE_KEY, get_maintenance_mode, set_maintenance_mode
+from app.services.better_auth import BetterAuthError, get_better_auth_profile
 
 logger = logging.getLogger("peaktalk.admin")
 
@@ -70,15 +68,17 @@ _PAID_PLANS = (PlanType.personal, PlanType.pro, PlanType.team, PlanType.starter)
 # ---------------------------------------------------------------------------
 
 
-async def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    """Dependency that ensures the caller is in the admin email list."""
-    allowed = settings.get_admin_emails()
-    if not allowed or current_user.email not in allowed:
-        logger.warning(
-            "admin: unauthorised access attempt by user_id=%s email=%s",
-            current_user.id,
-            current_user.email,
-        )
+async def require_admin(request: Request, current_user: User = Depends(get_current_user)) -> User:
+    """Server-side Better Auth Admin role guard for every admin endpoint."""
+    try:
+        profile = await get_better_auth_profile(request.headers.get("cookie"))
+    except BetterAuthError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"detail": "Authentication required.", "code": exc.code},
+        ) from exc
+    roles = {item.strip().lower() for item in (profile.role or "").split(",") if item.strip()}
+    if profile.banned or "admin" not in roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"detail": "Доступ запрещён.", "code": "admin_required"},
@@ -238,6 +238,7 @@ async def update_maintenance(
     _admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> MaintenanceStatusResponse:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"detail": "This administrative action is disabled.", "code": "admin_action_disabled"})
     setting = await set_maintenance_mode(db, body.enabled)
     logger.warning("admin: maintenance mode changed enabled=%s by=%s", body.enabled, _admin.email)
     return MaintenanceStatusResponse(enabled=body.enabled, updated_at=setting.updated_at)
@@ -502,6 +503,8 @@ async def set_user_plan(
     Restricted to non-production environments or when payments_enabled is False.
     """
 
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"detail": "This administrative action is disabled.", "code": "admin_action_disabled"})
+
     # Guard: disallow in production with payments enabled
     if settings.app_env == "production" and settings.payments_enabled:
         raise HTTPException(
@@ -726,6 +729,7 @@ async def delete_expired_guest_sessions(
 
     Safe to call repeatedly — idempotent. Returns the number of rows deleted.
     """
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"detail": "This administrative action is disabled.", "code": "admin_action_disabled"})
     now = datetime.now(timezone.utc)
     result = await db.execute(
         delete(GuestSession)

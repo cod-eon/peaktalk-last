@@ -1,538 +1,103 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Activity,
-  AlertCircle,
-  FileText,
-  Loader2,
-  Search,
-  Users,
-  Wallet,
-  X,
-  Zap,
-} from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { AlertCircle, Ban, Clock3, Eye, KeyRound, Loader2, Search, Shield, ShieldOff, UserRound, X } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import {
-  formatAdminCurrency,
-  formatAdminDate,
-} from '@/lib/admin';
-import {
-  AdminEmptyState,
-  AdminPageHeader,
-  AdminPagination,
-  AdminPanel,
-  AdminPlanBadge,
-  AdminSubscriptionBadge,
-} from '@/components/admin/AdminPrimitives';
-import type {
-  AdminPlanId,
-  AdminUserDetail,
-  AdminUsersResponse,
-  SetPlanPayload,
-} from '@/types/admin';
+import { AdminEmptyState, AdminPageHeader, AdminPagination, AdminPanel } from '@/components/admin/AdminPrimitives';
 
-const PLAN_OPTIONS: Array<{
-  id: Exclude<AdminPlanId, 'per_session'>;
-  label: string;
-  description: string;
-  needsDays: boolean;
-}> = [
-  { id: 'free', label: 'Free', description: 'Базовый бесплатный доступ.', needsDays: false },
-  { id: 'starter', label: 'Starter', description: 'Legacy-план. Сохраняем его явно, чтобы не даунгрейдить старых пользователей в free.', needsDays: false },
-  { id: 'personal', label: 'Personal', description: '10 сессий в месяц и PDF.', needsDays: true },
-  { id: 'pro', label: 'Pro', description: 'Безлимит, аналитика, приоритет.', needsDays: true },
-  { id: 'team', label: 'Team', description: 'Командный тариф и общий контур.', needsDays: true },
-];
+type ControlUser = {
+  id: string;
+  name: string;
+  email: string;
+  email_verified: boolean;
+  role: string | null;
+  banned: boolean;
+  ban_reason: string | null;
+  ban_expires: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+type Session = { id: string; created_at: string | null; expires_at: string | null; user_agent: string | null };
+type UserDetail = ControlUser & { sessions: Session[] };
+type UsersResponse = { items: ControlUser[]; total: number; page: number; per_page: number; pages: number };
+type AuditResponse = { items: Array<{ actor: string; target: string | null; action: string; outcome: string; timestamp: string; metadata: Record<string, unknown> }>; total: number; pages: number };
+type ActionDraft = { kind: 'role' | 'ban' | 'unban'; user: ControlUser; role?: string };
 
-function SetPlanModal({
-  user,
-  onClose,
-  onSuccess,
-}: {
-  user: AdminUserDetail;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const initialPlan = PLAN_OPTIONS.some((option) => option.id === user.plan)
-    ? (user.plan as Exclude<AdminPlanId, 'per_session'>)
-    : 'free';
-  const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [periodDays, setPeriodDays] = useState(30);
-  const [loading, setLoading] = useState(false);
+function formatDate(value: string | null) {
+  if (!value) return '—';
+  try { return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)); } catch { return value; }
+}
 
-  const optionMeta = PLAN_OPTIONS.find((option) => option.id === selectedPlan) ?? PLAN_OPTIONS[0];
+function roleLabel(role: string | null) {
+  return role?.split(',').map((item) => item.trim()).filter(Boolean).join(', ') || 'user';
+}
 
-  const handleApply = async () => {
-    setLoading(true);
-    try {
-      const payload: SetPlanPayload = {
-        plan: selectedPlan,
-        period_days: optionMeta.needsDays ? periodDays : 30,
-      };
-      await api.post(`/admin/users/${user.id}/set-plan`, payload);
-      toast.success(`План пользователя изменён на ${optionMeta.label}.`);
-      onSuccess();
-      onClose();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось изменить план.';
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function ActionDialog({ draft, onClose, onDone }: { draft: ActionDraft; onClose: () => void; onDone: () => void }) {
+  const [reason, setReason] = useState('');
+  const [role, setRole] = useState(draft.role ?? (draft.user.role === 'admin' ? 'user' : 'admin'));
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (draft.kind === 'role') return api.post(`/admin/control/users/${draft.user.id}/role`, { role, confirm: true });
+      return api.post(`/admin/control/users/${draft.user.id}/${draft.kind}`, { reason: reason.trim(), confirm: true });
+    },
+    onSuccess: () => { toast.success('Изменение применено.'); onDone(); onClose(); },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Не удалось применить изменение.'),
+  });
+  const needsReason = draft.kind !== 'role';
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={(event) => event.target === event.currentTarget && onClose()}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-
-      <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 14, scale: 0.98 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-xl border border-black/10 bg-[#f5f1ea] shadow-[0_30px_80px_rgba(17,24,39,0.22)]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="border-b border-black/8 px-5 py-5 sm:px-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-neutral-500">Access Control</p>
-              <h2 className="mt-2 font-syne text-[28px] leading-[0.95] tracking-[-0.05em] text-neutral-950">
-                Изменить план пользователя
-              </h2>
-              <p className="mt-2 text-sm text-neutral-600">{user.email}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center border border-black/10 bg-white text-neutral-700 transition-colors hover:bg-neutral-100"
-              aria-label="Закрыть"
-            >
-              <X size={16} />
-            </button>
-          </div>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/45 p-4" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section role="dialog" aria-modal="true" aria-labelledby="admin-action-title" className="w-full max-w-lg border border-black/10 bg-[#f5f1ea] p-5 shadow-2xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div><p className="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500">Подтверждение</p><h2 id="admin-action-title" className="mt-2 font-syne text-3xl tracking-[-0.05em]">{draft.kind === 'role' ? 'Сменить роль' : draft.kind === 'ban' ? 'Заблокировать пользователя' : 'Снять блокировку'}</h2></div>
+          <button type="button" onClick={onClose} aria-label="Закрыть диалог" className="inline-flex h-10 w-10 items-center justify-center border border-black/10 bg-white"><X size={16} /></button>
         </div>
-
-        <div className="grid gap-4 px-5 py-5 sm:px-6">
-          <div className="grid gap-3">
-            {PLAN_OPTIONS.map((option) => {
-              const selected = selectedPlan === option.id;
-
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setSelectedPlan(option.id)}
-                  className={`grid gap-1 border px-4 py-4 text-left transition-colors ${
-                    selected
-                      ? 'border-neutral-950 bg-neutral-950 text-white'
-                      : 'border-black/10 bg-white text-neutral-950 hover:bg-neutral-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm font-semibold uppercase tracking-[0.18em]">{option.label}</span>
-                    <span className={`h-3 w-3 rounded-full ${selected ? 'bg-[var(--accent-primary)]' : 'bg-neutral-300'}`} />
-                  </div>
-                  <p className={`text-sm leading-6 ${selected ? 'text-white/74' : 'text-neutral-600'}`}>{option.description}</p>
-                </button>
-              );
-            })}
-          </div>
-
-          {optionMeta.needsDays ? (
-            <div className="border border-black/8 bg-white px-4 py-4">
-              <label htmlFor="period-days" className="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500">
-                Длительность доступа
-              </label>
-              <div className="mt-3 flex items-center gap-3">
-                <input
-                  id="period-days"
-                  type="number"
-                  min={1}
-                  max={3650}
-                  value={periodDays}
-                  onChange={(event) => setPeriodDays(Math.max(1, Number.parseInt(event.target.value, 10) || 1))}
-                  className="w-32 border border-black/10 bg-[#f7f4ee] px-3 py-3 text-sm text-neutral-950 outline-none transition-colors focus:border-neutral-950"
-                />
-                <p className="text-sm text-neutral-600">Период в днях. Для free это поле не используется.</p>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 border-t border-black/8 px-5 py-5 sm:px-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 items-center justify-center border border-black/10 bg-white px-4 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100"
-          >
-            Отмена
-          </button>
-          <button
-            type="button"
-            onClick={handleApply}
-            disabled={loading}
-            className="inline-flex min-h-11 items-center justify-center gap-2 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Zap size={15} />}
-            Сохранить план
-          </button>
-        </div>
-      </motion.div>
+        <p className="mt-4 break-words text-sm text-neutral-700">{draft.user.email}</p>
+        {draft.kind === 'role' ? <label className="mt-6 block text-sm font-semibold">Новая роль<select value={role} onChange={(event) => setRole(event.target.value)} className="mt-2 block min-h-11 w-full border border-black/10 bg-white px-3"><option value="user">user</option><option value="admin">admin</option></select></label> : <label className="mt-6 block text-sm font-semibold">Причина<textarea autoFocus value={reason} onChange={(event) => setReason(event.target.value)} className="mt-2 min-h-28 w-full resize-y border border-black/10 bg-white p-3 font-normal outline-none focus:border-neutral-950" maxLength={500} placeholder="Кратко опишите основание" /></label>}
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" onClick={onClose} className="min-h-11 border border-black/10 bg-white px-4 text-sm font-semibold">Отмена</button><button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || (needsReason && !reason.trim())} className="inline-flex min-h-11 items-center justify-center gap-2 border border-neutral-950 bg-neutral-950 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{mutation.isPending && <Loader2 size={15} className="animate-spin" />}Подтвердить</button></div>
+      </section>
     </div>
   );
 }
 
-function UserDetailDrawer({
-  userId,
-  onClose,
-  onChangePlan,
-}: {
-  userId: string;
-  onClose: () => void;
-  onChangePlan: (user: AdminUserDetail) => void;
-}) {
-  const { data, isLoading, isError, error } = useQuery<AdminUserDetail>({
-    queryKey: ['admin-user-detail', userId],
-    queryFn: () => api.get(`/admin/users/${userId}`),
-    enabled: Boolean(userId),
-    retry: 1,
-    staleTime: 30_000,
-  });
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      <motion.aside
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        className="fixed right-0 top-0 z-[65] flex h-full w-full max-w-xl flex-col border-l border-black/10 bg-[#f5f1ea] shadow-[0_30px_80px_rgba(17,24,39,0.18)]"
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-black/8 px-5 py-5 sm:px-6">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-neutral-500">Client Profile</p>
-            <h3 className="mt-2 font-syne text-[30px] leading-[0.95] tracking-[-0.05em] text-neutral-950">
-              Карточка пользователя
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center border border-black/10 bg-white text-neutral-700 transition-colors hover:bg-neutral-100"
-            aria-label="Закрыть"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 size={22} className="animate-spin text-neutral-700" />
-            </div>
-          ) : null}
-
-          {isError ? (
-            <div className="flex items-start gap-3 border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
-              <AlertCircle size={16} className="mt-0.5 shrink-0" />
-              <p>{error instanceof Error ? error.message : 'Не удалось загрузить профиль.'}</p>
-            </div>
-          ) : null}
-
-          {data ? (
-            <div className="grid gap-4">
-              <div className="border border-black/10 bg-white px-4 py-4">
-                <p className="break-all text-lg font-semibold tracking-[-0.03em] text-neutral-950">{data.email}</p>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <AdminPlanBadge plan={data.plan} />
-                  <AdminSubscriptionBadge status={data.subscription_status} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Всего симуляций', value: data.simulations_total.toLocaleString('ru-RU'), icon: Activity },
-                  { label: 'В текущем цикле', value: data.simulations_used.toLocaleString('ru-RU'), icon: Zap },
-                  { label: 'Документы', value: data.documents_uploaded.toLocaleString('ru-RU'), icon: FileText },
-                  { label: 'Оплаты', value: data.payments_count.toLocaleString('ru-RU'), icon: Wallet },
-                ].map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div key={item.label} className="border border-black/8 bg-[rgba(17,24,39,0.02)] px-4 py-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500">{item.label}</p>
-                        <Icon size={14} className="text-neutral-500" />
-                      </div>
-                      <div className="mt-3 text-[26px] font-semibold tracking-[-0.04em] text-neutral-950">{item.value}</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <AdminPanel title="Billing" subtitle="Данные подписки и суммарный денежный след.">
-                <div className="grid gap-3 px-5 py-5">
-                  {[
-                    { label: 'Период старт', value: formatAdminDate(data.period_start) },
-                    { label: 'Период конец', value: formatAdminDate(data.period_end) },
-                    { label: 'Создание подписки', value: formatAdminDate(data.subscription_created_at) },
-                    { label: 'Платежей на сумму', value: formatAdminCurrency(data.payments_total_rub) },
-                    { label: 'Регистрация', value: formatAdminDate(data.created_at) },
-                    { label: 'ID', value: data.id },
-                  ].map((item) => (
-                    <div key={item.label} className="border border-black/8 bg-white px-4 py-3">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500">{item.label}</p>
-                      <p className="mt-2 break-all text-sm leading-6 text-neutral-900">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </AdminPanel>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="border-t border-black/8 px-5 py-5 sm:px-6">
-          <button
-            type="button"
-            onClick={() => data && onChangePlan(data)}
-            disabled={!data}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-neutral-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Zap size={15} />
-            Изменить план
-          </button>
-        </div>
-      </motion.aside>
-    </>
-  );
+function UserDetailCard({ userId, onAction }: { userId: string; onAction: (draft: ActionDraft) => void }) {
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ['admin-control-user', userId], queryFn: () => api.get(`/admin/control/users/${userId}`) as Promise<UserDetail>, retry: 1 });
+  const revoke = useMutation({ mutationFn: (path: string) => api.post(path), onSuccess: () => { toast.success('Сессия отозвана.'); void queryClient.invalidateQueries({ queryKey: ['admin-control-user', userId] }); }, onError: (error) => toast.error(error instanceof Error ? error.message : 'Не удалось отозвать сессию.') });
+  if (query.isLoading) return <AdminPanel title="Карточка пользователя"><div className="flex min-h-48 items-center justify-center" aria-live="polite"><Loader2 className="animate-spin" /></div></AdminPanel>;
+  if (query.isError || !query.data) return <AdminPanel title="Карточка пользователя"><div className="flex items-center gap-3 px-6 py-12 text-sm text-red-700"><AlertCircle size={18} />Не удалось загрузить карточку.</div></AdminPanel>;
+  const user = query.data;
+  return <AdminPanel title="Карточка пользователя" subtitle="Действия выполняются сервером через Better Auth Admin plugin." aside={<span className="font-mono text-[11px] text-neutral-500">{user.id}</span>}>
+    <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]">
+      <div className="grid gap-4 sm:grid-cols-2"><div><p className="text-xs uppercase tracking-[0.16em] text-neutral-500">Email</p><p className="mt-1 break-all text-sm font-semibold">{user.email}</p></div><div><p className="text-xs uppercase tracking-[0.16em] text-neutral-500">Статус</p><p className="mt-1 text-sm">{user.email_verified ? 'Email подтверждён' : 'Email не подтверждён'}</p></div><div><p className="text-xs uppercase tracking-[0.16em] text-neutral-500">Роль</p><p className="mt-1 text-sm font-semibold">{roleLabel(user.role)}</p></div><div><p className="text-xs uppercase tracking-[0.16em] text-neutral-500">Блокировка</p><p className={`mt-1 text-sm font-semibold ${user.banned ? 'text-red-700' : 'text-emerald-700'}`}>{user.banned ? 'Заблокирован' : 'Активен'}</p>{user.ban_reason && <p className="mt-1 break-words text-xs text-neutral-500">{user.ban_reason}</p>}</div></div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1"><button type="button" onClick={() => onAction({ kind: 'role', user })} className="inline-flex min-h-11 items-center justify-center gap-2 border border-black/10 bg-white px-3 text-sm font-semibold hover:bg-neutral-100"><Shield size={15} />Сменить роль</button><button type="button" onClick={() => onAction({ kind: user.banned ? 'unban' : 'ban', user })} className="inline-flex min-h-11 items-center justify-center gap-2 border border-black/10 bg-white px-3 text-sm font-semibold hover:bg-neutral-100">{user.banned ? <ShieldOff size={15} /> : <Ban size={15} />}{user.banned ? 'Снять бан' : 'Заблокировать'}</button><button type="button" onClick={() => { if (window.confirm('Отозвать все активные сессии пользователя?')) revoke.mutate(`/admin/control/users/${user.id}/sessions/revoke-all`); }} disabled={revoke.isPending || user.sessions.length === 0} className="inline-flex min-h-11 items-center justify-center gap-2 border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-800 disabled:opacity-50"><KeyRound size={15} />Отозвать все сессии</button></div>
+      <div className="lg:col-span-2"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">Активные сессии ({user.sessions.length})</h3>{user.sessions.length === 0 && <span className="text-xs text-neutral-500">Нет активных сессий</span>}</div><div className="mt-3 grid gap-2">{user.sessions.map((session) => <div key={session.id} className="flex flex-col gap-3 border border-black/10 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="break-all font-mono text-xs text-neutral-700">{session.id}</p><p className="mt-1 text-xs text-neutral-500">{session.user_agent || 'User-Agent не указан'} · до {formatDate(session.expires_at)}</p></div><button type="button" onClick={() => { if (window.confirm('Отозвать эту сессию?')) revoke.mutate(`/admin/control/users/${user.id}/sessions/${session.id}/revoke`); }} className="min-h-10 shrink-0 border border-black/10 px-3 text-xs font-semibold hover:bg-neutral-100">Отозвать</button></div>)}</div></div>
+    </div>
+  </AdminPanel>;
 }
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [editingUser, setEditingUser] = useState<AdminUserDetail | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setDebouncedSearch(value.trim());
-      setPage(1);
-    }, 350);
-  };
-
-  const { data, isLoading, isError, error } = useQuery<AdminUsersResponse>({
-    queryKey: ['admin-users', page, debouncedSearch],
-    queryFn: () =>
-      api.get(
-        `/admin/users?page=${page}&per_page=20${
-          debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ''
-        }`,
-      ),
-    staleTime: 30_000,
-    retry: 1,
-  });
-
-  const pageStats = useMemo(() => {
-    const items = data?.items ?? [];
-    const activeOnPage = items.filter((item) => item.subscription_status === 'active').length;
-    const simulationsOnPage = items.reduce((sum, item) => sum + item.simulations_total, 0);
-    const documentsOnPage = items.reduce((sum, item) => sum + item.documents_uploaded, 0);
-
-    return { activeOnPage, simulationsOnPage, documentsOnPage };
-  }, [data?.items]);
-
-  const handlePlanSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-    queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-    if (editingUser) {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', editingUser.id] });
-    }
-  };
-
-  return (
-    <div className="space-y-6 pb-10">
-      <AdminPageHeader
-        eyebrow="Operations / Users"
-        title="Реальная база пользователей, а не декоративный CRM."
-        description="Поиск теперь работает по email на backend, карточка пользователя берётся из detail endpoint, а ручное изменение тарифов ограничено реальными планами продукта."
-        index="02"
-      />
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            label: 'Найдено пользователей',
-            value: (data?.total ?? 0).toLocaleString('ru-RU'),
-            helper: debouncedSearch ? 'Количество после применения фильтра по email.' : 'Полный объём в выдаче /admin/users.',
-          },
-          {
-            label: 'Активны на странице',
-            value: pageStats.activeOnPage.toLocaleString('ru-RU'),
-            helper: 'Подписки со статусом active на текущей странице списка.',
-          },
-          {
-            label: 'Симуляций на странице',
-            value: pageStats.simulationsOnPage.toLocaleString('ru-RU'),
-            helper: `Документов на странице: ${pageStats.documentsOnPage.toLocaleString('ru-RU')}.`,
-          },
-        ].map((item) => (
-          <div key={item.label} className="border border-black/10 bg-white px-5 py-5 shadow-[0_18px_60px_rgba(17,24,39,0.05)]">
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-neutral-500">{item.label}</p>
-            <div className="mt-3 text-[30px] font-semibold tracking-[-0.04em] text-neutral-950">{item.value}</div>
-            <p className="mt-2 text-sm leading-6 text-neutral-600">{item.helper}</p>
-          </div>
-        ))}
-      </div>
-
-      <AdminPanel
-        title="Directory"
-        subtitle="Клик по строке открывает детальную карточку. Поиск работает по email и больше не делает вид, что фильтрует."
-        aside={
-          <div className="relative w-full max-w-md">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-            <input
-              type="text"
-              placeholder="Поиск по email"
-              value={search}
-              onChange={(event) => handleSearchChange(event.target.value)}
-              className="min-h-11 w-full border border-black/10 bg-[#f7f4ee] pl-10 pr-10 text-sm text-neutral-950 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-950"
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => handleSearchChange('')}
-                className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center text-neutral-500"
-                aria-label="Сбросить поиск"
-              >
-                <X size={14} />
-              </button>
-            ) : null}
-          </div>
-        }
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 size={24} className="animate-spin text-neutral-700" />
-          </div>
-        ) : null}
-
-        {isError ? (
-          <div className="m-5 flex items-start gap-3 border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 sm:m-6">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" />
-            <p>{error instanceof Error ? error.message : 'Не удалось загрузить пользователей.'}</p>
-          </div>
-        ) : null}
-
-        {data && !isLoading ? (
-          <>
-            {data.items.length === 0 ? (
-              <AdminEmptyState
-                icon={Users}
-                title="Ничего не найдено"
-                description="Фильтр не вернул ни одного пользователя. Проверьте email или очистите поиск."
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px]">
-                  <thead>
-                    <tr className="border-b border-black/8 bg-[rgba(17,24,39,0.03)]">
-                      {['Клиент', 'План', 'Статус', 'Подписка до', 'Всего симуляций', 'Документы', 'Регистрация'].map((column) => (
-                        <th
-                          key={column}
-                          className="px-5 py-4 text-left font-mono text-[10px] uppercase tracking-[0.22em] text-neutral-500 sm:px-6"
-                        >
-                          {column}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.items.map((user) => (
-                      <tr
-                        key={user.id}
-                        onClick={() => setSelectedUserId(user.id)}
-                        className="cursor-pointer border-b border-black/6 bg-white transition-colors hover:bg-[rgba(17,24,39,0.03)]"
-                      >
-                        <td className="px-5 py-4 sm:px-6">
-                          <div className="max-w-[260px]">
-                            <p className="truncate text-sm font-semibold text-neutral-950">{user.email}</p>
-                            <p className="mt-1 text-xs text-neutral-500">ID: {user.id.slice(0, 8)}…</p>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 sm:px-6">
-                          <AdminPlanBadge plan={user.plan} />
-                        </td>
-                        <td className="px-5 py-4 sm:px-6">
-                          <AdminSubscriptionBadge status={user.subscription_status} />
-                        </td>
-                        <td className="px-5 py-4 text-sm text-neutral-700 sm:px-6">{formatAdminDate(user.period_end)}</td>
-                        <td className="px-5 py-4 text-sm font-semibold text-neutral-950 sm:px-6">
-                          {user.simulations_total.toLocaleString('ru-RU')}
-                        </td>
-                        <td className="px-5 py-4 text-sm text-neutral-700 sm:px-6">
-                          {user.documents_uploaded.toLocaleString('ru-RU')}
-                        </td>
-                        <td className="px-5 py-4 text-sm text-neutral-700 sm:px-6">{formatAdminDate(user.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <AdminPagination
-              page={data.page}
-              pages={data.pages}
-              total={data.total}
-              onPageChange={setPage}
-            />
-          </>
-        ) : null}
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<ActionDraft | null>(null);
+  const query = useQuery({ queryKey: ['admin-control-users', search, page], queryFn: () => api.get(`/admin/control/users?page=${page}&per_page=20${search.trim() ? `&search=${encodeURIComponent(search.trim())}` : ''}`) as Promise<UsersResponse>, retry: 1 });
+  const audit = useQuery({ queryKey: ['admin-control-audit'], queryFn: () => api.get('/admin/control/audit?per_page=8') as Promise<AuditResponse>, retry: 1 });
+  const items = query.data?.items ?? [];
+  return <>
+    <AdminPageHeader eyebrow="Admin / Users" title="Пользователи" description="Закрытый операционный контур: доступ, сессии, блокировки и роли. Данные не покидают PeakTalk." index="02" />
+    <div className="mt-6 grid gap-6">
+      <AdminPanel title="Поиск и список" subtitle="Поиск выполняется по email через Better Auth Admin plugin.">
+        <div className="border-b border-black/8 p-5 sm:p-6"><label htmlFor="admin-user-search" className="sr-only">Поиск по email</label><div className="flex items-center gap-3 border border-black/10 bg-white px-3"><Search size={17} className="text-neutral-500" /><input id="admin-user-search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Поиск по email" className="min-h-12 min-w-0 flex-1 bg-transparent text-sm outline-none" /></div></div>
+        {query.isLoading ? <div className="flex min-h-56 items-center justify-center" aria-live="polite"><Loader2 className="animate-spin" /></div> : query.isError ? <div className="flex min-h-56 items-center justify-center gap-3 px-6 text-sm text-red-700"><AlertCircle size={18} />Не удалось загрузить список. Повторите запрос.</div> : items.length === 0 ? <AdminEmptyState icon={UserRound} title="Пользователи не найдены" description={search ? 'Измените поисковый запрос.' : 'В системе пока нет пользователей.'} /> : <><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left"><thead className="bg-neutral-950 text-xs uppercase tracking-[0.14em] text-white"><tr><th scope="col" className="px-5 py-3 font-medium">Пользователь</th><th scope="col" className="px-5 py-3 font-medium">Email</th><th scope="col" className="px-5 py-3 font-medium">Роль</th><th scope="col" className="px-5 py-3 font-medium">Статус</th><th scope="col" className="px-5 py-3 font-medium">Создан</th><th scope="col" className="px-5 py-3"><span className="sr-only">Открыть</span></th></tr></thead><tbody>{items.map((user) => <tr key={user.id} className="border-b border-black/8 align-top last:border-0"><td className="px-5 py-4"><button type="button" onClick={() => setSelectedId(user.id)} className="text-left text-sm font-semibold underline decoration-black/20 underline-offset-4 hover:decoration-black">{user.name || 'Без имени'}</button></td><td className="max-w-[260px] break-all px-5 py-4 text-sm text-neutral-700">{user.email}</td><td className="px-5 py-4 text-sm">{roleLabel(user.role)}</td><td className="px-5 py-4 text-sm"><span className={user.banned ? 'text-red-700' : 'text-emerald-700'}>{user.banned ? 'Бан' : 'Активен'}</span></td><td className="whitespace-nowrap px-5 py-4 text-xs text-neutral-500">{formatDate(user.created_at)}</td><td className="px-5 py-4"><button type="button" onClick={() => setSelectedId(user.id)} aria-label={`Открыть ${user.email}`} className="inline-flex h-9 w-9 items-center justify-center border border-black/10 bg-white"><Eye size={15} /></button></td></tr>)}</tbody></table></div><AdminPagination page={query.data?.page ?? page} pages={query.data?.pages ?? 1} total={query.data?.total ?? 0} onPageChange={setPage} /></>}
       </AdminPanel>
-
-      <AnimatePresence>
-        {selectedUserId ? (
-          <UserDetailDrawer
-            userId={selectedUserId}
-            onClose={() => setSelectedUserId(null)}
-            onChangePlan={(user) => setEditingUser(user)}
-          />
-        ) : null}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {editingUser ? (
-          <SetPlanModal
-            user={editingUser}
-            onClose={() => setEditingUser(null)}
-            onSuccess={handlePlanSuccess}
-          />
-        ) : null}
-      </AnimatePresence>
+      {selectedId && <UserDetailCard userId={selectedId} onAction={setDraft} />}
+      <AdminPanel title="Audit log" subtitle="Последние административные события; metadata ограничена allowlist и не содержит токенов или секретов.">
+        {audit.isLoading ? <div className="flex min-h-32 items-center justify-center"><Loader2 className="animate-spin" /></div> : audit.isError ? <div className="flex items-center gap-3 px-6 py-10 text-sm text-red-700"><AlertCircle size={18} />Audit log недоступен.</div> : audit.data?.items.length ? <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-neutral-100 text-xs uppercase tracking-[0.14em] text-neutral-600"><tr><th className="px-5 py-3">Время</th><th className="px-5 py-3">Действие</th><th className="px-5 py-3">Target</th><th className="px-5 py-3">Результат</th></tr></thead><tbody>{audit.data.items.map((item, index) => <tr key={`${item.timestamp}-${index}`} className="border-b border-black/8 last:border-0"><td className="whitespace-nowrap px-5 py-3 text-xs text-neutral-500">{formatDate(item.timestamp)}</td><td className="px-5 py-3 font-semibold">{item.action}</td><td className="max-w-[220px] break-all px-5 py-3 font-mono text-xs text-neutral-600">{item.target || '—'}</td><td className={`px-5 py-3 text-xs font-semibold uppercase ${item.outcome === 'success' ? 'text-emerald-700' : 'text-red-700'}`}>{item.outcome}</td></tr>)}</tbody></table></div> : <AdminEmptyState icon={Clock3} title="Событий пока нет" description="Административные действия появятся здесь." />}
+      </AdminPanel>
     </div>
-  );
+    {draft && <ActionDialog draft={draft} onClose={() => setDraft(null)} onDone={() => { void query.refetch(); void audit.refetch(); if (selectedId) void queryClient.invalidateQueries({ queryKey: ['admin-control-user', selectedId] }); }} />}
+  </>;
 }

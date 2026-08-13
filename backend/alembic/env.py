@@ -17,6 +17,7 @@ import app.models.subscription  # noqa: F401
 import app.models.user  # noqa: F401
 import app.models.user_identity  # noqa: F401
 import app.models.notification  # noqa: F401
+import app.models.admin_audit  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

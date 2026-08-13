@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # Better Auth is authoritative in Next.js; FastAPI introspects its database-backed session.
     auth_provider: Literal["better-auth"] = "better-auth"
     better_auth_session_url: str = "http://frontend:3000/api/auth/get-session"
+    better_auth_api_url: str = "http://frontend:3000/api/auth"
     better_auth_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
 
     # Yandex Object Storage
@@ -82,6 +83,7 @@ class Settings(BaseSettings):
 
     # Admin panel — comma-separated list of emails with admin access
     admin_emails: str = ""
+    better_auth_bootstrap_admin_email: str = ""
 
     def get_admin_emails(self) -> list[str]:
         return [e.strip() for e in self.admin_emails.split(",") if e.strip()]

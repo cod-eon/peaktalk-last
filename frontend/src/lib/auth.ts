@@ -1,5 +1,6 @@
 import "server-only";
 import { betterAuth } from "better-auth";
+import { admin, createAccessControl } from "better-auth/plugins";
 import { Pool } from "pg";
 import { sendAuthMail } from "@/lib/mail";
 
@@ -10,6 +11,16 @@ const secret = process.env.BETTER_AUTH_SECRET;
 const baseURL = process.env.BETTER_AUTH_URL;
 if (!databaseUrl || !secret || !baseURL) throw new Error("Better Auth server configuration is incomplete");
 const trustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? baseURL).split(",").map(v => v.trim()).filter(Boolean);
+
+const adminAccess = createAccessControl({
+  user: ["list", "get", "set-role", "ban"],
+  session: ["list", "revoke"],
+} as const);
+const adminRole = adminAccess.newRole({
+  user: ["list", "get", "set-role", "ban"],
+  session: ["list", "revoke"],
+});
+const userRole = adminAccess.newRole({ user: [], session: [] });
 
 export const auth = betterAuth({
   database: new Pool({ connectionString: databaseUrl, max: 10 }),
@@ -48,4 +59,11 @@ export const auth = betterAuth({
     },
   },
   advanced: { useSecureCookies: process.env.NODE_ENV === "production" },
+  plugins: [
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"],
+      roles: { admin: adminRole, user: userRole },
+    }),
+  ],
 });

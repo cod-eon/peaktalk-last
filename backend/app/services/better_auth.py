@@ -21,6 +21,8 @@ class BetterAuthError(ValueError):
 class BetterAuthProfile:
     subject: str
     email: str
+    role: str | None = None
+    banned: bool = False
 
 
 def _origin(value: str) -> str | None:
@@ -89,4 +91,44 @@ async def get_better_auth_profile(cookie_header: str | None) -> BetterAuthProfil
         or user.get("emailVerified") is not True
     ):
         raise BetterAuthError("email_verification_required")
-    return BetterAuthProfile(subject=subject, email=email.strip().lower())
+    role = user.get("role")
+    if isinstance(role, list):
+        role = ",".join(str(item) for item in role)
+    return BetterAuthProfile(
+        subject=subject,
+        email=email.strip().lower(),
+        role=role if isinstance(role, str) else None,
+        banned=user.get("banned") is True,
+    )
+
+
+async def better_auth_admin_request(
+    cookie_header: str | None,
+    path: str,
+    *,
+    method: str = "GET",
+    query: dict[str, str | int | None] | None = None,
+    body: dict | None = None,
+    origin: str | None = None,
+) -> httpx.Response:
+    """Call a Better Auth Admin endpoint without exposing credentials to callers."""
+    if not cookie_header:
+        raise BetterAuthError("missing_session")
+    url = f"{settings.better_auth_api_url.rstrip('/')}/{path.lstrip('/')}"
+    try:
+        async with httpx.AsyncClient(
+            timeout=settings.better_auth_http_timeout_seconds,
+            follow_redirects=False,
+        ) as client:
+            headers = {"cookie": cookie_header, "accept": "application/json"}
+            if origin:
+                headers["origin"] = origin
+            return await client.request(
+                method,
+                url,
+                params={key: value for key, value in (query or {}).items() if value is not None},
+                json=body,
+                headers=headers,
+            )
+    except httpx.HTTPError as exc:
+        raise BetterAuthError("session_service_unavailable") from exc

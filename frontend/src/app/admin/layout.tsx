@@ -7,13 +7,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
-  CreditCard,
-  Globe,
   Home,
   Loader2,
   LogOut,
   Menu,
-  Network,
   Shield,
   Users,
   X,
@@ -24,9 +21,6 @@ import { api } from '@/lib/api';
 const NAV_LINKS = [
   { href: '/admin', label: 'Обзор', icon: BarChart3 },
   { href: '/admin/users', label: 'Пользователи', icon: Users },
-  { href: '/admin/payments', label: 'Платежи', icon: CreditCard },
-  { href: '/admin/utm', label: 'UTM', icon: Globe },
-  { href: '/admin/marketing-plan', label: 'Маркетинг', icon: Network },
 ];
 
 function isActiveRoute(pathname: string, href: string) {
