@@ -42,6 +42,7 @@ test('auth state surfaces have status semantics and safe recovery actions', () =
   for (const route of ['src/app/api/auth/[...all]/route.ts', 'src/app/api/auth/session/route.ts']) {
     assert.match(read(route), /dynamic = "force-dynamic"/);
     assert.match(read(route), /runtime = "nodejs"/);
+    assert.match(read(route), /await import\("@\/lib\/auth"\)/);
   }
 });
 
