@@ -39,6 +39,10 @@ test('auth state surfaces have status semantics and safe recovery actions', () =
   assert.match(mail, /AUTH_SMTP_HOST/);
   assert.match(mail, /transport\.sendMail/);
   assert.match(mail, /RESEND_API_KEY/);
+  for (const route of ['src/app/api/auth/[...all]/route.ts', 'src/app/api/auth/session/route.ts']) {
+    assert.match(read(route), /dynamic = "force-dynamic"/);
+    assert.match(read(route), /runtime = "nodejs"/);
+  }
 });
 
 test('return paths and reduced-motion styling remain explicit security and accessibility contracts', () => {
