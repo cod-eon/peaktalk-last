@@ -130,5 +130,5 @@ def test_prep_card_and_guest_paywall_use_opponent_and_case_language() -> None:
     assert "интервьюера" not in simulation_ai._PREP_CARD_USER_TEMPLATE
 
     assert guest_simulation._PAYWALL_RESPONSE["message"] == "Быстрый pressure scan по материалу завершён"
-    assert guest_simulation._PAYWALL_RESPONSE["cta_primary"]["text"] == "Собрать Defense Brief — 299 ₽"
+    assert guest_simulation._PAYWALL_RESPONSE["cta_primary"]["text"] == "Собрать Defense Brief — 990 ₽"
     assert guest_simulation._PAYWALL_RESPONSE["cta_secondary"]["text"] == "Сохранить материал встречи и вернуться позже"

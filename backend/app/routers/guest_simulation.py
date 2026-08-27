@@ -2,7 +2,7 @@
 
 Allows unauthenticated users to run a short pressure scan against a meeting case.
 After the free guest turns the response carries a paywall payload directing the user
-to either buy a Defense Brief (299 ₽) or register to preserve the meeting material.
+to either buy a Defense Brief (990 ₽) or register to preserve the meeting material.
 """
 import logging
 import uuid
@@ -51,7 +51,7 @@ PERSONA_ALIASES = {
 _PAYWALL_RESPONSE = {
     "message": "Быстрый pressure scan по материалу завершён",
     "cta_primary": {
-        "text": "Собрать Defense Brief — 299 ₽",
+        "text": "Собрать Defense Brief — 990 ₽",
         "action": "pay_per_session",
     },
     "cta_secondary": {

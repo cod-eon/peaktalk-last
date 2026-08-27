@@ -91,7 +91,7 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
       </p>
 
       <div className="flex items-baseline gap-2 mb-1">
-        <span className="text-5xl font-black text-white tracking-tight">299 ₽</span>
+        <span className="text-5xl font-black text-white tracking-tight">990 ₽</span>
         <span className="text-sm text-white/55 font-medium">разово</span>
       </div>
 
@@ -114,7 +114,7 @@ export function PerSessionCard({ highlighted = false, returnPath }: PerSessionCa
         onClick={handleBuy}
         className="mt-auto w-full h-12 bg-white hover:bg-[#FAF8F4] text-[#111827] font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-none"
       >
-        Собрать Defense Brief за 299 ₽
+        Собрать Defense Brief за 990 ₽
         <ArrowRight size={15} />
       </button>
 

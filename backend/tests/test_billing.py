@@ -1,5 +1,7 @@
+import sys
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -8,7 +10,59 @@ from sqlalchemy import select
 
 from app.routers import billing as billing_router
 from app.models.subscription import Payment, PaymentStatus, PlanType, Subscription, SubscriptionStatus
+from app.services import yookassa_service
 from app.models.user import User
+
+
+@pytest.mark.asyncio
+async def test_per_session_plan_catalogue_reports_990_rub(
+    client: AsyncClient,
+) -> None:
+    response = await client.get("/billing/plans")
+
+    assert response.status_code == 200
+    per_session = next(
+        plan for plan in response.json() if plan["id"] == "per_session"
+    )
+    assert per_session["price"] == 990
+    assert per_session["billing"] == "once"
+
+
+@pytest.mark.asyncio
+async def test_per_session_payment_sends_990_rub_to_yookassa(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    class FakePayment:
+        @staticmethod
+        def create(payment_data, idempotency_key):
+            captured["payment_data"] = payment_data
+            captured["idempotency_key"] = idempotency_key
+            return SimpleNamespace(
+                id="yk_per_session_990",
+                confirmation=SimpleNamespace(
+                    confirmation_url="https://yookassa.test/confirm"
+                ),
+            )
+
+    fake_yookassa = ModuleType("yookassa")
+    fake_yookassa.Payment = FakePayment
+    monkeypatch.setitem(sys.modules, "yookassa", fake_yookassa)
+    monkeypatch.setattr(yookassa_service, "_get_configuration", lambda: None)
+
+    result = await yookassa_service.create_payment(
+        user_id="user-990",
+        plan=PlanType.per_session,
+        return_url="https://peaktalk.ru/billing/success",
+        customer_email="buyer@example.com",
+        idempotency_key="price-990-contract",
+    )
+
+    payment_data = captured["payment_data"]
+    assert isinstance(payment_data, dict)
+    assert payment_data["amount"] == {"value": "990.00", "currency": "RUB"}
+    assert payment_data["save_payment_method"] is False
+    assert captured["idempotency_key"] == "price-990-contract"
+    assert result["payment_id"] == "yk_per_session_990"
 
 
 @pytest.mark.asyncio

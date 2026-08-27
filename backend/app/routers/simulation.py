@@ -1086,7 +1086,7 @@ async def get_artifact(
         ),
         paywall=ArtifactPaywall(
             message="Defense Brief доступен в платной сессии",
-            cta="Получить Defense Brief — 299 ₽",
+            cta="Получить Defense Brief — 990 ₽",
             action="pay_per_session",
         ),
     )
