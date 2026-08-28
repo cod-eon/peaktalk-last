@@ -1,158 +1,151 @@
-#!/bin/bash
-# =============================================================================
-# PeakTalk — Deploy Script
-# =============================================================================
-# Runs on the VDS to pull latest code and restart all services.
-# Called by GitHub Actions on every push to main.
-#
-# Flow:
-#   1. git pull
-#   2. Build Docker images (api + worker with cache, frontend no-cache)
-#   3. Remove application containers by compose label (keeps postgres/redis)
-#   4. docker compose up -d  (migrate runs before api via depends_on)
-#   5. Health check
-# =============================================================================
+#!/usr/bin/env bash
 
-set -euo pipefail
+# PeakTalk production deployment entrypoint.
+# The CI runner transfers a verified source checkout plus an immutable image
+# artifact. Production env files and TLS material stay outside Git.
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+set -Eeuo pipefail
 
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
+APP_DIR="${APP_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}"
+COMPOSE_FILE="${COMPOSE_FILE:-${APP_DIR}/docker-compose.yml}"
+HEALTH_HOST="${DEPLOY_HEALTH_HOST:-${HEALTH_HOST:-peaktalk.ru}}"
+DEPLOY_SHA="${DEPLOY_SHA:-}"
+ARTIFACT_DIR="${ARTIFACT_DIR:-${APP_DIR}/.release}"
+BACKUP_COMMAND="${BACKUP_COMMAND:-/usr/local/sbin/peaktalk-db-backup}"
+STATE_DIR="${STATE_DIR:-/var/lib/peaktalk}"
+LOCK_FILE="${LOCK_FILE:-${STATE_DIR}/deploy.lock}"
+CURRENT_STATE="${STATE_DIR}/current-deploy"
+PREVIOUS_STATE="${STATE_DIR}/previous-deploy"
+MANIFEST="${ARTIFACT_DIR}/release-manifest"
+IMAGE_ARCHIVE="${ARTIFACT_DIR}/images.tar.gz"
+IMAGE_CHECKSUMS="${ARTIFACT_DIR}/images.sha256"
 
-echo ""
-echo "=============================================="
-echo "  PeakTalk Deploy  —  $(date '+%Y-%m-%d %H:%M:%S')"
-echo "=============================================="
+log() { printf '[deploy] %s\n' "$*"; }
+fail() { printf '[deploy] ERROR: %s\n' "$*" >&2; exit 1; }
 
-# ── Step 1: Pull latest code ──────────────────────────────────────────────────
-echo ""
-echo "[1/4] Pulling latest code from main..."
-git fetch origin main
-
-CURRENT_HEAD="$(git rev-parse HEAD)"
-REMOTE_HEAD="$(git rev-parse origin/main)"
-CHANGED_FILES="$(git diff --name-only "$CURRENT_HEAD" "$REMOTE_HEAD" || true)"
-
-if [ -z "$CHANGED_FILES" ]; then
-    echo "  Already up to date. Nothing to deploy."
-    exit 0
-fi
-
-echo "  Changed files:"
-printf '    - %s\n' $CHANGED_FILES
-
-need_backend=false
-need_frontend=false
-need_nginx=false
-full_deploy=false
-
-while IFS= read -r file; do
-    [ -z "$file" ] && continue
-    case "$file" in
-        backend/tests/*|docs/*|walkthrough.md)
-            ;;
-        backend/*)
-            need_backend=true
-            ;;
-        frontend/*)
-            need_frontend=true
-            ;;
-        nginx/*)
-            need_nginx=true
-            ;;
-        docker-compose.yml|deploy.sh|.github/workflows/*)
-            full_deploy=true
-            ;;
-        *)
-            ;;
-    esac
-done <<< "$CHANGED_FILES"
-
-if [ "$full_deploy" = true ]; then
-    need_backend=true
-    need_frontend=true
-    need_nginx=true
-fi
-
-git reset --hard "$REMOTE_HEAD"
-
-# ── Step 2: Build Docker images ───────────────────────────────────────────────
-echo ""
-echo "[2/4] Building Docker images..."
-if [ "$need_backend" = true ]; then
-    echo "  Backend changed -> rebuilding api + worker images"
-    docker compose up -d postgres redis
-    docker compose build api worker
-    echo "  Running migrations"
-    docker compose run --rm migrate
-else
-    echo "  Backend unchanged -> skipping backend rebuild"
-fi
-
-if [ "$need_frontend" = true ]; then
-    echo "  Frontend changed -> rebuilding frontend image with cache"
-    docker compose build frontend
-else
-    echo "  Frontend unchanged -> skipping frontend rebuild"
-fi
-
-# ── Step 3: Start / update services ───────────────────────────────────────────
-echo ""
-echo "[3/4] Starting services..."
-services_to_up=()
-
-if [ "$need_backend" = true ]; then
-    services_to_up+=(api worker beat)
-fi
-
-if [ "$need_frontend" = true ]; then
-    services_to_up+=(frontend)
-fi
-
-if [ "$need_nginx" = true ] || [ "$need_backend" = true ] || [ "$need_frontend" = true ]; then
-    services_to_up+=(nginx)
-fi
-
-if [ "${#services_to_up[@]}" -eq 0 ]; then
-    echo "  No runtime-impacting changes detected. Code synced only."
-else
-    echo "  Updating services: ${services_to_up[*]}"
-    docker compose up -d --remove-orphans "${services_to_up[@]}"
-
-    # Force nginx to reconnect to recreated upstream containers.
-    if printf '%s\n' "${services_to_up[@]}" | grep -qx 'nginx'; then
-        docker compose restart nginx
+rollback_runtime() {
+  local rollback_tag="${1:-}"
+  [[ -n "$rollback_tag" ]] || return 1
+  log "Attempting runtime rollback to ${rollback_tag}"
+  IMAGE_TAG="$rollback_tag" docker compose -f "$COMPOSE_FILE" up -d --remove-orphans >/dev/null
+  for attempt in {1..12}; do
+    if curl --fail --silent --show-error --insecure \
+        --resolve "${HEALTH_HOST}:443:127.0.0.1" \
+        "https://${HEALTH_HOST}/health" >/dev/null; then
+      log "Runtime rollback health check passed"
+      return 0
     fi
+    sleep 5
+  done
+  return 1
+}
+
+trap 'fail "Deployment failed at line ${LINENO}: ${BASH_COMMAND}"' ERR
+
+[[ -f "$COMPOSE_FILE" ]] || fail "Compose file not found: $COMPOSE_FILE"
+[[ -f "$MANIFEST" ]] || fail "Release manifest not found: $MANIFEST"
+[[ -f "$IMAGE_ARCHIVE" ]] || fail "Image archive not found: $IMAGE_ARCHIVE"
+[[ -f "$IMAGE_CHECKSUMS" ]] || fail "Image checksum file not found: $IMAGE_CHECKSUMS"
+[[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "DEPLOY_SHA must be a 40-character commit SHA"
+command -v docker >/dev/null 2>&1 || fail "Docker is not installed"
+docker compose version >/dev/null 2>&1 || fail "Docker Compose is unavailable"
+command -v flock >/dev/null 2>&1 || fail "flock is unavailable"
+command -v curl >/dev/null 2>&1 || fail "curl is unavailable"
+
+if [[ ! -d "$STATE_DIR" ]]; then
+  sudo install -d -o "$(id -u)" -g "$(id -g)" -m 750 "$STATE_DIR"
 fi
 
-# ── Step 4: Health check ───────────────────────────────────────────────────────
-echo ""
-echo "[4/4] Checking API health..."
+exec 9>"$LOCK_FILE"
+flock -n 9 || fail "Another deployment is already running"
 
-HEALTH_HOST="${DEPLOY_HEALTH_HOST:-peaktalk.ru}"
+cd "$APP_DIR"
 
-MAX_RETRIES=10
-RETRY_DELAY=3
-for i in $(seq 1 $MAX_RETRIES); do
-    if curl -ksf --resolve "$HEALTH_HOST:443:127.0.0.1" "https://$HEALTH_HOST/health" > /dev/null 2>&1; then
-        echo "  API is healthy ✓"
-        break
-    fi
-    if [ "$i" -eq "$MAX_RETRIES" ]; then
-        echo "  ERROR: API health check failed for host $HEALTH_HOST after $((MAX_RETRIES * RETRY_DELAY))s"
-        echo "  Check logs with: docker compose logs api"
-        exit 1
-    fi
-    echo "  Waiting for API... (attempt $i/$MAX_RETRIES)"
-    sleep $RETRY_DELAY
+manifest_value() {
+  local key="$1"
+  awk -F= -v expected_key="$key" '$1 == expected_key { print substr($0, index($0, "=") + 1); exit }' "$MANIFEST"
+}
+
+[[ "$(manifest_value commit)" == "$DEPLOY_SHA" ]] || fail "Release manifest commit mismatch"
+[[ "$(manifest_value api_tag)" == "peaktalk-backend:${DEPLOY_SHA}" ]] || fail "API image tag mismatch"
+[[ "$(manifest_value worker_tag)" == "peaktalk-worker:${DEPLOY_SHA}" ]] || fail "Worker image tag mismatch"
+[[ "$(manifest_value frontend_tag)" == "peaktalk-frontend:${DEPLOY_SHA}" ]] || fail "Frontend image tag mismatch"
+
+log "Preparing verified deployment ${DEPLOY_SHA}"
+(cd "$ARTIFACT_DIR" && sha256sum -c "$(basename "$IMAGE_CHECKSUMS")" >/dev/null) || fail "Image artifact checksum mismatch"
+docker compose -f "$COMPOSE_FILE" config >/dev/null
+
+if [[ ! -r backend/.env || ! -r frontend/.env.local ]]; then
+  fail "Production env files are missing or unreadable"
+fi
+
+sudo -n test -x "$BACKUP_COMMAND" || fail "Required database backup command is missing or not executable: $BACKUP_COMMAND"
+
+log "Loading verified application images"
+gzip -dc "$IMAGE_ARCHIVE" | docker load >/dev/null
+
+for image_key in api worker frontend; do
+  image_name="$(manifest_value "${image_key}_tag")"
+  image_id="$(docker image inspect "$image_name" --format '{{.Id}}' 2>/dev/null || true)"
+  [[ -n "$image_name" && -n "$image_id" ]] || fail "Loaded ${image_key} image is missing"
 done
 
-echo ""
-echo "Running containers:"
-docker compose ps
+previous_tag=""
+if [[ -r "$CURRENT_STATE" ]]; then
+  previous_tag="$(sed -n '1p' "$CURRENT_STATE")"
+fi
 
-echo ""
-echo "=============================================="
-echo "  Deploy complete!"
-echo "=============================================="
+if [[ -z "$previous_tag" ]]; then
+  previous_tag="legacy"
+  for image_pair in \
+    "peaktalk-backend:latest peaktalk-backend:${previous_tag}" \
+    "peaktalk-worker:latest peaktalk-worker:${previous_tag}" \
+    "peaktalk-frontend:latest peaktalk-frontend:${previous_tag}"; do
+    set -- $image_pair
+    docker image inspect "$1" >/dev/null 2>&1 || fail "No legacy image available for rollback: $1"
+    docker tag "$1" "$2"
+  done
+else
+  for image_name in peaktalk-backend peaktalk-worker peaktalk-frontend; do
+    docker image inspect "${image_name}:${previous_tag}" >/dev/null 2>&1 || fail "Previous image missing: ${image_name}:${previous_tag}"
+  done
+fi
+
+log "Validating Nginx configuration"
+docker compose -f "$COMPOSE_FILE" run --rm --no-deps nginx nginx -t
+
+log "Ensuring data services are ready"
+docker compose -f "$COMPOSE_FILE" up -d postgres redis
+
+log "Creating pre-deploy database backup"
+sudo -n "$BACKUP_COMMAND"
+
+export IMAGE_TAG="$DEPLOY_SHA"
+
+log "Running database migrations"
+docker compose -f "$COMPOSE_FILE" run --rm migrate
+
+log "Starting application stack"
+docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+
+log "Checking container state"
+docker compose -f "$COMPOSE_FILE" ps
+
+log "Checking local HTTPS health endpoint"
+for attempt in {1..12}; do
+  if curl --fail --silent --show-error --insecure \
+      --resolve "${HEALTH_HOST}:443:127.0.0.1" \
+      "https://${HEALTH_HOST}/health" >/dev/null; then
+    log "Local health check passed"
+    printf '%s\n' "$previous_tag" | sudo tee "$PREVIOUS_STATE" >/dev/null
+    printf '%s\n' "$DEPLOY_SHA" | sudo tee "$CURRENT_STATE" >/dev/null
+    exit 0
+  fi
+  sleep 5
+done
+
+if ! rollback_runtime "$previous_tag"; then
+  fail "Health check failed and runtime rollback did not recover"
+fi
+
+fail "Health check failed after deployment ${DEPLOY_SHA}; runtime was rolled back"

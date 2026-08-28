@@ -13,6 +13,7 @@ from app.database import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from app.models.user_identity import UserIdentity
     from app.models.subscription import Payment, Subscription, UsageCounter
 
 
@@ -39,7 +40,7 @@ class User(Base):
         Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
-        comment="Matches Supabase Auth user_id (sub claim)",
+        comment="Local PeakTalk user id; external identity is stored in user_identities",
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -59,6 +60,9 @@ class User(Base):
 
     onboarding_profile: Mapped["OnboardingProfile | None"] = relationship(
         "OnboardingProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    identities: Mapped[list["UserIdentity"]] = relationship(
+        "UserIdentity", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Billing relationships

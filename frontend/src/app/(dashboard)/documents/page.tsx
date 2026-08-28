@@ -5,7 +5,7 @@ import { FileText, UploadCloud, File, Search, Trash2, Loader2, RefreshCcw, Arrow
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { format } from 'date-fns';
+import { format } from 'date-fns/format';
 import { toast } from 'sonner';
 
 type Doc = {
@@ -37,7 +37,7 @@ function getExt(doc: Doc): string {
     if (doc.source === 'text') return 'ТЕКСТ';
     const ext = doc.name.split('.').pop()?.toUpperCase() ?? '';
     if (ext === 'PDF') return 'PDF';
-    if (ext === 'DOC') return 'DOCX';
+    if (ext === 'DOC') return 'DOC';
     if (['DOCX', 'TXT'].includes(ext)) return ext;
     return 'ФАЙЛ';
 }

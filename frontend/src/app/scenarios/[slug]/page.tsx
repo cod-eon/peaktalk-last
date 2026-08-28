@@ -14,7 +14,6 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getScenario } from '@/lib/scenarios-api'
 import { getCaseSituationIdForScenario } from '@/lib/case-context'
-import { createClient } from '@/lib/supabase/client'
 import {
   START_PRESSURE_OPTIONS,
   enrichScenario,
@@ -250,10 +249,9 @@ export default function ScenarioDetailPage() {
 
     setIsStarting(true);
     try {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
+      const sessionResponse = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
+      const session = sessionResponse.ok ? await sessionResponse.json() as { isAuthenticated?: boolean } : null;
+      if (!session?.isAuthenticated) {
         localStorage.setItem('peaktalk_guest_context', scenario.situation || scenario.subtitle);
         trackStart('guest_unauthenticated')
         router.push(`/simulation/guest?persona=${scenario.category}&difficulty=${difficulty}&from_scenario=true`);

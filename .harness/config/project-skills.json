@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "id": "product-decision",
+      "source": "project",
+      "domains": ["product", "architecture"],
+      "modes": ["plan", "review"],
+      "keywords": ["product", "prd", "roadmap", "positioning", "pricing", "onboarding", "paywall", "decision", "product decision", "продукт", "решение", "онбординг", "цена"]
+    },
+    {
+      "id": "controlled-development",
+      "source": "project",
+      "domains": ["harness", "code", "backend", "frontend", "api", "database", "security", "architecture"],
+      "modes": ["implement", "debug", "test", "review"],
+      "keywords": ["implement", "refactor", "bug", "regression", "harness", "router", "doctor", "contract", "реализ", "исправ", "регресс"]
+    },
+    {
+      "id": "ui-quality",
+      "source": "project",
+      "domains": ["ui", "frontend"],
+      "modes": ["implement", "review", "test"],
+      "keywords": ["ui", "ux", "responsive", "layout", "visual", "mobile", "desktop", "интерфейс", "экран", "адаптив"]
+    },
+    {
+      "id": "deploy-safety",
+      "source": "project",
+      "domains": ["deploy"],
+      "modes": ["plan", "implement", "review", "test"],
+      "keywords": ["deploy", "production", "rollback", "docker", "nginx", "деплой", "продакшн", "откат"]
+    },
+    {
+      "id": "product-copy",
+      "source": "project",
+      "domains": ["copy", "product"],
+      "modes": ["implement", "review"],
+      "keywords": ["copy", "text", "microcopy", "headline", "cta", "tone", "текст", "копирайт", "заголовок", "кнопка"]
+    }
+  ],
+  "trustedSystemSkills": {
+    "frontend": "frontend-dev-guidelines",
+    "backend": "backend-dev-guidelines",
+    "ui": "design-taste-frontend",
+    "deploy": "deployment-procedures"
+  }
+}

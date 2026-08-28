@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the existing homepage as a client route to avoid an unrelated server/client refactor. Consolidate its middle sections in `page.tsx`, isolate lazy decorative video behavior in one landing client component, keep complex editorial styling scoped to a CSS module, and use public no-precache assets for the generated dossier and existing HyperFrames film.
 
-**Tech Stack:** Next.js 16.1.6 App Router, React 19.2.3, TypeScript, Tailwind CSS v4, CSS Modules, existing `framer-motion` 12.35.x, native IntersectionObserver, Node test runner.
+**Tech Stack:** Next.js 16.3.0 App Router, React 19.2.3, TypeScript, Tailwind CSS v4, CSS Modules, existing `framer-motion` 12.35.x, native IntersectionObserver, Node test runner.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-landing-polish.md`
 
@@ -15,12 +15,12 @@
 - Preserve the hero and footer visual compositions; only approved copy and reduced-motion behavior may change there.
 - Final IA is Hero, Pressure proof, Scenarios, combined Process and Defense Brief, Pricing, compact FAQ, Footer.
 - Product focus is decision, initiative, roadmap, or budget defense before leadership; investor Q&A is secondary.
-- The factual free flow is exactly three questions without registration or a card; a full session and Defense Brief cost 299 RUB.
+- The factual free flow is exactly three questions without registration or a card; a full session and Defense Brief cost 990 RUB.
 - Add no runtime dependency and make no lockfile change.
 - Use existing `framer-motion` and native CSS only; no GSAP, Spline, Rive, Three scene, scroll hijack, or effect-component library.
 - Reuse the approved HyperFrames render only as a lazy decorative film under `public/noprecache`.
 - Preserve CTA event name, `source`, all seven `cta_location` values, routes, navigation labels, and anchor IDs from the spec.
-- Do not modify auth, billing, guest conversion, PWA configuration, API contracts, or scenario detail pages.
+- Do not modify auth, billing, guest conversion, service-worker configuration, API contracts, or scenario detail pages.
 - Visible homepage copy and homepage metadata use zero em dash or en dash characters.
 - Every automatic animation honors reduced motion; mobile uses a static film poster.
 - Verification uses the exact package-lock install. Do not run `pnpm install` or `pnpm run`; the environment command is described below.
@@ -71,7 +71,7 @@ test('homepage exposes the compact decision-defense contract', async () => {
     'Вопрос, который может сорвать защиту, лучше услышать до встречи.',
     'Выберите решение, которое нужно защитить на ближайшей встрече.',
     'От материала до позиции, которую можно защищать.',
-    'Три вопроса бесплатно. Полная подготовка за 299 ₽.',
+    'Три вопроса бесплатно. Полная подготовка за 990 ₽.',
     'Это курс переговоров или тренировка выступлений?',
     'Не несите слабый ответ на сильную встречу.',
   ];
@@ -295,14 +295,14 @@ PATH=/Users/codeon/.cache/codex-runtimes/codex-primary-runtime/dependencies/node
 
 Expected: lint exits 0; Next production build exits 0 and prerenders `/`.
 
-Verify no dependency or PWA config drift:
+Verify no dependency or deployment config drift and no accidental media preload:
 
 ```bash
 git diff --exit-code -- frontend/package.json frontend/package-lock.json frontend/next.config.ts
-rg -n "decision-defense-loop|decision-dossier" frontend/public/sw.js frontend/public/workbox-*.js 2>/dev/null && exit 1 || true
+rg -n "preload.*decision-defense-loop|decision-defense-loop.*preload" frontend/src && exit 1 || true
 ```
 
-Expected: no package, lockfile, or `next.config.ts` diff; generated service-worker files contain neither heavy asset name.
+Expected: no package, lockfile, or `next.config.ts` diff from the reconciled baseline; the heavy film is not preloaded by application source.
 
 - [ ] **Step 8: Perform desktop, tablet, mobile, interaction, and reduced-motion visual QA**
 

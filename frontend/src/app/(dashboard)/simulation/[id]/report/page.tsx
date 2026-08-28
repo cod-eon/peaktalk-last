@@ -309,6 +309,8 @@ export default function SimulationReportPage() {
         window.addEventListener('afterprint', () => document.getElementById('_pdf_print_style')?.remove(), { once: true });
     }, []);
 
+    // Keep callback identity scoped to the source type used by analytics.
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     const handleRerun = useCallback(async () => {
         if (!sessionId || rerunLoading) return;
 

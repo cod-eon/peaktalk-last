@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
+import { ru } from "date-fns/locale/ru";
 import { toast } from "sonner";
 
 interface NotificationItem {

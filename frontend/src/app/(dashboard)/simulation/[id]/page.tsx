@@ -48,10 +48,9 @@ export default function SimulationPage() {
     }
   }, []);
 
-  const { isListening, isSupported, startListening, stopListening } = useSpeechRecognition(handleSpeechResult);
+  const { isListening, isSupported, startListening, stopListening, error: speechError } = useSpeechRecognition(handleSpeechResult);
 
   // Refs for beforeunload beacon (can't use state inside event handler reliably)
-  const authTokenRef = useRef<string | null>(null);
   const isFinishedRef = useRef(false);
 
   const PERSONA_LABELS: Record<string, string> = {
@@ -94,31 +93,15 @@ export default function SimulationPage() {
   // Keep isFinishedRef in sync so beforeunload can read it synchronously
   useEffect(() => { isFinishedRef.current = isFinished; }, [isFinished]);
 
-  // Cache the Supabase auth token so it's available in the synchronous beforeunload handler
-  useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      const supabase = createClient();
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        authTokenRef.current = session?.access_token ?? null;
-      });
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        authTokenRef.current = session?.access_token ?? null;
-      });
-      cleanup = () => subscription.unsubscribe();
-    });
-    return () => cleanup?.();
-  }, []);
-
   // Fire-and-forget abandon signal when user closes the tab
   useEffect(() => {
     if (!sessionId) return;
     const handleBeforeUnload = () => {
-      if (isFinishedRef.current || !authTokenRef.current) return;
+      if (isFinishedRef.current) return;
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       fetch(`${apiUrl}/simulation/${sessionId}/abandon`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${authTokenRef.current}` },
+        credentials: 'include',
         keepalive: true,
       });
     };
@@ -165,6 +148,8 @@ export default function SimulationPage() {
   useEffect(() => {
     const aiMessages = messages.filter(m => m.role === 'assistant');
     if (aiMessages.length > 0) {
+      // The countdown belongs to the latest assistant turn.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(90);
     }
   }, [messages, isAnalyzing]); // isAnalyzing flips when AI finishes answering
@@ -239,6 +224,8 @@ export default function SimulationPage() {
   // Timer Timeout execution
   useEffect(() => {
     if (timeLeft === 0 && !isAnalyzing && !isFinished) {
+       // Timeout is an external timer event and must submit exactly once at zero.
+       // eslint-disable-next-line react-hooks/set-state-in-effect
        submitAnswer(answer.trim() ? answer : "[Время на ответ истекло, ответ не предоставлен]", true);
     }
   }, [answer, isAnalyzing, isFinished, submitAnswer, timeLeft]);
@@ -457,6 +444,12 @@ export default function SimulationPage() {
                 className={`w-full bg-neutral-50 border ${isListening ? 'border-neutral-900 ring-1 ring-neutral-900' : timeLeft === 0 ? 'border-red-400 bg-red-50/20' : 'border-neutral-200'} rounded-none p-4 sm:p-6 min-h-[140px] sm:min-h-[160px] text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all resize-none shadow-sm relative z-0`}
                 style={{ fontSize: '16px' }}
               />
+
+              {speechError && (
+                <p className="mt-2 text-xs text-amber-700" role="status" aria-live="polite">
+                  Диктовка недоступна. Можно продолжить ответ текстом.
+                </p>
+              )}
 
               <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div className="text-[11px] font-mono text-neutral-500 uppercase tracking-wider shrink-0 w-full sm:w-auto text-left pl-1">

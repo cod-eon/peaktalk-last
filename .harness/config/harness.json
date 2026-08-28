@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "id": "peaktalk",
+    "name": "PeakTalk"
+  },
+  "operatingModel": "risk-adaptive-autonomy",
+  "maxSelectedSkills": 3,
+  "maxAasSkills": 1,
+  "context": {
+    "documents": {
+      "harness": [
+        "docs/architecture/agent-harness.md",
+        "docs/decisions/0001-hybrid-agent-harness.md",
+        ".harness/README.md"
+      ],
+      "product": [
+        "docs/product/product-model.md",
+        "docs/product/mvp-boundaries.md"
+      ],
+      "spec": [
+        "docs/specs/core-flow.md"
+      ],
+      "architecture": [
+        "docs/architecture/current-system.md"
+      ],
+      "operations": [
+        "docs/operations/harness-recovery.md"
+      ]
+    },
+    "codeNavigation": {
+      "providerOrder": ["mcp", "codegraph-cli", "rg"],
+      "timeoutMs": 1200,
+      "maxFiles": 5
+    }
+  },
+  "principles": [
+    "Inspect evidence before changing code.",
+    "Separate facts, assumptions, and recommendations.",
+    "Do not silently make product decisions or costly-to-reverse architecture decisions.",
+    "Prefer a narrow implementation with explicit acceptance criteria.",
+    "Completion requires fresh evidence proportional to risk."
+  ],
+  "decisionGates": {
+    "product": {
+      "approval": "user",
+      "brief": [
+        "problem and affected user",
+        "two or three realistic options",
+        "trade-offs and failure modes",
+        "recommended option and why",
+        "what is deliberately not being built"
+      ]
+    },
+    "costlyArchitecture": {
+      "approval": "user",
+      "brief": [
+        "current constraint",
+        "alternatives considered",
+        "migration and rollback cost",
+        "operational consequences",
+        "recommended option and why"
+      ]
+    },
+    "externalOrDestructive": {
+      "approval": "explicit-authority"
+    }
+  },
+  "highRiskSignals": [
+    "auth",
+    "authentication",
+    "authorization",
+    "login",
+    "billing",
+    "payment",
+    "credits",
+    "yookassa",
+    "migration",
+    "alembic",
+    "schema",
+    "production",
+    "deploy",
+    "secret",
+    "admin",
+    "service worker",
+    "notification",
+    "guest conversion",
+    "rls"
+  ],
+  "mediumRiskSignals": [
+    "api",
+    "backend",
+    "database",
+    "frontend",
+    "component",
+    "page",
+    "route",
+    "simulation",
+    "document",
+    "workspace"
+  ],
+  "evidenceProfiles": {
+    "product": [
+      "approved decision brief with alternatives, trade-offs, and non-goals",
+      "acceptance criteria tied to the chosen user outcome"
+    ],
+    "frontend": [
+      "frontend lint",
+      "frontend production build"
+    ],
+    "ui": [
+      "desktop browser check",
+      "mobile browser check",
+      "loading, empty, error, and long-content states when affected"
+    ],
+    "backend": [
+      "targeted backend tests",
+      "API contract check when frontend is affected"
+    ],
+    "database": [
+      "migration path review",
+      "upgrade and rollback implications"
+    ],
+    "security": [
+      "authentication and authorization negative cases",
+      "secret and unsafe-input review"
+    ],
+    "deploy": [
+      "build and test gates",
+      "environment and migration review",
+      "health check and rollback plan"
+    ],
+    "default": [
+      "targeted automated check",
+      "diff review against acceptance criteria"
+    ]
+  },
+  "checkProfiles": {
+    "product": ["decision-brief", "acceptance-review"],
+    "frontend": ["frontend-lint", "frontend-build"],
+    "ui": ["ui-desktop", "ui-mobile"],
+    "backend": ["backend-tests"],
+    "api": ["api-contract"],
+    "database": ["migration-review"],
+    "security": ["security-negative-cases"],
+    "auth": ["auth-negative-cases"],
+    "deploy": ["deploy-preflight", "rollback-plan", "health-check"],
+    "default": ["targeted-check", "diff-review"],
+    "highRisk": ["risk-review"]
+  }
+}

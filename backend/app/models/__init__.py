@@ -16,10 +16,13 @@ from app.models.simulation import (
 from app.models.notification import Notification, PushSubscription
 from app.models.subscription import Payment, Subscription, UsageCounter
 from app.models.user import OnboardingProfile, User
+from app.models.user_identity import UserIdentity
+from app.models.admin_audit import AdminAuditEvent
 
 __all__ = [
     "User",
     "OnboardingProfile",
+    "UserIdentity",
     "AppSetting",
     "Document",
     "SpeechDraft",
@@ -38,4 +41,5 @@ __all__ = [
     "UpcomingMeeting",
     "PostMeetingFeedback",
     "PersonalizedPersona",
+    "AdminAuditEvent",
 ]

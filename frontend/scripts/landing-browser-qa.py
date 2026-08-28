@@ -5,12 +5,20 @@
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from playwright.sync_api import Page, sync_playwright
 
 
 BASE_URL = os.environ.get("LANDING_BASE_URL", "http://127.0.0.1:3100")
 CHROME_OVERRIDE = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+MOCK_AUTH_SESSION = os.environ.get("LANDING_MOCK_AUTH_SESSION") == "1"
+TARGET_HOST = urlparse(BASE_URL).hostname
+LOCAL_TARGET_HOSTS = {"localhost", "127.0.0.1", "::1"}
+if MOCK_AUTH_SESSION and TARGET_HOST not in LOCAL_TARGET_HOSTS:
+    raise RuntimeError(
+        "LANDING_MOCK_AUTH_SESSION=1 is restricted to localhost browser-QA targets"
+    )
 LOCAL_CHROME_PATH = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 EVIDENCE_DIR = (
     Path(__file__).resolve().parents[2]
@@ -63,6 +71,26 @@ def active_focus_index(page: Page) -> int:
     )
 
 
+def new_context(browser, **kwargs):
+    context = browser.new_context(**kwargs)
+    if MOCK_AUTH_SESSION:
+        context.route(
+            "**/api/auth/session",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(
+                    {
+                        "isAuthenticated": False,
+                        "auth_state": "signed_out",
+                        "user": None,
+                    }
+                ),
+            ),
+        )
+    return context
+
+
 with sync_playwright() as playwright:
     launch_options = {
         "headless": True,
@@ -81,7 +109,8 @@ with sync_playwright() as playwright:
         "reducedMotion": {},
     }
 
-    mobile_context = browser.new_context(
+    mobile_context = new_context(
+        browser,
         viewport={"width": 390, "height": 844}, ignore_https_errors=True
     )
     page = mobile_context.new_page()
@@ -232,7 +261,8 @@ with sync_playwright() as playwright:
         (768, 1024, "768x1024"),
         (390, 844, "390x844"),
     ]:
-        context = browser.new_context(
+        context = new_context(
+            browser,
             viewport={"width": width, "height": height}, ignore_https_errors=True
         )
         page = context.new_page()
@@ -272,7 +302,8 @@ with sync_playwright() as playwright:
         )
         context.close()
 
-    film_context = browser.new_context(
+    film_context = new_context(
+        browser,
         viewport={"width": 1440, "height": 1000}, ignore_https_errors=True
     )
     page = film_context.new_page()
@@ -344,13 +375,15 @@ with sync_playwright() as playwright:
 
     zero_source_contexts = [
         (
-            browser.new_context(
+            new_context(
+                browser,
                 viewport={"width": 390, "height": 844}, ignore_https_errors=True
             ),
             "mobile",
         ),
         (
-            browser.new_context(
+            new_context(
+                browser,
                 viewport={"width": 1440, "height": 1000},
                 reduced_motion="reduce",
                 ignore_https_errors=True,

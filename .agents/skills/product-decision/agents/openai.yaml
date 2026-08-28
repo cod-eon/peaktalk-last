@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Decision"
+  short_description: "PeakTalk product choices with explicit trade-offs"
+  default_prompt: "Use $product-decision to evaluate a PeakTalk product choice before implementation."

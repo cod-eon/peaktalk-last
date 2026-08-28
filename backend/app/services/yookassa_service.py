@@ -28,7 +28,7 @@ logger = logging.getLogger("peaktalk.yookassa")
 
 # Amounts in kopecks (1 RUB = 100 kopecks)
 PLAN_PRICES: dict[PlanType, int] = {
-    PlanType.per_session: 29900,   # 299 RUB — one-time credit
+    PlanType.per_session: 99000,   # 990 RUB — one-time credit
     PlanType.personal: 79000,      # 790 RUB/month
     PlanType.pro: 149000,          # 1490 RUB/month
     PlanType.team: 499000,         # 4990 RUB/month

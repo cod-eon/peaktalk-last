@@ -6,6 +6,8 @@ PeakTalk remains a professional pressure-testing product for defending a decisio
 
 The homepage should help a senior product or functional leader understand one job quickly: bring the material for an imminent high-stakes meeting, expose weak arguments through adversarial questions, and continue to a paid full session with a Defense Brief.
 
+Integration note: the release target is current `main` on Next.js 16.3. The canonical one-time price is 990 RUB under `docs/decisions/0026-one-time-defense-brief-price-990-rub.md`; release handling follows `docs/decisions/0029-landing-polish-production-release.md`.
+
 ## User outcome
 
 Within the first screen and the first proof section, a qualified visitor must understand:
@@ -13,7 +15,7 @@ Within the first screen and the first proof section, a qualified visitor must un
 - what material they can bring;
 - that three questions are available without registration or a card;
 - what PeakTalk tests: numbers, choice, risk, evidence, and ownership;
-- that a full session and Defense Brief cost 299 RUB;
+- that a full session and Defense Brief cost 990 RUB;
 - that this is not public-speaking or confidence coaching.
 
 ## Information architecture
@@ -95,7 +97,7 @@ The film is decorative. Essential claims remain semantic HTML. A dedicated clien
 - pause when it leaves the viewport;
 - keep a static poster if playback fails.
 
-Putting the film under `public/noprecache` is mandatory. The installed `next-pwa` version excludes this directory from precache by default. Do not modify PWA configuration.
+Keep the film under `public/noprecache` as a stable landing-media path. Current `main` does not generate a service worker; do not add one or preload this media in the initial page response.
 
 ## Generated visual asset
 
@@ -212,7 +214,7 @@ Headline:
 
 Body:
 
-> Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 299 ₽ и получите Defense Brief перед встречей.
+> Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 990 ₽ и получите Defense Brief перед встречей.
 
 Stage 1:
 
@@ -236,7 +238,7 @@ Stage 3:
 
 Headline:
 
-> Три вопроса бесплатно. Полная подготовка за 299 ₽.
+> Три вопроса бесплатно. Полная подготовка за 990 ₽.
 
 Intro:
 
@@ -254,7 +256,7 @@ Free column:
 Paid column:
 
 - Label: `Полная сессия и Defense Brief`
-- Price: `299 ₽ / разбор`
+- Price: `990 ₽ / разбор`
 - Body: `Полный разбор материала встречи с вопросами, ответами и планом защиты.`
 - Includes: `Сохранённый материал и ответы`, `Слабые места позиции`, `Вопросы и короткий план защиты`
 - CTA: `Собрать Defense Brief`
@@ -281,7 +283,7 @@ Keep the existing headline exactly:
 
 Body:
 
-> За три вопроса увидите, где позиция требует доработки. За 299 ₽ продолжите разбор и соберёте Defense Brief перед встречей.
+> За три вопроса увидите, где позиция требует доработки. За 990 ₽ продолжите разбор и соберёте Defense Brief перед встречей.
 
 CTA: `Проверить материал бесплатно`
 
@@ -295,7 +297,7 @@ Metadata title:
 
 Metadata description:
 
-> Проверьте аргументы перед защитой решения, бюджета или инициативы. Три вопроса без регистрации, полный разбор и Defense Brief за 299 ₽.
+> Проверьте аргументы перед защитой решения, бюджета или инициативы. Три вопроса без регистрации, полный разбор и Defense Brief за 990 ₽.
 
 Open Graph description:
 
@@ -327,7 +329,7 @@ No auth, billing, guest-flow, API, schema, service-worker configuration, scenari
 
 1. The final page contains exactly the seven major sections defined in the information architecture and no standalone CaseWorkspace, MethodSection, OutputArtifacts, or signals column.
 2. The hero and footer remain visually recognizable at 1440 by 1000 and 390 by 844.
-3. The page explains the real order: three questions without registration, then a 299 RUB full session and Defense Brief.
+3. The page explains the real order: three questions without registration, then a 990 RUB full session and Defense Brief.
 4. Pressure proof is a causal sequence, not three equal feature cards.
 5. Scenario layout is asymmetric: the budget defense scenario is visually primary, client and investor scenarios are secondary.
 6. The dossier cutout is visibly integrated with the process headline on desktop and becomes a normal below-heading image on mobile.
@@ -349,6 +351,6 @@ No auth, billing, guest-flow, API, schema, service-worker configuration, scenari
 - making investor pitch the primary wedge;
 - adding Spline, Three.js scenes, Rive, GSAP, scroll hijacking, or a component-effect library;
 - creating a new HyperFrames composition in this pass;
-- modifying auth, billing, guest conversion, PWA configuration, API contracts, or scenario detail pages;
+- modifying auth, billing, guest conversion, service-worker configuration, API contracts, or scenario detail pages;
 - removing unused dependencies as part of this redesign;
 - deployment or production release.

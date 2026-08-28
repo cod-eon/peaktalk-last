@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,11 +10,29 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str
+    database_pool_size: int = Field(default=10, ge=1, le=100)
+    database_max_overflow: int = Field(default=20, ge=0, le=100)
+    database_pool_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    database_command_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
 
-    # Supabase
-    supabase_url: str
-    supabase_key: str
-    supabase_storage_bucket: str = "peaktalk-dev-bucket"
+    # Better Auth is authoritative in Next.js; FastAPI introspects its database-backed session.
+    auth_provider: Literal["better-auth"] = "better-auth"
+    better_auth_session_url: str = "http://frontend:3000/api/auth/get-session"
+    better_auth_api_url: str = "http://frontend:3000/api/auth"
+    better_auth_http_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+
+    # Yandex Object Storage
+    storage_provider: Literal["yandex"] = "yandex"
+    yandex_s3_endpoint_url: str = "https://storage.yandexcloud.net"
+    yandex_s3_region: str = "ru-central1"
+    yandex_s3_bucket: str = "peaktalk-prod-private-documents"
+    yandex_s3_kms_key_id: str = ""
+    yandex_s3_access_key_id: str = ""
+    yandex_s3_secret_access_key: str = ""
+    yandex_s3_presign_ttl_seconds: int = Field(default=900, ge=60, le=3600)
+    yandex_s3_connect_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    yandex_s3_read_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    yandex_s3_max_attempts: int = Field(default=4, ge=1, le=10)
 
     # AI
     cloud_ru_api_key: str = Field(default="")
@@ -34,9 +53,6 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = False
 
-    # Supabase webhook secret (set in Supabase Dashboard → Database → Webhooks → custom header)
-    supabase_webhook_secret: str = ""
-
     # Payment gateway toggle — set to false to disable all payment checks
     # (everyone gets PRO behaviour, no limit enforcement, payment buttons hidden)
     payments_enabled: bool = True
@@ -53,8 +69,6 @@ class Settings(BaseSettings):
     # tax_system_code: 1=ОСН, 2=УСН доход, 3=УСН доход-расход, 6=ПСН
     yookassa_tax_system_code: int = 2
 
-    # Feature Flags (DevCycle)
-    devcycle_server_sdk_key: str = ""
     # vat_code per item: 1=без НДС, 3=10%, 4=20%
     yookassa_vat_code: int = 1
 
@@ -69,6 +83,7 @@ class Settings(BaseSettings):
 
     # Admin panel — comma-separated list of emails with admin access
     admin_emails: str = ""
+    better_auth_bootstrap_admin_email: str = ""
 
     def get_admin_emails(self) -> list[str]:
         return [e.strip() for e in self.admin_emails.split(",") if e.strip()]

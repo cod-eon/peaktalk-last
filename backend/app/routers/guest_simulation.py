@@ -2,7 +2,7 @@
 
 Allows unauthenticated users to run a short pressure scan against a meeting case.
 After the free guest turns the response carries a paywall payload directing the user
-to either buy a Defense Brief (299 ₽) or register to preserve the meeting material.
+to either buy a Defense Brief (990 ₽) or register to preserve the meeting material.
 """
 import logging
 import uuid
@@ -51,7 +51,7 @@ PERSONA_ALIASES = {
 _PAYWALL_RESPONSE = {
     "message": "Быстрый pressure scan по материалу завершён",
     "cta_primary": {
-        "text": "Собрать Defense Brief — 299 ₽",
+        "text": "Собрать Defense Brief — 990 ₽",
         "action": "pay_per_session",
     },
     "cta_secondary": {
@@ -194,8 +194,8 @@ async def guest_start(
     await db.flush()
 
     logger.info(
-        "guest_start: session_token=%s persona=%s difficulty=%d",
-        session_token,
+        "guest_start: session_id=%s persona=%s difficulty=%d",
+        session.id,
         body.persona,
         body.difficulty,
     )
@@ -263,7 +263,7 @@ async def guest_message(
             user_context=None,
         )
     except CloudRuAIError as exc:
-        logger.error("guest_message: Cloud.ru error session_token=%s: %s", body.guest_session_id, exc)
+        logger.error("guest_message: Cloud.ru error session_id=%s: %s", session.id, exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"detail": str(exc), "code": "ai_error"},
@@ -278,8 +278,8 @@ async def guest_message(
     remaining = GUEST_MAX_TURNS - new_turn
 
     logger.info(
-        "guest_message: session_token=%s turn=%d remaining=%d",
-        body.guest_session_id,
+        "guest_message: session_id=%s turn=%d remaining=%d",
+        session.id,
         new_turn,
         remaining,
     )

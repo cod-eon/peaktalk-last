@@ -15,7 +15,7 @@ test('homepage exposes the compact decision-defense contract', async () => {
     'Вопрос, который может сорвать защиту, лучше услышать до встречи.',
     'Выберите решение, которое нужно защитить на ближайшей встрече.',
     'От материала до позиции, которую можно защищать.',
-    'Три вопроса бесплатно. Полная подготовка за 299 ₽.',
+    'Три вопроса бесплатно. Полная подготовка за 990 ₽.',
     'Это курс переговоров или тренировка выступлений?',
     'Не несите слабый ответ на сильную встречу.',
   ];
@@ -40,12 +40,13 @@ test('homepage exposes the compact decision-defense contract', async () => {
   assert.match(html, /SoftwareApplication/);
 });
 
-test('homepage source preserves analytics and typography constraints', async () => {
-  const [pageSource, layoutSource, filmSource, landingStyles] = await Promise.all([
+test('homepage source preserves analytics, typography, and QA safety constraints', async () => {
+  const [pageSource, layoutSource, filmSource, landingStyles, browserQaSource] = await Promise.all([
     readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/components/landing/LandingPressureFilm.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/app/landing.module.css', import.meta.url), 'utf8'),
+    readFile(new URL('./landing-browser-qa.py', import.meta.url), 'utf8'),
   ]);
 
   const locations = [
@@ -97,5 +98,17 @@ test('homepage source preserves analytics and typography constraints', async () 
     filmSource,
     /hasMeaningfulFrame \? 'opacity-100 transition-opacity duration-300' : 'opacity-0'/,
     'Film must hide rewound frames immediately while retaining the meaningful-frame fade-in',
+  );
+
+  assert.match(browserQaSource, /urlparse\(BASE_URL\)\.hostname/, 'Browser QA must resolve the target host');
+  assert.match(
+    browserQaSource,
+    /LOCAL_TARGET_HOSTS = \{"localhost", "127\.0\.0\.1", "::1"\}/,
+    'Auth-session mocking must use an exact localhost allowlist',
+  );
+  assert.match(
+    browserQaSource,
+    /if MOCK_AUTH_SESSION and TARGET_HOST not in LOCAL_TARGET_HOSTS:/,
+    'Browser QA must reject auth-session mocking for production targets',
   );
 });

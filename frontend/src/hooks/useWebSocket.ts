@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 interface BaseNotification {
@@ -35,13 +34,7 @@ export const useWebSocket = () => {
     // Create an async function to get the session and connect
     const connect = async () => {
       try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.access_token) return;
         const wsUrl = buildWebSocketUrl();
-        wsUrl.searchParams.set('token', session.access_token);
-
         const ws = new WebSocket(wsUrl.toString());
         
         ws.onopen = () => {

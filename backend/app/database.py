@@ -12,8 +12,10 @@ engine = create_async_engine(
     echo=settings.debug,
     **({
         "pool_pre_ping": True,
-        "pool_size": 10,
-        "max_overflow": 20,
+        "pool_size": settings.database_pool_size,
+        "max_overflow": settings.database_max_overflow,
+        "pool_timeout": settings.database_pool_timeout_seconds,
+        "connect_args": {"command_timeout": settings.database_command_timeout_seconds},
     } if _is_postgres else {}),
 )
 

@@ -16,6 +16,7 @@ import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
 import LandingPressureFilm from '@/components/landing/LandingPressureFilm';
 import { trackEvent } from '@/lib/analytics';
+import landingFontStyles from './landing-v11.module.css';
 import styles from './landing.module.css';
 
 const CTA_LABEL = 'Проверить материал бесплатно';
@@ -499,7 +500,7 @@ function DecisionProcess() {
         <div className={styles.processIntro}>
           <RevealDiv><SectionLabel>подготовка / Defense Brief</SectionLabel><h2 className={`${styles.processHeadline} mt-5 font-display text-[34px] font-black leading-[1.02] text-neutral-950 sm:text-[54px] lg:text-[58px] xl:text-[72px]`}>От материала до позиции, которую можно защищать.</h2></RevealDiv>
           <RevealDiv className={styles.dossier} hidden={{ opacity: 0, x: 24, y: 16, scale: 0.98 }} visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}><Image src="/noprecache/landing/decision-dossier.png" alt="" width={1536} height={1024} sizes="(min-width: 1024px) 56vw, 100vw" className="h-auto w-full" aria-hidden="true" /></RevealDiv>
-          <RevealDiv className={styles.processBody}><p className="max-w-2xl text-[16px] leading-relaxed text-neutral-600">Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 299 ₽ и получите Defense Brief перед встречей.</p></RevealDiv>
+          <RevealDiv className={styles.processBody}><p className="max-w-2xl text-[16px] leading-relaxed text-neutral-600">Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 990 ₽ и получите Defense Brief перед встречей.</p></RevealDiv>
         </div>
         <div className={styles.stageTrack} data-process-track="open">
           <RevealDiv className={styles.annotationLayer} hidden={{ opacity: 0, x: -30, scaleX: 0.7 }} visible={{ opacity: 1, x: 0, scaleX: 1 }} duration={0.8}><svg viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true"><path d="M18 18 C158 18 226 74 338 74 S552 130 684 130" fill="none" stroke="#E8600A" strokeWidth="4" strokeLinecap="round" /></svg></RevealDiv>
@@ -522,7 +523,7 @@ function PricingCTA() {
   return (
     <section id="pricing" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mx-auto max-w-4xl text-center"><SectionLabel>цена подготовки</SectionLabel><h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Три вопроса бесплатно. Полная подготовка за 299 ₽.</h2><p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-neutral-600">Бесплатный стресс-тест показывает давление на вашем материале. Полная сессия сохраняет разбор и собирает Defense Brief.</p></RevealDiv>
+        <RevealDiv className="mx-auto max-w-4xl text-center"><SectionLabel>цена подготовки</SectionLabel><h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Три вопроса бесплатно. Полная подготовка за 990 ₽.</h2><p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-neutral-600">Бесплатный стресс-тест показывает давление на вашем материале. Полная сессия сохраняет разбор и собирает Defense Brief.</p></RevealDiv>
         <div className="mx-auto mt-11 grid max-w-5xl gap-5 md:grid-cols-2">
           <RevealDiv className="flex flex-col border border-neutral-200 bg-white p-7 sm:p-9">
             <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">Бесплатный стресс-тест</div><div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div><p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Вставьте материал, выберите оппонента и ответьте на три вопроса.</p><div className="my-6 h-px bg-neutral-200" />
@@ -530,7 +531,7 @@ function PricingCTA() {
             <Link href="/simulation/guest" onClick={() => trackLandingCta('pricing_free')} className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-950 px-6 text-center text-[15px] font-bold text-white transition-colors hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал бесплатно</Link>
           </RevealDiv>
           <RevealDiv delay={0.08} className="flex flex-col bg-neutral-950 p-7 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)] sm:p-9">
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">Полная сессия и Defense Brief</div><div className="mt-4 text-[44px] font-black leading-none text-white">299 ₽ <span className="text-lg font-medium text-white/50">/ разбор</span></div><p className="mt-4 text-[15px] leading-relaxed text-white/70">Полный разбор материала встречи с вопросами, ответами и планом защиты.</p><div className="my-6 h-px bg-white/10" />
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">Полная сессия и Defense Brief</div><div className="mt-4 text-[44px] font-black leading-none text-white">990 ₽ <span className="text-lg font-medium text-white/50">/ разбор</span></div><p className="mt-4 text-[15px] leading-relaxed text-white/70">Полный разбор материала встречи с вопросами, ответами и планом защиты.</p><div className="my-6 h-px bg-white/10" />
             <ul className="mb-8 grid gap-3 text-[15px] text-white/90">{['Сохранённый материал и ответы', 'Слабые места позиции', 'Вопросы и короткий план защиты'].map((item) => <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#FF8A3D]" />{item}</li>)}</ul>
             <Link href="/billing?plan=per_session" onClick={() => trackLandingCta('pricing_paid')} className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-center text-[15px] font-bold text-neutral-950 transition-colors hover:bg-[#FF8A3D] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">Собрать Defense Brief</Link>
           </RevealDiv>
@@ -565,7 +566,7 @@ function FooterCTA() {
       <div className="absolute inset-0 opacity-[0.08]" aria-hidden="true"><div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" /></div>
       <div className="container-custom relative z-10 py-[clamp(92px,13vw,150px)]">
         <RevealDiv className="mx-auto max-w-4xl text-center">
-          <SectionLabel dark>final check</SectionLabel><h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">Не несите слабый ответ на сильную встречу.</h2><p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">За три вопроса увидите, где позиция требует доработки. За 299 ₽ продолжите разбор и соберёте Defense Brief перед встречей.</p>
+          <SectionLabel dark>final check</SectionLabel><h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">Не несите слабый ответ на сильную встречу.</h2><p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">За три вопроса увидите, где позиция требует доработки. За 990 ₽ продолжите разбор и соберёте Defense Brief перед встречей.</p>
           <div className="mt-9 flex justify-center"><Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">{CTA_LABEL}<ArrowRight size={18} /></Link></div>
           <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">Без регистрации / без карты / на своём материале</p>
         </RevealDiv>
@@ -600,7 +601,7 @@ function JsonLd() {
         operatingSystem: 'Web',
         offers: [
           { '@type': 'Offer', name: 'Бесплатный стресс-тест', price: '0', priceCurrency: 'RUB', description: 'Три вопроса по материалу встречи без регистрации' },
-          { '@type': 'Offer', name: 'Полная сессия и Defense Brief', price: '299', priceCurrency: 'RUB', description: 'Полный разбор материала встречи с Defense Brief' },
+          { '@type': 'Offer', name: 'Полная сессия и Defense Brief', price: '990', priceCurrency: 'RUB', description: 'Полный разбор материала встречи с Defense Brief' },
         ],
         provider: { '@type': 'Organization', name: 'PeakTalk', url: 'https://peaktalk.ru' },
       },
@@ -616,7 +617,7 @@ function JsonLd() {
 export default function Page() {
   return (
     <MotionConfig reducedMotion="user">
-      <main className="relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white">
+      <main className={`${landingFontStyles.root} relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white`}>
         <JsonLd />
         <Nav />
         <Hero />

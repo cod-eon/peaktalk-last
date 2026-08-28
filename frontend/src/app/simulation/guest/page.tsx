@@ -229,6 +229,8 @@ export default function GuestSimulationPage() {
     if (isFromScenario) {
       const ctx = localStorage.getItem('peaktalk_guest_context');
       if (ctx) {
+        // Hydrate the guest draft from the scenario hand-off stored by the browser.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHasScenarioParam(true);
         setText(ctx);
       }
@@ -389,6 +391,8 @@ export default function GuestSimulationPage() {
 
   useEffect(() => {
     if (step !== 'chat' || timeLeft > 0 || isLoading) return;
+    // Timeout is an external timer event and submits the fallback answer once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void handleSendAnswer(answer.trim() || '[Истекло время на ответ]');
   }, [answer, handleSendAnswer, isLoading, step, timeLeft]);
 
@@ -713,7 +717,7 @@ export default function GuestSimulationPage() {
                   Соберите Defense Brief для этой встречи
                 </h1>
                 <p className="mt-5 font-inter text-[17px] leading-relaxed text-neutral-600">
-                  Вы прошли 3 неудобных вопроса. Полная подготовка за 299 ₽ сохранит материал, перенесёт ответы и даст Defense Brief: слабые места позиции, контраргументы и короткий план защиты перед встречей.
+                  Вы прошли 3 неудобных вопроса. Полная подготовка за 990 ₽ сохранит материал, перенесёт ответы и даст Defense Brief: слабые места позиции, контраргументы и короткий план защиты перед встречей.
                 </p>
               </div>
 
@@ -740,8 +744,8 @@ export default function GuestSimulationPage() {
                       onClick={() => trackGuestPaywallCta(user ? 'billing' : 'register')}
                       className="group flex min-h-[56px] w-full items-center justify-center gap-3 border border-[#E8600A] bg-[#E8600A] px-5 text-center text-[15px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30"
                     >
-                      <span className="hidden sm:inline">Собрать Defense Brief — 299 ₽</span>
-                      <span className="sm:hidden">Defense Brief — 299 ₽</span>
+                      <span className="hidden sm:inline">Собрать Defense Brief — 990 ₽</span>
+                      <span className="sm:hidden">Defense Brief — 990 ₽</span>
                       <ArrowRight size={18} className="shrink-0 transition-transform group-hover:translate-x-1" />
                     </Link>
                     {!user && (

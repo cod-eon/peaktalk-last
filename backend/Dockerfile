@@ -5,12 +5,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     curl \
+    antiword \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.lock .
+RUN pip install --no-cache-dir -r requirements.lock
 
 COPY . .
 
@@ -25,5 +26,6 @@ CMD ["gunicorn", "app.main:app", \
      "--workers", "2", \
      "--bind", "0.0.0.0:8000", \
      "--timeout", "120", \
+     "--access-logformat", "%(h)s %(l)s %(u)s %(t)s \"%(m)s %(U)s %(H)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\" %(L)s", \
      "--access-logfile", "-", \
      "--error-logfile", "-"]

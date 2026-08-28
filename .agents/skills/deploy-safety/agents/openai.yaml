@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deploy Safety"
+  short_description: "PeakTalk release preflight and rollback"
+  default_prompt: "Use $deploy-safety to prepare and verify a PeakTalk deployment safely."

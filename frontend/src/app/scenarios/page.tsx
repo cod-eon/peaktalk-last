@@ -292,6 +292,8 @@ export default function ScenariosPage() {
     }
 
     if (isUsingFallback) {
+      // Recompute the embedded catalog when its category changes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setScenarios(
         prioritizeWedgeScenario(
           getFallbackScenarios(activeCategory),

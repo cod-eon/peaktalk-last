@@ -40,7 +40,11 @@ from app.services.limits import (
     get_usage_counter,
     get_user_subscription,
 )
-from app.services.yookassa_service import create_payment, get_saved_payment_method_summary
+from app.services.yookassa_service import (
+    PLAN_PRICES,
+    create_payment,
+    get_saved_payment_method_summary,
+)
 from sqlalchemy import select
 
 logger = logging.getLogger("peaktalk.billing")
@@ -142,7 +146,7 @@ _PLAN_CATALOGUE: list[PlanInfo] = [
     PlanInfo(
         id="per_session",
         name="Defense Brief",
-        price=299,
+        price=PLAN_PRICES[PlanType.per_session] // 100,
         billing="once",
         simulations="1 стресс-тест материала",
         documents="включено",
@@ -313,7 +317,7 @@ async def create_subscription_payment(
 ) -> CreatePaymentResponse:
     """Initiate a YooKassa payment.
 
-    - plan == "per_session": one-time 299 RUB charge. On webhook success,
+    - plan == "per_session": one-time 990 RUB charge. On webhook success,
       session_credits += 1 for the user. No subscription record is created/updated.
     - Other paid plans: recurring monthly subscription flow (unchanged).
 

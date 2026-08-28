@@ -1,5 +1,5 @@
 const AUTH_ERROR_RULES: Array<[RegExp, string]> = [
-  [/invalid login credentials/i, "Неверный email или пароль. Проверьте данные и попробуйте снова."],
+  [/invalid (?:email or )?password|invalid login credentials|invalid credentials|incorrect email or password/i, "Неверный email или пароль. Проверьте данные и попробуйте снова."],
   [/email not confirmed/i, "Подтвердите email по ссылке из письма, затем войдите снова."],
   [/user already registered/i, "Пользователь с таким email уже зарегистрирован. Попробуйте войти."],
   [/unable to validate email address/i, "Введите корректный email."],
@@ -12,7 +12,7 @@ const AUTH_ERROR_RULES: Array<[RegExp, string]> = [
 
 export function translateAuthError(message: string | null | undefined): string {
   if (!message) {
-    return "Произошла ошибка авторизации. Попробуйте еще раз.";
+    return "Не удалось выполнить вход. Попробуйте ещё раз.";
   }
 
   if (/[А-Яа-яЁё]/.test(message)) {
@@ -34,5 +34,5 @@ export function translateAuthError(message: string | null | undefined): string {
     }
   }
 
-  return "Не удалось выполнить действие. Проверьте введенные данные и попробуйте снова.";
+  return "Не удалось выполнить действие. Проверьте данные и попробуйте ещё раз.";
 }

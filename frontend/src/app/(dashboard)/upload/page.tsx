@@ -30,6 +30,8 @@ export default function UploadPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        // Initialize from the browser query after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedSituationId(getCaseSituation(new URLSearchParams(window.location.search).get('case')).id);
     }, []);
 

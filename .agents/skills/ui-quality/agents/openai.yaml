@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Quality"
+  short_description: "PeakTalk UI states and responsive quality"
+  default_prompt: "Use $ui-quality to review a PeakTalk interface for behavior, states, and responsive quality."

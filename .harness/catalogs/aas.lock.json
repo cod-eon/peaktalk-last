@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "agentic-awesome-skills",
+  "repository": "https://github.com/sickn33/antigravity-awesome-skills.git",
+  "commit": "75c558b7ea89a023877b96eac74ced7aa1ee93f6",
+  "commitDate": "2026-08-08T07:06:12Z",
+  "indexPath": "data/skills_index.json",
+  "indexSha256": "3fee916ec8377bff1bacc8be49fd29317966d0cbff39460f9216aaecce28a96f",
+  "catalogSkillCount": 2007,
+  "mode": "read-only-catalog",
+  "installedAsActiveSkills": false
+}
