@@ -1,34 +1,38 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  ChevronDown,
-  Lock,
-  Menu,
-  ShieldAlert,
-  Target,
-  Timer,
-  X,
-} from 'lucide-react';
+import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
+import LandingPressureFilm from '@/components/landing/LandingPressureFilm';
 import { trackEvent } from '@/lib/analytics';
-import landingStyles from './landing-v11.module.css';
+import landingFontStyles from './landing-v11.module.css';
+import styles from './landing.module.css';
 
-const CTA_LABEL = 'Запустить демо бесплатно';
+const CTA_LABEL = 'Проверить материал бесплатно';
 
 type LandingCtaLocation =
   | 'nav_desktop'
   | 'nav_mobile'
   | 'hero_primary'
+  | 'pressure_fragment'
   | 'pricing_free'
   | 'pricing_paid'
   | 'footer_final';
 
-const trackLandingCta = (ctaLocation: LandingCtaLocation) => {
+type LandingCtaTracker = (ctaLocation: LandingCtaLocation) => void;
+
+const trackLandingCta: LandingCtaTracker = (ctaLocation) => {
   trackEvent('landing_cta_clicked', {
     source: 'landing',
     cta_location: ctaLocation,
@@ -66,29 +70,109 @@ type RevealProps = {
 };
 
 const navItems = [
-  { label: 'Как работает', id: '#how' },
+  { label: 'Кейс', id: '#case' },
+  { label: 'Давление', id: '#pressure' },
   { label: 'Сценарии', id: '#scenarios' },
-  { label: 'Что бесплатно', id: '#pricing' },
+  { label: 'Пакеты', id: '#pricing' },
   { label: 'FAQ', id: '#faq' },
 ];
 
-const smoothScroll = (id: string) => {
-  const element = document.querySelector(id);
-  if (!element) return;
-  const navHeight = 82;
-  const y = element.getBoundingClientRect().top + window.scrollY - navHeight;
-  window.scrollTo({ top: y, behavior: 'smooth' });
-};
+const pressureRows = [
+  {
+    label: 'вопрос финансового директора',
+    title: 'Если бюджет сократят на 30%, что вы уберёте первым и какую метрику не готовы потерять?',
+    body: 'Проверяется не уверенность, а выбор между статьями расходов, последствия и критерий решения.',
+  },
+  {
+    label: 'слабый ответ',
+    title: 'Сохраним ключевые активности без потери результата.',
+    body: 'В ответе нет конкретного выбора, цены риска и условия, при котором план нужно менять.',
+  },
+  {
+    label: 'что усилить',
+    title: 'Назовите сокращаемые статьи, цену риска, владельца решения и пороговую метрику.',
+    body: 'Так позиция становится проверяемой до встречи, а не в момент давления.',
+  },
+];
+
+const scenarios = [
+  {
+    tag: 'Бюджет',
+    title: 'Защитить бюджет перед руководителем',
+    body: 'Докажите, какие расходы нельзя сокращать без ущерба для результата.',
+    decision: 'Решение: что сохранить, что сократить и по какой метрике оценить риск.',
+    href: '/scenarios/budget-cut-q3',
+  },
+  {
+    tag: 'Клиент',
+    title: 'Подготовиться к клиентской эскалации',
+    body: 'Объясните сбой и защитите план восстановления доверия.',
+    decision: 'Решение: что вы берёте на себя, что обещаете клиенту и какой следующий шаг предлагаете.',
+    href: '/scenarios/client-escalation',
+  },
+  {
+    tag: 'Инвестор',
+    title: 'Выдержать вопросы инвестора',
+    body: 'Подготовьте ответы о рынке, росте, экономике и реалистичности плана.',
+    decision: 'Решение: какие допущения подтверждают рост и при каком условии план нужно пересмотреть.',
+    href: '/scenarios/series-a-pitch',
+  },
+];
+
+const processStages = [
+  {
+    label: 'материал встречи',
+    title: 'Вставьте то, что нужно защитить',
+    body: 'Тезисы, коммерческое предложение или план разговора для бюджета, QBR, клиента или инвестора.',
+  },
+  {
+    label: 'три вопроса бесплатно',
+    title: 'Ответьте на неудобные вопросы',
+    body: 'Выберите роль оппонента и пройдите три вопроса без регистрации.',
+  },
+  {
+    label: 'полная сессия и Defense Brief',
+    title: 'Соберите план защиты перед встречей',
+    body: 'После оплаты сохраните материал и ответы, пройдите полный разбор и получите слабые места позиции, ожидаемые вопросы и следующий шаг.',
+  },
+];
+
+const faqData = [
+  {
+    question: 'Что такое PeakTalk?',
+    answer:
+      'PeakTalk проверяет аргументацию перед сложной рабочей встречей. Вы вставляете материал, отвечаете на вопросы оппонента и видите слабые места позиции.',
+  },
+  {
+    question: 'Нужна ли регистрация?',
+    answer:
+      'Нет. Три вопроса по вашему материалу доступны без регистрации. Для полной сессии и Defense Brief потребуется аккаунт.',
+  },
+  {
+    question: 'Какой материал можно вставить?',
+    answer:
+      'Тезисы защиты, коммерческое предложение, письмо клиенту, структуру презентации или план разговора. Не вставляйте пароли, персональные данные и конфиденциальные фрагменты.',
+  },
+  {
+    question: 'Это курс переговоров или тренировка выступлений?',
+    answer:
+      'Нет. PeakTalk не тренирует голос или харизму. Он помогает проверить конкретную позицию перед конкретной встречей.',
+  },
+  {
+    question: 'Что входит в полную сессию?',
+    answer:
+      'Материал и ответы сохраняются, разбор показывает слабые места позиции и собирает Defense Brief с ожидаемыми вопросами и планом защиты.',
+  },
+];
 
 function useScrolled() {
   const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const nextScrolled = latest > 18;
+    setScrolled((current) => (current === nextScrolled ? current : nextScrolled));
+  });
 
   return scrolled;
 }
@@ -166,7 +250,7 @@ function RevealDiv({
 
 function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/[0.45]' : 'text-neutral-500'}`}>
+    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/65' : 'text-neutral-500'}`}>
       {children}
     </div>
   );
@@ -176,9 +260,7 @@ function Logo({ size = 24 }: { size?: number }) {
   return (
     <div className="flex items-center gap-2">
       <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={44} height={44} className="h-10 w-10 sm:h-11 sm:w-11" priority />
-      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.86 }}>
-        PeakTalk
-      </span>
+      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.86 }}>PeakTalk</span>
     </div>
   );
 }
@@ -186,6 +268,100 @@ function Logo({ size = 24 }: { size?: number }) {
 function Nav() {
   const scrolled = useScrolled();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuOpenerRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuDialogRef = useRef<HTMLDivElement>(null);
+  const restoreMobileMenuFocusRef = useRef(true);
+  const restoreMobileMenuScrollRef = useRef(true);
+
+  const openMobileMenu = () => {
+    restoreMobileMenuFocusRef.current = true;
+    restoreMobileMenuScrollRef.current = true;
+    setMobileMenuOpen(true);
+  };
+
+  const closeMobileMenu = () => {
+    restoreMobileMenuFocusRef.current = true;
+    restoreMobileMenuScrollRef.current = true;
+    setMobileMenuOpen(false);
+  };
+
+  const followMobileMenuLink = () => {
+    restoreMobileMenuFocusRef.current = false;
+    restoreMobileMenuScrollRef.current = false;
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    if (!mobileMenuOpen || !mobileMenuDialogRef.current) return;
+
+    const dialog = mobileMenuDialogRef.current;
+    const menuOpener = mobileMenuOpenerRef.current;
+    const scrollY = window.scrollY;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyLeft = document.body.style.left;
+    const previousBodyRight = document.body.style.right;
+    const previousBodyWidth = document.body.style.width;
+    const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getFocusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+      .filter((element) => element.getClientRects().length > 0);
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      getFocusableElements()[0]?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMobileMenu();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = getFocusableElements();
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+      if (!firstElement || !lastElement) return;
+
+      if (event.shiftKey && (document.activeElement === firstElement || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (document.activeElement === lastElement || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.left = previousBodyLeft;
+      document.body.style.right = previousBodyRight;
+      document.body.style.width = previousBodyWidth;
+
+      if (restoreMobileMenuScrollRef.current) window.scrollTo(0, scrollY);
+      if (restoreMobileMenuFocusRef.current) {
+        window.requestAnimationFrame(() => menuOpener?.focus());
+      }
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <>
@@ -193,370 +369,147 @@ function Nav() {
         initial={{ y: -84 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-white/90 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl' : 'bg-[#faf8f4]/84 py-3.5 backdrop-blur-md'}`}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-white/92 py-2.5 shadow-[0_12px_36px_rgba(17,17,17,0.06)] backdrop-blur-2xl' : 'bg-[#FAF8F4]/90 py-3.5 backdrop-blur-md'}`}
       >
         <div className="container-custom flex items-center justify-between gap-5">
-          <Link href="/" aria-label="PeakTalk">
-            <Logo />
-          </Link>
-
-          <div className="hidden items-center gap-8 lg:flex">
+          <Link href="/" aria-label="PeakTalk" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"><Logo /></Link>
+          <div className="hidden items-center gap-7 lg:flex">
             {navItems.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => smoothScroll(item.id)}
-                className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-              >
+              <Link key={item.label} href={item.id} className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30">
                 {item.label}
-              </button>
+              </Link>
             ))}
           </div>
-
           <div className="hidden items-center gap-4 lg:flex">
-            <Link
-              href="/login"
-              className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-            >
-              Вход
-            </Link>
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('nav_desktop')}
-              className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#E8600A] hover:border-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none"
-            >
-              {CTA_LABEL}
-            </Link>
+            <Link href="/login" className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30">Вход</Link>
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_desktop')} className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал</Link>
           </div>
-
-          <button
-            type="button"
-            className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 lg:hidden"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Открыть меню"
-            aria-controls="landing-mobile-menu"
-            aria-expanded={mobileMenuOpen}
-          >
+          <button ref={mobileMenuOpenerRef} type="button" className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 lg:hidden" onClick={openMobileMenu} aria-label="Открыть меню" aria-controls="landing-mobile-menu" aria-expanded={mobileMenuOpen}>
             <Menu size={22} />
           </button>
         </div>
       </motion.nav>
-
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            id="landing-mobile-menu"
-            className="fixed inset-0 z-[100] flex flex-col bg-[#faf8f4] p-6"
-          >
-            <div className="mb-12 flex items-center justify-between">
+      {mobileMenuOpen ? (
+        <AnimatePresence>
+          <motion.div ref={mobileMenuDialogRef} initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" role="dialog" aria-modal="true" aria-label="Навигация по странице" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
+            <div className="mb-10 flex items-center justify-between">
               <Logo />
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950"
-                aria-label="Закрыть меню"
-              >
-                <X size={24} />
-              </button>
+              <button type="button" onClick={closeMobileMenu} className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40" aria-label="Закрыть меню"><X size={24} /></button>
             </div>
-
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {navItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setTimeout(() => smoothScroll(item.id), 240);
-                  }}
-                  className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950"
-                >
-                  {item.label}
-                </button>
+                <Link key={item.label} href={item.id} onClick={followMobileMenuLink} className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{item.label}</Link>
               ))}
             </div>
-
             <div className="mt-auto grid gap-3">
-              <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950">
-                Войти
-              </Link>
-              <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_mobile')} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white rounded-none">
-                {CTA_LABEL}
-              </Link>
+              <Link href="/login" onClick={followMobileMenuLink} className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Войти</Link>
+              <Link href="/simulation/guest" onClick={() => { followMobileMenuLink(); trackLandingCta('nav_mobile'); }} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{CTA_LABEL}</Link>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      ) : null}
     </>
   );
 }
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#faf8f4] pt-24 lg:pt-20">
-      <div className="absolute inset-0 opacity-[0.35]" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:64px_64px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,#faf8f4_86%)]" />
+    <section className="relative overflow-hidden bg-[#FAF8F4] pt-24 lg:pt-20">
+      <div className="absolute inset-0 opacity-[0.45]" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:56px_56px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(250,248,244,0.4)_0%,#FAF8F4_88%)]" />
       </div>
-
-      <div className="container-custom relative z-10 grid items-center gap-8 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.74fr)_minmax(520px,1.26fr)] lg:gap-14 lg:pb-24">
+      <div className="container-custom relative z-10 grid items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(350px,0.85fr)] lg:gap-6 lg:pb-20 xl:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] xl:gap-12">
         <div className="max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-5 inline-flex max-w-full border border-neutral-200 bg-white/80 px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-600 shadow-sm rounded-none sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]"
-          >
-            подготовка к сложной рабочей встрече
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-5 inline-flex max-w-full border border-neutral-950 bg-white px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-700 shadow-[6px_6px_0_rgba(232,96,10,0.12)] sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]">Материал / разбор / Defense Brief</motion.div>
+          <motion.h1 data-landing-hero-copy initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }} className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[58px] xl:text-[64px]">Подготовьте материал, который выдержит вопросы руководства.</motion.h1>
+          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:text-[20px] sm:leading-[1.58]">Вставьте тезисы, коммерческое предложение или план разговора. За три вопроса без регистрации увидите, где позиции не хватает цифр, выбора и ответственности за решение.</motion.p>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }} className="mt-8 grid gap-3 sm:mt-9 sm:flex sm:items-center sm:gap-4 lg:gap-2 xl:gap-4">
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('hero_primary')} className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-[0_16px_36px_rgba(232,96,10,0.22)] transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:min-h-[56px] sm:px-8 sm:text-[15px] lg:px-4 lg:text-[13px] xl:px-8 xl:text-[15px]">{CTA_LABEL}<ArrowRight size={18} /></Link>
+            <Link href="#case" className="inline-flex min-h-[48px] cursor-pointer items-center justify-center whitespace-nowrap border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6 lg:px-4 lg:text-[13px] xl:px-6 xl:text-[15px]">Как устроена подготовка</Link>
           </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-[780px] font-display text-[32px] font-black leading-[1.04] text-neutral-950 sm:text-[52px] lg:text-[54px] xl:text-[56px]"
-          >
-            Проверка аргументов <span className="whitespace-nowrap">под давлением</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 max-w-[620px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-8 sm:text-[20px] sm:leading-[1.65]"
-          >
-            Перед важной встречей вставьте тезисы, КП или план разговора. PeakTalk
-            сыграет руководителя, клиента или инвестора, задаст неудобные вопросы
-            и покажет, где позиция не выдерживает давления.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            style={safariMotionStyle}
-            className="mt-7 md:hidden"
-          >
-            <HeroVisual compact />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 grid gap-3 sm:mt-10 sm:flex sm:items-center sm:gap-4"
-          >
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('hero_primary')}
-              className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-lg shadow-[#E8600A]/20 transition-all duration-200 hover:border-[#B74707] hover:bg-[#B74707] hover:shadow-xl hover:shadow-[#E8600A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 rounded-none sm:min-h-[56px] sm:px-8 sm:text-[15px]"
-            >
-              {CTA_LABEL}
-              <ArrowRight size={18} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => smoothScroll('#scenarios')}
-              className="inline-flex min-h-[48px] cursor-pointer items-center justify-center px-4 text-[15px] font-bold text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6"
-            >
-              Посмотреть сценарии
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.34 }}
-            className="mt-7 flex max-w-[680px] flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400 sm:mt-8 sm:gap-x-6 sm:gap-y-3 sm:text-[11px] sm:tracking-[0.16em]"
-          >
-            <span>без регистрации</span>
-            <span className="text-[#E8600A] font-medium">демо: 3 вопроса</span>
-            <span>на своём кейсе</span>
-          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.34 }} className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 sm:text-[11px] sm:tracking-[0.16em]">Без регистрации / без карты / на своём материале</motion.div>
+          <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="mt-7 md:hidden"><HeroVisual compact /></motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 18, scale: 0.99 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          style={safariMotionStyle}
-          className="relative hidden min-w-0 md:block lg:translate-x-4"
-        >
-          <HeroVisual />
-        </motion.div>
+        <motion.div data-landing-hero-visual initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="relative hidden min-w-0 md:block lg:translate-x-5"><HeroVisual /></motion.div>
       </div>
     </section>
   );
 }
 
-function PressureGap() {
-  const items = [
-    {
-      title: 'Вопрос оппонента',
-      body: 'Почему это решение важнее двух альтернатив, которые уже лежат в backlog?',
-    },
-    {
-      title: 'Слабое место',
-      body: 'Вы называете срок, но не показываете зависимость от ресурсов и владельца решения.',
-    },
-    {
-      title: 'Prep-card',
-      body: 'Начните с цены задержки, затем назовите компромисс и условия, при которых план меняется.',
-    },
-  ];
-
+function PressureProof() {
   return (
-    <section className="bg-white py-[clamp(76px,12vw,140px)]">
-      <div className="md:hidden">
-        <div className="container-custom">
-          <RevealDiv className="overflow-hidden border border-neutral-950 bg-neutral-950 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)]">
-            <div className="border-b border-white/10 px-5 py-5">
-              <SectionLabel dark>живой фрагмент</SectionLabel>
-              <h2 className="mt-4 text-[28px] font-bold leading-[1.08] text-white text-balance">
-                Не презентация. Проверка, где позиция треснет.
-              </h2>
-              <p className="mt-4 text-[15px] leading-relaxed text-white/62 text-pretty">
-                Вместо абстрактных советов PeakTalk показывает конкретный момент, где собеседник начнёт давить.
-              </p>
-            </div>
-
-            <div className="grid gap-px bg-white/10">
-              <div className="bg-neutral-950 px-5 py-5">
-                <div className="mb-3 flex items-center justify-between gap-4">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">вопрос CFO</div>
-                  <div className="font-mono text-[10px] tabular-nums text-white/36">01 / 03</div>
-                </div>
-                <p className="text-[18px] font-semibold leading-[1.35] text-white text-pretty">
-                  Если бюджет режут на 30%, что Вы убираете первым — и какая метрика не должна просесть?
-                </p>
-              </div>
-
-              <div className="bg-[#f7f3eb] px-5 py-5 text-neutral-950">
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">ваш ответ</div>
-                <p className="text-[15px] leading-relaxed text-neutral-600 text-pretty">
-                  “Мы постараемся сохранить ключевые активности и пересобрать план без потери результата…”
-                </p>
-              </div>
-
-              <div className="bg-white px-5 py-5 text-neutral-950">
-                <div className="mb-4 flex items-start gap-3">
-                  <div className="mt-1 size-2 shrink-0 bg-[#E8600A]" />
-                  <div>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">слабое место</div>
-                    <p className="mt-2 text-[17px] font-bold leading-snug text-neutral-950">
-                      Нет выбора, цены компромисса и владельца решения.
-                    </p>
-                  </div>
-                </div>
-                <div className="border-l-2 border-[#E8600A] pl-4">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400">prep-card</div>
-                  <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 text-pretty">
-                    Начните с того, что можно отложить. Затем назовите риск, метрику и условие, при котором план меняется.
-                  </p>
-                </div>
-              </div>
-            </div>
+    <section id="pressure" className="scroll-mt-24 bg-neutral-950 py-[clamp(52px,4.5vw,60px)] text-white">
+      <div className="container-custom grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)] lg:items-start lg:gap-16">
+        <div>
+          <RevealDiv>
+            <SectionLabel dark>проверка под давлением</SectionLabel>
+            <h2 className="mt-5 max-w-4xl text-[32px] font-bold leading-[1.08] text-white sm:text-[48px] lg:text-[54px]">Вопрос, который может сорвать защиту, лучше услышать до встречи.</h2>
+            <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-white/62">PeakTalk проверяет, сможете ли вы объяснить выбор, назвать цену риска и взять ответственность за решение.</p>
           </RevealDiv>
-        </div>
-      </div>
-
-      <div className="container-custom">
-        <RevealDiv className="mb-14 mt-16 grid gap-6 md:mt-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-          <div>
-            <SectionLabel>что на выходе</SectionLabel>
-            <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Слабое место лучше увидеть на экране, а не за столом переговоров.
-            </h2>
+          <div className="mt-10 border-y border-white/14">
+            {pressureRows.map((row, index) => (
+              <RevealDiv key={row.label} delay={index * 0.1} className={`grid gap-4 border-b border-white/14 py-6 last:border-b-0 sm:grid-cols-[150px_minmax(0,1fr)] ${index === 1 ? 'sm:pl-8' : ''}`}>
+                <div className="flex items-start gap-3"><span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center border border-[#FF8A3D]/60 font-mono text-[9px] text-[#FF8A3D]">0{index + 1}</span><span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">{row.label}</span></div>
+                <div><h3 className="text-[19px] font-bold leading-snug text-white sm:text-[22px]">{row.title}</h3><p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/58">{row.body}</p></div>
+              </RevealDiv>
+            ))}
           </div>
-          <p className="max-w-xl text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
-            PeakTalk не пишет красивый текст вместо Вас. Он быстро показывает, какой вопрос прилетит,
-            где ответ ломается и как усилить формулировку до встречи.
-          </p>
-        </RevealDiv>
+          <RevealDiv className="mt-8"><Link href="/simulation/guest" onClick={() => trackLandingCta('pressure_fragment')} className="inline-flex min-h-[52px] items-center justify-center gap-3 border border-white bg-white px-6 text-[14px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">Проверить свой материал<ArrowRight size={17} /></Link></RevealDiv>
+        </div>
+        <RevealDiv className="mx-auto w-full max-w-[370px] border border-white/14 bg-white/[0.03] p-2 lg:sticky lg:top-28"><LandingPressureFilm /></RevealDiv>
+      </div>
+    </section>
+  );
+}
 
-        <div className="grid gap-8 border-t border-neutral-100 pt-10 lg:grid-cols-3 lg:gap-14 lg:pt-14">
-          {items.map((item, index) => (
-            <RevealDiv key={item.title} delay={index * 0.05} className="bg-white">
-              <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">0{index + 1}</div>
-              <h3 className="mt-4 text-[22px] font-bold leading-tight text-neutral-950">{item.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{item.body}</p>
-            </RevealDiv>
-          ))}
+function ScenarioLink({ item, primary = false }: { item: (typeof scenarios)[number]; primary?: boolean }) {
+  return (
+    <article className={`group relative flex h-full flex-col overflow-hidden border border-neutral-950 bg-white transition-transform duration-200 hover:-translate-y-1 focus-within:-translate-y-1 ${primary ? 'min-h-[430px] p-7 sm:p-10' : 'min-h-[210px] p-6 sm:p-7'}`}>
+      {primary ? <div className="absolute right-[-44px] top-[-36px] h-44 w-44 rotate-12 border border-[#E8600A]/25 bg-[#FFF7ED]" aria-hidden="true" /> : null}
+      <div className="relative flex items-center justify-between gap-4"><div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8600A]">{item.tag}</div><div className="h-px flex-1 bg-neutral-200" /></div>
+      <h3 className={`relative mt-7 max-w-2xl font-bold leading-[1.08] text-neutral-950 ${primary ? 'text-[30px] sm:text-[40px]' : 'text-[22px]'}`}>{item.title}</h3>
+      <p className="relative mt-4 max-w-xl text-[15px] leading-relaxed text-neutral-600">{item.body}</p>
+      <p className={`relative mt-6 border-l-2 border-[#E8600A] pl-4 font-semibold leading-relaxed text-neutral-800 ${primary ? 'max-w-2xl text-[15px]' : 'text-[14px]'}`}>{item.decision}</p>
+      <Link href={item.href} className="relative mt-auto inline-flex w-fit items-center gap-2 pt-7 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Разобрать сценарий<ArrowRight size={16} /></Link>
+    </article>
+  );
+}
+
+function ScenarioEntrances() {
+  return (
+    <section id="scenarios" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(52px,4.5vw,60px)]">
+      <div className="container-custom">
+        <RevealDiv className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div><SectionLabel>сценарии встреч</SectionLabel><h2 className="mt-5 max-w-4xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Выберите решение, которое нужно защитить на ближайшей встрече.</h2></div>
+          <p className="max-w-xl text-[16px] leading-relaxed text-neutral-600 lg:justify-self-end lg:pb-1">Начните с давления, которое встретите при защите бюджета, разговоре с клиентом или вопросах инвестора.</p>
+        </RevealDiv>
+        <div className="mt-11 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+          <RevealDiv><ScenarioLink item={scenarios[0]} primary /></RevealDiv>
+          <div className="grid gap-5"><RevealDiv delay={0.06}><ScenarioLink item={scenarios[1]} /></RevealDiv><RevealDiv delay={0.12}><ScenarioLink item={scenarios[2]} /></RevealDiv></div>
         </div>
       </div>
     </section>
   );
 }
 
-function ActionFlowPipeline() {
-  const steps = [
-    {
-      id: '1',
-      label: 'материал',
-      title: 'Загрузите спич',
-      body: 'Тезисы, КП, письмо клиенту или план защиты бюджета.',
-      result: 'сценарий тренировки',
-    },
-    {
-      id: '2',
-      label: 'давление',
-      title: 'Пройдите симуляцию',
-      body: 'Ответьте на вопросы оппонента, которые проверяют ценность, риски и компромиссы.',
-      result: 'проверенная аргументация',
-    },
-    {
-      id: '3',
-      label: 'правки',
-      title: 'План улучшений',
-      body: 'Увидьте слабые места, формулировки и следующий рабочий шаг.',
-      result: 'список правок',
-    },
-  ];
-
+function DecisionProcess() {
   return (
-    <section id="how" className="bg-[#faf8f4] py-[clamp(80px,12vw,140px)]">
+    <section id="case" className="scroll-mt-24 overflow-hidden border-y border-neutral-200 bg-white py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <SectionLabel>как работает</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Один материал → неудобные вопросы → рабочий план ответа.
-            </h2>
-          </div>
-          <p className="max-w-md text-[17px] leading-relaxed text-neutral-500 lg:pb-2">
-            Без учебной сцены и геймификации. Только короткий контур подготовки к разговору, где Вас будут проверять.
-          </p>
-        </RevealDiv>
-
-        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
-          <div className="flex flex-col justify-between rounded-none bg-neutral-950 p-8 text-white shadow-xl shadow-black/5">
-            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#FF8A3D]">pipeline</div>
-            <p className="mt-8 text-[22px] font-bold leading-[1.2] lg:text-[26px]">
-              Материал превращается в проверку аргументов, а не в ещё один AI-текст.
-            </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {steps.map((step, index) => (
-              <RevealDiv
-                key={step.title}
-                delay={index * 0.05}
-                className="relative flex flex-col rounded-none border border-neutral-100 bg-white p-7 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">{step.label}</div>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#faf8f4] font-display text-sm font-black text-neutral-950">
-                    {step.id}
-                  </div>
-                </div>
-                <h3 className="mt-8 text-[20px] font-bold leading-[1.15] text-neutral-950">{step.title}</h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">{step.body}</p>
-                <div className="mt-auto pt-6">
-                  <div className="inline-block rounded bg-[#E8600A]/10 px-2.5 py-1 text-[13px] font-semibold text-[#E8600A]">
-                    Результат: {step.result}
-                  </div>
-                </div>
+        <div className={styles.processIntro}>
+          <RevealDiv><SectionLabel>подготовка / Defense Brief</SectionLabel><h2 className={`${styles.processHeadline} mt-5 font-display text-[34px] font-black leading-[1.02] text-neutral-950 sm:text-[54px] lg:text-[58px] xl:text-[72px]`}>От материала до позиции, которую можно защищать.</h2></RevealDiv>
+          <RevealDiv className={styles.dossier} hidden={{ opacity: 0, x: 24, y: 16, scale: 0.98 }} visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}><Image src="/noprecache/landing/decision-dossier.png" alt="" width={1536} height={1024} sizes="(min-width: 1024px) 56vw, 100vw" className="h-auto w-full" aria-hidden="true" /></RevealDiv>
+          <RevealDiv className={styles.processBody}><p className="max-w-2xl text-[16px] leading-relaxed text-neutral-600">Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 990 ₽ и получите Defense Brief перед встречей.</p></RevealDiv>
+        </div>
+        <div className={styles.stageTrack} data-process-track="open">
+          <RevealDiv className={styles.annotationLayer} hidden={{ opacity: 0, x: -30, scaleX: 0.7 }} visible={{ opacity: 1, x: 0, scaleX: 1 }} duration={0.8}><svg viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true"><path d="M18 18 C158 18 226 74 338 74 S552 130 684 130" fill="none" stroke="#E8600A" strokeWidth="4" strokeLinecap="round" /></svg></RevealDiv>
+          <div className={styles.stageList}>
+            {processStages.map((stage, index) => (
+              <RevealDiv key={stage.label} delay={index * 0.08} className={styles.processStage}>
+                <div className={styles.stageMarker}>0{index + 1}</div>
+                <div className="max-w-[260px] font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-[#E8600A]">{stage.label}</div>
+                <h3 className="mt-5 text-[22px] font-bold leading-[1.12] text-neutral-950">{stage.title}</h3><p className="mt-4 max-w-[360px] text-[15px] leading-relaxed text-neutral-600">{stage.body}</p>
               </RevealDiv>
             ))}
           </div>
@@ -566,115 +519,21 @@ function ActionFlowPipeline() {
   );
 }
 
-function InteractiveScenarios() {
-  const scenarios = [
-    {
-      tag: 'Бюджет',
-      title: 'Защитить бюджет перед руководителем',
-      desc: 'Когда просят сократить расходы, а Вам нужно доказать, что решение влияет на результат.',
-      href: '/scenarios/budget-cut-q3',
-    },
-    {
-      tag: 'Клиент',
-      title: 'Подготовиться к разговору с клиентом',
-      desc: 'Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
-      href: '/scenarios/client-escalation',
-    },
-    {
-      tag: 'Инвестор',
-      title: 'Выдержать вопросы инвестора',
-      desc: 'Когда будут давить на рынок, рост, unit-экономику и реалистичность плана.',
-      href: '/scenarios/series-a-pitch',
-    },
-  ];
-
-  return (
-    <section id="scenarios" className="bg-white py-[clamp(80px,12vw,140px)]">
-      <div className="container-custom">
-        <RevealDiv className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <SectionLabel>сценарии встреч</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-              Начните не с “переговоров вообще”, а с разговора, который уже стоит в календаре.
-            </h2>
-          </div>
-          <Link href="/scenarios" className="inline-flex min-h-[48px] w-fit items-center gap-2 bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 lg:pb-2 rounded-none">
-            Все сценарии
-            <ArrowRight size={16} />
-          </Link>
-        </RevealDiv>
-
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-          {scenarios.map((item, index) => (
-            <RevealDiv key={item.title} delay={index * 0.04} className="group flex min-h-[260px] flex-col rounded-none border border-neutral-100 bg-white p-7 shadow-sm transition-all duration-200 hover:shadow-lg lg:min-h-[300px] lg:p-8">
-              <div className="mb-10 flex items-center justify-between gap-4 lg:mb-14">
-                <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#E8600A]">{item.tag}</div>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 font-display text-sm font-black text-neutral-400">{index + 1}</div>
-              </div>
-              <h3 className="text-[22px] font-bold leading-[1.15] text-neutral-950 lg:text-[24px]">{item.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-500">{item.desc}</p>
-              <Link
-                href={item.href}
-                className="mt-auto inline-flex w-fit items-center gap-2 pt-6 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 lg:pt-8"
-              >
-                Разобрать сценарий
-                <ArrowRight size={16} />
-              </Link>
-            </RevealDiv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function PricingCTA() {
   return (
-    <section id="pricing" className="bg-[#faf8f4] py-[clamp(80px,12vw,140px)]">
+    <section id="pricing" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mx-auto mb-14 max-w-3xl text-center">
-          <SectionLabel>бесплатно / полностью</SectionLabel>
-          <h2 className="mt-5 text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-            Бесплатно — первые 3 вопроса.<br className="hidden sm:block" /> Полная сессия — когда нужно сохранить разбор.
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-neutral-500">
-            Мы не прячем границу: бесплатный режим показывает механику на Вашем материале. Отчёт, расшифровка и prep-card открываются в полной сессии.
-          </p>
-        </RevealDiv>
-
-        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2 lg:gap-8">
-          <RevealDiv className="flex flex-col rounded-none border border-neutral-200 bg-white p-8 shadow-sm lg:p-10">
-            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">бесплатный стресс-тест</div>
-            <div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div>
-            <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Материал встречи, выбранный оппонент и первые 3 вопроса без регистрации.</p>
-            <div className="my-6 h-px bg-neutral-100" />
-            <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">
-              {['Без регистрации', 'Без карты', 'На тезисах, документе или плане разговора'].map((item) => (
-                <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E8600A]" />{item}</li>
-              ))}
-            </ul>
-            <Link href="/simulation/guest" onClick={() => trackLandingCta('pricing_free')} className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-100 px-6 text-[15px] font-bold text-neutral-900 transition-colors hover:bg-neutral-200 rounded-none">
-              {CTA_LABEL}
-            </Link>
+        <RevealDiv className="mx-auto max-w-4xl text-center"><SectionLabel>цена подготовки</SectionLabel><h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Три вопроса бесплатно. Полная подготовка за 990 ₽.</h2><p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-neutral-600">Бесплатный стресс-тест показывает давление на вашем материале. Полная сессия сохраняет разбор и собирает Defense Brief.</p></RevealDiv>
+        <div className="mx-auto mt-11 grid max-w-5xl gap-5 md:grid-cols-2">
+          <RevealDiv className="flex flex-col border border-neutral-200 bg-white p-7 sm:p-9">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">Бесплатный стресс-тест</div><div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div><p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Вставьте материал, выберите оппонента и ответьте на три вопроса.</p><div className="my-6 h-px bg-neutral-200" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">{['Три вопроса по вашему материалу', 'Без регистрации', 'Без карты'].map((item) => <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#E8600A]" />{item}</li>)}</ul>
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('pricing_free')} className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-950 px-6 text-center text-[15px] font-bold text-white transition-colors hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал бесплатно</Link>
           </RevealDiv>
-
-          <RevealDiv delay={0.08} className="flex flex-col rounded-none bg-neutral-950 p-8 text-white shadow-xl lg:p-10">
-            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#FF8A3D]">полная сессия</div>
-            <div className="mt-4 flex items-end gap-2 text-[48px] font-black leading-none text-white">
-              <span className="text-[#FF8A3D]">990</span>
-              <span>₽</span>
-              <span className="pb-1.5 text-lg font-medium text-white/50">/ сессия</span>
-            </div>
-            <p className="mt-4 text-[15px] leading-relaxed text-white/70">Полная симуляция для подготовки к конкретному разговору, с сохранением материалов.</p>
-            <div className="my-6 h-px bg-white/10" />
-            <ul className="mb-8 grid gap-3 text-[15px] text-white/90">
-              {['История вопросов и ответов', 'Разбор слабых мест', 'Prep-card и отчёт перед встречей'].map((item) => (
-                <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF8A3D]" />{item}</li>
-              ))}
-            </ul>
-            <Link href="/billing" onClick={() => trackLandingCta('pricing_paid')} className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-[15px] font-bold text-neutral-950 transition-colors hover:bg-neutral-100 rounded-none">
-              Открыть полную сессию
-            </Link>
+          <RevealDiv delay={0.08} className="flex flex-col bg-neutral-950 p-7 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)] sm:p-9">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">Полная сессия и Defense Brief</div><div className="mt-4 text-[44px] font-black leading-none text-white">990 ₽ <span className="text-lg font-medium text-white/50">/ разбор</span></div><p className="mt-4 text-[15px] leading-relaxed text-white/70">Полный разбор материала встречи с вопросами, ответами и планом защиты.</p><div className="my-6 h-px bg-white/10" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-white/90">{['Сохранённый материал и ответы', 'Слабые места позиции', 'Вопросы и короткий план защиты'].map((item) => <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#FF8A3D]" />{item}</li>)}</ul>
+            <Link href="/billing?plan=per_session" onClick={() => trackLandingCta('pricing_paid')} className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-center text-[15px] font-bold text-neutral-950 transition-colors hover:bg-[#FF8A3D] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">Собрать Defense Brief</Link>
           </RevealDiv>
         </div>
       </div>
@@ -682,83 +541,17 @@ function PricingCTA() {
   );
 }
 
-function FAQAndTrust() {
-  const faqs = [
-    {
-      q: 'Что такое PeakTalk?',
-      a: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
-    },
-    {
-      q: 'Нужна ли регистрация?',
-      a: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора, отчёта и prep-card.',
-    },
-    {
-      q: 'Что можно вставить вместо документа?',
-      a: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
-    },
-    {
-      q: 'Это заменяет коуча или курс?',
-      a: 'Нет. PeakTalk закрывает другую задачу: быстрый pressure-test конкретного материала перед конкретным разговором.',
-    },
-  ];
-
-  const signals = [
-    { icon: Target, title: 'Конкретный материал', desc: 'Вопросы строятся вокруг текста, который Вы вставили.' },
-    { icon: ShieldAlert, title: 'Неприятная роль', desc: 'Оппонент давит по цифрам, срокам, рискам и компромиссам.' },
-    { icon: Timer, title: 'Перед встречей', desc: 'Формат рассчитан на подготовку, когда времени мало.' },
-    { icon: Lock, title: 'Без карты на старте', desc: 'Бесплатный режим запускается без оплаты и регистрации.' },
-  ];
-
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
+function FAQAndBoundaries() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   return (
-    <section id="faq" className="bg-white py-[clamp(80px,12vw,140px)]">
-      <div className="container-custom grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1fr)] lg:gap-20">
-        <RevealDiv>
-          <SectionLabel>trust / faq</SectionLabel>
-          <h2 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.1] text-neutral-950 sm:text-[46px]">
-            Для разговоров, где общие формулировки не проходят.
-          </h2>
-          <div className="mt-10 grid gap-6">
-            {signals.map((signal) => (
-              <div key={signal.title} className="flex gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8600A]/10">
-                  <signal.icon size={20} className="text-[#E8600A]" />
-                </div>
-                <div>
-                  <div className="text-[17px] font-bold text-neutral-950">{signal.title}</div>
-                  <p className="mt-1 text-[15px] leading-relaxed text-neutral-500">{signal.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </RevealDiv>
-
-        <div className="flex flex-col gap-3">
-          {faqs.map((faq, index) => (
-            <div key={faq.q} className="rounded-none border border-neutral-100 bg-[#faf8f4] transition-colors hover:bg-neutral-100/50">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="flex w-full cursor-pointer items-center justify-between gap-5 px-6 py-5 text-left text-[17px] font-bold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-                aria-expanded={openIndex === index}
-              >
-                {faq.q}
-                <ChevronDown size={20} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {openIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <p className="px-6 pb-6 text-[15px] leading-relaxed text-neutral-600">{faq.a}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+    <section id="faq" className="scroll-mt-24 bg-white py-[clamp(52px,4.5vw,60px)]">
+      <div className="container-custom mx-auto max-w-[900px]">
+        <RevealDiv className="mb-9"><SectionLabel>FAQ / границы продукта</SectionLabel></RevealDiv>
+        <div className="flex flex-col border-t border-neutral-950">
+          {faqData.map((faq, index) => (
+            <div key={faq.question} className="border-b border-neutral-200">
+              <button type="button" onClick={() => setOpenIndex(openIndex === index ? null : index)} className="flex w-full cursor-pointer items-center justify-between gap-5 px-1 py-5 text-left text-[17px] font-bold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:py-6 sm:text-[19px]" aria-expanded={openIndex === index}>{faq.question}<ChevronDown size={20} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} /></button>
+              <AnimatePresence>{openIndex === index && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden"><p className="max-w-3xl px-1 pt-2 pb-6 text-[15px] leading-relaxed text-neutral-600">{faq.answer}</p></motion.div>}</AnimatePresence>
             </div>
           ))}
         </div>
@@ -770,69 +563,32 @@ function FAQAndTrust() {
 function FooterCTA() {
   return (
     <section className="relative overflow-hidden bg-black text-white">
-      <div className="absolute inset-0 opacity-[0.06]" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" />
-      </div>
-
-      <div className="container-custom relative z-10 py-[clamp(100px,14vw,160px)] text-center">
-        <RevealDiv>
-          <SectionLabel dark>final check</SectionLabel>
-          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[40px] font-black leading-[1.05] text-white sm:text-[60px] lg:text-[72px]">
-            Не несите слабый ответ на сильную встречу.
-          </h2>
-          <p className="mx-auto mt-8 max-w-2xl text-[18px] leading-relaxed text-white/70">
-            Запустите бесплатное демо на своём материале и посмотрите, где аргументация требует усиления.
-          </p>
-          <div className="mt-10 flex justify-center">
-            <Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white rounded-none">
-              {CTA_LABEL}
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/[0.4]">без регистрации / без карты / на своём кейсе</p>
+      <div className="absolute inset-0 opacity-[0.08]" aria-hidden="true"><div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" /></div>
+      <div className="container-custom relative z-10 py-[clamp(92px,13vw,150px)]">
+        <RevealDiv className="mx-auto max-w-4xl text-center">
+          <SectionLabel dark>final check</SectionLabel><h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">Не несите слабый ответ на сильную встречу.</h2><p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">За три вопроса увидите, где позиция требует доработки. За 990 ₽ продолжите разбор и соберёте Defense Brief перед встречей.</p>
+          <div className="mt-9 flex justify-center"><Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">{CTA_LABEL}<ArrowRight size={18} /></Link></div>
+          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">Без регистрации / без карты / на своём материале</p>
         </RevealDiv>
       </div>
-
       <Footer />
     </section>
   );
 }
 
 function Footer() {
+  const footerLinkClass = 'transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]';
   return (
     <footer className="relative z-10 border-t border-white/10 bg-black py-10">
       <div className="container-custom flex flex-col items-center justify-between gap-7 text-white/75 md:flex-row">
-        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
-          <div className="brightness-0 invert"><Logo size={20} /></div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">стресс-тест встреч</div>
-        </div>
-        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]">
-          <Link href="/scenarios" className="transition-colors hover:text-white">Сценарии</Link>
-          <Link href="/contacts" className="transition-colors hover:text-white">Контакты</Link>
-          <Link href="/personal-data" className="transition-colors hover:text-white">Оферта</Link>
-          <Link href="/privacy" className="transition-colors hover:text-white">Конфиденциальность</Link>
-        </div>
+        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left"><div className="brightness-0 invert"><Logo size={20} /></div><div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/65">стресс-тест встреч</div></div>
+        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/65"><Link href="/scenarios" className={footerLinkClass}>Сценарии</Link><Link href="/contacts" className={footerLinkClass}>Контакты</Link><Link href="/personal-data" className={footerLinkClass}>Оферта</Link><Link href="/privacy" className={footerLinkClass}>Конфиденциальность</Link></div>
       </div>
     </footer>
   );
 }
 
 function JsonLd() {
-  const faqData = [
-    {
-      question: 'Что такое PeakTalk?',
-      answer: 'PeakTalk — сервис подготовки к сложным рабочим встречам. Вы вставляете материал разговора, выбираете оппонента и отвечаете на вопросы, которые проверяют слабые места аргументации.',
-    },
-    {
-      question: 'Нужна ли регистрация?',
-      answer: 'Для первых трёх вопросов регистрация не нужна. Аккаунт нужен для сохранения сессии, полного разбора, отчёта и prep-card.',
-    },
-    {
-      question: 'Что можно вставить вместо документа?',
-      answer: 'Подойдут тезисы, план разговора, коммерческое предложение, письмо клиенту, структура презентации или любой текст, который нужно защитить на встрече.',
-    },
-  ];
-
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -840,60 +596,38 @@ function JsonLd() {
         '@type': 'SoftwareApplication',
         name: 'PeakTalk',
         url: 'https://peaktalk.ru',
-        description: 'AI-стресс-тест аргументов перед сложной рабочей встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места позиции.',
+        description: 'Стресс-тест аргументации перед защитой решения, бюджета или инициативы: три вопроса без регистрации и полный разбор с Defense Brief.',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: [
-          {
-            '@type': 'Offer',
-            name: 'Гостевой стресс-тест',
-            price: '0',
-            priceCurrency: 'RUB',
-            description: '3 бесплатных вопроса без регистрации',
-          },
-          {
-            '@type': 'Offer',
-            name: 'Full session',
-            price: '990',
-            priceCurrency: 'RUB',
-            description: 'Полная сессия с отчётом и prep-card',
-          },
+          { '@type': 'Offer', name: 'Бесплатный стресс-тест', price: '0', priceCurrency: 'RUB', description: 'Три вопроса по материалу встречи без регистрации' },
+          { '@type': 'Offer', name: 'Полная сессия и Defense Brief', price: '990', priceCurrency: 'RUB', description: 'Полный разбор материала встречи с Defense Brief' },
         ],
-        provider: {
-          '@type': 'Organization',
-          name: 'PeakTalk',
-          url: 'https://peaktalk.ru',
-        },
+        provider: { '@type': 'Organization', name: 'PeakTalk', url: 'https://peaktalk.ru' },
       },
       {
         '@type': 'FAQPage',
-        mainEntity: faqData.map((faq) => ({
-          '@type': 'Question',
-          name: faq.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: faq.answer,
-          },
-        })),
+        mainEntity: faqData.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })),
       },
     ],
   };
-
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />;
 }
 
 export default function Page() {
   return (
-    <main className={`${landingStyles.root} relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white`}>
-      <JsonLd />
-      <Nav />
-      <Hero />
-      <PressureGap />
-      <ActionFlowPipeline />
-      <InteractiveScenarios />
-      <PricingCTA />
-      <FAQAndTrust />
-      <FooterCTA />
-    </main>
+    <MotionConfig reducedMotion="user">
+      <main className={`${landingFontStyles.root} relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white`}>
+        <JsonLd />
+        <Nav />
+        <Hero />
+        <PressureProof />
+        <ScenarioEntrances />
+        <DecisionProcess />
+        <PricingCTA />
+        <FAQAndBoundaries />
+        <FooterCTA />
+      </main>
+    </MotionConfig>
   );
 }
