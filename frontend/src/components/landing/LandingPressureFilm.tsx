@@ -15,6 +15,10 @@ export default function LandingPressureFilm(): React.JSX.Element {
   const [hasMeaningfulFrame, setHasMeaningfulFrame] = useState(false);
   const [playbackFailed, setPlaybackFailed] = useState(false);
 
+  const syncMeaningfulFrame = (currentTime: number) => {
+    setHasMeaningfulFrame(currentTime >= 10.5);
+  };
+
   useEffect(() => {
     if (prefersReducedMotion || !wrapperRef.current) return;
 
@@ -86,10 +90,12 @@ export default function LandingPressureFilm(): React.JSX.Element {
           preload="none"
           poster="/noprecache/landing/decision-defense-poster.png"
           aria-hidden="true"
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${hasMeaningfulFrame ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 h-full w-full object-cover ${hasMeaningfulFrame ? 'opacity-100 transition-opacity duration-300' : 'opacity-0'}`}
           onTimeUpdate={(event) => {
-            if (event.currentTarget.currentTime >= 10.5) setHasMeaningfulFrame(true);
+            syncMeaningfulFrame(event.currentTarget.currentTime);
           }}
+          onSeeking={(event) => syncMeaningfulFrame(event.currentTarget.currentTime)}
+          onSeeked={(event) => syncMeaningfulFrame(event.currentTarget.currentTime)}
           onError={() => setPlaybackFailed(true)}
         >
           <source src="/noprecache/landing/decision-defense-loop.mp4" type="video/mp4" />

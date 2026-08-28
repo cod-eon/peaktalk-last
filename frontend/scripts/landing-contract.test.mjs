@@ -80,4 +80,16 @@ test('homepage source preserves analytics and typography constraints', async () 
   assert.match(filmSource, /video\.pause\(\)/, 'Film must pause outside the actual viewport');
   assert.match(filmSource, /video\.play\(\)/, 'Film must resume inside the actual viewport');
   assert.match(filmSource, /currentTime >= 10\.5/, 'Film must hold the meaningful 11.2s poster over low-information opening frames');
+  assert.match(
+    filmSource,
+    /setHasMeaningfulFrame\(currentTime >= 10\.5\)/,
+    'Film must restore the poster whenever playback rewinds below the meaningful-frame threshold',
+  );
+  assert.match(filmSource, /onSeeking=/, 'Film must hide low-information frames as soon as seeking begins');
+  assert.match(filmSource, /onSeeked=/, 'Film must resync poster visibility after seeking completes');
+  assert.match(
+    filmSource,
+    /hasMeaningfulFrame \? 'opacity-100 transition-opacity duration-300' : 'opacity-0'/,
+    'Film must hide rewound frames immediately while retaining the meaningful-frame fade-in',
+  );
 });
