@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
+import React, { useRef, useState } from 'react';
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  ChevronDown,
-  FileText,
-  Lock,
-  Menu,
-  ShieldAlert,
-  Target,
-  Timer,
-  X,
-} from 'lucide-react';
+import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import HeroVisual from '@/components/HeroVisual';
+import LandingPressureFilm from '@/components/landing/LandingPressureFilm';
 import { trackEvent } from '@/lib/analytics';
+import styles from './landing.module.css';
 
 const CTA_LABEL = 'Проверить материал бесплатно';
 
@@ -78,19 +78,19 @@ const navItems = [
 
 const pressureRows = [
   {
-    label: 'вопрос CFO',
-    title: 'Если бюджет режут на 30%, что Вы убираете первым и какая метрика не должна просесть?',
-    body: 'Будущий оппонент проверяет не уверенность, а цену компромисса, владельца решения и конкретную метрику.',
+    label: 'вопрос финансового директора',
+    title: 'Если бюджет сократят на 30%, что вы уберёте первым и какую метрику не готовы потерять?',
+    body: 'Проверяется не уверенность, а выбор между статьями расходов, последствия и критерий решения.',
   },
   {
     label: 'слабый ответ',
-    title: '“Мы постараемся сохранить ключевые активности без потери результата...”',
-    body: 'Общая формулировка не показывает выбор, последствия и условия, при которых план меняется.',
+    title: 'Сохраним ключевые активности без потери результата.',
+    body: 'В ответе нет конкретного выбора, цены риска и условия, при котором план нужно менять.',
   },
   {
     label: 'что усилить',
-    title: 'Назовите сокращаемые статьи, цену риска, owner и пороговую метрику.',
-    body: 'PeakTalk превращает неясную позицию в список мест, где аргументация должна стать жестче до встречи.',
+    title: 'Назовите сокращаемые статьи, цену риска, владельца решения и пороговую метрику.',
+    body: 'Так позиция становится проверяемой до встречи, а не в момент давления.',
   },
 ];
 
@@ -98,86 +98,41 @@ const scenarios = [
   {
     tag: 'Бюджет',
     title: 'Защитить бюджет перед руководителем',
-    desc: 'Когда просят сократить расходы, а Вам нужно доказать, какие инвестиции держат результат.',
+    body: 'Докажите, какие расходы нельзя сокращать без ущерба для результата.',
+    decision: 'Решение: что сохранить, что сократить и по какой метрике оценить риск.',
     href: '/scenarios/budget-cut-q3',
-    pressure: 'CFO давит на ROI, альтернативы и цену задержки.',
   },
   {
     tag: 'Клиент',
     title: 'Подготовиться к клиентской эскалации',
-    desc: 'Когда нужно вернуть доверие, объяснить сбой или защитить продление контракта.',
+    body: 'Объясните сбой и защитите план восстановления доверия.',
+    decision: 'Решение: что вы берёте на себя, что обещаете клиенту и какой следующий шаг предлагаете.',
     href: '/scenarios/client-escalation',
-    pressure: 'Клиент проверяет ответственность, гарантии и следующий шаг.',
   },
   {
     tag: 'Инвестор',
     title: 'Выдержать вопросы инвестора',
-    desc: 'Когда будут давить на рынок, рост, unit-экономику и реалистичность плана.',
+    body: 'Подготовьте ответы о рынке, росте, экономике и реалистичности плана.',
+    decision: 'Решение: какие допущения подтверждают рост и при каком условии план нужно пересмотреть.',
     href: '/scenarios/series-a-pitch',
-    pressure: 'Инвестор просит математику, а не эмоции.',
   },
 ];
 
-const methodSteps = [
+const processStages = [
   {
-    id: '01',
-    label: 'source material',
-    title: 'Вставьте материал встречи',
-    body: 'Тезисы защиты, КП, memo, план разговора или структура презентации.',
-    result: 'Подготовка начинается с позиции, которую нужно защитить, а не с абстрактной темы.',
+    label: 'материал встречи',
+    title: 'Вставьте то, что нужно защитить',
+    body: 'Тезисы, коммерческое предложение или план разговора для бюджета, QBR, клиента или инвестора.',
   },
   {
-    id: '02',
-    label: 'pressure scan',
-    title: 'Найдите слабые места до звонка',
-    body: 'PeakTalk проверяет логику, доказательства, компромиссы, метрики, владельцев решений и next step.',
-    result: 'До встречи видно, где будущий оппонент начнет давить.',
+    label: 'три вопроса бесплатно',
+    title: 'Ответьте на неудобные вопросы',
+    body: 'Выберите роль оппонента и пройдите три вопроса без регистрации.',
   },
   {
-    id: '03',
-    label: 'defense brief',
-    title: 'Соберите Defense Brief и стресс-тест',
-    body: 'Слабые зоны, вопросы оппонента и рабочие формулировки собираются в один кейс подготовки.',
-    result: 'На встречу идет усиленная позиция, а не просто более гладкий текст.',
-  },
-];
-
-const caseWorkspaceItems = [
-  {
-    label: 'source',
-    title: 'Материал встречи',
-    body: 'Тезисы защиты, КП, memo, письмо клиенту или структура презентации остаются в центре подготовки.',
-    result: 'PeakTalk работает с Вашей позицией, а не генерирует абстрактную речь.',
-  },
-  {
-    label: 'pressure scan',
-    title: 'Разбор слабых мест',
-    body: 'Система ищет пробелы в логике, метриках, компромиссах, ответственности и next step.',
-    result: 'До разговора видно, где будущий оппонент начнет давить.',
-  },
-  {
-    label: 'defense brief',
-    title: 'Памятка и стресс-тест',
-    body: 'Усиленная версия материала и вопросы роли собираются в один кейс подготовки.',
-    result: 'Следующий шаг очевиден: прогнать позицию, исправить ответ, идти на встречу.',
-  },
-];
-
-const outputArtifacts = [
-  {
-    label: 'история давления',
-    title: 'Вопросы и ответы по Вашему материалу',
-    body: 'Сохраняется ход проверки: какие возражения прилетели и как Вы на них ответили.',
-  },
-  {
-    label: 'weak spots',
-    title: 'Слабые места позиции',
-    body: 'Отдельно подсвечиваются пробелы: метрики, trade-off, владелец решения, цена риска.',
-  },
-  {
-    label: 'brief',
-    title: 'Краткая памятка перед встречей',
-    body: 'Defense Brief собирает фразы-опоры, вопросы, которые стоит ожидать, и следующий рабочий шаг.',
+    label: 'полная сессия и Defense Brief',
+    title: 'Соберите план защиты перед встречей',
+    body: 'После оплаты сохраните материал и ответы, пройдите полный разбор и получите слабые места позиции, ожидаемые вопросы и следующий шаг.',
   },
 ];
 
@@ -185,39 +140,38 @@ const faqData = [
   {
     question: 'Что такое PeakTalk?',
     answer:
-      'PeakTalk — AI-стресс-тест аргументов перед сложной рабочей встречей. Вы вставляете материал, выбираете роль оппонента и отвечаете на вопросы, которые проверяют слабые места позиции.',
+      'PeakTalk проверяет аргументацию перед сложной рабочей встречей. Вы вставляете материал, отвечаете на вопросы оппонента и видите слабые места позиции.',
   },
   {
     question: 'Нужна ли регистрация?',
     answer:
-      'Для быстрого pressure scan регистрация не нужна. Аккаунт нужен для сохранения истории, полного разбора и Defense Brief после полной сессии.',
+      'Нет. Три вопроса по вашему материалу доступны без регистрации. Для полной сессии и Defense Brief потребуется аккаунт.',
   },
   {
     question: 'Какой материал можно вставить?',
     answer:
-      'Подойдут тезисы защиты, коммерческое предложение, memo, письмо клиенту, структура презентации или план разговора. Не вставляйте пароли, персональные данные, NDA-фрагменты и коммерческую тайну.',
+      'Тезисы защиты, коммерческое предложение, письмо клиенту, структуру презентации или план разговора. Не вставляйте пароли, персональные данные и конфиденциальные фрагменты.',
   },
   {
-    question: 'Это курс переговоров или коуч по выступлениям?',
+    question: 'Это курс переговоров или тренировка выступлений?',
     answer:
-      'Нет. PeakTalk не тренирует голос, харизму или общие soft skills. Он проверяет конкретную позицию перед конкретным разговором: QBR, защита бюджета, инвесторский pitch или клиентская эскалация.',
+      'Нет. PeakTalk не тренирует голос или харизму. Он помогает проверить конкретную позицию перед конкретной встречей.',
   },
   {
-    question: 'Что открывается в полной сессии?',
+    question: 'Что входит в полную сессию?',
     answer:
-      'Полная сессия за 299 ₽ сохраняет материал и ответы, показывает слабые места аргументации и собирает Defense Brief перед встречей.',
+      'Материал и ответы сохраняются, разбор показывает слабые места позиции и собирает Defense Brief с ожидаемыми вопросами и планом защиты.',
   },
 ];
 
 function useScrolled() {
   const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 18);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const nextScrolled = latest > 18;
+    setScrolled((current) => (current === nextScrolled ? current : nextScrolled));
+  });
 
   return scrolled;
 }
@@ -305,9 +259,7 @@ function Logo({ size = 24 }: { size?: number }) {
   return (
     <div className="flex items-center gap-2">
       <Image src="/logo_svg.svg" alt="PeakTalk Logo" width={44} height={44} className="h-10 w-10 sm:h-11 sm:w-11" priority />
-      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.86 }}>
-        PeakTalk
-      </span>
+      <span className="brand-wordmark text-neutral-950" style={{ fontSize: size * 0.86 }}>PeakTalk</span>
     </div>
   );
 }
@@ -325,97 +277,38 @@ function Nav() {
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${scrolled ? 'border-b border-black/[0.08] bg-white/92 py-2.5 shadow-[0_12px_36px_rgba(17,17,17,0.06)] backdrop-blur-2xl' : 'bg-[#FAF8F4]/90 py-3.5 backdrop-blur-md'}`}
       >
         <div className="container-custom flex items-center justify-between gap-5">
-          <Link href="/" aria-label="PeakTalk">
-            <Logo />
-          </Link>
-
+          <Link href="/" aria-label="PeakTalk" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"><Logo /></Link>
           <div className="hidden items-center gap-7 lg:flex">
             {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.id}
-                className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-              >
+              <Link key={item.label} href={item.id} className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors duration-150 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30">
                 {item.label}
               </Link>
             ))}
           </div>
-
           <div className="hidden items-center gap-4 lg:flex">
-            <Link
-              href="/login"
-              className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-            >
-              Вход
-            </Link>
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('nav_desktop')}
-              className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40"
-            >
-              Проверить материал
-            </Link>
+            <Link href="/login" className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30">Вход</Link>
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_desktop')} className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал</Link>
           </div>
-
-          <button
-            type="button"
-            className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 lg:hidden"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Открыть меню"
-            aria-controls="landing-mobile-menu"
-            aria-expanded={mobileMenuOpen}
-          >
+          <button type="button" className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 lg:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Открыть меню" aria-controls="landing-mobile-menu" aria-expanded={mobileMenuOpen}>
             <Menu size={22} />
           </button>
         </div>
       </motion.nav>
-
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            id="landing-mobile-menu"
-            className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6"
-          >
+          <motion.div initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
             <div className="mb-10 flex items-center justify-between">
               <Logo />
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950"
-                aria-label="Закрыть меню"
-              >
-                <X size={24} />
-              </button>
+              <button type="button" onClick={() => setMobileMenuOpen(false)} className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40" aria-label="Закрыть меню"><X size={24} /></button>
             </div>
-
             <div className="flex flex-col gap-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.id}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950"
-                >
-                  {item.label}
-                </Link>
+                <Link key={item.label} href={item.id} onClick={() => setMobileMenuOpen(false)} className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{item.label}</Link>
               ))}
             </div>
-
             <div className="mt-auto grid gap-3">
-              <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950">
-                Войти
-              </Link>
-              <Link
-                href="/simulation/guest"
-                onClick={() => trackLandingCta('nav_mobile')}
-                className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white"
-              >
-                {CTA_LABEL}
-              </Link>
+              <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Войти</Link>
+              <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_mobile')} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{CTA_LABEL}</Link>
             </div>
           </motion.div>
         )}
@@ -431,137 +324,19 @@ function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:56px_56px]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(250,248,244,0.4)_0%,#FAF8F4_88%)]" />
       </div>
-
       <div className="container-custom relative z-10 grid items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] lg:gap-12 lg:pb-20">
         <div className="max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-5 inline-flex max-w-full border border-neutral-950 bg-white px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-700 shadow-[6px_6px_0_rgba(232,96,10,0.12)] sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]"
-          >
-            Материал / разбор / Defense Brief
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-5 inline-flex max-w-full border border-neutral-950 bg-white px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-700 shadow-[6px_6px_0_rgba(232,96,10,0.12)] sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]">Материал / разбор / Defense Brief</motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }} className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[42px] xl:text-[64px]">Подготовьте материал, который выдержит вопросы руководства.</motion.h1>
+          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:text-[20px] sm:leading-[1.58]">Вставьте тезисы, коммерческое предложение или план разговора. За три вопроса без регистрации увидите, где позиции не хватает цифр, выбора и ответственности за решение.</motion.p>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }} className="mt-8 grid gap-3 sm:mt-9 xl:flex xl:items-center xl:gap-4">
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('hero_primary')} className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-[0_16px_36px_rgba(232,96,10,0.22)] transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:min-h-[56px] sm:px-8 sm:text-[15px]">{CTA_LABEL}<ArrowRight size={18} /></Link>
+            <Link href="#case" className="inline-flex min-h-[48px] cursor-pointer items-center justify-center border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6">Как устроена подготовка</Link>
           </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[58px] xl:text-[64px]"
-          >
-            Подготовьте материал, который выдержит вопросы на встрече
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:text-[20px] sm:leading-[1.58]"
-          >
-            Вставьте тезисы, КП, memo или план разговора. PeakTalk сохранит исходник,
-            найдет слабые места, соберет короткий Defense Brief и затем прогонит позицию
-            через вопросы CFO, клиента или инвестора.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 grid gap-3 sm:mt-9 sm:flex sm:items-center sm:gap-4"
-          >
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('hero_primary')}
-              className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-[0_16px_36px_rgba(232,96,10,0.22)] transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:min-h-[56px] sm:px-8 sm:text-[15px]"
-            >
-              {CTA_LABEL}
-              <ArrowRight size={18} />
-            </Link>
-            <Link
-              href="#case"
-              className="inline-flex min-h-[48px] cursor-pointer items-center justify-center border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6"
-            >
-              Как устроен кейс
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.34 }}
-            className="mt-7 flex max-w-[680px] flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 sm:gap-x-6 sm:gap-y-3 sm:text-[11px] sm:tracking-[0.16em]"
-          >
-            <span>без регистрации</span>
-            <span>без карты</span>
-            <span className="font-bold text-[#E8600A]">на своём материале</span>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            style={safariMotionStyle}
-            className="mt-7 md:hidden"
-          >
-            <HeroVisual compact />
-          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.34 }} className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 sm:text-[11px] sm:tracking-[0.16em]">Без регистрации / без карты / на своём материале</motion.div>
+          <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="mt-7 md:hidden"><HeroVisual compact /></motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 18, scale: 0.99 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          style={safariMotionStyle}
-          className="relative hidden min-w-0 md:block lg:translate-x-5"
-        >
-          <HeroVisual />
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function CaseWorkspace() {
-  return (
-    <section id="case" className="scroll-mt-24 border-y border-neutral-200 bg-white py-[clamp(64px,8vw,104px)]">
-      <div className="container-custom">
-        <RevealDiv className="mb-10 grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-          <div>
-            <SectionLabel>meeting case</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">
-              Не чат с AI. Рабочий кейс вокруг Вашего материала.
-            </h2>
-          </div>
-          <p className="max-w-xl text-[16px] leading-relaxed text-neutral-600 lg:pb-2">
-            Новая логика PeakTalk начинается не с выбора режима, а с материала, который нужно
-            защитить. Разбор, усиленная версия и стресс-тест живут рядом, чтобы подготовка не распадалась
-            на отдельные AI-ответы.
-          </p>
-        </RevealDiv>
-
-        <div className="grid gap-px border border-neutral-950 bg-neutral-950 lg:grid-cols-3">
-          {caseWorkspaceItems.map((item, index) => (
-            <RevealDiv
-              key={item.title}
-              delay={index * 0.05}
-              className="flex min-h-[300px] flex-col bg-[#FAF8F4] p-6 sm:p-8"
-            >
-              <div className="flex items-start justify-between gap-5">
-                <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8600A]">
-                  {item.label}
-                </div>
-                <div className="border border-neutral-950 bg-white px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-neutral-950">
-                  0{index + 1}
-                </div>
-              </div>
-              <h3 className="mt-10 text-[23px] font-bold leading-[1.12] text-neutral-950">{item.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{item.body}</p>
-              <div className="mt-auto border-t border-neutral-200 pt-6 text-[14px] font-semibold leading-relaxed text-[#B74707]">
-                {item.result}
-              </div>
-            </RevealDiv>
-          ))}
-        </div>
+        <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="relative hidden min-w-0 md:block lg:translate-x-5"><HeroVisual /></motion.div>
       </div>
     </section>
   );
@@ -569,213 +344,80 @@ function CaseWorkspace() {
 
 function PressureProof() {
   return (
-    <section id="pressure" className="scroll-mt-24 bg-neutral-950 py-[clamp(76px,11vw,132px)] text-white">
-      <div className="container-custom">
-        <RevealDiv className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
-          <div>
-            <SectionLabel dark>live pressure fragment</SectionLabel>
-            <h2 className="mt-5 max-w-2xl text-[32px] font-bold leading-[1.08] text-white sm:text-[48px]">
-              Не презентация. Место, где позиция начинает трескаться.
-            </h2>
-          </div>
-          <p className="max-w-xl text-[16px] leading-relaxed text-white/62 lg:pb-2">
-            PeakTalk не пишет речь вместо Вас. Он показывает момент, где будущий оппонент начнет
-            давить на цифры, компромисс и ответственность за решение.
-          </p>
-        </RevealDiv>
-
-        <RevealDiv className="grid border border-white/12 bg-white/[0.03] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="border-b border-white/12 p-5 sm:p-7 lg:border-b-0 lg:border-r">
-            <div className="flex items-center gap-3 text-[#FF8A3D]">
-              <ShieldAlert size={20} />
-              <div className="font-mono text-[11px] uppercase tracking-[0.16em]">case pressure room</div>
-            </div>
-            <p className="mt-8 text-[24px] font-bold leading-[1.16] text-white sm:text-[30px]">
-              Один слабый ответ лучше увидеть здесь, а не за столом переговоров.
-            </p>
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('pressure_fragment')}
-              className="mt-8 inline-flex min-h-[52px] items-center justify-center gap-3 border border-white bg-white px-6 text-[14px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white"
-            >
-              Проверить свой материал
-              <ArrowRight size={17} />
-            </Link>
-          </div>
-
-          <div className="divide-y divide-white/12">
+    <section id="pressure" className="scroll-mt-24 bg-neutral-950 py-[clamp(52px,4.5vw,60px)] text-white">
+      <div className="container-custom grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)] lg:items-start lg:gap-16">
+        <div>
+          <RevealDiv>
+            <SectionLabel dark>проверка под давлением</SectionLabel>
+            <h2 className="mt-5 max-w-4xl text-[32px] font-bold leading-[1.08] text-white sm:text-[48px] lg:text-[54px]">Вопрос, который может сорвать защиту, лучше услышать до встречи.</h2>
+            <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-white/62">PeakTalk проверяет, сможете ли вы объяснить выбор, назвать цену риска и взять ответственность за решение.</p>
+          </RevealDiv>
+          <div className="mt-10 border-y border-white/14">
             {pressureRows.map((row, index) => (
-              <div key={row.label} className="grid gap-4 p-5 sm:p-7 md:grid-cols-[164px_minmax(0,1fr)]">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">
-                    {row.label}
-                  </div>
-                  <div className="mt-2 font-mono text-[10px] tabular-nums text-white/32">
-                    0{index + 1} / 03
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[18px] font-bold leading-snug text-white sm:text-[22px]">
-                    {row.title}
-                  </p>
-                  <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/58">
-                    {row.body}
-                  </p>
-                </div>
-              </div>
+              <RevealDiv key={row.label} delay={index * 0.1} className={`grid gap-4 border-b border-white/14 py-6 last:border-b-0 sm:grid-cols-[150px_minmax(0,1fr)] ${index === 1 ? 'sm:pl-8' : ''}`}>
+                <div className="flex items-start gap-3"><span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center border border-[#FF8A3D]/60 font-mono text-[9px] text-[#FF8A3D]">0{index + 1}</span><span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#FF8A3D]">{row.label}</span></div>
+                <div><h3 className="text-[19px] font-bold leading-snug text-white sm:text-[22px]">{row.title}</h3><p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/58">{row.body}</p></div>
+              </RevealDiv>
             ))}
           </div>
-        </RevealDiv>
+          <RevealDiv className="mt-8"><Link href="/simulation/guest" onClick={() => trackLandingCta('pressure_fragment')} className="inline-flex min-h-[52px] items-center justify-center gap-3 border border-white bg-white px-6 text-[14px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">Проверить свой материал<ArrowRight size={17} /></Link></RevealDiv>
+        </div>
+        <RevealDiv className="mx-auto w-full max-w-[370px] border border-white/14 bg-white/[0.03] p-2 lg:sticky lg:top-28"><LandingPressureFilm /></RevealDiv>
       </div>
     </section>
+  );
+}
+
+function ScenarioLink({ item, primary = false }: { item: (typeof scenarios)[number]; primary?: boolean }) {
+  return (
+    <article className={`group relative flex h-full flex-col overflow-hidden border border-neutral-950 bg-white transition-transform duration-200 hover:-translate-y-1 focus-within:-translate-y-1 ${primary ? 'min-h-[430px] p-7 sm:p-10' : 'min-h-[210px] p-6 sm:p-7'}`}>
+      {primary ? <div className="absolute right-[-44px] top-[-36px] h-44 w-44 rotate-12 border border-[#E8600A]/25 bg-[#FFF7ED]" aria-hidden="true" /> : null}
+      <div className="relative flex items-center justify-between gap-4"><div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8600A]">{item.tag}</div><div className="h-px flex-1 bg-neutral-200" /></div>
+      <h3 className={`relative mt-7 max-w-2xl font-bold leading-[1.08] text-neutral-950 ${primary ? 'text-[30px] sm:text-[40px]' : 'text-[22px]'}`}>{item.title}</h3>
+      <p className="relative mt-4 max-w-xl text-[15px] leading-relaxed text-neutral-600">{item.body}</p>
+      <p className={`relative mt-6 border-l-2 border-[#E8600A] pl-4 font-semibold leading-relaxed text-neutral-800 ${primary ? 'max-w-2xl text-[15px]' : 'text-[14px]'}`}>{item.decision}</p>
+      <Link href={item.href} className="relative mt-auto inline-flex w-fit items-center gap-2 pt-7 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Разобрать сценарий<ArrowRight size={16} /></Link>
+    </article>
   );
 }
 
 function ScenarioEntrances() {
   return (
-    <section id="scenarios" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(76px,11vw,132px)]">
+    <section id="scenarios" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
-          <div>
-            <SectionLabel>сценарии встреч</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">
-              Начните с разговора, который уже стоит в календаре.
-            </h2>
-          </div>
-          <div className="lg:justify-self-end">
-            <p className="max-w-xl text-[16px] leading-relaxed text-neutral-600">
-              Страница не продает “переговоры вообще”. Выберите ситуацию, где нужно защитить решение,
-              деньги, доверие или план.
-            </p>
-            <Link
-              href="/scenarios"
-              className="mt-5 inline-flex min-h-[48px] items-center gap-2 border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-950 transition-colors hover:border-neutral-950"
-            >
-              Все сценарии
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+        <RevealDiv className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div><SectionLabel>сценарии встреч</SectionLabel><h2 className="mt-5 max-w-4xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Выберите решение, которое нужно защитить на ближайшей встрече.</h2></div>
+          <p className="max-w-xl text-[16px] leading-relaxed text-neutral-600 lg:justify-self-end lg:pb-1">Начните с давления, которое встретите при защите бюджета, разговоре с клиентом или вопросах инвестора.</p>
         </RevealDiv>
-
-        <div className="grid gap-px border border-neutral-950 bg-neutral-950 lg:grid-cols-3">
-          {scenarios.map((item, index) => (
-            <RevealDiv
-              key={item.title}
-              delay={index * 0.04}
-              className="group flex min-h-[314px] flex-col bg-white p-6 transition-colors hover:bg-[#fffbf6] sm:p-7"
-            >
-              <div className="mb-8 flex items-center justify-between gap-4">
-                <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8600A]">
-                  {item.tag}
-                </div>
-                <div className="font-mono text-[11px] tabular-nums text-neutral-400">0{index + 1}</div>
-              </div>
-              <h3 className="text-[23px] font-bold leading-[1.12] text-neutral-950 lg:text-[25px]">{item.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{item.desc}</p>
-              <div className="mt-6 border-l-2 border-[#E8600A] pl-4 text-[14px] font-semibold leading-relaxed text-neutral-800">
-                {item.pressure}
-              </div>
-              <Link
-                href={item.href}
-                className="mt-auto inline-flex w-fit items-center gap-2 pt-7 text-[15px] font-bold text-neutral-950 transition-colors group-hover:text-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30"
-              >
-                Разобрать сценарий
-                <ArrowRight size={16} />
-              </Link>
-            </RevealDiv>
-          ))}
+        <div className="mt-11 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+          <RevealDiv><ScenarioLink item={scenarios[0]} primary /></RevealDiv>
+          <div className="grid gap-5"><RevealDiv delay={0.06}><ScenarioLink item={scenarios[1]} /></RevealDiv><RevealDiv delay={0.12}><ScenarioLink item={scenarios[2]} /></RevealDiv></div>
         </div>
       </div>
     </section>
   );
 }
 
-function MethodSection() {
+function DecisionProcess() {
   return (
-    <section id="how" className="scroll-mt-24 bg-white py-[clamp(76px,11vw,132px)]">
+    <section id="case" className="scroll-mt-24 overflow-hidden border-y border-neutral-200 bg-white py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <SectionLabel>как работает</SectionLabel>
-            <h2 className="mt-5 max-w-3xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">
-              Материал встречи превращается в проверку позиции.
-            </h2>
-          </div>
-          <p className="max-w-md text-[16px] leading-relaxed text-neutral-600 lg:pb-2">
-            Три шага без учебной сцены, бейджей и абстрактных AI-настроек: материал, pressure scan,
-            Defense Brief и только затем репетиция давления.
-          </p>
-        </RevealDiv>
-
-        <div className="grid gap-px border border-neutral-200 bg-neutral-200 lg:grid-cols-3">
-          {methodSteps.map((step, index) => (
-            <RevealDiv key={step.title} delay={index * 0.05} className="flex min-h-[330px] flex-col bg-[#FAF8F4] p-6 sm:p-8">
-              <div className="flex items-start justify-between gap-5">
-                <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
-                  {step.label}
-                </div>
-                <div className="border border-neutral-950 bg-white px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-neutral-950">
-                  {step.id}
-                </div>
-              </div>
-              <h3 className="mt-10 text-[23px] font-bold leading-[1.12] text-neutral-950">{step.title}</h3>
-              <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{step.body}</p>
-              <div className="mt-auto border-t border-neutral-200 pt-6 text-[14px] font-semibold leading-relaxed text-[#B74707]">
-                {step.result}
-              </div>
-            </RevealDiv>
-          ))}
+        <div className={styles.processIntro}>
+          <RevealDiv><SectionLabel>подготовка / Defense Brief</SectionLabel><h2 className={`${styles.processHeadline} mt-5 font-display text-[34px] font-black leading-[1.02] text-neutral-950 sm:text-[54px] lg:text-[58px] xl:text-[72px]`}>От материала до позиции, которую можно защищать.</h2></RevealDiv>
+          <RevealDiv className={styles.dossier} hidden={{ opacity: 0, x: 24, y: 16, scale: 0.98 }} visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}><Image src="/noprecache/landing/decision-dossier.png" alt="" width={1536} height={1024} sizes="(min-width: 1024px) 56vw, 100vw" className="h-auto w-full" aria-hidden="true" /></RevealDiv>
+          <RevealDiv className={styles.processBody}><p className="max-w-2xl text-[16px] leading-relaxed text-neutral-600">Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 299 ₽ и получите Defense Brief перед встречей.</p></RevealDiv>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function OutputArtifacts() {
-  return (
-    <section className="bg-[#FAF8F4] py-[clamp(76px,11vw,132px)]">
-      <div className="container-custom">
-        <RevealDiv className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr]">
-          <div>
-            <SectionLabel>после полной сессии</SectionLabel>
-            <h2 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[46px]">
-              На выходе не “совет”. На выходе рабочий briefing перед встречей.
-            </h2>
-            <p className="mt-5 max-w-md text-[16px] leading-relaxed text-neutral-600">
-              Бесплатный pressure scan показывает механику. Полная сессия нужна, чтобы сохранить разбор,
-              слабые места и короткую памятку перед реальным разговором.
-            </p>
+        <div className={styles.stageTrack}>
+          <RevealDiv className={styles.annotationLayer} hidden={{ opacity: 0, x: -30, scaleX: 0.7 }} visible={{ opacity: 1, x: 0, scaleX: 1 }} duration={0.8}><svg viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true"><path d="M45 104 C210 16 310 150 492 82 S765 28 954 94" fill="none" stroke="#E8600A" strokeWidth="4" strokeLinecap="round" /></svg></RevealDiv>
+          <div className="relative grid gap-4 lg:grid-cols-3">
+            {processStages.map((stage, index) => (
+              <RevealDiv key={stage.label} delay={index * 0.08} className="relative min-h-[250px] border border-neutral-200 bg-[#FAF8F4] p-6 sm:p-7">
+                <div className="flex items-start justify-between gap-4"><div className="max-w-[220px] font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-[#E8600A]">{stage.label}</div><div className="flex h-8 w-8 shrink-0 items-center justify-center border border-neutral-950 bg-white font-mono text-[10px] font-bold">0{index + 1}</div></div>
+                <h3 className="mt-10 text-[22px] font-bold leading-[1.12] text-neutral-950">{stage.title}</h3><p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{stage.body}</p>
+              </RevealDiv>
+            ))}
           </div>
-
-          <div className="border border-neutral-950 bg-white">
-            <div className="border-b border-neutral-950 bg-neutral-950 px-5 py-4 text-white sm:px-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#FF8A3D]">
-                  Defense Brief
-                </div>
-                <FileText size={18} className="text-[#FF8A3D]" />
-              </div>
-            </div>
-            <div className="divide-y divide-neutral-200">
-              {outputArtifacts.map((artifact, index) => (
-                <div key={artifact.title} className="grid gap-4 p-5 sm:p-6 md:grid-cols-[150px_minmax(0,1fr)]">
-                  <div>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E8600A]">
-                      {artifact.label}
-                    </div>
-                    <div className="mt-2 font-mono text-[10px] tabular-nums text-neutral-400">
-                      0{index + 1}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-[19px] font-bold leading-snug text-neutral-950">{artifact.title}</h3>
-                    <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">{artifact.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </RevealDiv>
+        </div>
       </div>
     </section>
   );
@@ -783,74 +425,19 @@ function OutputArtifacts() {
 
 function PricingCTA() {
   return (
-    <section id="pricing" className="scroll-mt-24 bg-white py-[clamp(76px,11vw,132px)]">
+    <section id="pricing" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(52px,4.5vw,60px)]">
       <div className="container-custom">
-        <RevealDiv className="mx-auto mb-12 max-w-3xl text-center">
-          <SectionLabel>free / Defense Brief</SectionLabel>
-          <h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[46px]">
-            Бесплатно — первый pressure scan. 299 ₽ — когда нужен Defense Brief.
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-neutral-600">
-            Граница простая: демо показывает давление на Вашем материале. Defense Brief сохраняет
-            историю, слабые места и короткий план защиты перед встречей.
-          </p>
-        </RevealDiv>
-
-        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2 lg:gap-8">
-          <RevealDiv className="flex flex-col border border-neutral-200 bg-[#FAF8F4] p-7 sm:p-8 lg:p-10">
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
-              бесплатный stress-test
-            </div>
-            <div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div>
-            <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">
-              Материал встречи, выбранный оппонент и первая проверка без регистрации.
-            </p>
-            <div className="my-6 h-px bg-neutral-200" />
-            <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">
-              {['Без регистрации', 'Без карты', 'На тезисах, документе или плане разговора'].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#E8600A]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('pricing_free')}
-              className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-950 px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#E8600A]"
-            >
-              {CTA_LABEL}
-            </Link>
+        <RevealDiv className="mx-auto max-w-4xl text-center"><SectionLabel>цена подготовки</SectionLabel><h2 className="mt-5 text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[48px]">Три вопроса бесплатно. Полная подготовка за 299 ₽.</h2><p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-neutral-600">Бесплатный стресс-тест показывает давление на вашем материале. Полная сессия сохраняет разбор и собирает Defense Brief.</p></RevealDiv>
+        <div className="mx-auto mt-11 grid max-w-5xl gap-5 md:grid-cols-2">
+          <RevealDiv className="flex flex-col border border-neutral-200 bg-white p-7 sm:p-9">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">Бесплатный стресс-тест</div><div className="mt-4 text-[48px] font-black leading-none text-neutral-950">0 ₽</div><p className="mt-4 text-[15px] leading-relaxed text-neutral-600">Вставьте материал, выберите оппонента и ответьте на три вопроса.</p><div className="my-6 h-px bg-neutral-200" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-neutral-700">{['Три вопроса по вашему материалу', 'Без регистрации', 'Без карты'].map((item) => <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#E8600A]" />{item}</li>)}</ul>
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('pricing_free')} className="mt-auto flex min-h-[56px] items-center justify-center bg-neutral-950 px-6 text-center text-[15px] font-bold text-white transition-colors hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал бесплатно</Link>
           </RevealDiv>
-
-          <RevealDiv delay={0.08} className="flex flex-col bg-neutral-950 p-7 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)] sm:p-8 lg:p-10">
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">
-              Defense Brief
-            </div>
-            <div className="mt-4 flex items-end gap-2 text-[48px] font-black leading-none text-white">
-              <span className="text-[#FF8A3D]">299</span>
-              <span>₽</span>
-              <span className="pb-1.5 text-lg font-medium text-white/50">/ разбор</span>
-            </div>
-            <p className="mt-4 text-[15px] leading-relaxed text-white/70">
-              Разбор материала встречи: вопросы, ответы, слабые места и план защиты.
-            </p>
-            <div className="my-6 h-px bg-white/10" />
-            <ul className="mb-8 grid gap-3 text-[15px] text-white/90">
-              {['История вопросов и ответов', 'Слабые места позиции', 'Defense Brief перед встречей'].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#FF8A3D]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/billing?plan=per_session"
-              onClick={() => trackLandingCta('pricing_paid')}
-              className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-[15px] font-bold text-neutral-950 transition-colors hover:bg-[#FF8A3D] hover:text-white"
-            >
-              Собрать Defense Brief
-            </Link>
+          <RevealDiv delay={0.08} className="flex flex-col bg-neutral-950 p-7 text-white shadow-[0_28px_80px_rgba(17,17,17,0.18)] sm:p-9">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF8A3D]">Полная сессия и Defense Brief</div><div className="mt-4 text-[44px] font-black leading-none text-white">299 ₽ <span className="text-lg font-medium text-white/50">/ разбор</span></div><p className="mt-4 text-[15px] leading-relaxed text-white/70">Полный разбор материала встречи с вопросами, ответами и планом защиты.</p><div className="my-6 h-px bg-white/10" />
+            <ul className="mb-8 grid gap-3 text-[15px] text-white/90">{['Сохранённый материал и ответы', 'Слабые места позиции', 'Вопросы и короткий план защиты'].map((item) => <li key={item} className="flex items-start gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#FF8A3D]" />{item}</li>)}</ul>
+            <Link href="/billing?plan=per_session" onClick={() => trackLandingCta('pricing_paid')} className="mt-auto flex min-h-[56px] items-center justify-center bg-white px-6 text-center text-[15px] font-bold text-neutral-950 transition-colors hover:bg-[#FF8A3D] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">Собрать Defense Brief</Link>
           </RevealDiv>
         </div>
       </div>
@@ -859,79 +446,16 @@ function PricingCTA() {
 }
 
 function FAQAndBoundaries() {
-  const signals = [
-    {
-      icon: Target,
-      title: 'Конкретная встреча',
-      desc: 'QBR, защита бюджета, pitch, клиентская эскалация или stakeholder update.',
-    },
-    {
-      icon: ShieldAlert,
-      title: 'Неприятная роль',
-      desc: 'Оппонент давит по цифрам, срокам, рискам и компромиссам.',
-    },
-    {
-      icon: Timer,
-      title: 'Перед реальным разговором',
-      desc: 'Формат рассчитан на подготовку, когда времени мало.',
-    },
-    {
-      icon: Lock,
-      title: 'Честная граница демо',
-      desc: 'Быстрый pressure scan доступен без карты и регистрации.',
-    },
-  ];
-
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#FAF8F4] py-[clamp(76px,11vw,132px)]">
-      <div className="container-custom grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(460px,1fr)] lg:gap-20">
-        <RevealDiv>
-          <SectionLabel>faq / границы продукта</SectionLabel>
-          <h2 className="mt-5 max-w-xl text-[32px] font-bold leading-[1.08] text-neutral-950 sm:text-[46px]">
-            Для разговоров, где общие формулировки не проходят.
-          </h2>
-          <div className="mt-10 grid gap-6">
-            {signals.map((signal) => (
-              <div key={signal.title} className="flex gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-neutral-200 bg-white text-[#E8600A]">
-                  <signal.icon size={20} />
-                </div>
-                <div>
-                  <div className="text-[17px] font-bold text-neutral-950">{signal.title}</div>
-                  <p className="mt-1 text-[15px] leading-relaxed text-neutral-600">{signal.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </RevealDiv>
-
-        <div className="flex flex-col gap-3">
+    <section id="faq" className="scroll-mt-24 bg-white py-[clamp(52px,4.5vw,60px)]">
+      <div className="container-custom mx-auto max-w-[900px]">
+        <RevealDiv className="mb-9"><SectionLabel>FAQ / границы продукта</SectionLabel></RevealDiv>
+        <div className="flex flex-col border-t border-neutral-950">
           {faqData.map((faq, index) => (
-            <div key={faq.question} className="border border-neutral-200 bg-white transition-colors hover:border-neutral-300">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="flex w-full cursor-pointer items-center justify-between gap-5 px-5 py-5 text-left text-[17px] font-bold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:px-6"
-                aria-expanded={openIndex === index}
-              >
-                {faq.question}
-                <ChevronDown size={20} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {openIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <p className="px-5 pb-6 text-[15px] leading-relaxed text-neutral-600 sm:px-6">{faq.answer}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <div key={faq.question} className="border-b border-neutral-200">
+              <button type="button" onClick={() => setOpenIndex(openIndex === index ? null : index)} className="flex w-full cursor-pointer items-center justify-between gap-5 px-1 py-5 text-left text-[17px] font-bold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:py-6 sm:text-[19px]" aria-expanded={openIndex === index}>{faq.question}<ChevronDown size={20} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} /></button>
+              <AnimatePresence>{openIndex === index && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden"><p className="max-w-3xl px-1 pb-6 text-[15px] leading-relaxed text-neutral-600">{faq.answer}</p></motion.div>}</AnimatePresence>
             </div>
           ))}
         </div>
@@ -943,55 +467,26 @@ function FAQAndBoundaries() {
 function FooterCTA() {
   return (
     <section className="relative overflow-hidden bg-black text-white">
-      <div className="absolute inset-0 opacity-[0.08]" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" />
-      </div>
-
+      <div className="absolute inset-0 opacity-[0.08]" aria-hidden="true"><div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.52)_1px,transparent_1px)] bg-[size:76px_76px]" /></div>
       <div className="container-custom relative z-10 py-[clamp(92px,13vw,150px)]">
         <RevealDiv className="mx-auto max-w-4xl text-center">
-          <SectionLabel dark>final check</SectionLabel>
-          <h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">
-            Не несите слабый ответ на сильную встречу.
-          </h2>
-          <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">
-            За быстрый scan Вы увидите, где позиция проседает. После оплаты сохраните разбор и
-            соберете Defense Brief перед разговором.
-          </p>
-          <div className="mt-9 flex justify-center">
-            <Link
-              href="/simulation/guest"
-              onClick={() => trackLandingCta('footer_final')}
-              className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white"
-            >
-              {CTA_LABEL}
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/[0.4]">
-            без регистрации / без карты / на своём материале
-          </p>
+          <SectionLabel dark>final check</SectionLabel><h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">Не несите слабый ответ на сильную встречу.</h2><p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">За три вопроса увидите, где позиция требует доработки. За 299 ₽ продолжите разбор и соберёте Defense Brief перед встречей.</p>
+          <div className="mt-9 flex justify-center"><Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">{CTA_LABEL}<ArrowRight size={18} /></Link></div>
+          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/[0.4]">Без регистрации / без карты / на своём материале</p>
         </RevealDiv>
       </div>
-
       <Footer />
     </section>
   );
 }
 
 function Footer() {
+  const footerLinkClass = 'transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]';
   return (
     <footer className="relative z-10 border-t border-white/10 bg-black py-10">
       <div className="container-custom flex flex-col items-center justify-between gap-7 text-white/75 md:flex-row">
-        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
-          <div className="brightness-0 invert"><Logo size={20} /></div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">стресс-тест встреч</div>
-        </div>
-        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]">
-          <Link href="/scenarios" className="transition-colors hover:text-white">Сценарии</Link>
-          <Link href="/contacts" className="transition-colors hover:text-white">Контакты</Link>
-          <Link href="/personal-data" className="transition-colors hover:text-white">Оферта</Link>
-          <Link href="/privacy" className="transition-colors hover:text-white">Конфиденциальность</Link>
-        </div>
+        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left"><div className="brightness-0 invert"><Logo size={20} /></div><div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">стресс-тест встреч</div></div>
+        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]"><Link href="/scenarios" className={footerLinkClass}>Сценарии</Link><Link href="/contacts" className={footerLinkClass}>Контакты</Link><Link href="/personal-data" className={footerLinkClass}>Оферта</Link><Link href="/privacy" className={footerLinkClass}>Конфиденциальность</Link></div>
       </div>
     </footer>
   );
@@ -1005,63 +500,38 @@ function JsonLd() {
         '@type': 'SoftwareApplication',
         name: 'PeakTalk',
         url: 'https://peaktalk.ru',
-        description:
-          'AI-стресс-тест аргументов перед сложной рабочей встречей: вставьте тезисы, документ или план разговора, получите неудобные вопросы и слабые места позиции.',
+        description: 'Стресс-тест аргументации перед защитой решения, бюджета или инициативы: три вопроса без регистрации и полный разбор с Defense Brief.',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         offers: [
-          {
-            '@type': 'Offer',
-            name: 'Гостевой стресс-тест',
-            price: '0',
-            priceCurrency: 'RUB',
-            description: 'Быстрый pressure scan без регистрации',
-          },
-          {
-            '@type': 'Offer',
-            name: 'Defense Brief',
-            price: '299',
-            priceCurrency: 'RUB',
-            description: 'Разбор материала встречи с Defense Brief',
-          },
+          { '@type': 'Offer', name: 'Бесплатный стресс-тест', price: '0', priceCurrency: 'RUB', description: 'Три вопроса по материалу встречи без регистрации' },
+          { '@type': 'Offer', name: 'Полная сессия и Defense Brief', price: '299', priceCurrency: 'RUB', description: 'Полный разбор материала встречи с Defense Brief' },
         ],
-        provider: {
-          '@type': 'Organization',
-          name: 'PeakTalk',
-          url: 'https://peaktalk.ru',
-        },
+        provider: { '@type': 'Organization', name: 'PeakTalk', url: 'https://peaktalk.ru' },
       },
       {
         '@type': 'FAQPage',
-        mainEntity: faqData.map((faq) => ({
-          '@type': 'Question',
-          name: faq.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: faq.answer,
-          },
-        })),
+        mainEntity: faqData.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })),
       },
     ],
   };
-
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />;
 }
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white">
-      <JsonLd />
-      <Nav />
-      <Hero />
-      <CaseWorkspace />
-      <PressureProof />
-      <ScenarioEntrances />
-      <MethodSection />
-      <OutputArtifacts />
-      <PricingCTA />
-      <FAQAndBoundaries />
-      <FooterCTA />
-    </main>
+    <MotionConfig reducedMotion="user">
+      <main className="relative min-h-screen overflow-x-clip selection:bg-[#E8600A] selection:text-white">
+        <JsonLd />
+        <Nav />
+        <Hero />
+        <PressureProof />
+        <ScenarioEntrances />
+        <DecisionProcess />
+        <PricingCTA />
+        <FAQAndBoundaries />
+        <FooterCTA />
+      </main>
+    </MotionConfig>
   );
 }

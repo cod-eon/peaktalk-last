@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 
 const safariMotionStyle: React.CSSProperties = {
@@ -15,12 +15,14 @@ type HeroVisualProps = {
 };
 
 export default function HeroVisual({ compact = false }: HeroVisualProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <div className={`relative mx-auto w-full ${compact ? 'max-w-[390px]' : 'max-w-[min(100%,900px)]'}`}>
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         style={safariMotionStyle}
         className="relative z-10 border border-neutral-300 bg-white shadow-[0_18px_46px_rgba(17,24,39,0.08)]"
       >
