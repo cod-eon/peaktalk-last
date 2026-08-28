@@ -388,9 +388,9 @@ function Nav() {
           </button>
         </div>
       </motion.nav>
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div ref={mobileMenuDialogRef} initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" role="dialog" aria-modal="true" aria-label="Навигация по странице" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
+      {mobileMenuOpen ? (
+        <AnimatePresence>
+          <motion.div ref={mobileMenuDialogRef} initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" role="dialog" aria-modal="true" aria-label="Навигация по странице" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
             <div className="mb-10 flex items-center justify-between">
               <Logo />
               <button type="button" onClick={closeMobileMenu} className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40" aria-label="Закрыть меню"><X size={24} /></button>
@@ -405,8 +405,8 @@ function Nav() {
               <Link href="/simulation/guest" onClick={() => { followMobileMenuLink(); trackLandingCta('nav_mobile'); }} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{CTA_LABEL}</Link>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      ) : null}
     </>
   );
 }

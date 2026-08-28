@@ -136,8 +136,35 @@ with sync_playwright() as playwright:
         full_page=False,
     )
 
+    page.evaluate(
+        """() => {
+          window.__menuExitSentinel = { samples: 0, violations: [] };
+          const sampleExitInterval = () => {
+            const dialog = document.querySelector('#landing-mobile-menu');
+            if (!dialog) return;
+            const locked = document.documentElement.style.overflow === 'hidden'
+              && document.body.style.overflow === 'hidden'
+              && document.body.style.position === 'fixed';
+            const focusInside = dialog.contains(document.activeElement);
+            window.__menuExitSentinel.samples += 1;
+            if (!locked || !focusInside) {
+              window.__menuExitSentinel.violations.push({ locked, focusInside });
+            }
+            window.requestAnimationFrame(sampleExitInterval);
+          };
+          window.requestAnimationFrame(sampleExitInterval);
+        }"""
+    )
     page.keyboard.press("Escape")
     dialog.wait_for(state="detached")
+    exit_sentinel = page.evaluate("window.__menuExitSentinel")
+    check(
+        not exit_sentinel["violations"],
+        f"Modal containment ended while the exiting dialog was still mounted: {exit_sentinel}",
+    )
+    page.wait_for_function(
+        "document.activeElement?.getAttribute('aria-label') === 'Открыть меню'"
+    )
     scroll_after_escape = page.evaluate("window.scrollY")
     check(page.evaluate("document.activeElement?.getAttribute('aria-label')") == "Открыть меню", "Escape did not restore focus to the menu opener")
     check(
@@ -184,6 +211,8 @@ with sync_playwright() as playwright:
         "scrollWhileOpen": scroll_while_open,
         "scrollAfterEscape": scroll_after_escape,
         "escapeRestoredOpener": True,
+        "exitIntervalSamples": exit_sentinel["samples"],
+        "exitIntervalViolations": exit_sentinel["violations"],
         "anchorHash": page.evaluate("window.location.hash"),
         "anchorScrollY": anchor_scroll_y,
         "anchorTargetVisible": True,
