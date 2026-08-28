@@ -72,6 +72,12 @@ test('homepage source preserves analytics and typography constraints', async () 
   assert.match(landingStyles, /transform:\s*none\s*!important/, 'Reduced motion must remove process transforms');
   assert.match(pageSource, /text-white\/65/, 'Small footer links must keep readable contrast');
   assert.match(pageSource, /pt-2 pb-6/, 'Expanded FAQ answers need breathing room below the question');
+  assert.match(pageSource, /role="dialog"/, 'Mobile navigation must expose dialog semantics');
+  assert.match(pageSource, /aria-modal="true"/, 'Mobile navigation must be announced as modal');
+  assert.match(pageSource, /aria-label="Навигация по странице"/, 'Mobile navigation dialog needs a meaningful label');
+  assert.match(pageSource, /mobileMenuOpenerRef/, 'Mobile navigation must retain its opener for focus restoration');
+  assert.match(pageSource, /event\.key === 'Escape'/, 'Mobile navigation must support Escape dismissal');
+  assert.match(pageSource, /document\.body\.style\.position/, 'Mobile navigation must lock background scrolling');
 
   assert.match(filmSource, /useRef<HTMLVideoElement>/, 'Film playback needs a stable video ref');
   assert.match(filmSource, /hasApproached/, 'Film source must mount persistently after first approach');

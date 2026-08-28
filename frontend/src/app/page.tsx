@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AnimatePresence,
   MotionConfig,
@@ -267,6 +267,100 @@ function Logo({ size = 24 }: { size?: number }) {
 function Nav() {
   const scrolled = useScrolled();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuOpenerRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuDialogRef = useRef<HTMLDivElement>(null);
+  const restoreMobileMenuFocusRef = useRef(true);
+  const restoreMobileMenuScrollRef = useRef(true);
+
+  const openMobileMenu = () => {
+    restoreMobileMenuFocusRef.current = true;
+    restoreMobileMenuScrollRef.current = true;
+    setMobileMenuOpen(true);
+  };
+
+  const closeMobileMenu = () => {
+    restoreMobileMenuFocusRef.current = true;
+    restoreMobileMenuScrollRef.current = true;
+    setMobileMenuOpen(false);
+  };
+
+  const followMobileMenuLink = () => {
+    restoreMobileMenuFocusRef.current = false;
+    restoreMobileMenuScrollRef.current = false;
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    if (!mobileMenuOpen || !mobileMenuDialogRef.current) return;
+
+    const dialog = mobileMenuDialogRef.current;
+    const menuOpener = mobileMenuOpenerRef.current;
+    const scrollY = window.scrollY;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyLeft = document.body.style.left;
+    const previousBodyRight = document.body.style.right;
+    const previousBodyWidth = document.body.style.width;
+    const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getFocusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+      .filter((element) => element.getClientRects().length > 0);
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      getFocusableElements()[0]?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMobileMenu();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = getFocusableElements();
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements.at(-1);
+      if (!firstElement || !lastElement) return;
+
+      if (event.shiftKey && (document.activeElement === firstElement || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (document.activeElement === lastElement || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.left = previousBodyLeft;
+      document.body.style.right = previousBodyRight;
+      document.body.style.width = previousBodyWidth;
+
+      if (restoreMobileMenuScrollRef.current) window.scrollTo(0, scrollY);
+      if (restoreMobileMenuFocusRef.current) {
+        window.requestAnimationFrame(() => menuOpener?.focus());
+      }
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <>
@@ -289,26 +383,26 @@ function Nav() {
             <Link href="/login" className="font-mono text-[11px] uppercase tracking-[0.14em] text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30">Вход</Link>
             <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_desktop')} className="inline-flex min-h-11 items-center justify-center border border-neutral-950 bg-neutral-950 px-5 text-sm font-semibold text-white transition-colors duration-150 hover:border-[#E8600A] hover:bg-[#E8600A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Проверить материал</Link>
           </div>
-          <button type="button" className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 lg:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Открыть меню" aria-controls="landing-mobile-menu" aria-expanded={mobileMenuOpen}>
+          <button ref={mobileMenuOpenerRef} type="button" className="flex h-11 w-11 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 lg:hidden" onClick={openMobileMenu} aria-label="Открыть меню" aria-controls="landing-mobile-menu" aria-expanded={mobileMenuOpen}>
             <Menu size={22} />
           </button>
         </div>
       </motion.nav>
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
+          <motion.div ref={mobileMenuDialogRef} initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }} id="landing-mobile-menu" role="dialog" aria-modal="true" aria-label="Навигация по странице" className="fixed inset-0 z-[100] flex flex-col bg-[#FAF8F4] p-6">
             <div className="mb-10 flex items-center justify-between">
               <Logo />
-              <button type="button" onClick={() => setMobileMenuOpen(false)} className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40" aria-label="Закрыть меню"><X size={24} /></button>
+              <button type="button" onClick={closeMobileMenu} className="flex h-12 w-12 cursor-pointer items-center justify-center border border-neutral-300 bg-white text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40" aria-label="Закрыть меню"><X size={24} /></button>
             </div>
             <div className="flex flex-col gap-2">
               {navItems.map((item) => (
-                <Link key={item.label} href={item.id} onClick={() => setMobileMenuOpen(false)} className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{item.label}</Link>
+                <Link key={item.label} href={item.id} onClick={followMobileMenuLink} className="cursor-pointer border-b border-neutral-200 py-4 text-left text-[22px] font-bold leading-none text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{item.label}</Link>
               ))}
             </div>
             <div className="mt-auto grid gap-3">
-              <Link href="/login" className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Войти</Link>
-              <Link href="/simulation/guest" onClick={() => trackLandingCta('nav_mobile')} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{CTA_LABEL}</Link>
+              <Link href="/login" onClick={followMobileMenuLink} className="flex min-h-12 items-center justify-center border border-neutral-300 text-sm font-semibold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">Войти</Link>
+              <Link href="/simulation/guest" onClick={() => { followMobileMenuLink(); trackLandingCta('nav_mobile'); }} className="flex min-h-12 items-center justify-center border border-neutral-950 bg-neutral-950 px-4 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40">{CTA_LABEL}</Link>
             </div>
           </motion.div>
         )}
