@@ -41,9 +41,11 @@ test('homepage exposes the compact decision-defense contract', async () => {
 });
 
 test('homepage source preserves analytics and typography constraints', async () => {
-  const [pageSource, layoutSource] = await Promise.all([
+  const [pageSource, layoutSource, filmSource, landingStyles] = await Promise.all([
     readFile(new URL('../src/app/page.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/components/landing/LandingPressureFilm.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/app/landing.module.css', import.meta.url), 'utf8'),
   ]);
 
   const locations = [
@@ -60,4 +62,22 @@ test('homepage source preserves analytics and typography constraints', async () 
   assert.match(pageSource, /landing_cta_clicked/);
   assert.match(pageSource, /source: 'landing'/);
   assert.doesNotMatch(`${pageSource}\n${layoutSource}`, /[—–]/);
+
+  assert.match(pageSource, /lg:text-\[58px\]/, 'Hero must preserve the protected desktop type scale');
+  assert.match(pageSource, /sm:flex sm:items-center sm:gap-4/, 'Hero CTAs must stay side by side from sm');
+  assert.doesNotMatch(pageSource, /lg:grid-cols-3/, 'Process must not regress to three equal columns');
+  assert.match(pageSource, /className=\{styles\.processStage\}/, 'Process stages must use the open-track layout');
+  assert.match(landingStyles, /\.processStage/, 'Open process stages need responsive track styling');
+  assert.match(landingStyles, /opacity:\s*1\s*!important/, 'Reduced motion must never leave process visuals hidden');
+  assert.match(landingStyles, /transform:\s*none\s*!important/, 'Reduced motion must remove process transforms');
+  assert.match(pageSource, /text-white\/65/, 'Small footer links must keep readable contrast');
+  assert.match(pageSource, /pt-2 pb-6/, 'Expanded FAQ answers need breathing room below the question');
+
+  assert.match(filmSource, /useRef<HTMLVideoElement>/, 'Film playback needs a stable video ref');
+  assert.match(filmSource, /hasApproached/, 'Film source must mount persistently after first approach');
+  assert.match(filmSource, /approachObserver\.disconnect\(\)/, 'Approach observer must stop after first mount');
+  assert.match(filmSource, /visibilityObserver/, 'Film needs a separate viewport visibility observer');
+  assert.match(filmSource, /video\.pause\(\)/, 'Film must pause outside the actual viewport');
+  assert.match(filmSource, /video\.play\(\)/, 'Film must resume inside the actual viewport');
+  assert.match(filmSource, /currentTime >= 10\.5/, 'Film must hold the meaningful 11.2s poster over low-information opening frames');
 });

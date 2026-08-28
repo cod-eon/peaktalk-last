@@ -27,6 +27,50 @@
   margin-top: 44px;
 }
 
+.stageList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.stageList::before {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 17px;
+  width: 3px;
+  content: '';
+  background: #e8600a;
+}
+
+.processStage {
+  position: relative;
+  z-index: 1;
+  padding: 0 0 44px 58px;
+}
+
+.processStage:last-child {
+  padding-bottom: 0;
+}
+
+.stageMarker {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e8600a;
+  background: #fff;
+  color: #111;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .annotationLayer {
   display: none;
 }
@@ -60,12 +104,35 @@
     margin-top: 20px;
   }
 
+  .stageList {
+    display: grid;
+    min-height: 360px;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 0.94fr) minmax(0, 1.24fr);
+    gap: clamp(32px, 4.5vw, 64px);
+  }
+
+  .stageList::before {
+    display: none;
+  }
+
+  .processStage {
+    padding: 56px 0 0;
+  }
+
+  .processStage:nth-child(2) {
+    margin-top: 56px;
+  }
+
+  .processStage:nth-child(3) {
+    margin-top: 112px;
+  }
+
   .annotationLayer {
     position: absolute;
     z-index: 0;
-    top: 32px;
-    right: 1%;
-    left: 1%;
+    top: 0;
+    right: 0;
+    left: 0;
     display: block;
     height: 170px;
     transform-origin: left center;
@@ -82,6 +149,9 @@
 @media (prefers-reduced-motion: reduce) {
   .annotationLayer,
   .dossier {
+    opacity: 1 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
     transition: none !important;
   }
 }

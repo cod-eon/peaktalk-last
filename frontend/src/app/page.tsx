@@ -249,7 +249,7 @@ function RevealDiv({
 
 function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/[0.45]' : 'text-neutral-500'}`}>
+    <div className={`font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-white/65' : 'text-neutral-500'}`}>
       {children}
     </div>
   );
@@ -324,19 +324,19 @@ function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.045)_1px,transparent_1px)] bg-[size:56px_56px]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(250,248,244,0.4)_0%,#FAF8F4_88%)]" />
       </div>
-      <div className="container-custom relative z-10 grid items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] lg:gap-12 lg:pb-20">
+      <div className="container-custom relative z-10 grid items-center gap-9 pb-14 md:pb-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(350px,0.85fr)] lg:gap-6 lg:pb-20 xl:grid-cols-[minmax(0,0.82fr)_minmax(520px,1.18fr)] xl:gap-12">
         <div className="max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-5 inline-flex max-w-full border border-neutral-950 bg-white px-3.5 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-neutral-700 shadow-[6px_6px_0_rgba(232,96,10,0.12)] sm:mb-6 sm:px-4 sm:text-[10px] sm:tracking-[0.16em]">Материал / разбор / Defense Brief</motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }} className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[42px] xl:text-[64px]">Подготовьте материал, который выдержит вопросы руководства.</motion.h1>
+          <motion.h1 data-landing-hero-copy initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.64, delay: 0.06, ease: [0.16, 1, 0.3, 1] }} className="max-w-[820px] font-display text-[34px] font-black leading-[1.03] text-neutral-950 sm:text-[56px] lg:text-[58px] xl:text-[64px]">Подготовьте материал, который выдержит вопросы руководства.</motion.h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.58, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="mt-6 max-w-[640px] text-[17px] leading-[1.62] text-neutral-600 sm:mt-7 sm:text-[20px] sm:leading-[1.58]">Вставьте тезисы, коммерческое предложение или план разговора. За три вопроса без регистрации увидите, где позиции не хватает цифр, выбора и ответственности за решение.</motion.p>
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }} className="mt-8 grid gap-3 sm:mt-9 xl:flex xl:items-center xl:gap-4">
-            <Link href="/simulation/guest" onClick={() => trackLandingCta('hero_primary')} className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-[0_16px_36px_rgba(232,96,10,0.22)] transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:min-h-[56px] sm:px-8 sm:text-[15px]">{CTA_LABEL}<ArrowRight size={18} /></Link>
-            <Link href="#case" className="inline-flex min-h-[48px] cursor-pointer items-center justify-center border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6">Как устроена подготовка</Link>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }} className="mt-8 grid gap-3 sm:mt-9 sm:flex sm:items-center sm:gap-4 lg:gap-2 xl:gap-4">
+            <Link href="/simulation/guest" onClick={() => trackLandingCta('hero_primary')} className="inline-flex min-h-[54px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap border border-[#E8600A] bg-[#E8600A] px-7 text-center text-[14px] font-bold text-white shadow-[0_16px_36px_rgba(232,96,10,0.22)] transition-colors duration-200 hover:border-[#B74707] hover:bg-[#B74707] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:min-h-[56px] sm:px-8 sm:text-[15px] lg:px-4 lg:text-[13px] xl:px-8 xl:text-[15px]">{CTA_LABEL}<ArrowRight size={18} /></Link>
+            <Link href="#case" className="inline-flex min-h-[48px] cursor-pointer items-center justify-center whitespace-nowrap border border-neutral-300 bg-white px-5 text-[15px] font-bold text-neutral-800 transition-colors duration-150 hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/30 sm:min-h-[56px] sm:px-6 lg:px-4 lg:text-[13px] xl:px-6 xl:text-[15px]">Как устроена подготовка</Link>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.34 }} className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500 sm:text-[11px] sm:tracking-[0.16em]">Без регистрации / без карты / на своём материале</motion.div>
           <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.62, delay: 0.18, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="mt-7 md:hidden"><HeroVisual compact /></motion.div>
         </div>
-        <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="relative hidden min-w-0 md:block lg:translate-x-5"><HeroVisual /></motion.div>
+        <motion.div data-landing-hero-visual initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.72, delay: 0.16, ease: [0.16, 1, 0.3, 1] }} style={safariMotionStyle} className="relative hidden min-w-0 md:block lg:translate-x-5"><HeroVisual /></motion.div>
       </div>
     </section>
   );
@@ -407,13 +407,14 @@ function DecisionProcess() {
           <RevealDiv className={styles.dossier} hidden={{ opacity: 0, x: 24, y: 16, scale: 0.98 }} visible={{ opacity: 1, x: 0, y: 0, scale: 1 }}><Image src="/noprecache/landing/decision-dossier.png" alt="" width={1536} height={1024} sizes="(min-width: 1024px) 56vw, 100vw" className="h-auto w-full" aria-hidden="true" /></RevealDiv>
           <RevealDiv className={styles.processBody}><p className="max-w-2xl text-[16px] leading-relaxed text-neutral-600">Сначала пройдите бесплатный стресс-тест на своём материале. Если нужен полный разбор, продолжите сессию за 299 ₽ и получите Defense Brief перед встречей.</p></RevealDiv>
         </div>
-        <div className={styles.stageTrack}>
-          <RevealDiv className={styles.annotationLayer} hidden={{ opacity: 0, x: -30, scaleX: 0.7 }} visible={{ opacity: 1, x: 0, scaleX: 1 }} duration={0.8}><svg viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true"><path d="M45 104 C210 16 310 150 492 82 S765 28 954 94" fill="none" stroke="#E8600A" strokeWidth="4" strokeLinecap="round" /></svg></RevealDiv>
-          <div className="relative grid gap-4 lg:grid-cols-3">
+        <div className={styles.stageTrack} data-process-track="open">
+          <RevealDiv className={styles.annotationLayer} hidden={{ opacity: 0, x: -30, scaleX: 0.7 }} visible={{ opacity: 1, x: 0, scaleX: 1 }} duration={0.8}><svg viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true"><path d="M18 18 C158 18 226 74 338 74 S552 130 684 130" fill="none" stroke="#E8600A" strokeWidth="4" strokeLinecap="round" /></svg></RevealDiv>
+          <div className={styles.stageList}>
             {processStages.map((stage, index) => (
-              <RevealDiv key={stage.label} delay={index * 0.08} className="relative min-h-[250px] border border-neutral-200 bg-[#FAF8F4] p-6 sm:p-7">
-                <div className="flex items-start justify-between gap-4"><div className="max-w-[220px] font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-[#E8600A]">{stage.label}</div><div className="flex h-8 w-8 shrink-0 items-center justify-center border border-neutral-950 bg-white font-mono text-[10px] font-bold">0{index + 1}</div></div>
-                <h3 className="mt-10 text-[22px] font-bold leading-[1.12] text-neutral-950">{stage.title}</h3><p className="mt-4 text-[15px] leading-relaxed text-neutral-600">{stage.body}</p>
+              <RevealDiv key={stage.label} delay={index * 0.08} className={styles.processStage}>
+                <div className={styles.stageMarker}>0{index + 1}</div>
+                <div className="max-w-[260px] font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-[#E8600A]">{stage.label}</div>
+                <h3 className="mt-5 text-[22px] font-bold leading-[1.12] text-neutral-950">{stage.title}</h3><p className="mt-4 max-w-[360px] text-[15px] leading-relaxed text-neutral-600">{stage.body}</p>
               </RevealDiv>
             ))}
           </div>
@@ -455,7 +456,7 @@ function FAQAndBoundaries() {
           {faqData.map((faq, index) => (
             <div key={faq.question} className="border-b border-neutral-200">
               <button type="button" onClick={() => setOpenIndex(openIndex === index ? null : index)} className="flex w-full cursor-pointer items-center justify-between gap-5 px-1 py-5 text-left text-[17px] font-bold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8600A]/40 sm:py-6 sm:text-[19px]" aria-expanded={openIndex === index}>{faq.question}<ChevronDown size={20} className={`shrink-0 text-neutral-400 transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} /></button>
-              <AnimatePresence>{openIndex === index && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden"><p className="max-w-3xl px-1 pb-6 text-[15px] leading-relaxed text-neutral-600">{faq.answer}</p></motion.div>}</AnimatePresence>
+              <AnimatePresence>{openIndex === index && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden"><p className="max-w-3xl px-1 pt-2 pb-6 text-[15px] leading-relaxed text-neutral-600">{faq.answer}</p></motion.div>}</AnimatePresence>
             </div>
           ))}
         </div>
@@ -472,7 +473,7 @@ function FooterCTA() {
         <RevealDiv className="mx-auto max-w-4xl text-center">
           <SectionLabel dark>final check</SectionLabel><h2 className="mx-auto mt-6 max-w-4xl font-display text-[38px] font-black leading-[1.04] text-white sm:text-[60px] lg:text-[72px]">Не несите слабый ответ на сильную встречу.</h2><p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-white/68">За три вопроса увидите, где позиция требует доработки. За 299 ₽ продолжите разбор и соберёте Defense Brief перед встречей.</p>
           <div className="mt-9 flex justify-center"><Link href="/simulation/guest" onClick={() => trackLandingCta('footer_final')} className="inline-flex min-h-[56px] items-center justify-center gap-3 border border-white/24 bg-white px-8 text-[15px] font-bold text-neutral-950 transition-colors hover:border-[#E8600A] hover:bg-[#E8600A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A3D]">{CTA_LABEL}<ArrowRight size={18} /></Link></div>
-          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/[0.4]">Без регистрации / без карты / на своём материале</p>
+          <p className="mt-6 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-white/65">Без регистрации / без карты / на своём материале</p>
         </RevealDiv>
       </div>
       <Footer />
@@ -485,8 +486,8 @@ function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/10 bg-black py-10">
       <div className="container-custom flex flex-col items-center justify-between gap-7 text-white/75 md:flex-row">
-        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left"><div className="brightness-0 invert"><Logo size={20} /></div><div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/[0.28]">стресс-тест встреч</div></div>
-        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/[0.38]"><Link href="/scenarios" className={footerLinkClass}>Сценарии</Link><Link href="/contacts" className={footerLinkClass}>Контакты</Link><Link href="/personal-data" className={footerLinkClass}>Оферта</Link><Link href="/privacy" className={footerLinkClass}>Конфиденциальность</Link></div>
+        <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left"><div className="brightness-0 invert"><Logo size={20} /></div><div className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/65">стресс-тест встреч</div></div>
+        <div className="flex flex-wrap justify-center gap-7 font-mono text-[11px] uppercase tracking-[0.14em] text-white/65"><Link href="/scenarios" className={footerLinkClass}>Сценарии</Link><Link href="/contacts" className={footerLinkClass}>Контакты</Link><Link href="/personal-data" className={footerLinkClass}>Оферта</Link><Link href="/privacy" className={footerLinkClass}>Конфиденциальность</Link></div>
       </div>
     </footer>
   );
