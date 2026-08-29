@@ -6,13 +6,23 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      direct_deploy:
+        description: Bypass GitHub artifact storage and deploy from this runner
+        required: false
+        type: boolean
+        default: false
+      target_sha:
+        description: Exact origin/main commit to deploy in direct mode
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
   group: peaktalk-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -24,6 +34,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.direct_deploy && inputs.target_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -56,6 +68,8 @@ jobs:
       APP_ENV: test
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.direct_deploy && inputs.target_sha || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -79,6 +93,8 @@ jobs:
       NEXT_PUBLIC_HCAPTCHA_SITEKEY: test-site-key
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.direct_deploy && inputs.target_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -103,6 +119,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.direct_deploy && inputs.target_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -129,6 +147,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.direct_deploy && inputs.target_sha || github.sha }}
       - name: Validate Compose syntax
         run: |
           cp backend/.env.example backend/.env
@@ -140,7 +160,9 @@ jobs:
   build-artifact:
     name: Build immutable release artifact
     needs: [harness, backend-tests, frontend-quality, dependency-audit, compose-validation]
-    if: github.event_name != 'pull_request'
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.event_name != 'workflow_dispatch' || inputs.direct_deploy != true)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -208,6 +230,9 @@ jobs:
       github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    concurrency:
+      group: peaktalk-production-deploy
+      cancel-in-progress: false
     env:
       VDS_HOST: ${{ secrets.VDS_HOST }}
       VDS_USER: ${{ secrets.VDS_USER }}
@@ -289,6 +314,146 @@ jobs:
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
             "${VDS_USER}@${VDS_HOST}" \
             "cd '${VDS_APP_DIR}' && DEPLOY_SHA='${GITHUB_SHA}' DEPLOY_HEALTH_HOST='${VDS_DOMAIN}' ARTIFACT_DIR='${VDS_APP_DIR}/.release' bash deploy.sh"
+      - name: Verify public health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 10 "https://${VDS_DOMAIN}/health" >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public health check failed" >&2
+          exit 1
+
+  direct-deploy:
+    name: Direct deploy exact main SHA to VDS
+    needs: [harness, backend-tests, frontend-quality, dependency-audit, compose-validation]
+    if: github.event_name == 'workflow_dispatch' && inputs.direct_deploy == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    concurrency:
+      group: peaktalk-production-deploy
+      cancel-in-progress: false
+    env:
+      TARGET_SHA: ${{ inputs.target_sha }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_HCAPTCHA_SITEKEY: ${{ secrets.NEXT_PUBLIC_HCAPTCHA_SITEKEY }}
+      VDS_HOST: ${{ secrets.VDS_HOST }}
+      VDS_USER: ${{ secrets.VDS_USER }}
+      VDS_APP_DIR: ${{ secrets.VDS_APP_DIR }}
+      VDS_DOMAIN: ${{ secrets.VDS_DOMAIN }}
+      VDS_KNOWN_HOSTS: ${{ secrets.VDS_KNOWN_HOSTS }}
+      VDS_SSH_KEY: ${{ secrets.VDS_SSH_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_sha }}
+          fetch-depth: 1
+      - name: Validate exact main release target and configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "target_sha must be a full 40-character commit SHA" >&2
+            exit 1
+          }
+          checked_out_sha="$(git rev-parse HEAD)"
+          [[ "$checked_out_sha" == "$TARGET_SHA" ]] || {
+            echo "Checked-out commit does not match target_sha" >&2
+            exit 1
+          }
+          git fetch --no-tags --depth=1 origin main
+          main_sha="$(git rev-parse FETCH_HEAD)"
+          [[ "$main_sha" == "$TARGET_SHA" ]] || {
+            echo "Refusing direct deploy because target_sha is not current origin/main" >&2
+            exit 1
+          }
+          for variable in \
+            NEXT_PUBLIC_API_URL NEXT_PUBLIC_HCAPTCHA_SITEKEY \
+            VDS_HOST VDS_USER VDS_APP_DIR VDS_DOMAIN VDS_KNOWN_HOSTS VDS_SSH_KEY; do
+            if [[ -z "${!variable}" ]]; then
+              echo "Missing required release secret: ${variable}" >&2
+              exit 1
+            fi
+          done
+      - name: Build pinned application images
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull -t "peaktalk-backend:${TARGET_SHA}" backend
+          docker build --pull -t "peaktalk-worker:${TARGET_SHA}" -f backend/Dockerfile.worker backend
+          docker build --pull \
+            --build-arg "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" \
+            --build-arg "NEXT_PUBLIC_HCAPTCHA_SITEKEY=${NEXT_PUBLIC_HCAPTCHA_SITEKEY}" \
+            -t "peaktalk-frontend:${TARGET_SHA}" frontend
+      - name: Assemble and checksum runner-local release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .release
+          api_id="$(docker image inspect "peaktalk-backend:${TARGET_SHA}" --format '{{.Id}}')"
+          worker_id="$(docker image inspect "peaktalk-worker:${TARGET_SHA}" --format '{{.Id}}')"
+          frontend_id="$(docker image inspect "peaktalk-frontend:${TARGET_SHA}" --format '{{.Id}}')"
+          {
+            printf 'commit=%s\n' "$TARGET_SHA"
+            printf 'api_tag=peaktalk-backend:%s\n' "$TARGET_SHA"
+            printf 'api_id=%s\n' "$api_id"
+            printf 'worker_tag=peaktalk-worker:%s\n' "$TARGET_SHA"
+            printf 'worker_id=%s\n' "$worker_id"
+            printf 'frontend_tag=peaktalk-frontend:%s\n' "$TARGET_SHA"
+            printf 'frontend_id=%s\n' "$frontend_id"
+          } > .release/release-manifest
+          docker save \
+            "peaktalk-backend:${TARGET_SHA}" \
+            "peaktalk-worker:${TARGET_SHA}" \
+            "peaktalk-frontend:${TARGET_SHA}" \
+            | gzip -1 > .release/images.tar.gz
+          (cd .release && sha256sum images.tar.gz > images.sha256)
+          (cd .release && sha256sum -c images.sha256)
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VDS_SSH_KEY }}
+      - name: Install pinned VDS host key
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VDS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+      - name: Sync verified source and runner-local release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin main
+          [[ "$(git rev-parse FETCH_HEAD)" == "$TARGET_SHA" ]] || {
+            echo "Refusing direct deploy because origin/main advanced during the build" >&2
+            exit 1
+          }
+          rsync -az --delete \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='backend/.env' \
+            --exclude='frontend/.env.local' \
+            --exclude='.release' \
+            --exclude='ВРЕМЕННО_key' \
+            --exclude='*.key' \
+            --exclude='node_modules' \
+            --exclude='frontend/.next' \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10' \
+            ./ "${VDS_USER}@${VDS_HOST}:${VDS_APP_DIR}/"
+          rsync -az --delete \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10' \
+            .release/ "${VDS_USER}@${VDS_HOST}:${VDS_APP_DIR}/.release/"
+      - name: Activate verified direct release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+            "${VDS_USER}@${VDS_HOST}" \
+            "cd '${VDS_APP_DIR}' && DEPLOY_SHA='${TARGET_SHA}' DEPLOY_HEALTH_HOST='${VDS_DOMAIN}' ARTIFACT_DIR='${VDS_APP_DIR}/.release' bash deploy.sh"
       - name: Verify public health endpoint
         shell: bash
         run: |
