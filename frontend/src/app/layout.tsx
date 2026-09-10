@@ -7,9 +7,9 @@ import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://peaktalk.ru"),
-  title: "PeakTalk - стресс-тест решения перед рабочей встречей",
+  title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
   description:
-    "Проверьте аргументы перед защитой решения, бюджета или инициативы. Три вопроса без регистрации, полный разбор и Defense Brief за 990 ₽.",
+    "Подготовьтесь к защите бюджета, инвест-питчу, QBR или клиентской эскалации: вставьте тезисы и получите неудобные вопросы, слабые места и план усиления позиции.",
   applicationName: "PeakTalk",
   manifest: "/manifest.json",
   icons: {
@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "PeakTalk - стресс-тест решения перед рабочей встречей",
+    title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
     description:
-      "Вставьте материал встречи, получите неудобные вопросы и найдите слабые места позиции до разговора с руководством.",
+      "Вставьте тезисы или план разговора, получите неудобные вопросы, слабые места и план усиления позиции.",
     url: "https://peaktalk.ru",
     siteName: "PeakTalk",
     locale: "ru_RU",
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PeakTalk - стресс-тест решения перед рабочей встречей",
+    title: "PeakTalk — AI-стресс-тест аргументов перед рабочей встречей",
     description:
-      "Проверьте решение под давлением до реальной встречи.",
+      "Проверьте позицию с ИИ-оппонентом до реальной встречи.",
     images: ["/og-image.png"],
   },
   alternates: {
